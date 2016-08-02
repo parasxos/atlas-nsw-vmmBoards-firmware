@@ -33,6 +33,8 @@ entity packet_formation is
         vmmWordReady: in std_logic;
         vmmEventDone: in std_logic;
 
+        UDPDone     : in std_logic;
+
         packLen     : out std_logic_vector(11 downto 0);
         dataout     : out std_logic_vector(63 downto 0);
         wrenable    : out std_logic;
@@ -75,12 +77,12 @@ architecture Behavioral of packet_formation is
     signal end_packet_int   : std_logic                     := '0';
 
     type stateType is (waitingForNewCycle, S2, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, triggerVmmReadout, waitForData, 
-                       sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, eventDone, resetVMMs, resetDone, isTriggerOff);
+                       sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, eventDone, resetVMMs, resetDone, isUDPDone, isTriggerOff);
     signal state            : stateType;
 
 --------------------  Debugging ------------------------------
     signal probe0_out           : std_logic_vector(129 DOWNTO 0);
-    signal probe1_out           : std_logic_vector(129 downto 0);
+    signal probe1_out           : std_logic_vector(142 downto 0);
 -----------------------------------------------------------------
 
 ----------------------  Debugging ------------------------------
@@ -91,7 +93,6 @@ architecture Behavioral of packet_formation is
     attribute mark_debug of globBcid_i            :    signal    is    "true";
     attribute mark_debug of precCnt               :    signal    is    "true";
     attribute mark_debug of vmmId_i               :    signal    is    "true";
-    attribute mark_debug of eventCounter_i        :    signal    is    "true";
     attribute mark_debug of daqFIFO_din           :    signal    is    "true";
     attribute mark_debug of vmmWord_i             :    signal    is    "true";
     attribute mark_debug of packLen_i             :    signal    is    "true";
@@ -106,7 +107,6 @@ architecture Behavioral of packet_formation is
     attribute dont_touch of globBcid_i            :    signal    is    "true";
     attribute dont_touch of precCnt               :    signal    is    "true";
     attribute dont_touch of vmmId_i               :    signal    is    "true";
-    attribute dont_touch of eventCounter_i        :    signal    is    "true";
     attribute dont_touch of daqFIFO_din           :    signal    is    "true";
     attribute dont_touch of vmmWord_i             :    signal    is    "true";
     attribute dont_touch of packLen_i             :    signal    is    "true";
@@ -121,7 +121,6 @@ architecture Behavioral of packet_formation is
     attribute keep of globBcid_i            :	signal	is	"true";
     attribute keep of precCnt               :	signal	is	"true";
     attribute keep of vmmId_i               :	signal	is	"true";
-    attribute keep of eventCounter_i        :	signal	is	"true";
     attribute keep of daqFIFO_din           :   signal  is  "true";
     attribute keep of vmmWord_i             :   signal  is  "true";
     attribute keep of packLen_i             :   signal  is  "true";
@@ -134,7 +133,7 @@ architecture Behavioral of packet_formation is
     port(
         clk     : IN STD_LOGIC;
         probe0  : IN STD_LOGIC_VECTOR(129 DOWNTO 0);
-        probe1  : IN STD_LOGIC_VECTOR(129 downto 0)
+        probe1  : IN STD_LOGIC_VECTOR(142 downto 0)
     );
     end component;
 
@@ -156,16 +155,16 @@ begin
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
                 if newCycle = '1' then
-                    tr_hold         <= '1';                 -- Prevent new triggers
+--                    tr_hold         <= '1';                 -- Prevent new triggers
                     eventCounter_i  <= eventCounter_i + 1;
                     daqFIFO_wr_en   <= '0';
---                    packetCounter   <= packetCounter + 1;   -- Signal to count packets for debugging
                     state           <= S2;
                 else
                     tr_hold         <= '0';
                 end if;
                 
             when waitForLatency =>
+                tr_hold         <= '1';                 -- Prevent new triggers
                 if trigLatencyCnt > trigLatency then 
                     state           <= S2;
                 else
@@ -173,12 +172,10 @@ begin
                 end if;
 
             when S2 =>          -- wait for the header elements to be formed
+                tr_hold         <= '1';                 -- Prevent new triggers
                 packLen_cnt     <= x"000";
                 vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
-                if udp_busy = '0' then
-                    rst_FIFO        <= '1';
-                    state           <= captureEventID;
-                end if;
+                state           <= captureEventID;
 
             when captureEventID =>      -- Form Header
                 rst_FIFO                <= '0';
@@ -242,13 +239,12 @@ begin
 
             when sendTrailer =>
                 packLen_i           <= std_logic_vector(packLen_cnt);
-                if udp_busy /= '1' then     -- Wait until previous udp packet has been sent
-                    daqFIFO_wr_en   <= '0';
-                    state           <= packetDone;
-                end if;
+                daqFIFO_wr_en   <= '0';
+                wait_Cnt        <= 0;
+                state           <= packetDone;
 
             when packetDone =>                  -- Wait for FIFO2UDP to get synced
-                if wait_Cnt < 10 then
+                if wait_Cnt < 2 then
                     wait_Cnt        <= wait_Cnt + 1;
                     end_packet_int  <= '1';
                     daqFIFO_wr_en   <= '0';
@@ -273,7 +269,14 @@ begin
                 
             when resetDone =>
                 if resetting = '0' then
+                    state       <= isUDPDone;
+                end if;
+
+            when isUDPDone =>
+                if (UDPDone = '1') then -- Wait for all 8 UDP packets to be sent
                     state       <= isTriggerOff;
+                else
+                    state       <= isUDPDone;
                 end if;
                 
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
@@ -324,6 +327,7 @@ port map(
     probe1_out(93)                      <=  triggerVmmReadout_i;    --Not tested
     probe1_out(109 downto 94)           <=  latency;
     probe1_out(110)                     <=  udp_busy;
-    probe1_out(129 downto 111)          <=  (others => '0');
+    probe1_out(142 downto 111)                <= eventCounter_i;
+--    probe1_out(129 downto 111)          <=  (others => '0');
 
 end Behavioral;

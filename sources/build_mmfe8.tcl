@@ -48,7 +48,7 @@
 ##########################-Christos Bakalis, christos.bakalis@cern.ch-####################
 #*****************************************************************************************
 # Set part type
-set thepart "xc7a200tfbg484-2"
+set thepart "xc7a200tfbg484-3"
 
 # Set project name
 set projectname "MMFE8"

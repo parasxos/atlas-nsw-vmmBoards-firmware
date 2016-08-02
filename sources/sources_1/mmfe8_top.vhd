@@ -443,6 +443,8 @@ architecture Behavioral of mmfe8_top is
     signal daqFIFO_reset            : std_logic := '0';
     signal daq_vmm_ena_wen_enable   : std_logic_vector(8 downto 1) := (others => '0');
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
+    
+    signal UDPDone                  : std_logic;
    
     -------------------------------------------------
     -- Trigger Signals
@@ -766,7 +768,8 @@ architecture Behavioral of mmfe8_top is
             fifo_data_out               : out std_logic_vector (7 downto 0);
             udp_txi                     : out udp_tx_type;    
             udp_tx_start                : out std_logic;
-            control                     : out std_logic;   
+            control                     : out std_logic;
+            UDPDone                     : out std_logic; 
             re_out                      : out std_logic;     
             udp_tx_data_out_ready       : in  std_logic;
             wr_en                       : in  std_logic;
@@ -804,6 +807,8 @@ architecture Behavioral of mmfe8_top is
         vmmWord         : in std_logic_vector(63 downto 0);
         vmmWordReady    : in std_logic;
         vmmEventDone    : in std_logic;
+        
+        UDPDone         : in std_logic;
 
         packLen         : out std_logic_vector(11 downto 0);
         dataout         : out std_logic_vector(63 downto 0);
@@ -1440,7 +1445,8 @@ FIFO2UDP_instance: FIFO2UDP
         fifo_data_out               => fifo_data_out_int,
         udp_txi                     => udp_txi_int,    
         udp_tx_start                => udp_tx_start_int,
-        control                     => control.ip_controls.arp_controls.clear_cache,    
+        control                     => control.ip_controls.arp_controls.clear_cache,
+        UDPDone                     => UDPDone,   
         re_out                      => re_out_int,    
         udp_tx_data_out_ready       => udp_tx_data_out_ready_int,
         wr_en                       => daqFIFO_wr_en_i,
@@ -1462,6 +1468,8 @@ packet_formation_instance: packet_formation
         vmmWord         => vmmWord_i,
         vmmWordReady    => vmmWordReady_i,
         vmmEventDone    => vmmEventDone_i,
+        
+        UDPDone         => UDPDone,
         
         packLen         => pf_packLen,
         dataout         => daq_data_out_i,

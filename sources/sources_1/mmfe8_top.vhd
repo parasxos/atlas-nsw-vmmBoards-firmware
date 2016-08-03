@@ -491,7 +491,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
-    type state_t is (IDLE, CONFIGURE, CONF_DONE, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ);
+    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ);
     signal state        : state_t;
     signal rstDAQFIFO   : std_logic := '0';
 
@@ -1767,18 +1767,27 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     is_state        <= "0010";
                     if w = 40 then
                         cnt_vmm     <= cnt_vmm - 1;
-                        if cnt_vmm = 1 then --1 VMM conf done
+                        if cnt_vmm = 1 then --VMM conf done
                             state           <= SEND_CONF_REPLY;
                             we_conf_int     <= '1';
                         else
-                            state       <= CONFIGURE after 100ns;  
+                            state       <= CONFIGURE_DELAY;
                         end if;
                         w   <= 0;
                     else
                         w <= w + 1;
                     end if;
                     
-                    conf_wen_i      <= '0';   
+                    conf_wen_i      <= '0';
+
+                when CONFIGURE_DELAY => -- Waits 100 ns to move to next configuration
+                    is_state        <= "1011";
+                    if (w >= 19) then
+                        w           <= 0;
+                        state       <= CONFIGURE;
+                    else
+                        w <= w + 1;
+                    end if;
                     
                 when    SEND_CONF_REPLY    =>
                     is_state            <= "1010"; 

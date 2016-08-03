@@ -149,13 +149,11 @@ begin
             eventCounter_i <= x"00000000";
         else
         case state is
-
             when waitingForNewCycle =>
                 triggerVmmReadout_i     <= '0';
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
                 if newCycle = '1' then
---                    tr_hold         <= '1';                 -- Prevent new triggers
                     eventCounter_i  <= eventCounter_i + 1;
                     daqFIFO_wr_en   <= '0';
                     state           <= S2;

@@ -15,7 +15,9 @@
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+-- Changelog:
+-- 02.08.2016 Added ONLY_CONF_ONCE as a state to prevent multiple configuratoins
+--      of the VMM. (Reid Pinkham)
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -117,7 +119,7 @@ architecture rtl of config_logic is
     type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC, SEND_REPLY, TEST, REPLY);
     signal state     : tx_state;  
     
-    type state_t is (START, SEND1,SEND0, FINISHED);
+    type state_t is (START, SEND1,SEND0, FINISHED, ONLY_CONF_ONCE);
     signal conf_state  : state_t; 
 
     attribute keep : string;
@@ -482,15 +484,13 @@ sync_start_vmm_conf: process(clk200)
                                           
                    when SEND1 =>     
          
-                      ConfFSMstate        <= "0011";   
-  --                     i <= 0;
+                      ConfFSMstate        <= "0011";
                        vmm_cktk_i <= '0';
                        if (counter - 2) >= 0  then
                            counter              <= counter - 1;
                            conf_state           <= SEND0;
                        else
---                           conf_done_i          <= '1';
-                           conf_state                <= FINISHED;
+                           conf_state           <= FINISHED;
                        end if;                                             
                     when FINISHED =>           
                         ConfFSMstate        <= "0100";            
@@ -499,16 +499,22 @@ sync_start_vmm_conf: process(clk200)
                             conf_done_i        <= '1';
                             del_cnt   <= del_cnt + 1;
                         elsif  del_cnt = 100 then
-                            conf_state         <= START;
+                            conf_state         <= ONLY_CONF_ONCE;
                             del_cnt   <= 0;
                        else
                             del_cnt   <= del_cnt + 1;
                        end if;
-                       
---                       conf_done_i        <= '1';
-                       vmm_cktk_i         <= '0';       
-                       counter            <= 0; 
-                       cnt_cktk           <= 0;                
+
+                       vmm_cktk_i         <= '0';
+                       counter            <= 0;
+                       cnt_cktk           <= 0;
+                   when ONLY_CONF_ONCE =>
+                        ConfFSMstate        <= "0101";
+                        if (start_vmm_conf = '0') then
+                            conf_state <= START;
+                        else
+                            conf_state <= ONLY_CONF_ONCE;
+                        end if;
                end case;
            end if;
         end if;

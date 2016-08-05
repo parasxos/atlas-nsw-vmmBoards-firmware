@@ -10,7 +10,8 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 
+-- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals
+-- (Reid Pinkham)
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -146,7 +147,32 @@ entity mmfe8_top is
         CKDT_5_P, CKDT_5_N    : OUT STD_LOGIC;
         CKDT_6_P, CKDT_6_N    : OUT STD_LOGIC;
         CKDT_7_P, CKDT_7_N    : OUT STD_LOGIC;
-        CKDT_8_P, CKDT_8_N    : OUT STD_LOGIC             
+        CKDT_8_P, CKDT_8_N    : OUT STD_LOGIC;
+        
+        VP_0                  : IN STD_LOGIC;
+        VN_0                  : IN STD_LOGIC;
+        Vaux0_v_n             : IN STD_LOGIC;
+        Vaux0_v_p             : IN STD_LOGIC;
+        Vaux1_v_n             : IN STD_LOGIC;
+        Vaux1_v_p             : IN STD_LOGIC;
+        Vaux2_v_n             : IN STD_LOGIC;
+        Vaux2_v_p             : IN STD_LOGIC;
+        Vaux3_v_n             : IN STD_LOGIC;
+        Vaux3_v_p             : IN STD_LOGIC;
+        Vaux8_v_n             : IN STD_LOGIC;
+        Vaux8_v_p             : IN STD_LOGIC;
+        Vaux9_v_n             : IN STD_LOGIC;
+        Vaux9_v_p             : IN STD_LOGIC;
+        Vaux10_v_n            : IN STD_LOGIC;
+        Vaux10_v_p            : IN STD_LOGIC;
+        Vaux11_v_n            : IN STD_LOGIC;
+        Vaux11_v_p            : IN STD_LOGIC;
+
+        MuxAddr0              : OUT STD_LOGIC;
+        MuxAddr1              : OUT STD_LOGIC;
+        MuxAddr2              : OUT STD_LOGIC;
+        MuxAddr3_p            : OUT STD_LOGIC;
+        MuxAddr3_n            : OUT STD_LOGIC
 	  );
 end mmfe8_top;
 
@@ -500,6 +526,20 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     signal read_out           : std_logic_vector(255 downto 0);
 
+    ------------------------------------------------------------------
+    -- xADC signals
+    ------------------------------------------------------------------
+    signal xadc_start           : std_logic;
+    signal vmm_id_xadc          : std_logic_vector (15 downto 0);
+    signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1024 packets
+    signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1024 samples over ~0.7 seconds
+    signal xadc_end_of_data     : std_logic;
+    signal xadc_fifo_bus        : std_logic_vector (63 downto 0);
+    signal xadc_fifo_enable     : std_logic;
+    signal xadc_packet_len      : std_logic_vector (11 downto 0);
+    signal xadc_running         : std_logic;
+    signal xadc_busy            : std_logic;
+
     -------------------------------------------------------------------
     -- These attribute will stop timing errors being reported in back
     -- annotated SDF simulation.
@@ -564,6 +604,7 @@ architecture Behavioral of mmfe8_top is
     attribute keep of pf_newCycle           :  signal  is  "true";
 --      attribute keep of pf_dataout            :  signal  is  "true";
 --      attribute keep of pf_wren               :  signal  is  "true";
+
 
     -------------------------------------------------------------------
     -- Other
@@ -630,6 +671,7 @@ architecture Behavioral of mmfe8_top is
     -- 18. config_logic
     -- 19. select_data
     -- 20. ila_top_level
+    -- 21. xadc
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -1007,47 +1049,72 @@ architecture Behavioral of mmfe8_top is
 	-- 18
     component config_logic is
         Port ( 
-            clk125              : in  std_logic;
-            clk200              : in  std_logic;
-            clk_in              : in  std_logic;
-            reset               : in  std_logic;
-            user_data_in        : in  std_logic_vector (7 downto 0);
-            user_data_out       : out std_logic_vector (63 downto 0);
-            udp_rx              : in udp_rx_type;
-            resp_data           : out udp_response;
-            send_error          : out std_logic;
-            user_conf           : out  std_logic;
-            user_wr_en          : in  std_logic;
-            user_last           : in std_logic;
-            configuring         : in std_logic;
-            we_conf             : out std_logic;
-            vmm_id              : out std_logic_vector(15 downto 0);            
-            cfg_bit_out         : out std_logic ;
-            vmm_cktk            : out std_logic ;
-            status              : out std_logic_vector(3 downto 0);
-            start_vmm_conf      : in  std_logic;
-            conf_done           : out std_logic;     
-            ext_trigger         : out std_logic;
-            ACQ_sync            : out std_logic_vector(15 downto 0);
-            udp_header          : in std_logic;
-            packet_length       : in std_logic_vector (15 downto 0));
+        clk125              : in  std_logic;
+        clk200              : in  std_logic;
+        clk_in              : in  std_logic;
+        
+        reset               : in  std_logic;
+
+        user_data_in        : in  std_logic_vector (7 downto 0);
+        user_data_out       : out std_logic_vector (63 downto 0);
+
+        udp_rx              : in udp_rx_type;
+        resp_data           : out udp_response;
+
+        send_error          : out std_logic;
+        user_conf           : out std_logic;
+        user_wr_en          : in  std_logic;
+        user_last           : in  std_logic;
+        configuring         : in  std_logic;
+        
+        we_conf             : out std_logic;
+        
+        vmm_id              : out std_logic_vector(15 downto 0);
+        cfg_bit_out         : out std_logic ;
+        vmm_cktk            : out std_logic ;
+        status              : out std_logic_vector(3 downto 0);
+        
+        start_vmm_conf      : in  std_logic;
+        conf_done           : out std_logic;
+        ext_trigger         : out std_logic;
+        
+        ACQ_sync            : out std_logic_vector(15 downto 0);
+        
+--        vmm_we              : in std_logic;
+        
+        udp_header          : in std_logic;
+        packet_length       : in std_logic_vector (15 downto 0);
+
+        xadc_busy           : in std_logic;
+        xadc_start          : out std_logic;
+        vmm_id_xadc         : out std_logic_vector(15 downto 0)
+        );
     end component;
     -- 19
     component select_data
     port(
         configuring                 : in  std_logic;
         data_acq                    : in  std_logic;
+        xadc                        : in  std_logic;
         we_data                     : in  std_logic;
         we_conf                     : in  std_logic;
+        we_xadc                     : in  std_logic;
         daq_data_in                 : in  std_logic_vector(63 downto 0);
         conf_data_in                : in  std_logic_vector(63 downto 0);
+        xadc_data_in                : in  std_logic_vector(63 downto 0);
         data_packet_length          : in  std_logic_vector(11 downto 0);
+        xadc_packet_length          : in  std_logic_vector(11 downto 0);
         end_packet_conf             : in  std_logic;
         end_packet_daq              : in  std_logic;
+        end_packet_xadc             : in  std_logic;
+        fifo_rst_daq                : in  std_logic;
+        fifo_rst_xadc               : in  std_logic;
+    
         data_out                    : out std_logic_vector(63 downto 0);
         packet_length               : out std_logic_vector(11 downto 0);
         we                          : out std_logic;
-        end_packet                  : out std_logic
+        end_packet                  : out std_logic;
+        fifo_rst                    : out std_logic
     );
     end component;
     -- 20
@@ -1055,6 +1122,48 @@ architecture Behavioral of mmfe8_top is
         PORT (  clk     : IN std_logic;
                 probe0  : IN std_logic_vector(255 DOWNTO 0)
                 );
+    end component;
+    -- 21
+    component xadc
+    port(
+        clk200              : in std_logic;
+        rst                 : in std_logic;
+        
+        VP_0                : in std_logic;
+        VN_0                : in std_logic;
+        Vaux0_v_n           : in std_logic;
+        Vaux0_v_p           : in std_logic;
+        Vaux1_v_n           : in std_logic;
+        Vaux1_v_p           : in std_logic;
+        Vaux2_v_n           : in std_logic;
+        Vaux2_v_p           : in std_logic;
+        Vaux3_v_n           : in std_logic;
+        Vaux3_v_p           : in std_logic;
+        Vaux8_v_n           : in std_logic;
+        Vaux8_v_p           : in std_logic;
+        Vaux9_v_n           : in std_logic;
+        Vaux9_v_p           : in std_logic;
+        Vaux10_v_n          : in std_logic;
+        Vaux10_v_p          : in std_logic;
+        Vaux11_v_n          : in std_logic;
+        Vaux11_v_p          : in std_logic;
+        data_in_rdy         : in std_logic;
+        vmm_id              : in std_logic_vector(15 downto 0);
+        sample_size         : in std_logic_vector(10 downto 0);
+        delay_in            : in std_logic_vector(17 downto 0);
+        UDPDone             : in std_logic;
+    
+        MuxAddr0            : out std_logic;
+        MuxAddr1            : out std_logic;
+        MuxAddr2            : out std_logic;
+        MuxAddr3_p          : out std_logic;
+        MuxAddr3_n          : out std_logic;
+        end_of_data         : out std_logic;
+        fifo_bus            : out std_logic_vector(63 downto 0);
+        data_fifo_enable    : out std_logic;
+        packet_len          : out std_logic_vector(11 downto 0);
+        xadc_busy           : out std_logic
+    );
     end component;
 
 begin
@@ -1321,7 +1430,11 @@ configuration_logic: config_logic
             ACQ_sync            => ACQ_sync_int,
             udp_header          => udp_header_int,
             vmm_cktk            => conf_cktk_out_i,
-            packet_length       => udp_rx_int.hdr.data_length);
+            packet_length       => udp_rx_int.hdr.data_length,
+            xadc_busy           => xadc_busy,
+            xadc_start          => xadc_start,
+            vmm_id_xadc         => vmm_id_xadc
+            );
 
 clk_200_to_400_inst: clk_wiz_200_to_400
     port map(
@@ -1489,18 +1602,68 @@ packet_formation_instance: packet_formation
 data_selection:  select_data
     port map(
         configuring                 => start_conf_proc_int,
+        xadc                        => xadc_running,
         data_acq                    => daq_enable_i,
         we_data                     => daq_wr_en_i,
         we_conf                     => we_conf_int,
+        we_xadc                     => xadc_fifo_enable,
         daq_data_in                 => daq_data_out_i,
         conf_data_in                => user_data_out_i,
+        xadc_data_in                => xadc_fifo_bus,
         data_packet_length          => pf_packLen,
-        data_out                    => daqFIFO_din_i,
-        packet_length               => packet_length_int,
+        xadc_packet_length          => xadc_packet_len,
         end_packet_conf             => end_packet_conf_int,
         end_packet_daq              => end_packet_daq_int,
+        end_packet_xadc             => xadc_end_of_data,
+        fifo_rst_daq                => pf_rst_FIFO,
+        fifo_rst_xadc               => '0',
+
+        data_out                    => daqFIFO_din_i,
+        packet_length               => packet_length_int,
         we                          => daqFIFO_wr_en_i,
-        end_packet                  => end_packet_i
+        end_packet                  => end_packet_i,
+        fifo_rst                    => daqFIFO_reset
+    );
+
+xadc_instance: xadc
+    port map(
+        clk200                      => clk_200,
+        rst                         => '0', -- change this plz
+        
+        VP_0                        => VP_0,
+        VN_0                        => VN_0,
+        Vaux0_v_n                   => Vaux0_v_n,
+        Vaux0_v_p                   => Vaux0_v_p,
+        Vaux1_v_n                   => Vaux1_v_n,
+        Vaux1_v_p                   => Vaux1_v_p,
+        Vaux2_v_n                   => Vaux2_v_n,
+        Vaux2_v_p                   => Vaux2_v_p,
+        Vaux3_v_n                   => Vaux3_v_n,
+        Vaux3_v_p                   => Vaux3_v_p,
+        Vaux8_v_n                   => Vaux8_v_n,
+        Vaux8_v_p                   => Vaux8_v_p,
+        Vaux9_v_n                   => Vaux9_v_n,
+        Vaux9_v_p                   => Vaux9_v_p,
+        Vaux10_v_n                  => Vaux10_v_n,
+        Vaux10_v_p                  => Vaux10_v_p,
+        Vaux11_v_n                  => Vaux11_v_n,
+        Vaux11_v_p                  => Vaux11_v_p,
+        data_in_rdy                 => xadc_start,
+        vmm_id                      => vmm_id_xadc,
+        sample_size                 => xadc_sample_size,
+        delay_in                    => xadc_delay,
+        UDPDone                     => UDPDone,
+    
+        MuxAddr0                    => MuxAddr0,
+        MuxAddr1                    => MuxAddr1,
+        MuxAddr2                    => MuxAddr2,
+        MuxAddr3_p                  => MuxAddr3_p,
+        MuxAddr3_n                  => MuxAddr3_n,
+        end_of_data                 => xadc_end_of_data,
+        fifo_bus                    => xadc_fifo_bus,
+        data_fifo_enable            => xadc_fifo_enable,
+        packet_len                  => xadc_packet_len,
+        xadc_busy                   => xadc_busy
     );
 
 --FIFO2Elink_instance: FIFO2Elink
@@ -1697,7 +1860,7 @@ synced_to_200: process(clk_200)
         if status_int_old = status_int then
             status_int_synced   <= status_int_old;
         end if;
-        
+
         vmm_id_old       <= vmm_id;
         if vmm_id_old = vmm_id then
             vmm_id_synced   <= vmm_id_old;

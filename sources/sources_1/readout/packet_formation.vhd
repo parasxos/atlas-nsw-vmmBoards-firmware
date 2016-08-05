@@ -236,7 +236,7 @@ begin
                 end if;
 
             when sendTrailer =>
-                packLen_i           <= std_logic_vector(packLen_cnt);
+                packLen_i       <= std_logic_vector(packLen_cnt);
                 daqFIFO_wr_en   <= '0';
                 wait_Cnt        <= 0;
                 state           <= packetDone;

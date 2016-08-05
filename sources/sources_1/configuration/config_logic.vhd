@@ -66,7 +66,12 @@ entity config_logic is
 --        vmm_we              : in std_logic;
         
         udp_header          : in std_logic;
-        packet_length       : in  std_logic_vector (15 downto 0));
+        packet_length       : in std_logic_vector (15 downto 0);
+
+        xadc_busy           : in std_logic;
+        xadc_start          : out std_logic;
+        vmm_id_xadc         : out std_logic_vector(15 downto 0)
+    );
 end config_logic;
 
 architecture rtl of config_logic is
@@ -116,7 +121,7 @@ architecture rtl of config_logic is
     
     
     
-    type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC, SEND_REPLY, TEST, REPLY);
+    type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC_Init, XADC, SEND_REPLY, TEST, REPLY);
     signal state     : tx_state;  
     
     type state_t is (START, SEND1,SEND0, FINISHED, ONLY_CONF_ONCE);
@@ -294,7 +299,8 @@ begin
                         status_int  <= "1001";   
                         count   <= 0;
                     elsif dest_port = x"19D0"  then           -- 6608 XADC
-                        state <= XADC;
+                        state <= XADC_Init;
+                        vmm_id_xadc <= vmm_id_int;
                         status_int  <= "0010";
                     else
                         count <= 0; 
@@ -328,7 +334,17 @@ begin
                         del_cnt2   <= del_cnt2 + 1;
                    end if;    
                 
-                when XADC =>
+                when XADC_Init => -- Initialize the XADC
+                    MainFSMstate        <= "0111";
+                    state               <= XADC;
+                    xadc_start          <= '0';
+
+                when XADC => --Main XADC State
+                    if (xadc_busy = '0') then -- if xadc is done
+                        state           <= IDLE;
+                    else
+                        state           <= XADC;
+                    end if;
                 
                 when FPGA_CONF =>
                     MainFSMstate        <= "1011";

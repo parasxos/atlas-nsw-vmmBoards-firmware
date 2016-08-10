@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 -- Company: NTU ATHENS - BNL
 -- Engineer: Paris Moschovakos & Panagiotis Gkountoumis
 -- 
@@ -10,8 +10,9 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 
-----------------------------------------------------------------------------------
+-- Changed the FIFO2UDP rstFIFO input signals (swapped rstDAQFIFO <--> daqFIFO_reset)
+-- at the OR gate. Christos Bakalis 10.08.2016
+--------------------------------------------------------------------------------------
 
 library unisim;
 use unisim.vcomponents.all;
@@ -1851,7 +1852,7 @@ end process;
     vmm_ena_vec     <= conf_vmm_ena_vec or (etr_vmm_ena_vec and daq_vmm_ena_wen_enable);
     vmm_wen_vec     <= conf_vmm_wen_vec or (etr_vmm_wen_vec and daq_vmm_ena_wen_enable);
 
-    rstDAQFIFO      <= pf_rst_FIFO or daqFIFO_reset;
+    daqFIFO_reset <= pf_rst_FIFO or rstDAQFIFO;
     
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;

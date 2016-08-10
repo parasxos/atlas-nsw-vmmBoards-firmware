@@ -1453,7 +1453,7 @@ FIFO2UDP_instance: FIFO2UDP
         end_packet                  => end_packet_i,
         global_reset                => glbl_rst_i,
         packet_length_in            => packet_length_int,
-        reset_DAQ_FIFO              => daqFIFO_reset,
+        reset_DAQ_FIFO              => rstDAQFIFO, -- changed from daqFIFO_reset. cbakalis 10.08.2016
         sending_o                   => udp_busy
     );       
 

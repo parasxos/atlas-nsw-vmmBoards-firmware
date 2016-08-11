@@ -1,4 +1,7 @@
 *.jou
 *.log
+*.str
+*.swp
 *~
+.Xil/
 sources/MMFE8/

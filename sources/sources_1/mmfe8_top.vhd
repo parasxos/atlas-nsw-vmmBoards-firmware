@@ -12,6 +12,7 @@
 -- Changelog:
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals
 -- (Reid Pinkham)
+-- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -519,7 +520,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ);
     signal state        : state_t;
-    signal rstDAQFIFO   : std_logic := '0';
+    signal rstFIFO_top  : std_logic := '0';
 
     -------------------------------------------------
     -- Debugging Signals
@@ -537,7 +538,6 @@ architecture Behavioral of mmfe8_top is
     signal xadc_fifo_bus        : std_logic_vector (63 downto 0);
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
-    signal xadc_running         : std_logic;
     signal xadc_busy            : std_logic;
 
     -------------------------------------------------------------------
@@ -647,6 +647,11 @@ architecture Behavioral of mmfe8_top is
     attribute keep of start_conf_proc_int       : signal is "TRUE";
     attribute keep of cnt_reply                 : signal is "TRUE";
     attribute keep of end_packet_conf_int       : signal is "TRUE";
+    attribute keep of xadc_busy                 : signal is "TRUE";
+    attribute keep of daqFIFO_reset             : signal is "TRUE";
+    attribute keep of rstFIFO_top               : signal is "TRUE";
+    attribute keep of pf_rst_FIFO               : signal is "TRUE";
+    
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -1109,6 +1114,7 @@ architecture Behavioral of mmfe8_top is
         end_packet_xadc             : in  std_logic;
         fifo_rst_daq                : in  std_logic;
         fifo_rst_xadc               : in  std_logic;
+        rstFIFO_top                 : in std_logic;
     
         data_out                    : out std_logic_vector(63 downto 0);
         packet_length               : out std_logic_vector(11 downto 0);
@@ -1602,7 +1608,7 @@ packet_formation_instance: packet_formation
 data_selection:  select_data
     port map(
         configuring                 => start_conf_proc_int,
-        xadc                        => xadc_running,
+        xadc                        => xadc_busy,
         data_acq                    => daq_enable_i,
         we_data                     => daq_wr_en_i,
         we_conf                     => we_conf_int,
@@ -1617,6 +1623,7 @@ data_selection:  select_data
         end_packet_xadc             => xadc_end_of_data,
         fifo_rst_daq                => pf_rst_FIFO,
         fifo_rst_xadc               => '0',
+        rstFIFO_top                 => rstFIFO_top,
 
         data_out                    => daqFIFO_din_i,
         packet_length               => packet_length_int,
@@ -1843,7 +1850,7 @@ testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
                         vmm_cktp      <= '0';
                     when 9980 to 10000 =>
                         cktp_state <= cktp_state + 1;
-                        vmm_cktp      <= '1';                             
+                        vmm_cktp      <= '1';
                     when others =>
                         cktp_state <= 0;
                 end case;
@@ -1896,7 +1903,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     daq_vmm_ena_wen_enable  <= x"00";
                     daq_cktk_out_enable     <= x"00";
                     daq_enable_i            <= '0';
-                    rstDAQFIFO              <= '0';
+                    rstFIFO_top             <= '0';
                     tren                    <= '0';
                     conf_wen_i              <= '0';
                     conf_ena_i              <= '0';     
@@ -1976,7 +1983,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     daq_vmm_ena_wen_enable  <= x"ff";
                     daq_cktk_out_enable     <= x"ff";
                     daq_enable_i            <= '1';
-                    rstDAQFIFO              <= '1';
+                    rstFIFO_top             <= '1';
                     pf_reset                <= '1';
                     if status_int_synced = "0000" or status_int_synced = "1000" then    -- Reset came or idle
                         daq_vmm_ena_wen_enable  <= x"00";
@@ -1989,7 +1996,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     end if;
                 when TRIG =>
                     is_state        <= "0100";
-                    rstDAQFIFO      <= '0';
+                    rstFIFO_top     <= '0';
                     pf_reset        <= '0';
                     tren            <= '1';
                     state           <= DAQ;
@@ -2014,7 +2021,6 @@ end process;
     vmm_ena_vec     <= conf_vmm_ena_vec or (etr_vmm_ena_vec and daq_vmm_ena_wen_enable);
     vmm_wen_vec     <= conf_vmm_wen_vec or (etr_vmm_wen_vec and daq_vmm_ena_wen_enable);
 
-    rstDAQFIFO      <= pf_rst_FIFO or daqFIFO_reset;
     
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;
@@ -2063,7 +2069,11 @@ ila_top: ila_top_level
     read_out(99 downto 92)      <= etr_vmm_ena_vec;
     read_out(102 downto 100)    <= pf_vmmIdRo;
     read_out(103)               <= daq_enable_i;
+    read_out(104)               <= xadc_busy;
+    read_out(105)               <= daqFIFO_reset;
+    read_out(106)               <= rstFIFO_top;
+    read_out(107)               <= pf_rst_FIFO;
 
-    read_out(255 downto 104)     <= (others => '0');
+    read_out(255 downto 108)     <= (others => '0');
 
 end Behavioral;

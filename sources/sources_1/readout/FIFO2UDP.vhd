@@ -62,6 +62,7 @@ architecture Behavioral of FIFO2UDP is
     signal count_length                : unsigned(15 downto 0) := x"0000";
     signal daq_fifo_re                 : std_logic := '0';
     signal fifo_empty_UDP              : std_logic := '0';
+    signal fifo_full_UDP               : std_logic := '0';
     signal prog_fifo_empty             : std_logic := '0';
     signal daq_out                     : std_logic_vector(255 downto 0);
     signal data_out                    : std_logic_vector(7 downto 0) := x"00";
@@ -94,6 +95,7 @@ architecture Behavioral of FIFO2UDP is
     attribute keep of data_out_valid          : signal is "true";
     attribute keep of sending                 : signal is "true";
     attribute keep of udp_tx_data_out_ready   : signal is "true";
+    attribute dont_touch of udp_tx_data_out_ready   : signal is "true";
     attribute keep of daq_data_out            : signal is "true";
     attribute keep of udp_tx_start            : signal is "true";
     attribute keep of end_packet_synced       : signal is "true";     
@@ -104,6 +106,7 @@ architecture Behavioral of FIFO2UDP is
     attribute keep of count_length            : signal is "true";
     attribute keep of daq_data_in_int         : signal is "true";
     attribute keep of wr_en_int               : signal is "true";
+    attribute keep of fifo_full_UDP           : signal is "true";
     attribute dont_touch of wr_en_int         : signal is "true";
     
     attribute keep of packet_length_in               : signal is "true";
@@ -142,7 +145,8 @@ end component;
 component ila_0
 PORT (
     clk     : IN std_logic;
-    probe0  : IN std_logic_vector(255 DOWNTO 0));
+    probe0  : IN std_logic_vector(255 DOWNTO 0);
+    probe1  : IN std_logic);
 end component;    
 
 begin
@@ -156,7 +160,7 @@ daq_FIFO_instance: readout_fifo
         wr_en       => wr_en,
         rd_en       => daq_fifo_re,
         dout        => daq_data_out,
-        full        => open,
+        full        => fifo_full_UDP,
         empty       => fifo_empty_UDP
     );
 
@@ -268,6 +272,8 @@ begin
                     elsif count_length = 0 then
                         count <= count + 1; 
                         daq_fifo_re                 <= '0';
+                    else
+                        daq_fifo_re                 <= '1';
                     end if; 
                     count_length  <= count_length - 1;    
                     udp_tx_start_int                             <= '0';                
@@ -323,7 +329,8 @@ end process;
            
         ila_daq_send : ila_0
            port map ( clk           => clk_125, 
-                      probe0        => daq_out);   
+                      probe0        => daq_out,
+                      probe1        => udp_tx_data_out_ready);   
     
         daq_out(0)              <= end_packet_synced;
         daq_out(1)              <= fifo_empty_UDP;
@@ -333,7 +340,7 @@ end process;
         daq_out(12 downto 5)    <= data_out;
         daq_out(38 downto 13)   <= std_logic_vector(to_unsigned(count, daq_out(38 downto 13)'length));    
         daq_out(39)             <= udp_tx_start_int;
-        daq_out(40)             <= udp_tx_data_out_ready;
+        daq_out(40)             <= '0'; --udp_tx_data_out_ready;
         daq_out(48 downto 41)   <= daq_data_out;
         daq_out(112 downto 49)  <= daq_data_in;
         daq_out(113)            <= sending;
@@ -342,13 +349,14 @@ end process;
         daq_out(157 downto 146) <= packet_len_r;
         daq_out(221 downto 158) <= daq_data_in_int;
         daq_out(222)            <= wr_en_int;
-        daq_out(223)            <= wr_en;
+        daq_out(223)            <= '0'; -- wr_en;
         daq_out(235 downto 224) <= packet_length_in;
         daq_out(236)            <= udp_tx_data_out_ready;
         daq_out(237)            <= fifo_len_wr_en;
         daq_out(238)            <= fifo_len_rd_en;
         daq_out(239)            <= fifo_empty_len;
-        daq_out(255 downto 240) <= (others => '0');
+        daq_out(240)            <= fifo_full_UDP;
+        daq_out(255 downto 241) <= (others => '0');
     
     
     end Behavioral;

@@ -50,6 +50,7 @@ port(
     end_packet_xadc             : in  std_logic;
     fifo_rst_daq                : in  std_logic;
     fifo_rst_xadc               : in  std_logic;
+    rstFIFO_top                 : in std_logic;
 
     data_out                    : out std_logic_vector(63 downto 0);
     packet_length               : out std_logic_vector(11 downto 0);
@@ -62,6 +63,7 @@ end select_data;
 architecture Behavioral of select_data is
 
 signal sel                      : std_logic_vector(2 downto 0);
+signal fifo_rst_i               : std_logic;
 begin
 
 data_selection : process(configuring, data_acq)
@@ -73,26 +75,28 @@ begin
                 data_out        <= conf_data_in;
                 packet_length   <= x"002"; -- constant length
                 end_packet      <= end_packet_conf;
-                fifo_rst        <= '0';
+                fifo_rst_i      <= '0';
             when "010" => -- DAQ
                 we              <= we_data;
                 data_out        <= daq_data_in;
                 packet_length   <= data_packet_length;
                 end_packet      <= end_packet_daq;
-                fifo_rst        <= fifo_rst_daq;
+                fifo_rst_i      <= fifo_rst_daq;
             when "001" => -- XADC
                 we              <= we_xadc;
                 data_out        <= xadc_data_in;
                 packet_length   <= xadc_packet_length;
                 end_packet      <= end_packet_xadc;
-                fifo_rst        <= fifo_rst_xadc;
+                fifo_rst_i      <= fifo_rst_xadc;
             when others =>
                 we              <= '0';
                 data_out        <= (others => '0');
                 packet_length   <= x"000";
                 end_packet      <= '0';
-                fifo_rst        <= '0';
+                fifo_rst_i      <= '0';
         end case; 
 end process;
+
+fifo_rst <= fifo_rst_i or rstFIFO_top; -- top reset always will work
 
 end Behavioral;

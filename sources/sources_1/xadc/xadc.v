@@ -522,34 +522,34 @@ end
 
 
 
-ila_1 ila_1
-(
-    .clk(clk200),
-    .probe0(data_fifo_enable), // 1
-    .probe1(fifo_bus), // 64
-    .probe2(packet_len), // 12
-    .probe3(xadc_start), //1
-    .probe4(ch_sel), // 5
-    .probe5(configuring), // 1
-    .probe6(init_chan), // 1
-    .probe7(chan_done), // 1
-    .probe8(type_done), // 1
-    .probe9(save), // 1
-    .probe10(init_type), // 1
-    .probe11(fifo_done), // 1
-    .probe12(rst_pkt), // 1
-    .probe13(end_of_data), // 1
-    .probe14(vmm_id), // 16
-    .probe15(st_wr), // 4
-    .probe16(st_pkt), // 4
-    .probe17(st_chan), // 4
-    .probe18(st), // 4
-    .probe19(data_in_rdy), // 1
-    .probe20(pkt_cnt), // 9
-    .probe21(cnt), // 11
-    .probe22(test_counter), // 12
-    .probe23(vmm_id_sel)
-);
+//ila_1 ila_1
+//(
+//    .clk(clk200),
+//    .probe0(data_fifo_enable), // 1
+//    .probe1(fifo_bus), // 64
+//    .probe2(packet_len), // 12
+//    .probe3(xadc_start), //1
+//    .probe4(ch_sel), // 5
+//    .probe5(configuring), // 1
+//    .probe6(init_chan), // 1
+//    .probe7(chan_done), // 1
+//    .probe8(type_done), // 1
+//    .probe9(save), // 1
+//    .probe10(init_type), // 1
+//    .probe11(fifo_done), // 1
+//    .probe12(rst_pkt), // 1
+//    .probe13(end_of_data), // 1
+//    .probe14(vmm_id), // 16
+//    .probe15(st_wr), // 4
+//    .probe16(st_pkt), // 4
+//    .probe17(st_chan), // 4
+//    .probe18(st), // 4
+//    .probe19(data_in_rdy), // 1
+//    .probe20(pkt_cnt), // 9
+//    .probe21(cnt), // 11
+//    .probe22(test_counter), // 12
+//    .probe23(vmm_id_sel)
+//);
 
 
 xadc_wiz_0 xadc

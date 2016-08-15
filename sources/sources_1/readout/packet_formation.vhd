@@ -268,6 +268,7 @@ begin
             when resetDone =>
                 if resetting = '0' then
                     state       <= isUDPDone;
+                    rst_vmm     <= '0'; -- Prevent from continuously resetting while waiting for UDP Packet
                 end if;
 
             when isUDPDone =>
@@ -280,7 +281,6 @@ begin
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
                 end_packet_int  <= '0';
                 tr_hold         <= '0';     -- Allow new triggers
-                rst_vmm         <= '0';
                 if newCycle /= '1' then
                     state           <= waitingForNewCycle;
                 end if;

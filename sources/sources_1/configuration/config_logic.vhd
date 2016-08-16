@@ -63,14 +63,14 @@ entity config_logic is
         
         ACQ_sync            : out std_logic_vector(15 downto 0);
         
---        vmm_we              : in std_logic;
-        
         udp_header          : in std_logic;
         packet_length       : in std_logic_vector (15 downto 0);
 
         xadc_busy           : in std_logic;
         xadc_start          : out std_logic;
-        vmm_id_xadc         : out std_logic_vector(15 downto 0)
+        vmm_id_xadc         : out std_logic_vector(15 downto 0);
+        xadc_sample_size    : out std_logic_vector(10 downto 0);
+        xadc_delay          : out std_logic_vector(17 downto 0)
     );
 end config_logic;
 
@@ -299,10 +299,19 @@ begin
                         status_int  <= "1001";   
                         count   <= 0;
                     elsif dest_port = x"19D0"  then           -- 6608 XADC
-                        state <= XADC_Init;
-                        vmm_id_xadc <= vmm_id_int;
+                        state               <= XADC_Init;
+                        status_int          <= "0100";
                         xadc_start          <= '1';
-                        status_int  <= "0100";
+                        
+                        if cnt_array > 0 then -- If it is not an empty packet
+                            vmm_id_xadc         <= conf_data(1)(15 downto 0);
+                            xadc_sample_size    <= conf_data(2)(10 downto 0);
+                            xadc_delay          <= conf_data(3)(17 downto 0);
+                        else -- is an empty packet
+                            vmm_id_xadc <= "0000000000000000";
+                            xadc_sample_size    <= "01111111111"; -- 1023 packets
+                            xadc_delay          <= "011111111111111111"; -- 1023 samples over ~0.7 seconds
+                        end if;
                     else
                         count <= 0; 
                         state <= IDLE;

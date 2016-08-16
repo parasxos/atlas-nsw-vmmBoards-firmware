@@ -518,7 +518,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
-    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ);
+    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ, XADC_run);
     signal state        : state_t;
     signal rstFIFO_top  : std_logic := '0';
 
@@ -532,8 +532,8 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------------------------------------
     signal xadc_start           : std_logic;
     signal vmm_id_xadc          : std_logic_vector (15 downto 0);
-    signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1024 packets
-    signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1024 samples over ~0.7 seconds
+    signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1023 packets
+    signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1023 samples over ~0.7 seconds
     signal xadc_end_of_data     : std_logic;
     signal xadc_fifo_bus        : std_logic_vector (63 downto 0);
     signal xadc_fifo_enable     : std_logic;
@@ -1921,6 +1921,8 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                         state         <= CONFIGURE;
                     elsif status_int_synced = "1111" then   -- DAQ ON
                         state         <= DAQ_INIT;
+                    elsif status_int_synced = "0100" then -- xADC is started
+                        state         <= XADC_run;
                     end if;
             
                when    CONFIGURE    =>        
@@ -2005,6 +2007,11 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     if status_int_synced = "1000" then  -- Reset came
                         daq_enable_i    <= '0';
                         state           <= DAQ_INIT;
+                    end if;
+                when XADC_run =>
+                    is_state            <= "0110";
+                    if status_int_synced = "0000" then -- done with xADC, back to idle
+                        state <= IDLE;
                     end if;
 
                 when others =>

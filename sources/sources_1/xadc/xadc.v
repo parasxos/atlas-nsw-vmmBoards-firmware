@@ -22,7 +22,7 @@
 
 module xadc #
 (
-    parameter   max_packet_size	= 9'b10111011 // Max of 187 packets per UDP frame
+    parameter   max_packet_size	= 9'b10010110 // Max of 150 packets per UDP frame
 //    parameter   sample_size	= 11'b1111111111, // 1024 packets
 //    parameter   delay_in = 18'b11111111111111111 // Delay 131072 clock cycles to spread 1024 samples over ~0.7 seconds
 )
@@ -112,7 +112,7 @@ reg [4:0]       cnt_delay;
 reg [11:0]       packet_len_r;
 reg             xadc_start_r;
 reg [4:0]       ch_sel_r;
-reg [10:0]      cnt; // Take 1024 packets
+reg [10:0]      cnt;
 reg [17:0]      delay; 
 reg             configuring_r;
 reg [11:0]      xadc_result_r;
@@ -130,7 +130,7 @@ reg             init_type_r;
 reg             fifo_done_r;
 reg             end_of_data_r;
 reg             full_pkt_r;
-reg [11:0]      test_counter;
+reg [11:0]      test_counter = 0; // Initialize to zero to ensure accurate counts
 reg             xadc_busy_r;
 
 parameter idle = 4'b0, st1 = 4'b1, st2 = 4'b10, st3 = 4'b11, st4 = 4'b100, st5 = 4'b101, st6 = 4'b110, st7 = 4'b111;
@@ -432,11 +432,15 @@ begin
                     else if (read_cnt == 3'b011) packet[47:36] <= xadc_result_r;
                     else if (read_cnt == 3'b100) packet[59:48] <= xadc_result_r;
 
-                    if (read_cnt == 3'b100) // packet is full, increment reset the read_cnt
+                    if (read_cnt == 3'b100) // packet is full, send packet and reset the read_cnt
                         begin
                             read_cnt <= 3'b0;
-                            pkt_cnt <= pkt_cnt + 1'b1; // Increment the packet count
                             full_pkt_r <= 1'b1;
+                        end
+                    else if (read_cnt == 3'b000) // Packet has data, increment packet count on first write
+                        begin
+                            pkt_cnt <= pkt_cnt + 1'b1; // Increment the packet count
+                            read_cnt <= read_cnt + 1'b1;
                         end
                     else
                         read_cnt <= read_cnt + 1'b1;
@@ -459,7 +463,7 @@ begin
 end
 
 
-// State machine to write to data fifo and length fifo
+// State machine to write to the data fifo
 always @(posedge clk200)
 begin
     if (rst)
@@ -468,14 +472,14 @@ begin
             cnt_fifo <= 3'b0;
             rst_pkt_r <= 1'b1; // Ties rst_pkt to global reset
         end
-    else if (1'b1)
+    else
         begin
         case (st_wr)
             idle :
                 begin
                     data_fifo_enable_r <= 1'b0; // Hold it low
                     rst_pkt_r <= 1'b0;
-                    if (full_pkt == 1'b1 || write_start == 1'b1) // write one packet
+                    if (full_pkt == 1'b1 || write_start == 1'b1) // send one packet
                         begin
                             st_wr <= st1;
                             packet_len_r <= {3'b0, pkt_cnt};
@@ -490,7 +494,7 @@ begin
                     st_wr <= st2;
                     fifo_bus_r <= packet;
 
-                    if (pkt_cnt == max_packet_size || write_start == 1'b1) // If 187 packets or finished with data
+                    if (pkt_cnt == max_packet_size || write_start == 1'b1) // If maximum packets or finished with data
                         begin
                             end_of_data_r <= 1'b1;
                             fifo_done_r <= 1'b1;
@@ -522,34 +526,34 @@ end
 
 
 
-//ila_1 ila_1
-//(
-//    .clk(clk200),
-//    .probe0(data_fifo_enable), // 1
-//    .probe1(fifo_bus), // 64
-//    .probe2(packet_len), // 12
-//    .probe3(xadc_start), //1
-//    .probe4(ch_sel), // 5
-//    .probe5(configuring), // 1
-//    .probe6(init_chan), // 1
-//    .probe7(chan_done), // 1
-//    .probe8(type_done), // 1
-//    .probe9(save), // 1
-//    .probe10(init_type), // 1
-//    .probe11(fifo_done), // 1
-//    .probe12(rst_pkt), // 1
-//    .probe13(end_of_data), // 1
-//    .probe14(vmm_id), // 16
-//    .probe15(st_wr), // 4
-//    .probe16(st_pkt), // 4
-//    .probe17(st_chan), // 4
-//    .probe18(st), // 4
-//    .probe19(data_in_rdy), // 1
-//    .probe20(pkt_cnt), // 9
-//    .probe21(cnt), // 11
-//    .probe22(test_counter), // 12
-//    .probe23(vmm_id_sel)
-//);
+ila_1 ila_1
+(
+    .clk(clk200),
+    .probe0(data_fifo_enable), // 1
+    .probe1(fifo_bus), // 64
+    .probe2(packet_len), // 12
+    .probe3(xadc_start), //1
+    .probe4(ch_sel), // 5
+    .probe5(configuring), // 1
+    .probe6(init_chan), // 1
+    .probe7(chan_done), // 1
+    .probe8(type_done), // 1
+    .probe9(save), // 1
+    .probe10(init_type), // 1
+    .probe11(fifo_done), // 1
+    .probe12(rst_pkt), // 1
+    .probe13(end_of_data), // 1
+    .probe14(vmm_id), // 16
+    .probe15(st_wr), // 4
+    .probe16(st_pkt), // 4
+    .probe17(st_chan), // 4
+    .probe18(st), // 4
+    .probe19(data_in_rdy), // 1
+    .probe20(pkt_cnt), // 9
+    .probe21(cnt), // 11
+    .probe22(test_counter), // 12
+    .probe23(vmm_id_sel) // 3
+);
 
 
 xadc_wiz_0 xadc

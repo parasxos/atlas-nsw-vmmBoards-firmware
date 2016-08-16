@@ -136,13 +136,13 @@ architecture Behavioral of packet_formation is
     attribute keep of triggerVmmReadout_i   :   signal  is  "true";
 
 
-    component ila_pf
-    port(
-        clk     : IN STD_LOGIC;
-        probe0  : IN STD_LOGIC_VECTOR(129 DOWNTO 0);
-        probe1  : IN STD_LOGIC_VECTOR(147 downto 0)
-    );
-    end component;
+--    component ila_pf
+--    port(
+--        clk     : IN STD_LOGIC;
+--        probe0  : IN STD_LOGIC_VECTOR(129 DOWNTO 0);
+--        probe1  : IN STD_LOGIC_VECTOR(147 downto 0)
+--    );
+--    end component;
 
 --    component vio_0
 --      Port ( 
@@ -348,12 +348,12 @@ end process;
 --    probe_out0 => bigPackLen
 --  );
 
-ilaPacketFormation: ila_pf
-port map(
-    clk                     =>  clk_200,
-    probe0                  =>  probe0_out,
-    probe1                  =>  probe1_out
-);
+--ilaPacketFormation: ila_pf
+--port map(
+--    clk                     =>  clk_200,
+--    probe0                  =>  probe0_out,
+--    probe1                  =>  probe1_out
+--);
 
     probe0_out(63 downto 0)             <=  header;             -- OK
     probe0_out(127 downto 64)           <=  vmmWord_i;          -- OK

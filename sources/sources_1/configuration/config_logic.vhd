@@ -180,12 +180,12 @@ architecture rtl of config_logic is
       
     
   
---    component ila_user_FIFO IS
---        PORT (
---            clk         : IN std_logic;
---            probe0      : IN std_logic_vector(255 DOWNTO 0)
---        );
---    end component;    
+    component ila_user_FIFO IS
+        PORT (
+            clk         : IN std_logic;
+            probe0      : IN std_logic_vector(255 DOWNTO 0)
+        );
+    end component;    
     
      
 
@@ -302,7 +302,7 @@ begin
                         state <= XADC_Init;
                         vmm_id_xadc <= vmm_id_int;
                         xadc_start          <= '1';
-                        status_int  <= "0010";
+                        status_int  <= "0100";
                     else
                         count <= 0; 
                         state <= IDLE;
@@ -549,11 +549,11 @@ sync_start_vmm_conf: process(clk200)
     cfg_bit_out     <= cfg_bit_out_i;
     vmm_cktk        <=vmm_cktk_i;     
     
---    ila_conf_logic :  ila_user_FIFO
---        port map(
---              clk         => clk125,
---              probe0      => sig_out 
---        );              
+    ila_conf_logic :  ila_user_FIFO
+        port map(
+              clk         => clk125,
+              probe0      => sig_out 
+        );              
                      
 
 --we_conf     <= we_conf_int;

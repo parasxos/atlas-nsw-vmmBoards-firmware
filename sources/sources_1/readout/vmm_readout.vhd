@@ -63,7 +63,7 @@ architecture Behavioral of vmm_readout is
     signal vmmEventDone_i       : std_logic := '0';
     signal trigger_pulse_i      : std_logic := '0';
     signal hitsLen_cnt          : integer := 0;
-    signal hitsLenMax           : integer := 1100;  --Real maximum is 1121 for a jumbo UDP frame and 184 for a normal UDP frame
+    signal hitsLenMax           : integer := 150;--1100;  --Real maximum is 1119 for a jumbo UDP frame and 184 for a normal UDP frame
 
     -- readoutProc
     signal dt_done              : std_logic := '1';
@@ -98,7 +98,6 @@ architecture Behavioral of vmm_readout is
     attribute keep of NoFlg                 :	signal	is	"true";
     attribute keep of dt_state              :	signal	is	"true";
     attribute keep of NoFlg_counter         :	signal	is	"true";
-    attribute keep of daq_enable            :	signal	is	"true";
     attribute keep of reading_out_word      :	signal	is	"true";
     attribute keep of dt_done               :	signal	is	"true";
     attribute keep of vmm_ckdt_i            :	signal	is	"true";
@@ -109,7 +108,7 @@ architecture Behavioral of vmm_readout is
     attribute keep of dt_cntr_intg          :   signal	is	"true";
     attribute keep of vmmEventDone_i        :   signal  is  "true";
     attribute keep of hitsLen_cnt           :   signal  is  "true";
-
+    attribute keep of daq_enable_i          :   signal  is  "true";
     attribute keep of vmmWordReady_i        :   signal	is	"true";
     attribute keep of vmmWord_i             :   signal	is	"true";
     attribute keep of trigger_pulse         :   signal  is  "true";
@@ -132,16 +131,16 @@ port(
 end component;
     
 
-component ila_readout
-port(
-    clk     : in std_logic;
-    probe0  : in std_logic_vector(127 downto 0)
-);
-end component;
+--component ila_readout
+--port(
+--    clk     : in std_logic;
+--    probe0  : in std_logic_vector(127 downto 0)
+--);
+--end component;
 
 begin
 
-readoutControlProc: process(clk_200, daq_enable_i, dt_done, vmm_data0_i)
+readoutControlProc: process(clk_200, dt_done, vmm_data0_i)
 begin
     if (dt_done = '1') then
         reading_out_word    <= '0';     -- readoutProc done, stop it
@@ -326,11 +325,11 @@ port map(
     vmm_cktk_vec    => vmm_cktk_vec
     );
 
-ilaDAQ: ila_readout
-port map(
-    clk                     =>  clk_200,
-    probe0                  =>  probe0_out
-    );
+--ilaDAQ: ila_readout
+--port map(
+--    clk                     =>  clk_200,
+--    probe0                  =>  probe0_out
+--    );
 
     probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
     probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK

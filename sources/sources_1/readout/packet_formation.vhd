@@ -82,7 +82,10 @@ architecture Behavioral of packet_formation is
 
 --------------------  Debugging ------------------------------
     signal probe0_out           : std_logic_vector(129 DOWNTO 0);
-    signal probe1_out           : std_logic_vector(142 downto 0);
+    signal probe1_out           : std_logic_vector(147 downto 0);
+    signal debug_state          : std_logic_vector(4 downto 0);
+    signal bigPackLen           : std_logic_vector(11 downto 0);
+    signal bigPackFlag          : std_logic;
 -----------------------------------------------------------------
 
 ----------------------  Debugging ------------------------------
@@ -99,6 +102,8 @@ architecture Behavioral of packet_formation is
     attribute mark_debug of packLen_cnt           :    signal    is    "true";
     attribute mark_debug of end_packet_int        :    signal    is    "true";
     attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
+    attribute mark_debug of debug_state           :    signal    is    "true";
+    
     
     attribute dont_touch : string;
 
@@ -113,6 +118,8 @@ architecture Behavioral of packet_formation is
     attribute dont_touch of packLen_cnt           :    signal    is    "true";
     attribute dont_touch of end_packet_int        :    signal    is    "true";
     attribute dont_touch of triggerVmmReadout_i   :    signal    is    "true";
+    attribute dont_touch of debug_state           :    signal    is    "true";
+    attribute dont_touch of eventCounter_i        :    signal    is    "true";
     
     attribute keep : string;
 
@@ -129,13 +136,20 @@ architecture Behavioral of packet_formation is
     attribute keep of triggerVmmReadout_i   :   signal  is  "true";
 
 
-    component ila_pf
-    port(
-        clk     : IN STD_LOGIC;
-        probe0  : IN STD_LOGIC_VECTOR(129 DOWNTO 0);
-        probe1  : IN STD_LOGIC_VECTOR(142 downto 0)
-    );
-    end component;
+--    component ila_pf
+--    port(
+--        clk     : IN STD_LOGIC;
+--        probe0  : IN STD_LOGIC_VECTOR(129 DOWNTO 0);
+--        probe1  : IN STD_LOGIC_VECTOR(147 downto 0)
+--    );
+--    end component;
+
+--    component vio_0
+--      Port ( 
+--        clk : in STD_LOGIC;
+--        probe_out0 : out std_logic_vector ( 11 downto 0 )
+--      );
+--    end component;
 
 -----------------------------------------------------------------
 
@@ -150,6 +164,7 @@ begin
         else
         case state is
             when waitingForNewCycle =>
+                debug_state <= "00000";
                 triggerVmmReadout_i     <= '0';
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
@@ -161,7 +176,10 @@ begin
                     tr_hold         <= '0';
                 end if;
                 
+                bigPackFlag <= '0';
+                
             when waitForLatency =>
+                debug_state <= "00001";
                 tr_hold         <= '1';                 -- Prevent new triggers
                 if trigLatencyCnt > trigLatency then 
                     state           <= S2;
@@ -170,33 +188,39 @@ begin
                 end if;
 
             when S2 =>          -- wait for the header elements to be formed
+                debug_state <= "00010";
                 tr_hold         <= '1';                 -- Prevent new triggers
-                packLen_cnt     <= x"000";
+                packLen_cnt     <= x"000";              -- Reset length count
                 vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
                 state           <= captureEventID;
 
             when captureEventID =>      -- Form Header
+                debug_state <= "00011";
                 rst_FIFO                <= '0';
                 header(63 downto 0)     <=    eventCounter_i & precCnt & globBcid & b"00000" & vmmId_i;
                                         --          32       &    8    &    16    &     5    &   3
                 state                   <= setEventID;
                 
             when setEventID =>
+                debug_state <= "00100";
                 rst_FIFO                <= '0';
                 daqFIFO_wr_en           <= '0';
                 daqFIFO_din             <= header;
                 state                   <= sendHeaderStep1;
 
             when sendHeaderStep1 =>
+                debug_state <= "00101";
                 daqFIFO_wr_en   <= '1';
                 packLen_cnt     <= packLen_cnt + 1;
                 state           <= sendHeaderStep2;
 
             when sendHeaderStep2 =>
+                debug_state <= "00110";
                 daqFIFO_wr_en   <= '0';
                 state           <= triggerVmmReadout;
 
             when triggerVmmReadout =>   -- Creates an 125ns pulse to trigger the readout
+                debug_state <= "00111";
                 if wait_Cnt < 25 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
@@ -207,6 +231,7 @@ begin
                 end if;
 
             when waitForData =>
+                debug_state <= "01000";
                 if vmmWordReady = '1' then
                     daqFIFO_din     <= vmmWord_i;
                     daqFIFO_wr_en   <= '0';
@@ -217,15 +242,21 @@ begin
                 end if;
 
             when sendVmmDataStep1 =>
+                debug_state <= "01001";
                 daqFIFO_wr_en   <= '1';
                 packLen_cnt     <= packLen_cnt + 1;
                 state           <= sendVmmDataStep2;
 
             when sendVmmDataStep2 =>
+                debug_state <= "01010";
                 daqFIFO_wr_en   <= '0';
                 state           <= formTrailer;
+                if (packLen_cnt >= unsigned(bigPackLen)) then -- Debug if statement to trigger on large packets
+                    bigPackFlag <= '1';
+                end if;
 
             when formTrailer =>
+                debug_state <= "01011";
                 if (vmmEventDone = '1') then
                     daqFIFO_wr_en   <= '0';
                     state           <= sendTrailer;
@@ -236,12 +267,14 @@ begin
                 end if;
 
             when sendTrailer =>
-                packLen_i           <= std_logic_vector(packLen_cnt);
+                debug_state <= "01100";
+                packLen_i       <= std_logic_vector(packLen_cnt);
                 daqFIFO_wr_en   <= '0';
                 wait_Cnt        <= 0;
                 state           <= packetDone;
 
             when packetDone =>                  -- Wait for FIFO2UDP to get synced
+                debug_state <= "01101";
                 if wait_Cnt < 2 then
                     wait_Cnt        <= wait_Cnt + 1;
                     end_packet_int  <= '1';
@@ -253,6 +286,7 @@ begin
                 end if;
 
             when eventDone =>
+                debug_state <= "01110";
                 if vmmId_cnt >= 7 then
                     vmmId_cnt   <= 0;
                     state       <= resetVMMs;
@@ -260,18 +294,23 @@ begin
                     vmmId_cnt   <= vmmId_cnt + 1;
                     state       <= S2;
                 end if;
+                bigPackFlag <= '0';
                 
             when resetVMMs =>
+                debug_state <= "01111";
                 rst_vmm     <= '1';
                 state       <= resetDone;
                 
             when resetDone =>
+                debug_state <= "10000";
                 if resetting = '0' then
+                    rst_vmm         <= '0';
                     state       <= isUDPDone;
                     rst_vmm     <= '0'; -- Prevent from continuously resetting while waiting for UDP Packet
                 end if;
 
             when isUDPDone =>
+                debug_state <= "10001";
                 if (UDPDone = '1') then -- Wait for all 8 UDP packets to be sent
                     state       <= isTriggerOff;
                 else
@@ -279,6 +318,7 @@ begin
                 end if;
                 
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
+                debug_state <= "10010";
                 end_packet_int  <= '0';
                 tr_hold         <= '0';     -- Allow new triggers
                 if newCycle /= '1' then
@@ -303,16 +343,23 @@ end process;
     vmmId           <= vmmId_i;
     trigLatency     <= to_integer(unsigned(latency));
 
-ilaPacketFormation: ila_pf
-port map(
-    clk                     =>  clk_200,
-    probe0                  =>  probe0_out,
-    probe1                  =>  probe1_out
-);
+--debugVIO: vio_0
+--  PORT MAP (
+--    clk => clk_200,
+--    probe_out0 => bigPackLen
+--  );
+
+--ilaPacketFormation: ila_pf
+--port map(
+--    clk                     =>  clk_200,
+--    probe0                  =>  probe0_out,
+--    probe1                  =>  probe1_out
+--);
 
     probe0_out(63 downto 0)             <=  header;             -- OK
     probe0_out(127 downto 64)           <=  vmmWord_i;          -- OK
-    probe0_out(129 downto 128)          <= (others => '0');
+    probe0_out(128)                     <=  bigPackFlag;
+    probe0_out(129)                     <= resetting;
 
     probe1_out(63 downto 0)             <=  daqFIFO_din;        -- OK
     probe1_out(64)                      <=  vmmWordReady;       -- OK
@@ -325,7 +372,8 @@ port map(
     probe1_out(93)                      <=  triggerVmmReadout_i;    --Not tested
     probe1_out(109 downto 94)           <=  latency;
     probe1_out(110)                     <=  udp_busy;
-    probe1_out(142 downto 111)                <= eventCounter_i;
+    probe1_out(142 downto 111)          <= eventCounter_i;
+    probe1_out(147 downto 143)          <= debug_state;
 --    probe1_out(129 downto 111)          <=  (others => '0');
 
 end Behavioral;

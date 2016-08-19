@@ -23,8 +23,8 @@
 module xadc #
 (
     parameter   max_packet_size	= 9'b10010110 // Max of 150 packets per UDP frame
-//    parameter   sample_size	= 11'b1111111111, // 1024 packets
-//    parameter   delay_in = 18'b11111111111111111 // Delay 131072 clock cycles to spread 1024 samples over ~0.7 seconds
+//    parameter   sample_size	= 11'b1111111111, // 1023 packets
+//    parameter   delay_in = 18'b11111111111111111 // Delay 131072 clock cycles to spread 1023 samples over ~0.7 seconds
 )
 (
     input           clk200,

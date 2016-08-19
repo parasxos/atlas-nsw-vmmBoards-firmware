@@ -1083,14 +1083,16 @@ architecture Behavioral of mmfe8_top is
         conf_done           : out std_logic;
         ext_trigger         : out std_logic;
         
-        ACQ_sync            : out std_logic_vector(15 downto 0);        
+        ACQ_sync            : out std_logic_vector(15 downto 0);
         
         udp_header          : in std_logic;
         packet_length       : in std_logic_vector (15 downto 0);
 
         xadc_busy           : in std_logic;
         xadc_start          : out std_logic;
-        vmm_id_xadc         : out std_logic_vector(15 downto 0)
+        vmm_id_xadc         : out std_logic_vector(15 downto 0);
+        xadc_sample_size    : out std_logic_vector(10 downto 0);
+        xadc_delay          : out std_logic_vector(17 downto 0)
         );
     end component;
     -- 19
@@ -1437,7 +1439,9 @@ configuration_logic: config_logic
             packet_length       => udp_rx_int.hdr.data_length,
             xadc_busy           => xadc_busy,
             xadc_start          => xadc_start,
-            vmm_id_xadc         => vmm_id_xadc
+            vmm_id_xadc         => vmm_id_xadc,
+            xadc_sample_size    => xadc_sample_size,
+            xadc_delay          => xadc_delay
             );
 
 clk_200_to_400_inst: clk_wiz_200_to_400

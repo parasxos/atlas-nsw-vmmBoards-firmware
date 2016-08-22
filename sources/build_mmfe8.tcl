@@ -184,6 +184,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
@@ -516,6 +517,13 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

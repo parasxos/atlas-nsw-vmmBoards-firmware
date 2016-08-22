@@ -10,8 +10,8 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 25.07.2016 Added DAQ FIFO reset every vmm packet sent
--- 
+-- 25.07.2016 Added DAQ FIFO reset every vmm packet sent XXXXXX (NOW REMOVED) XXXXX
+-- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -47,7 +47,9 @@ entity packet_formation is
         resetting   : in std_logic;
         rst_FIFO    : out std_logic;
         
-        latency     : in std_logic_vector(15 downto 0)
+        latency     : in std_logic_vector(15 downto 0);
+        
+        trigger     : in std_logic
     );
 end packet_formation;
 
@@ -81,8 +83,8 @@ architecture Behavioral of packet_formation is
     signal state            : stateType;
 
 --------------------  Debugging ------------------------------
-    signal probe0_out           : std_logic_vector(129 DOWNTO 0);
-    signal probe1_out           : std_logic_vector(147 downto 0);
+    signal probe0_out           : std_logic_vector(132 DOWNTO 0);
+    signal probe1_out           : std_logic_vector(200 downto 0);
     signal debug_state          : std_logic_vector(4 downto 0);
     signal bigPackLen           : std_logic_vector(11 downto 0);
     signal bigPackFlag          : std_logic;
@@ -134,22 +136,25 @@ architecture Behavioral of packet_formation is
     attribute keep of packLen_cnt           :   signal  is  "true";
     attribute keep of end_packet_int        :   signal  is  "true";
     attribute keep of triggerVmmReadout_i   :   signal  is  "true";
+    
+    attribute keep of trigger               :   signal is "TRUE";
+    attribute dont_touch of trigger         : signal is "TRUE";
 
 
---    component ila_pf
---    port(
---        clk     : IN STD_LOGIC;
---        probe0  : IN STD_LOGIC_VECTOR(129 DOWNTO 0);
---        probe1  : IN STD_LOGIC_VECTOR(147 downto 0)
---    );
---    end component;
+    component ila_pf
+    port(
+        clk     : IN STD_LOGIC;
+        probe0  : IN STD_LOGIC_VECTOR(132 DOWNTO 0);
+        probe1  : IN STD_LOGIC_VECTOR(200 downto 0)
+    );
+    end component;
 
---    component vio_0
---      Port ( 
---        clk : in STD_LOGIC;
---        probe_out0 : out std_logic_vector ( 11 downto 0 )
---      );
---    end component;
+    component vio_0
+      Port ( 
+        clk : in STD_LOGIC;
+        probe_out0 : out std_logic_vector ( 11 downto 0 )
+      );
+    end component;
 
 -----------------------------------------------------------------
 
@@ -219,9 +224,9 @@ begin
                 daqFIFO_wr_en   <= '0';
                 state           <= triggerVmmReadout;
 
-            when triggerVmmReadout =>   -- Creates an 125ns pulse to trigger the readout
+            when triggerVmmReadout =>   -- Creates an 100ns pulse to trigger the readout
                 debug_state <= "00111";
-                if wait_Cnt < 25 then
+                if wait_Cnt < 20 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
                 else
@@ -232,11 +237,11 @@ begin
 
             when waitForData =>
                 debug_state <= "01000";
-                if vmmWordReady = '1' then
+                if (vmmWordReady = '1') then
                     daqFIFO_din     <= vmmWord_i;
                     daqFIFO_wr_en   <= '0';
                     state           <= sendVmmDataStep1;
-                elsif vmmEventDone = '1' then
+                elsif (vmmEventDone = '1') then
                     daqFIFO_wr_en   <= '0';
                     state           <= sendTrailer; 
                 end if;
@@ -343,23 +348,24 @@ end process;
     vmmId           <= vmmId_i;
     trigLatency     <= to_integer(unsigned(latency));
 
---debugVIO: vio_0
---  PORT MAP (
---    clk => clk_200,
---    probe_out0 => bigPackLen
---  );
+debugVIO: vio_0
+  PORT MAP (
+    clk => clk_200,
+    probe_out0 => bigPackLen
+  );
 
---ilaPacketFormation: ila_pf
---port map(
---    clk                     =>  clk_200,
---    probe0                  =>  probe0_out,
---    probe1                  =>  probe1_out
---);
+ilaPacketFormation: ila_pf
+port map(
+    clk                     =>  clk_200,
+    probe0                  =>  probe0_out,
+    probe1                  =>  probe1_out
+);
 
     probe0_out(63 downto 0)             <=  header;             -- OK
     probe0_out(127 downto 64)           <=  vmmWord_i;          -- OK
     probe0_out(128)                     <=  bigPackFlag;
     probe0_out(129)                     <= resetting;
+    probe0_out(132 downto 130)          <= vmmId_i;
 
     probe1_out(63 downto 0)             <=  daqFIFO_din;        -- OK
     probe1_out(64)                      <=  vmmWordReady;       -- OK
@@ -374,6 +380,7 @@ end process;
     probe1_out(110)                     <=  udp_busy;
     probe1_out(142 downto 111)          <= eventCounter_i;
     probe1_out(147 downto 143)          <= debug_state;
---    probe1_out(129 downto 111)          <=  (others => '0');
+    probe1_out(148)                     <= trigger;
+    probe1_out(200 downto 149)          <=  (others => '0');
 
 end Behavioral;

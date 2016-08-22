@@ -528,6 +528,7 @@ architecture Behavioral of mmfe8_top is
     -- Debugging Signals
     -------------------------------------------------
     signal read_out           : std_logic_vector(255 downto 0);
+    signal trigger_i          : std_logic;
 
     ------------------------------------------------------------------
     -- xADC signals
@@ -652,6 +653,9 @@ architecture Behavioral of mmfe8_top is
     attribute keep of rstFIFO_top               : signal is "TRUE";
     attribute keep of pf_rst_FIFO               : signal is "TRUE";
     
+    attribute keep of trigger_i                 : signal is "TRUE";
+    attribute dont_touch of trigger_i           : signal is "TRUE";
+
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -813,18 +817,22 @@ architecture Behavioral of mmfe8_top is
             destinationIP               : in std_logic_vector(31 downto 0);
             daq_data_in                 : in  std_logic_vector(63 downto 0);
             fifo_data_out               : out std_logic_vector (7 downto 0);
-            udp_txi                     : out udp_tx_type;    
+            udp_txi                        : out udp_tx_type;    
             udp_tx_start                : out std_logic;
-            control                     : out std_logic;
-            UDPDone                     : out std_logic; 
-            re_out                      : out std_logic;     
+            re_out                        : out std_logic;
+            control                        : out std_logic;
+            UDPDone                     : out std_logic;
             udp_tx_data_out_ready       : in  std_logic;
             wr_en                       : in  std_logic;
-            end_packet                  : in std_logic;
+            end_packet                  : in  std_logic;
             global_reset                : in  std_logic;
-            packet_length_in            : in std_logic_vector(11 downto 0);
-            reset_DAQ_FIFO              : in std_logic;
-            sending_o                   : out std_logic
+            packet_length_in            : in  std_logic_vector(11 downto 0);
+            reset_DAQ_FIFO              : in  std_logic;
+            sending_o                   : out std_logic;
+    
+            vmmID                       : in  std_logic_vector(2 downto 0);
+            
+            trigger_out                 : out std_logic
         );
     end component;
     -- 10
@@ -846,30 +854,33 @@ architecture Behavioral of mmfe8_top is
     -- 11
     component packet_formation is
     port (
-        clk_200         : in std_logic;
+            clk_200     : in std_logic;
+    
+            newCycle    : in std_logic;
+            
+            trigVmmRo   : out std_logic;
+            vmmId       : out std_logic_vector(2 downto 0);
+            vmmWord     : in std_logic_vector(63 downto 0);
+            vmmWordReady: in std_logic;
+            vmmEventDone: in std_logic;
         
-        newCycle        : in std_logic;
-        trigVmmRo       : out std_logic;
-        vmmId           : out std_logic_vector(2 downto 0);
-        vmmWord         : in std_logic_vector(63 downto 0);
-        vmmWordReady    : in std_logic;
-        vmmEventDone    : in std_logic;
+            UDPDone     : in std_logic;
         
-        UDPDone         : in std_logic;
-
-        packLen         : out std_logic_vector(11 downto 0);
-        dataout         : out std_logic_vector(63 downto 0);
-        wrenable        : out std_logic;
-        end_packet      : out std_logic;
-        udp_busy        : in std_logic;
-
-        tr_hold         : out std_logic;
-        reset           : in std_logic;
-        rst_vmm         : out std_logic;
-        resetting       : in std_logic;
-        rst_FIFO        : out std_logic;
-        
-        latency         : in std_logic_vector(15 downto 0)
+            packLen     : out std_logic_vector(11 downto 0);
+            dataout     : out std_logic_vector(63 downto 0);
+            wrenable    : out std_logic;
+            end_packet  : out std_logic;
+            udp_busy    : in std_logic;
+            
+            tr_hold     : out std_logic;
+            reset       : in std_logic;
+            rst_vmm     : out std_logic;
+            resetting   : in std_logic;
+            rst_FIFO    : out std_logic;
+            
+            latency     : in std_logic_vector(15 downto 0);
+            
+            trigger     : in std_logic
     );
     end component;
     -- 12
@@ -1575,7 +1586,11 @@ FIFO2UDP_instance: FIFO2UDP
         global_reset                => glbl_rst_i,
         packet_length_in            => packet_length_int,
         reset_DAQ_FIFO              => daqFIFO_reset,
-        sending_o                   => udp_busy
+        sending_o                   => udp_busy,
+
+        vmmID                       => pf_vmmIdRo,
+        
+        trigger_out                 => trigger_i
     );       
 
 packet_formation_instance: packet_formation
@@ -1604,7 +1619,9 @@ packet_formation_instance: packet_formation
         resetting       => etr_reset_latched,
         rst_FIFO        => pf_rst_FIFO,
 
-        latency         => ACQ_sync_int
+        latency         => ACQ_sync_int,
+        
+        trigger         => trigger_i
     );   
         
 data_selection:  select_data
@@ -2081,7 +2098,9 @@ ila_top: ila_top_level
     read_out(105)               <= daqFIFO_reset;
     read_out(106)               <= rstFIFO_top;
     read_out(107)               <= pf_rst_FIFO;
+    read_out(171 downto 108)    <= daq_data_out_i;
+    read_out(172)               <= trigger_i;
 
-    read_out(255 downto 108)     <= (others => '0');
+    read_out(255 downto 173)    <= (others => '0');
 
 end Behavioral;

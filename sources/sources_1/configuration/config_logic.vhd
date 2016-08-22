@@ -84,7 +84,7 @@ architecture rtl of config_logic is
     signal i,w,del_cnt          : integer := 0;
     signal del_cnt2             : integer := 0;
     signal counter, k, j        : integer := 0;
-    signal sig_out              : std_logic_vector(255 downto 0);
+    signal sig_out              : std_logic_vector(292 downto 0);
     signal sn                   : std_logic_vector(31 downto 0);
     signal vmm_id_int           : std_logic_vector(15 downto 0);
     signal cmd                  : std_logic_vector(15 downto 0);
@@ -118,6 +118,10 @@ architecture rtl of config_logic is
     signal cnt_reply           : integer := 0;
     signal delay_user_last     : std_logic := '0';
     signal ERROR               : std_logic_vector(15 downto 0);
+
+    signal vmm_id_xadc_i        : std_logic_vector(15 downto 0);
+    signal xadc_sample_size_i   : std_logic_vector(10 downto 0);
+    signal xadc_delay_i         : std_logic_vector(17 downto 0);
     
     
     
@@ -143,6 +147,7 @@ architecture rtl of config_logic is
     attribute keep of status_int                  : signal is "true";
     attribute keep of start_conf_process          : signal is "true";
     attribute keep of conf_done_i                 : signal is "true";
+    attribute keep of cnt_array                   : signal is "true";
     
     attribute keep of DAQ_START_STOP                  : signal is "true";
     attribute dont_touch of DAQ_START_STOP            : signal is "true";    
@@ -156,12 +161,15 @@ architecture rtl of config_logic is
     attribute keep of delay_data                  : signal is "true"; 
     attribute keep of i                           : signal is "true";
     attribute keep of vmm_cktk_i                  : signal is "true";
-    attribute keep of cnt_array                   : signal is "true";
     attribute keep of udp_header_int              : signal is "true"; 
     attribute keep of j                           : signal is "true";     
     attribute keep of start_vmm_conf_int          : signal is "true";   
     attribute keep of start_vmm_conf_synced       : signal is "true";
     attribute keep of dest_port                   : signal is "true";
+    
+    attribute keep of vmm_id_xadc_i               : signal is "true";
+    attribute keep of xadc_sample_size_i          : signal is "true";
+    attribute keep of xadc_delay_i                : signal is "true";
     
 --    attribute keep of vmm_we_int                      : signal is "true";
 --    attribute dont_touch of vmm_we_int                : signal is "true";  
@@ -180,13 +188,13 @@ architecture rtl of config_logic is
       
     
   
-    component ila_user_FIFO IS
-        PORT (
-            clk         : IN std_logic;
-            probe0      : IN std_logic_vector(255 DOWNTO 0)
-        );
-    end component;    
-    
+--    component ila_user_FIFO IS
+--        PORT (
+--            clk         : IN std_logic;
+--            probe0      : IN std_logic_vector(292 DOWNTO 0)
+--        );
+--    end component;    
+
      
 
 
@@ -256,7 +264,7 @@ begin
                     end if;
                      
                     if delay_user_last = '1' then               
-                        cnt_array   <= 0;
+--                        cnt_array   <= 0;
 --                        count       <= 4;
                         j           <= 0;
                         state       <= SerialNo;
@@ -304,13 +312,13 @@ begin
                         xadc_start          <= '1';
                         
                         if cnt_array > 0 then -- If it is not an empty packet
-                            vmm_id_xadc         <= conf_data(1)(15 downto 0);
-                            xadc_sample_size    <= conf_data(2)(10 downto 0);
-                            xadc_delay          <= conf_data(3)(17 downto 0);
+                            vmm_id_xadc_i       <= conf_data(0)(15 downto 0);
+                            xadc_sample_size_i  <= conf_data(1)(10 downto 0);
+                            xadc_delay_i        <= conf_data(2)(17 downto 0);
                         else -- is an empty packet
-                            vmm_id_xadc <= "0000000000000000";
-                            xadc_sample_size    <= "01111111111"; -- 1023 packets
-                            xadc_delay          <= "011111111111111111"; -- 1023 samples over ~0.7 seconds
+                            vmm_id_xadc_i       <= "0000000000000000";
+                            xadc_sample_size_i  <= "01111111111"; -- 1023 packets
+                            xadc_delay_i        <= "011111111111111111"; -- 1023 samples over ~0.7 seconds
                         end if;
                     else
                         count <= 0; 
@@ -550,6 +558,9 @@ sync_start_vmm_conf: process(clk200)
   start_vmm_conf_int    <= start_vmm_conf;  
   vmm_id                <= vmm_id_int;
   dest_port             <= udp_rx.hdr.dst_port;
+  vmm_id_xadc           <=vmm_id_xadc_i;
+  xadc_sample_size      <= xadc_sample_size_i;
+  xadc_delay            <= xadc_delay_i;
 
        
 
@@ -558,11 +569,11 @@ sync_start_vmm_conf: process(clk200)
     cfg_bit_out     <= cfg_bit_out_i;
     vmm_cktk        <=vmm_cktk_i;     
     
-    ila_conf_logic :  ila_user_FIFO
-        port map(
-              clk         => clk125,
-              probe0      => sig_out 
-        );              
+--    ila_conf_logic :  ila_user_FIFO
+--        port map(
+--              clk         => clk125,
+--              probe0      => sig_out 
+--        );              
                      
 
 --we_conf     <= we_conf_int;
@@ -578,7 +589,7 @@ sig_out(43 downto 12)       <= sn;
 sig_out(59 downto 44)       <= vmm_id_int;
 sig_out(75 downto 60)       <= cmd;
 sig_out(83 downto 76)       <= std_logic_vector(to_unsigned(count, sig_out(83 downto 76)'length));
-sig_out(91 downto 84)      <= std_logic_vector(to_unsigned(cnt_array, sig_out(91 downto 84)'length));   
+sig_out(91 downto 84)      <= std_logic_vector(to_unsigned(cnt_array, 8));   
 sig_out(92)                <= user_last_int;
 sig_out(93)                <= last_synced200;
 --sig_out(110)                <= reading_packet;
@@ -601,16 +612,15 @@ sig_out(190 downto 175)     <= std_logic_vector(to_unsigned(counter, sig_out(190
 sig_out(198 downto 191)     <= std_logic_vector(to_unsigned(k, sig_out(198 downto 191)'length));
 sig_out(214 downto 199)     <= dest_port;
 
---sig_out(224)                <= we_conf_int;
 sig_out(246 downto 215)     <= DAQ_START_STOP;
---sig_out(2)                <= vmm_we;
---sig_out(18 downto 3)     <= std_logic_vector(to_unsigned(k, sig_out(18 downto 3)'length));
---sig_out(34 downto 19)     <= std_logic_vector(to_unsigned(cnt_cktk, sig_out(34 downto 19)'length));
---sig_out(50 downto 35)     <= std_logic_vector(to_unsigned(counter, sig_out(50 downto 35)'length));
---sig_out(66 downto 51)     <= std_logic_vector(to_unsigned(del_cnt, sig_out(66 downto 51)'length));
+sig_out(262 downto 247)     <= vmm_id_xadc_i;
+sig_out(273 downto 263)     <= xadc_sample_size_i;
+sig_out(291 downto 274)     <= xadc_delay_i;
+sig_out(292)                <= '0';
 
 
 
-sig_out(255 downto 247)     <= (others => '0');                 
+
+--sig_out(255 downto 247)     <= (others => '0');                 
 
 end rtl;

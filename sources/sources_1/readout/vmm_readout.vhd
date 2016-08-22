@@ -10,8 +10,10 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 
--- 
+-- 22.08.2016 Changed vmm_data0_i to reading_out_word in dt_state x"5" to prevent soft reset
+-- during VMM readout (Reid Pinkham)
+-- 22.08.2016 Changed dt_cntr_intg (integer) to dt_cntr_st (4 bit vector) (Reid Pinkham)
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -68,7 +70,7 @@ architecture Behavioral of vmm_readout is
     -- readoutProc
     signal dt_done              : std_logic := '1';
 	signal vmm_data_buf_i 		: std_logic_vector( 37 DOWNTO 0 ) 	:= ( others => '0' );
-	signal dt_cntr_intg 		: integer := 0;
+	signal dt_cntr_st   		: std_logic_vector(3 downto 0) := "0000";
     signal dt_cntr_intg0        : integer := 0;
     signal dt_cntr_intg1        : integer := 0;
     signal vmm_ckdt_i           : std_logic;
@@ -105,7 +107,7 @@ architecture Behavioral of vmm_readout is
     attribute keep of vmm_data0_i           :   signal	is	"true";
     attribute keep of vmm_data1_i           :   signal	is	"true";
     attribute keep of dataBitRead           :   signal	is	"true";
-    attribute keep of dt_cntr_intg          :   signal	is	"true";
+    attribute keep of dt_cntr_st            :   signal	is	"true";
     attribute keep of vmmEventDone_i        :   signal  is  "true";
     attribute keep of hitsLen_cnt           :   signal  is  "true";
     attribute keep of daq_enable_i          :   signal  is  "true";
@@ -131,12 +133,12 @@ port(
 end component;
     
 
---component ila_readout
---port(
---    clk     : in std_logic;
---    probe0  : in std_logic_vector(127 downto 0)
---);
---end component;
+component ila_readout
+port(
+    clk     : in std_logic;
+    probe0  : in std_logic_vector(127 downto 0)
+);
+end component;
 
 begin
 
@@ -178,7 +180,7 @@ begin
                         dt_state        <= x"3";
 
 				    when x"3" =>
-				        if (reading_out_word /= '1') then
+				        if (reading_out_word = '0') then
 				            vmm_cktk_i      <= '1';
 				            hitsLen_cnt     <= hitsLen_cnt + 1;
 				            dt_state        <= x"4";
@@ -192,7 +194,7 @@ begin
                         dt_state        <= x"5";
 
     				when x"5" =>
-                        if (vmm_data0_i = '1') then             -- Data presence: wait to read out
+                        if (reading_out_word = '1') then        -- Data presence: wait for read out to finish
                             NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         else
@@ -206,15 +208,17 @@ begin
 
                 	when x"6" =>                                -- Wait until word readout is done
                 		if (dt_done = '1') then
-                		  if hitsLen_cnt >= hitsLenMax then       -- Maximum UDP packet length reached 
-                            dt_state             <= x"7";
-                          else
-                            dt_state            <= x"3";        -- Issue new CKTK strobe
-                          end if;
+                            if hitsLen_cnt >= hitsLenMax then       -- Maximum UDP packet length reached 
+                                dt_state            <= x"7";
+                            else
+                                dt_state            <= x"3";        -- Issue new CKTK strobe
+                            end if;
+                        else
+                            dt_state                <= x"6";
                 		end if;
 
                     when x"7" =>                                -- Start the soft reset sequence, there is still a chance
-                        if (reading_out_word /= '1') then       -- of getting data at this point so check that before soft reset
+                        if (reading_out_word = '0') then        -- of getting data at this point so check that before soft reset
                             dt_state                <= x"8";
                         else
 				            NoFlg_counter   <= 0;
@@ -224,6 +228,11 @@ begin
 				    when x"8" =>
 					    hitsLen_cnt             <= 0;
 					    dt_state                <= x"9";
+
+                    when x"9" =>
+                        vmmEventDone_i          <= '1';
+                        NoFlg_counter           <= 0;
+                        dt_state                <= x"0";
 
 				    when others =>
 				        vmmEventDone_i          <= '1';
@@ -237,65 +246,71 @@ begin
     end if;
 end process;
 
--- by using this clock the CKDT strobe has f=25MHz (T=40ns, D=50%, phase=0deg) to click in data0 and data1
+-- by using this clock the CKDT strobe has f=25MHz (T=40ns, D=50%, phase=0deg) to clock in data0 and data1
 readoutProc: process(clk_50, reading_out_word)
 begin
     if rising_edge(clk_50) then
         if (reading_out_word = '1') then
 
-            case dt_cntr_intg is
-
-                when 0 =>                               -- Initiate values
+            case dt_cntr_st is
+                when x"0" =>                               -- Initiate values
                     dt_done       <= '0';
                 	vmm_data_buf  <= (others => '0');
-                    dt_cntr_intg  <= dt_cntr_intg + 1;
+                    dt_cntr_st    <= x"1";
                     dt_cntr_intg0 <= 0;
                     dt_cntr_intg1 <= 1;
                 	vmm_ckdt_i    <= '0';               -- Go for the first ckdt
 
-                when 1 =>
+                when x"1" =>
                     vmm_ckdt_i     <= '1';
-                    dt_cntr_intg   <= dt_cntr_intg + 1;
+                    dt_cntr_st     <= x"2";
 
-                when 2 =>                               --  19 ckdt and collect data
+                when x"2" =>                               --  19 ckdt and collect data
                     vmm_ckdt_i     <= '0';
                     if (dataBitRead /= 19) then
                         vmm_data_buf(dt_cntr_intg0) <= vmm_data0;
                         vmm_data_buf(dt_cntr_intg1) <= vmm_data1;
                         vmm_data_buf_i              <= vmm_data_buf;
-                        dt_cntr_intg                <= 1;
+                        dt_cntr_st                  <= x"1";
                         dataBitRead                 <= dataBitRead + 1;
                     else
                         vmm_data_buf(dt_cntr_intg0) <= vmm_data0;
                         vmm_data_buf(dt_cntr_intg1) <= vmm_data1;
                         vmm_data_buf_i              <= vmm_data_buf;
                         dataBitRead                 <= 1;
-                        dt_cntr_intg                <= 3;
+                        dt_cntr_st                  <= x"3";
                     end if;
                     dt_cntr_intg0               <= dt_cntr_intg0 + 2;
                     dt_cntr_intg1               <= dt_cntr_intg1 + 2;
 
-                when 3 =>
+                when x"3" =>
                     vmmWordReady_i    <= '0';
                     vmmWord_i         <= b"00" & vmm_data_buf(25 downto 18) & vmm_data_buf(37 downto 26) & vmm_data_buf(17 downto 8) & b"000000000000000000000000" & vmm_data_buf(7 downto 2) & vmm_data_buf(1) & vmm_data_buf(0);
                                                  --         TDO             &           Gray             &           PDO             &                             &          Address         &    Threshold    &       Flag;
-                    dt_cntr_intg      <= dt_cntr_intg + 1;
+                    dt_cntr_st        <= x"4";
 
-                when 4 =>
+                when x"4" =>
                     vmmWordReady_i    <= '1';
-                    dt_cntr_intg      <= dt_cntr_intg + 1;
+                    dt_cntr_st        <= x"5";
 
-                when others =>                  -- Word read
+                when x"5" =>                   -- Word read
                     dt_cntr_intg0   <= 0;
                     dt_cntr_intg1   <= 1;
-                    dt_cntr_intg    <= 0;
+                    dt_cntr_st      <= x"0";
+                    vmmWordReady_i  <= '0';
+                    dt_done         <= '1';
+
+                when others =>
+                    dt_cntr_intg0   <= 0;
+                    dt_cntr_intg1   <= 1;
+                    dt_cntr_st      <= x"0";
                     vmmWordReady_i  <= '0';
                     dt_done         <= '1';
             end case;
         else
             dt_cntr_intg0 <= 0;
             dt_cntr_intg1 <= 1;
-            dt_cntr_intg  <= 0;
+            dt_cntr_st    <= x"0";
         end if;
     end if;
 end process;
@@ -325,28 +340,29 @@ port map(
     vmm_cktk_vec    => vmm_cktk_vec
     );
 
---ilaDAQ: ila_readout
---port map(
---    clk                     =>  clk_200,
---    probe0                  =>  probe0_out
---    );
+ilaDAQ: ila_readout
+port map
+    (
+        clk                     =>  clk_200,
+        probe0                  =>  probe0_out
+    );
 
     probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
     probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK
     probe0_out(7 downto 5)      <=  std_logic_vector(to_unsigned(NoFlg, probe0_out(7 downto 5)'length));            -- OK
     probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
-    probe0_out(13 downto 11)    <=  std_logic_vector(to_unsigned(dt_cntr_intg, probe0_out(13 downto 11)'length));   -- OK
-    probe0_out(14)              <=  daq_enable_i;                                                                   -- OK
-    probe0_out(15)              <=  reading_out_word;                                                               -- OK
-    probe0_out(16)              <=  dt_done;                                                                        -- OK
-    probe0_out(17)              <=  vmm_ckdt_i;                                                                     -- OK
-    probe0_out(18)              <=  vmm_data0_i;                                                                    -- OK
-    probe0_out(19)              <=  vmm_data1_i;                                                                    -- OK
-    probe0_out(24 downto 20)    <=  std_logic_vector(to_unsigned(dataBitRead, probe0_out(28 downto 24)'length));    -- OK
-    probe0_out(25)              <=  vmmWordReady_i;                                                                 -- OK
-    probe0_out(89 downto 26)    <=  vmmWord_i;                                                                      -- OK
-    probe0_out(90)              <=  trigger_pulse_i;                                                                -- OK
-    probe0_out(98 downto 91)   <=  std_logic_vector(to_unsigned(hitsLen_cnt, probe0_out(101 downto 94)'length));    -- OK
-    probe0_out(127 downto 99)  <=  (others => '0');
+    probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                   -- OK
+    probe0_out(15)              <=  daq_enable_i;                                                                   -- OK
+    probe0_out(16)              <=  reading_out_word;                                                               -- OK
+    probe0_out(17)              <=  dt_done;                                                                        -- OK
+    probe0_out(18)              <=  vmm_ckdt_i;                                                                     -- OK
+    probe0_out(19)              <=  vmm_data0_i;                                                                    -- OK
+    probe0_out(20)              <=  vmm_data1_i;                                                                    -- OK
+    probe0_out(25 downto 21)    <=  std_logic_vector(to_unsigned(dataBitRead, probe0_out(28 downto 24)'length));    -- OK
+    probe0_out(26)              <=  vmmWordReady_i;                                                                 -- OK
+    probe0_out(90 downto 27)    <=  vmmWord_i;                                                                      -- OK
+    probe0_out(91)              <=  trigger_pulse_i;                                                                -- OK
+    probe0_out(99 downto 92)    <=  std_logic_vector(to_unsigned(hitsLen_cnt, probe0_out(101 downto 94)'length));   -- OK
+    probe0_out(127 downto 100)  <=  (others => '0');
 
 end behavioral;

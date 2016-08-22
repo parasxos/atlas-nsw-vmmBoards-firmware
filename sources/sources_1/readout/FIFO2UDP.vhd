@@ -51,7 +51,11 @@ entity FIFO2UDP is
         global_reset                : in  std_logic;
         packet_length_in            : in  std_logic_vector(11 downto 0);
         reset_DAQ_FIFO              : in  std_logic;
-        sending_o                   : out std_logic
+        sending_o                   : out std_logic;
+
+        vmmID                       : in  std_logic_vector(2 downto 0);
+        
+        trigger_out                 : out std_logic
     );
 end FIFO2UDP;
 
@@ -84,6 +88,10 @@ architecture Behavioral of FIFO2UDP is
     signal temp_buffer                 : std_logic_vector(63 downto 0) := (others=> '0');
     
     signal daq_data_out                : std_logic_vector(7 downto 0) := x"00";
+    
+    signal vmmID_i                     : std_logic_vector(2 downto 0);
+    
+    signal trigger                     : std_logic;
   
     attribute keep : string;
     attribute dont_touch : string;
@@ -108,14 +116,21 @@ architecture Behavioral of FIFO2UDP is
     attribute keep of wr_en_int               : signal is "true";
     attribute keep of fifo_full_UDP           : signal is "true";
     attribute dont_touch of wr_en_int         : signal is "true";
+    attribute dont_touch of fifo_empty_len    : signal is "true";
+    attribute keep of wr_en                   : signal is "true";
+    attribute dont_touch of wr_en             : signal is "true";
     
     attribute keep of packet_length_in               : signal is "true";
     attribute dont_touch of packet_length_in         : signal is "true";
+    attribute dont_touch of vmmID_i           : signal is "true";
+    attribute dont_touch of trigger           : signal is "true";
+    attribute keep of trigger                 : signal is "true";
   
   
   
   
 component readout_fifo is
+
 port(
     rst         : in std_logic;
     wr_clk      : in std_logic;
@@ -150,6 +165,21 @@ PORT (
 end component;    
 
 begin
+
+
+-- process ot trigger ILAs
+trigger_proc: process (clk_200, vmmID_i, data_out_last)
+begin
+    if rising_edge(clk_200) then
+        if (vmmID_i = "111" and data_out_last = '1') then
+            trigger <= '1';
+        else
+            trigger <= '0';
+        end if;
+    end if;
+end process;
+
+
 
 daq_FIFO_instance: readout_fifo
     port map(
@@ -317,46 +347,56 @@ begin
         end if;
     end if;
 end process;
+
+
+vmmID_i <= vmmID; -- assign external signal to internal
        
-        udp_tx_start                <= udp_tx_start_int;
-        udp_txi.data.data_out_last  <= data_out_last;
-        udp_txi.data.data_out_valid <= data_out_valid ;
-        udp_txi.data.data_out       <= data_out;
-        
-        daq_data_in_int             <= daq_data_in;
-        wr_en_int                   <= wr_en;
-        sending_o                   <= sending;
-           
-        ila_daq_send : ila_0
-           port map ( clk           => clk_125, 
-                      probe0        => daq_out,
-                      probe1        => udp_tx_data_out_ready);   
-    
-        daq_out(0)              <= end_packet_synced;
-        daq_out(1)              <= fifo_empty_UDP;
-        daq_out(2)              <= daq_fifo_re;
-        daq_out(3)              <= data_out_valid;
-        daq_out(4)              <= data_out_last;   
-        daq_out(12 downto 5)    <= data_out;
-        daq_out(38 downto 13)   <= std_logic_vector(to_unsigned(count, daq_out(38 downto 13)'length));    
-        daq_out(39)             <= udp_tx_start_int;
-        daq_out(40)             <= '0'; --udp_tx_data_out_ready;
-        daq_out(48 downto 41)   <= daq_data_out;
-        daq_out(112 downto 49)  <= daq_data_in;
-        daq_out(113)            <= sending;
-        daq_out(129 downto 114) <= std_logic_vector(packet_length);
-        daq_out(145 downto 130) <= std_logic_vector(count_length);     
-        daq_out(157 downto 146) <= packet_len_r;
-        daq_out(221 downto 158) <= daq_data_in_int;
-        daq_out(222)            <= wr_en_int;
-        daq_out(223)            <= '0'; -- wr_en;
-        daq_out(235 downto 224) <= packet_length_in;
-        daq_out(236)            <= udp_tx_data_out_ready;
-        daq_out(237)            <= fifo_len_wr_en;
-        daq_out(238)            <= fifo_len_rd_en;
-        daq_out(239)            <= fifo_empty_len;
-        daq_out(240)            <= fifo_full_UDP;
-        daq_out(255 downto 241) <= (others => '0');
-    
-    
-    end Behavioral;
+udp_tx_start                <= udp_tx_start_int;
+udp_txi.data.data_out_last  <= data_out_last;
+udp_txi.data.data_out_valid <= data_out_valid ;
+udp_txi.data.data_out       <= data_out;
+
+daq_data_in_int             <= daq_data_in;
+wr_en_int                   <= wr_en;
+sending_o                   <= sending;
+
+trigger_out                 <= trigger;
+   
+ila_daq_send : ila_0
+    port map
+    (
+        clk           => clk_125, 
+        probe0        => daq_out,
+        probe1        => udp_tx_data_out_ready
+    );   
+
+daq_out(0)              <= end_packet_synced;
+daq_out(1)              <= fifo_empty_UDP;
+daq_out(2)              <= daq_fifo_re;
+daq_out(3)              <= data_out_valid;
+daq_out(4)              <= data_out_last;   
+daq_out(12 downto 5)    <= data_out;
+daq_out(38 downto 13)   <= std_logic_vector(to_unsigned(count, daq_out(38 downto 13)'length));    
+daq_out(39)             <= udp_tx_start_int;
+daq_out(40)             <= '0'; --udp_tx_data_out_ready;
+daq_out(48 downto 41)   <= daq_data_out;
+daq_out(112 downto 49)  <= daq_data_in;
+daq_out(113)            <= sending;
+daq_out(129 downto 114) <= std_logic_vector(packet_length);
+daq_out(145 downto 130) <= std_logic_vector(count_length);     
+daq_out(157 downto 146) <= packet_len_r;
+daq_out(221 downto 158) <= daq_data_in_int;
+daq_out(222)            <= wr_en_int;
+daq_out(223)            <= wr_en;
+daq_out(235 downto 224) <= packet_length_in;
+daq_out(236)            <= udp_tx_data_out_ready;
+daq_out(237)            <= fifo_len_wr_en;
+daq_out(238)            <= fifo_len_rd_en;
+daq_out(239)            <= fifo_empty_len;
+daq_out(240)            <= fifo_full_UDP;
+daq_out(243 downto 241) <= vmmID_i;
+daq_out(244)            <= trigger;
+daq_out(255 downto 245) <= (others => '0');
+
+
+end Behavioral;

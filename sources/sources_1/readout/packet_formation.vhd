@@ -10,8 +10,8 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 25.07.2016 Added DAQ FIFO reset every vmm packet sent
--- 
+-- 25.07.2016 Added DAQ FIFO reset every vmm packet sent XXXXXX (NOW REMOVED) XXXXX
+-- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -295,7 +295,7 @@ begin
                 if vmmId_cnt >= 7 then
                     vmmId_cnt   <= 0;
                     state       <= resetVMMs;
-                elsif (UDPDone = '1') then -- changed to make the fifuke utterly useless
+                else
                     vmmId_cnt   <= vmmId_cnt + 1;
                     state       <= S2;
                 end if;

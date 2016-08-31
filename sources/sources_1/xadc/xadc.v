@@ -22,7 +22,7 @@
 
 module xadc #
 (
-    parameter   max_packet_size = 9'b10010110 // Max of 150 packets per UDP frame
+    parameter   max_packet_size = 9'b100101100 // Max of 300 32 bit packets per UDP frame
 //    parameter   sample_size   = 11'b1111111111, // 1023 packets
 //    parameter   delay_in = 18'b11111111111111111 // Delay 131072 clock cycles to spread 1023 samples over ~0.7 seconds
 )
@@ -121,8 +121,6 @@ reg             chan_done_r;
 reg             init_chan_r;
 reg             type_done_r;
 reg [63:0]      packet; // Putting 5 12-bit words in each packet
-reg [31:0]      packet_0;
-reg [31:0]      packet_1;
 reg [8:0]       pkt_cnt;
 reg [2:0]       read_cnt;
 reg [15:0]      vmm_id_r;
@@ -133,7 +131,6 @@ reg             fifo_done_r;
 reg             end_of_data_r;
 reg             full_pkt_r;
 reg [11:0]      test_counter = 0; // Initialize to zero to ensure accurate counts
-reg [2:0]       wr_cnt;
 reg             xadc_busy_r;
 
 parameter idle = 4'b0, st1 = 4'b1, st2 = 4'b10, st3 = 4'b11, st4 = 4'b100, st5 = 4'b101, st6 = 4'b110, st7 = 4'b111;
@@ -189,7 +186,6 @@ begin
             delay <= 18'b0;
             vmm_id_sel <= 3'b0;
             xadc_busy_r <= 1'b0;
-            wr_cnt      <= 3'b0;
         end
     else
         begin
@@ -402,21 +398,15 @@ begin
             st_pkt     <= idle;
             read_cnt   <= 3'b0;
             packet     <= 64'b0;
-            packet_0   <= 32'b0;
-            packet_1   <= 32'b0;
             full_pkt_r <= 1'b0;
             pkt_cnt    <= 9'b0;
-            wr_cnt      <= 3'b0;
         end
     if(rst_pkt)
         begin
             st_pkt     <= idle;
             read_cnt   <= 3'b0;
             packet     <= 64'b0;
-            packet_0   <= 32'b0;
-            packet_1   <= 32'b0;
             full_pkt_r <= 1'b0;
-            wr_cnt      <= 3'b0;
         end
     else if (rst_pkt2 == 1'b1)
         pkt_cnt <= 9'b0;
@@ -441,20 +431,15 @@ begin
                     else if (read_cnt == 3'b010) packet[35:24] <= xadc_result_r;
                     else if (read_cnt == 3'b011) packet[47:36] <= xadc_result_r;
                     else if (read_cnt == 3'b100) packet[59:48] <= xadc_result_r;
-                    else if (read_cnt == 3'b101) 
-                        begin
-                            packet_0    <= packet[63:32];
-                            packet_1    <= packet[31:0];
-                        end
 
-                    if (read_cnt == 3'b101) // packet is full, send packet and reset the read_cnt
+                    if (read_cnt == 3'b100) // packet is full, send packet and reset the read_cnt
                         begin
                             read_cnt    <= 3'b0;
                             full_pkt_r  <= 1'b1;
                         end
                     else if (read_cnt == 3'b000) // Packet has data, increment packet count on first write
                         begin
-                            pkt_cnt <= pkt_cnt + 1'b1; // Increment the packet count
+                            pkt_cnt <= pkt_cnt + 2'b10; // Increment the packet count by 2 for 32 bit
                             read_cnt <= read_cnt + 1'b1;
                         end
                     else
@@ -503,69 +488,42 @@ begin
                         st_wr <= idle;
                 end
 
-            st1 : // loop state for writing
+            st1 : // loop state for writing first part of packet
                 begin
-                    if (wr_cnt == 3'b000)
-                        begin
-                            data_fifo_enable_r <= 1'b0;
-                            fifo_bus_r         <= packet_0;
-                            wr_cnt             <= wr_cnt + 1'b1;
-                        end
+					data_fifo_enable_r <= 1'b1;
+					st_wr <= st2;
+					fifo_bus_r <= packet[63:32];
+				end
 
-                    else if (wr_cnt == 3'b001)
-                        begin
-                            data_fifo_enable_r <= 1'b1;
-                            wr_cnt             <= wr_cnt + 1'b1;
-                        end
+			st2 : // loop state for writing second part of packet
+					data_fifo_enable_r <= 1'b1;
+					st_wr <= st3;
+					fifo_bus_r <= packet[31:0];
 
-                    else if (wr_cnt == 3'b010)
-                        begin
-                            data_fifo_enable_r <= 1'b0;
-                            fifo_bus_r         <= packet_1;
-                            wr_cnt             <= wr_cnt + 1'b1;
-                        end
-                    
+					if (pkt_cnt >= max_packet_size || write_start == 1'b1) // If maximum packets or finished with data
+						begin
+							end_of_data_r <= 1'b1;
+							fifo_done_r <= 1'b1;
+							rst_pkt2_r <= 1'b1; // reset the packet count
+						end                
+					end
+				end
 
-                    else if (wr_cnt == 3'b011)
-                        begin
-                            data_fifo_enable_r <= 1'b1;
-                            wr_cnt             <= wr_cnt + 1'b1;
-                        end
+			st3 : // Reset packet contents
+				begin                
+					rst_pkt2_r <= 1'b0;
+					fifo_done_r <= 1'b0;
+					data_fifo_enable_r <= 1'b0;
+					rst_pkt_r <= 1'b1;
+					end_of_data_r <= end_of_data_r; // Ensure the 125 MHz clock can recieve the signal
+					st_wr <= st4;
+				end
 
-                    else if (wr_cnt == 3'b100)
-                        begin
-                            data_fifo_enable_r <= 1'b0;
-                            wr_cnt             <= wr_cnt + 1'b1;
-                        end
-
-                    else if (wr_cnt == 3'b101)
-                        begin
-                            st_wr              <= st2;
-                            wr_cnt             <= 3'b0;
-                        if (pkt_cnt == max_packet_size || write_start == 1'b1) // If maximum packets or finished with data
-                            begin
-                                end_of_data_r <= 1'b1;
-                                fifo_done_r <= 1'b1;
-                                rst_pkt2_r <= 1'b1; // reset the packet count
-                            end                
-                        end
-                    end
-
-        st2 : // Reset packet contents
-            begin                
-                rst_pkt2_r <= 1'b0;
-                fifo_done_r <= 1'b0;
-                data_fifo_enable_r <= 1'b0;
-                rst_pkt_r <= 1'b1;
-                end_of_data_r <= end_of_data_r; // Ensure the 125 MHz clock can recieve the signal
-                st_wr <= st3;
-            end
-
-        st3 : // Wait state
-            begin
-                st_wr <= idle;
-                end_of_data_r <= 1'b0;
-            end
+			st4 : // Wait state
+				begin
+					st_wr <= idle;
+					end_of_data_r <= 1'b0;
+				end
 
         default :
             st_wr <= idle;

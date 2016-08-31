@@ -496,6 +496,7 @@ begin
 				end
 
 			st2 : // loop state for writing second part of packet
+			     begin
 					data_fifo_enable_r <= 1'b1;
 					st_wr <= st3;
 					fifo_bus_r <= packet[31:0];
@@ -507,7 +508,7 @@ begin
 							rst_pkt2_r <= 1'b1; // reset the packet count
 						end                
 					end
-				end
+				
 
 			st3 : // Reset packet contents
 				begin                

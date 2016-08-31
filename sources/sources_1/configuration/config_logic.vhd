@@ -37,9 +37,10 @@ entity config_logic is
         clk_in              : in  std_logic;
         
         reset               : in  std_logic;
+        rst_reply           : in  std_logic;
 
         user_data_in        : in  std_logic_vector (7 downto 0);
-        user_data_out       : out std_logic_vector (63 downto 0);
+        user_data_out       : out std_logic_vector (31 downto 0);
 
         udp_rx              : in udp_rx_type;
         resp_data           : out udp_response;
@@ -49,6 +50,7 @@ entity config_logic is
         user_wr_en          : in  std_logic;
         user_last           : in  std_logic;
         configuring         : in  std_logic;
+        begin_conf_reply    : in  std_logic;
         
         we_conf             : out std_logic;
         
@@ -61,10 +63,14 @@ entity config_logic is
         conf_done           : out std_logic;
         ext_trigger         : out std_logic;
         
+        conf_len_out        : out std_logic_vector(11 downto 0);
         ACQ_sync            : out std_logic_vector(15 downto 0);
         
         udp_header          : in std_logic;
         packet_length       : in std_logic_vector (15 downto 0);
+
+        reply_done_out      : out std_logic;
+        end_packet_conf     : out std_logic;
 
         xadc_busy           : in std_logic;
         xadc_start          : out std_logic;
@@ -75,6 +81,11 @@ entity config_logic is
 end config_logic;
 
 architecture rtl of config_logic is
+
+    ----------- REPLY CONSTANTS ----------------------------------------------
+    constant payload_0          : std_logic_vector(31 downto 0) := x"C0CAC01A";
+    constant trailer            : std_logic_vector(31 downto 0) := x"FFFFFFFF";
+    --------------------------------------------------------------------------
 
     signal packet_length_int    : integer := 0;
     signal reading_packet       : std_logic := '0';
@@ -109,7 +120,7 @@ architecture rtl of config_logic is
     signal udp_response_int     : udp_response;
     signal start_vmm_conf_int   : std_logic := '0';
     signal start_vmm_conf_synced   : std_logic := '0';
---    signal we_conf_int          : std_logic := '0';
+    signal we_conf_i           : std_logic := '0';
     signal vmm_we_int          : std_logic := '0';
     signal cnt_cktk            : integer := 0;
     signal DAQ_START_STOP      : std_logic_vector(31 downto 0);
@@ -117,7 +128,14 @@ architecture rtl of config_logic is
     signal data_length         : integer := 0;
     signal cnt_reply           : integer := 0;
     signal delay_user_last     : std_logic := '0';
+    signal packLen_i           : std_logic_vector(11 downto 0) := x"000";
+    signal packLen_cnt         : unsigned(11 downto 0)         := x"000";
     signal ERROR               : std_logic_vector(15 downto 0);
+    signal user_data_out_i     : std_logic_vector(31 downto 0);
+
+    signal reply_done_i        : std_logic := '0';
+    signal reply_init_i        : std_logic := '0';
+    signal end_packet_conf_i   : std_logic := '0';
 
     signal vmm_id_xadc_i        : std_logic_vector(15 downto 0);
     signal xadc_sample_size_i   : std_logic_vector(10 downto 0);
@@ -125,7 +143,8 @@ architecture rtl of config_logic is
     
     
     
-    type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC_Init, XADC, SEND_REPLY, TEST, REPLY);
+    type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC_Init, XADC,
+                      SEND_REPLY, TEST, REPLY, WAIT_FOR_REPLY_MAKER, WAIT_FOR_FLOW_FSM);
     signal state     : tx_state;  
     
     type state_t is (START, SEND1,SEND0, FINISHED, ONLY_CONF_ONCE);
@@ -200,6 +219,11 @@ architecture rtl of config_logic is
 
 begin
 
+    reply_done_out  <= reply_done_i;
+    conf_len_out    <= packLen_i;
+    end_packet_conf <= end_packet_conf_i;
+    user_data_out   <= user_data_out_i;
+
  process (clk125)
     begin
     if clk125'event and clk125 = '1' then
@@ -230,10 +254,10 @@ begin
 ------------------------  DAQ ON        1111
 
 
-    process (clk125, state, configuring, cmd, reading_packet, count, packet_length_int, user_wr_en_int, last_synced200, user_wr_en, dest_port)
---    variable i : natural range 0 to 10 := 0; --1ms
+    process (clk125, state, configuring, cmd, reading_packet, count, packet_length_int, user_wr_en_int, last_synced200, user_wr_en, dest_port,
+     begin_conf_reply, reply_done_i, rst_reply)
     begin
-        if clk125'event and clk125 = '1' then	
+        if clk125'event and clk125 = '1' then   
           if reset = '1' then 
             state   <= IDLE;
           else
@@ -247,6 +271,7 @@ begin
                     sn              <= (others=> '0');
                     vmm_id_int      <= x"0000";
                     cmd             <= x"0000";
+                    reply_init_i    <= '0';
                     
                     if user_wr_en = '1' then
                         state   <= DATA;
@@ -423,35 +448,93 @@ begin
                         count <= 0;
                         state   <= IDLE;
                     end if;
-               when REPLY => 
-                    state   <= IDLE;
-                    
 
---                    if cnt_reply = 0 then
-----                        user_data_out_i <= conf_data_out_i;
---                        user_data_out   <= reply_package;
---                        cnt_reply   <= cnt_reply + 1;
---                    elsif cnt_reply = 1 then
---                        user_data_out_i <= (others => '0');
---                        cnt_reply   <= cnt_reply + 1;
---                        end_packet_conf_int <= '1';
---                        we_conf_int     <= '0';
---                    elsif cnt_reply > 1 and cnt_reply < 100 then
---                        cnt_reply   <= cnt_reply + 1;
---                    else
---                        cnt_reply           <= 0;
---                        state               <= IDLE;
-----                        state               <= DAQ_INIT;
---                        end_packet_conf_int <= '1';
---                    end if;
+                when REPLY => 
 
+               		if(begin_conf_reply = '1')then
+               			reply_init_i  <= '1'; 					-- go to reply_maker
+                    	state   	  <= WAIT_FOR_REPLY_MAKER;
+                    else null;
+                    end if; 
 
-                    
-               when others =>    
+                when WAIT_FOR_REPLY_MAKER =>
+                	if(reply_done_i = '1')then 				-- has reply_maker finished?
+                		state 	   <= IDLE;
+                	else null;
+                	end if;
+                   
+               when others => null;
             end case;
-	    end if;
-	  end if;
+        end if;
+      end if;
     end process;
+
+reply_maker: process(clk200, cnt_reply, reply_init_i, rst_reply) -- process that creates reply packets
+
+	begin
+		if(rising_edge(clk200))then
+
+			if(rst_reply = '1')then
+			
+                we_conf_i 		<= '0';
+				packLen_cnt     <= x"000";
+				user_data_out_i	<= (others => '0');
+				cnt_reply       <=  0;
+				reply_done_i    <= '0';
+				end_packet_conf_i  	 <= '0'; 
+
+			elsif(reply_init_i = '1' and rst_reply = '0')then
+
+				if(cnt_reply = 0)then
+				    we_conf_i 		<= '0';
+					user_data_out_i <= payload_0;					
+					cnt_reply 		<= cnt_reply + 1;
+
+				elsif(cnt_reply = 1)then
+					we_conf_i 		<= '1';
+					packLen_cnt     <= packLen_cnt + 1; -- payload_0 just written in the FIFO
+					cnt_reply 		<= cnt_reply + 1;
+
+				elsif(cnt_reply = 2)then
+				    we_conf_i 		<= '0';
+					user_data_out_i <= trailer;					
+					cnt_reply 		<= cnt_reply + 1;
+
+				elsif(cnt_reply = 3)then
+					we_conf_i 		<= '1';
+					packLen_cnt     <= packLen_cnt + 1; -- trailer just written in the FIFO
+					cnt_reply 		<= cnt_reply + 1;
+
+				elsif(cnt_reply = 4)then
+				    we_conf_i 		<= '0';															
+					cnt_reply 		<= cnt_reply + 1;
+					
+                elsif(cnt_reply = 5)then
+                    packLen_i       <= std_logic_vector(packLen_cnt); -- send reply length
+                    cnt_reply 		<= cnt_reply + 1;
+
+				elsif(cnt_reply >= 6 and cnt_reply < 8)then -- send end_packet
+					end_packet_conf_i    <= '1';
+					cnt_reply 		     <= cnt_reply + 1;
+
+				elsif(cnt_reply >= 8 and cnt_reply < 200)then -- delay and wait for FIFO2UDP
+					end_packet_conf_i  	 <= '0';
+					cnt_reply 		     <= cnt_reply + 1; 					
+					
+				elsif(cnt_reply >=200 and cnt_reply < 300)then -- hold reply_done high for flow_fsm and go back to config_fsm
+				    reply_done_i         <= '1';
+				    cnt_reply 		     <= cnt_reply + 1;
+
+				else null;
+								
+				end if;
+
+			else null;
+			end if;
+
+		end if; --clk
+
+	end process;
            
         
 --synced_to_clkin: process(clk_in) 
@@ -576,7 +659,7 @@ sync_start_vmm_conf: process(clk200)
 --        );              
                      
 
---we_conf     <= we_conf_int;
+we_conf     <= we_conf_i;
 
 --vmm_we_int  <= vmm_we;
                          

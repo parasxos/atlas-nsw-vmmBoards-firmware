@@ -40,11 +40,12 @@ port(
     we_data                     : in  std_logic;
     we_conf                     : in  std_logic;
     we_xadc                     : in  std_logic;
-    daq_data_in                 : in  std_logic_vector(63 downto 0);
-    conf_data_in                : in  std_logic_vector(63 downto 0);
-    xadc_data_in                : in  std_logic_vector(63 downto 0);
+    daq_data_in                 : in  std_logic_vector(31 downto 0);
+    conf_data_in                : in  std_logic_vector(31 downto 0);
+    xadc_data_in                : in  std_logic_vector(31 downto 0);
     data_packet_length          : in  std_logic_vector(11 downto 0);
     xadc_packet_length          : in  std_logic_vector(11 downto 0);
+    conf_packet_length          : in  std_logic_vector(11 downto 0);
     end_packet_conf             : in  std_logic;
     end_packet_daq              : in  std_logic;
     end_packet_xadc             : in  std_logic;
@@ -52,7 +53,7 @@ port(
     fifo_rst_xadc               : in  std_logic;
     rstFIFO_top                 : in std_logic;
 
-    data_out                    : out std_logic_vector(63 downto 0);
+    data_out                    : out std_logic_vector(31 downto 0);
     packet_length               : out std_logic_vector(11 downto 0);
     we                          : out std_logic;
     end_packet                  : out std_logic;
@@ -73,7 +74,7 @@ begin
             when "100" => -- Configuration
                 we              <= we_conf;
                 data_out        <= conf_data_in;
-                packet_length   <= x"002"; -- constant length
+                packet_length   <= conf_packet_length; -- constant length
                 end_packet      <= end_packet_conf;
                 fifo_rst_i      <= '0';
             when "010" => -- DAQ

@@ -11,10 +11,6 @@ vivado -mode batch -source build_mmfe8.tcl
 
 e-mail: paris.moschovakos@cern.ch
 
-
-------------------------------------------------------------------------------------------
-------------   BUILD_MMFE8.TCL SCRIPT README (also contained in the .tcl script itself) --
------ Added on 27/07/2016 ----------------------------------------------------------------
 #################################  README FIRST ##########################################
 
  The build_mmfe8.tcl script points to the source files needed to re-create the project

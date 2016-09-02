@@ -13,7 +13,8 @@
 -- 22.08.2016 Changed vmm_data0_i to reading_out_word in dt_state x"5" to prevent soft reset
 -- during VMM readout (Reid Pinkham)
 -- 22.08.2016 Changed dt_cntr_intg (integer) to dt_cntr_st (4 bit vector) (Reid Pinkham)
---
+-- 01.09.2016 Changed the data bus width, making it 32-bit-wide. VMMWord is now
+-- made up of two 32-bit chunks. (Christos Bakalis) 
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -372,4 +373,4 @@ port map
     probe0_out(99 downto 92)    <=  std_logic_vector(to_unsigned(hitsLen_cnt, probe0_out(101 downto 94)'length));   -- OK
     probe0_out(127 downto 100)  <=  (others => '0');
 
-end behavioral;
+end Behavioral;

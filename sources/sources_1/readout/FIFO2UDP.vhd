@@ -23,6 +23,9 @@
 -- jumbo UDP frames. (P.M.)
 -- 22.08.2016 Re-wrote the main logic into a single state machine to fix the freezing
 -- bug. (Reid Pinkham)
+-- 01.09.2016 Changed the data bus width, making it 32-bit-wide. Also changed the 
+-- read_proc FSM to accomodate the new packet format as now the trailer is being 
+-- formed in packet formation. (Christos Bakalis) 
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -85,8 +88,6 @@ architecture Behavioral of FIFO2UDP is
     signal packet_len_r                : std_logic_vector(11 downto 0);
     signal fifo_empty_len              : std_logic;
     signal state                       : std_logic_vector(3 downto 0) := "0000";
-    
-    signal is_trailer                  : integer := 0;
     
     signal daq_data_out                : std_logic_vector(7 downto 0) := x"00";
     
@@ -318,9 +319,9 @@ begin
 
                 when x"6" =>
                     if udp_tx_data_out_ready = '1' then   
-                      count_length  <= count_length - 1;      
+                      count_length              <= count_length - 1;      
                       udp_tx_start_int          <= '0'; 
-                      data_out                    <= daq_data_out;
+                      data_out                  <= daq_data_out;
                       count                     <= x"7";
                     end if;
 
@@ -336,7 +337,7 @@ begin
                         else
                             daq_fifo_re                 <= '1';
                         end if; 
-                        count_length  <= count_length - 1;    
+                        count_length     <= count_length - 1;    
                         udp_tx_start_int                             <= '0';                
                         data_out_valid                               <= '1';   
                         control                                      <= '0';                                       

@@ -15,6 +15,9 @@
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals
 -- (Reid Pinkham)
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
+-- 01.09.2016 Changed the internal data bus from 64 to 32-bit. Also, the 
+-- configuration reply packet is now created in the config_logic module. 
+-- xADC is now also 32-bit wide.(Christos Bakalis)
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -526,7 +529,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
-    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ, XADC_run);
+    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, CHECK_FOR_DONE, DELAY_AND_HOLD, DAQ_INIT, TRIG, DAQ, XADC_run);
     signal state        : state_t;
     signal rstFIFO_top  : std_logic := '0';
 
@@ -554,13 +557,14 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------------------------------------
     signal tied_to_gnd_vec_i    : std_logic_vector(31 downto 0) := (others => '0');
     signal big_cnt              : integer := 0;
+    signal delay_cnt            : integer := 0;
 
     -------------------------------------------------------------------
     -- These attribute will stop timing errors being reported in back
     -- annotated SDF simulation.
     -------------------------------------------------------------------
---    attribute ASYNC_REG                         : string;
---    attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
+    attribute ASYNC_REG                         : string;
+    attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
   
     -------------------------------------------------------------------
     -- Keep signals for ILA
@@ -830,10 +834,10 @@ architecture Behavioral of mmfe8_top is
             destinationIP               : in std_logic_vector(31 downto 0);
             daq_data_in                 : in  std_logic_vector(31 downto 0);
             fifo_data_out               : out std_logic_vector (7 downto 0);
-            udp_txi                        : out udp_tx_type;    
+            udp_txi                     : out udp_tx_type;    
             udp_tx_start                : out std_logic;
-            re_out                        : out std_logic;
-            control                        : out std_logic;
+            re_out                      : out std_logic;
+            control                     : out std_logic;
             UDPDone                     : out std_logic;
             udp_tx_data_out_ready       : in  std_logic;
             wr_en                       : in  std_logic;
@@ -965,36 +969,36 @@ architecture Behavioral of mmfe8_top is
   component UDP_Complete_nomac
      Port (
       -- UDP TX signals
-      udp_tx_start      : in std_logic;                 -- indicates req to tx UDP
-      udp_txi         : in udp_tx_type;             -- UDP tx cxns
-      udp_tx_result     : out std_logic_vector (1 downto 0);        -- tx status (changes during transmission)
-      udp_tx_data_out_ready   : out std_logic;              -- indicates udp_tx is ready to take data
+      udp_tx_start              : in std_logic;                 -- indicates req to tx UDP
+      udp_txi                   : in udp_tx_type;             -- UDP tx cxns
+      udp_tx_result             : out std_logic_vector (1 downto 0);        -- tx status (changes during transmission)
+      udp_tx_data_out_ready     : out std_logic;              -- indicates udp_tx is ready to take data
       -- UDP RX signals
-      udp_rx_start      : out std_logic;              -- indicates receipt of udp header
-      udp_rxo         : out udp_rx_type;
+      udp_rx_start              : out std_logic;              -- indicates receipt of udp header
+      udp_rxo                   : out udp_rx_type;
       -- IP RX signals
-      ip_rx_hdr       : out ipv4_rx_header_type;
+      ip_rx_hdr                 : out ipv4_rx_header_type;
       -- system signals
-      rx_clk          : in  STD_LOGIC;
-      tx_clk          : in  STD_LOGIC;
-      reset           : in  STD_LOGIC;
-      our_ip_address        : in STD_LOGIC_VECTOR (31 downto 0);
-      our_mac_address     : in std_logic_vector (47 downto 0);
-      control         : in udp_control_type;
+      rx_clk                    : in  STD_LOGIC;
+      tx_clk                    : in  STD_LOGIC;
+      reset                     : in  STD_LOGIC;
+      our_ip_address            : in STD_LOGIC_VECTOR (31 downto 0);
+      our_mac_address           : in std_logic_vector (47 downto 0);
+      control                   : in udp_control_type;
       -- status signals
-      arp_pkt_count     : out STD_LOGIC_VECTOR(7 downto 0);     -- count of arp pkts received
-      ip_pkt_count      : out STD_LOGIC_VECTOR(7 downto 0);     -- number of IP pkts received for us
+      arp_pkt_count             : out STD_LOGIC_VECTOR(7 downto 0);     -- count of arp pkts received
+      ip_pkt_count              : out STD_LOGIC_VECTOR(7 downto 0);     -- number of IP pkts received for us
       -- MAC Transmitter
-      mac_tx_tdata            : out  std_logic_vector(7 downto 0);      -- data byte to tx
-      mac_tx_tvalid           : out  std_logic;             -- tdata is valid
-      mac_tx_tready           : in std_logic;                 -- mac is ready to accept data
-      mac_tx_tfirst           : out  std_logic;             -- indicates first byte of frame
-      mac_tx_tlast            : out  std_logic;             -- indicates last byte of frame
+      mac_tx_tdata              : out  std_logic_vector(7 downto 0);      -- data byte to tx
+      mac_tx_tvalid             : out  std_logic;             -- tdata is valid
+      mac_tx_tready             : in std_logic;                 -- mac is ready to accept data
+      mac_tx_tfirst             : out  std_logic;             -- indicates first byte of frame
+      mac_tx_tlast              : out  std_logic;             -- indicates last byte of frame
       -- MAC Receiver
-      mac_rx_tdata            : in std_logic_vector(7 downto 0);          -- data byte received
-      mac_rx_tvalid           : in std_logic;                 -- indicates tdata is valid
-      mac_rx_tready           : out  std_logic;             -- tells mac that we are ready to take data
-      mac_rx_tlast            : in std_logic);              -- indicates last byte of the trame
+      mac_rx_tdata              : in std_logic_vector(7 downto 0);          -- data byte received
+      mac_rx_tvalid             : in std_logic;                 -- indicates tdata is valid
+      mac_rx_tready             : out  std_logic;             -- tells mac that we are ready to take data
+      mac_rx_tlast              : in std_logic);              -- indicates last byte of the trame
   end component;
     -- 14
     component temac_10_100_1000_fifo_block
@@ -1072,7 +1076,7 @@ architecture Behavioral of mmfe8_top is
     -- 17
   component i2c_top is
   port(  
-      clk_in            : in    std_logic;    
+      clk_in              : in    std_logic;    
         phy_rstn_out      : out   std_logic
   );  
   end component;
@@ -1098,6 +1102,7 @@ architecture Behavioral of mmfe8_top is
         user_last           : in  std_logic;
         configuring         : in  std_logic;
         begin_conf_reply    : in  std_logic;
+        UDP_done_conf       : in  std_logic;
         
         we_conf             : out std_logic;
         
@@ -1228,27 +1233,27 @@ gen_vector_reset: process (userclk2)
    -- Transceiver PMA reset circuitry
    -----------------------------------------------------------------------------
    
-   -- Create a reset pulse of a decent length
---   process(glbl_rst_i, clk_200)
---   begin
---     if (glbl_rst_i = '1') then
---       pma_reset_pipe <= "1111";
---     elsif clk_200'event and clk_200 = '1' then
---       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
---     end if;
---   end process;
-   
-   process(clk_200, glbl_rst_i)
+--    Create a reset pulse of a decent length
+   process(glbl_rst_i, clk_200)
    begin
-        if(rising_edge(clk_200))then
-            if(glbl_rst_i = '1')then
-                pma_reset_pipe <= "1111";
-            else 
-                pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
-            end if;
-        end if;
-   
+     if (glbl_rst_i = '1') then
+       pma_reset_pipe <= "1111";
+     elsif clk_200'event and clk_200 = '1' then
+       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
+     end if;
    end process;
+   
+--   process(clk_200, glbl_rst_i)
+--   begin
+--        if(rising_edge(clk_200))then
+--            if(glbl_rst_i = '1')then
+--                pma_reset_pipe <= "1111";
+--            else 
+--                pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
+--            end if;
+--        end if;
+   
+--   end process;
 
    pma_reset <= pma_reset_pipe(3);
 
@@ -1426,34 +1431,34 @@ gen_gtx_reset: process (userclk2)
 
 UDP_block: UDP_Complete_nomac
   Port map(
-      udp_tx_start        => udp_tx_start_int,
-      udp_txi           => udp_txi_int, 
-      udp_tx_result       => open,
-      udp_tx_data_out_ready     => udp_tx_data_out_ready_int, 
-      udp_rx_start        => udp_header_int,                  -- indicates receipt of udp header
-      udp_rxo           => udp_rx_int,
-      ip_rx_hdr         => ip_rx_hdr_int, 
-      rx_clk            => userclk2,
-      tx_clk            => userclk2,
-      reset             => glbl_rst_i,
-      our_ip_address          => myIP,
-      our_mac_address       => myMAC,
-      control           => control,
-      arp_pkt_count       => open,
-      ip_pkt_count        => open,
-      mac_tx_tdata              => tx_axis_mac_tdata_int,
-      mac_tx_tvalid             => tx_axis_mac_tvalid_int,
-      mac_tx_tready             => tx_axis_mac_tready_int,
-      mac_tx_tfirst             => open,
-      mac_tx_tlast              => tx_axis_mac_tlast_int,
-      mac_rx_tdata              => rx_axis_mac_tdata_int,
-      mac_rx_tvalid             => rx_axis_mac_tvalid_int,
-      mac_rx_tready             => rx_axis_mac_tready_int,
-      mac_rx_tlast              => rx_axis_mac_tlast_int);
+      udp_tx_start                => udp_tx_start_int,
+      udp_txi                     => udp_txi_int, 
+      udp_tx_result               => open,
+      udp_tx_data_out_ready       => udp_tx_data_out_ready_int, 
+      udp_rx_start                => udp_header_int,                  -- indicates receipt of udp header
+      udp_rxo                     => udp_rx_int,
+      ip_rx_hdr                   => ip_rx_hdr_int, 
+      rx_clk                      => userclk2,
+      tx_clk                      => userclk2,
+      reset                       => glbl_rst_i,
+      our_ip_address              => myIP,
+      our_mac_address             => myMAC,
+      control                     => control,
+      arp_pkt_count               => open,
+      ip_pkt_count                => open,
+      mac_tx_tdata                => tx_axis_mac_tdata_int,
+      mac_tx_tvalid               => tx_axis_mac_tvalid_int,
+      mac_tx_tready               => tx_axis_mac_tready_int,
+      mac_tx_tfirst               => open,
+      mac_tx_tlast                => tx_axis_mac_tlast_int,
+      mac_rx_tdata                => rx_axis_mac_tdata_int,
+      mac_rx_tvalid               => rx_axis_mac_tvalid_int,
+      mac_rx_tready               => rx_axis_mac_tready_int,
+      mac_rx_tlast                => rx_axis_mac_tlast_int);
 
 i2c_module: i2c_top
      port map(  clk_in            => clk_200,
-              phy_rstn_out      => phy_rstn_out);
+              phy_rstn_out        => phy_rstn_out);
 
 configuration_logic: config_logic
         Port map( 
@@ -1471,7 +1476,8 @@ configuration_logic: config_logic
             user_wr_en          => udp_rx_int.data.data_in_valid,
             user_last           => udp_rx_int.data.data_in_last,
             configuring         => '0', --configuring_i,
-            begin_conf_reply    => begin_conf_reply_i, 
+            begin_conf_reply    => begin_conf_reply_i,
+            UDP_done_conf       => UDPDone, 
             we_conf             => we_conf_int,
             vmm_id              => vmm_id,
             cfg_bit_out         => conf_di_i,
@@ -1972,6 +1978,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                    -- end_packet_conf_int     <= '0';
                     start_conf_proc_int     <= '0';
                     big_cnt                 <= 0;
+                    rst_reply_i         <= '0';
 
                     if status_int_synced = "0010" then      -- VMM conf x8: 0010
                         cnt_vmm       <= 8;
@@ -2003,7 +2010,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                         cnt_vmm     <= cnt_vmm - 1;
                         if cnt_vmm = 1 then --VMM conf done
                             state           <= SEND_CONF_REPLY;
-                            rst_reply_i     <= '0';
+                          --  rst_reply_i     <= '0';
                           --  we_conf_int     <= '1';
                         else
                             state       <= CONFIGURE_DELAY;
@@ -2024,27 +2031,25 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                         w <= w + 1;
                     end if;
                     
-                when    SEND_CONF_REPLY    =>
+                when  SEND_CONF_REPLY    =>
                    is_state            <= "1010";
-                   rst_reply_i         <= '0';
                    begin_conf_reply_i  <= '1'; -- signals the start of reply packet creation at configuration block
+                   state               <= CHECK_FOR_DONE;
 
---                  if(big_cnt < 1_500)then -- big counter, just to make sure the flow_fsm doesn't get stuck here
+                when CHECK_FOR_DONE =>
+                  if(reply_done_i = '1')then  --wait for configuration block to finish making + sending the reply                        
+                    state       <= DELAY_AND_HOLD;
+                    rst_reply_i <= '1';
+                  else null;
+                  end if;
 
---                    big_cnt <= big_cnt + 1;
-
-                    if(reply_done_i = '1')then --wait for configuration block to finish making + sending the reply
-                        rst_reply_i <= '1';
-                        state       <= IDLE;
-                    else null;
-                    end if;
-
---                    elsif(big_cnt = 1_500)then -- abort waiting for reply
---                      rst_reply_i <= '1'; 
---                      state       <= IDLE;
---                    else null;
---                    end if;
-
+                when DELAY_AND_HOLD => -- hold rst_reply_i high for 30 cycles so that config_fsm latches it in time (different clock domains)
+                  if(delay_cnt < 30)then
+                    delay_cnt   <= delay_cnt + 1;
+                  else
+                    delay_cnt   <= 0;
+                    state       <= IDLE;
+                  end if;              
 
                 when DAQ_INIT =>
                     is_state                <= "0011";
@@ -2104,7 +2109,7 @@ end process;
     test_last_out           <= udp_txi_int.data.data_out_last;
 
     fifo_data               <= fifo_data_out_int;
-  re_out                  <= re_out_int;
+    re_out                  <= re_out_int;
 
 
 ila_top: ila_top_level

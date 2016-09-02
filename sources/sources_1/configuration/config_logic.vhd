@@ -16,8 +16,10 @@
 -- Revision 0.01 - File Created
 -- Additional Comments:
 -- Changelog:
--- 02.08.2016 Added ONLY_CONF_ONCE as a state to prevent multiple configuratoins
---      of the VMM. (Reid Pinkham)
+-- 02.08.2016 Added ONLY_CONF_ONCE as a state to prevent multiple configurations
+-- of the VMM. (Reid Pinkham)
+-- 01.09.2016 New, dynamic configuration reply packet is being created in this 
+-- module. (Christos Bakalis)
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -51,6 +53,7 @@ entity config_logic is
         user_last           : in  std_logic;
         configuring         : in  std_logic;
         begin_conf_reply    : in  std_logic;
+        UDP_done_conf       : in  std_logic;
         
         we_conf             : out std_logic;
         
@@ -140,6 +143,11 @@ architecture rtl of config_logic is
     signal vmm_id_xadc_i        : std_logic_vector(15 downto 0);
     signal xadc_sample_size_i   : std_logic_vector(10 downto 0);
     signal xadc_delay_i         : std_logic_vector(17 downto 0);
+    signal rst_reply_i          : std_logic := '0';
+    signal rst_main_proc_latched    : std_logic := '0';
+    signal begin_reply_latched      : std_logic := '0';
+    
+    signal debug_state : std_logic_vector(2 downto 0) := (others => '0');
     
     
     
@@ -149,6 +157,12 @@ architecture rtl of config_logic is
     
     type state_t is (START, SEND1,SEND0, FINISHED, ONLY_CONF_ONCE);
     signal conf_state  : state_t; 
+
+    type reply_state_t is (IDLE, REPLY, DONE_AND_WAIT);
+    signal reply_state : reply_state_t := IDLE;
+
+    signal reply_step : std_logic_vector(3 downto 0) := (others => '0');
+    signal reply_step_ila : std_logic_vector(3 downto 0) := (others => '0');
 
     attribute keep : string;
     attribute dont_touch : string;
@@ -167,6 +181,11 @@ architecture rtl of config_logic is
     attribute keep of start_conf_process          : signal is "true";
     attribute keep of conf_done_i                 : signal is "true";
     attribute keep of cnt_array                   : signal is "true";
+    attribute keep of reply_step                  : signal is "true";
+    attribute keep of rst_main_proc_latched       : signal is "true";
+    attribute keep of reply_step_ila              : signal is "true";
+    attribute dont_touch of reply_step_ila        : signal is "true";
+    
     
     attribute keep of DAQ_START_STOP                  : signal is "true";
     attribute dont_touch of DAQ_START_STOP            : signal is "true";    
@@ -189,6 +208,15 @@ architecture rtl of config_logic is
     attribute keep of vmm_id_xadc_i               : signal is "true";
     attribute keep of xadc_sample_size_i          : signal is "true";
     attribute keep of xadc_delay_i                : signal is "true";
+    attribute keep of reply_init_i                : signal is "true";
+    attribute dont_touch of reply_init_i          : signal is "true";
+    attribute keep of rst_reply_i                 : signal is "true";
+    attribute dont_touch of rst_reply_i                 : signal is "true";
+    
+    attribute dont_touch of reply_step                 : signal is "true";
+    
+    attribute dont_touch of rst_main_proc_latched       : signal is "true";
+    
     
 --    attribute keep of vmm_we_int                      : signal is "true";
 --    attribute dont_touch of vmm_we_int                : signal is "true";  
@@ -207,12 +235,12 @@ architecture rtl of config_logic is
       
     
   
---    component ila_user_FIFO IS
---        PORT (
---            clk         : IN std_logic;
---            probe0      : IN std_logic_vector(292 DOWNTO 0)
---        );
---    end component;    
+    component ila_user_FIFO IS
+        PORT (
+            clk         : IN std_logic;
+            probe0      : IN std_logic_vector(292 DOWNTO 0)
+        );
+    end component;    
 
      
 
@@ -252,10 +280,25 @@ begin
 ------------------------  FPGA_CONF     1001        
 ------------------------  REPLY         1011
 ------------------------  DAQ ON        1111
+------------------------  REPLY         1100
 
+begin_reply_ff: process(clk125) -- process to latch the begin_conf_reply from flow_fsm (different clock domains)
+begin
+    if(rising_edge(clk125))then
+        begin_reply_latched <= begin_conf_reply;
+    end if;
+end process;
 
-    process (clk125, state, configuring, cmd, reading_packet, count, packet_length_int, user_wr_en_int, last_synced200, user_wr_en, dest_port,
-     begin_conf_reply, reply_done_i, rst_reply)
+rst_reply_ff: process(clk125) -- process to latch the rst_reply from flow_fsm (different clock domains)
+begin
+    if(rising_edge(clk125))then
+        rst_main_proc_latched <= rst_reply;
+    end if;
+end process;
+         
+
+config_fsm: process (clk125, state, configuring, cmd, reading_packet, count, packet_length_int, user_wr_en_int, last_synced200, user_wr_en, dest_port,
+     begin_reply_latched, reply_done_i, rst_main_proc_latched)
     begin
         if clk125'event and clk125 = '1' then   
           if reset = '1' then 
@@ -362,9 +405,7 @@ begin
                     end if;        
                                 
                     if conf_done_i = '1' then 
---                        user_data_out   <= reply_package;
-                        state           <= DELAY;-- SEND_REPLY;   
---                        reading_packet  <= '0';
+                        state           <= DELAY;  
                         ERROR   <= x"0000";
                         status_int      <= "1011";
                     end if;    
@@ -450,18 +491,23 @@ begin
                     end if;
 
                 when REPLY => 
+                    
+                    MainFSMstate <= "1100";
 
-               		if(begin_conf_reply = '1')then
-               			reply_init_i  <= '1'; 					-- go to reply_maker
-                    	state   	  <= WAIT_FOR_REPLY_MAKER;
+                    if(begin_reply_latched = '1')then
+                        reply_init_i  <= '1';                   -- go to reply_maker
+                        state         <= WAIT_FOR_REPLY_MAKER;
                     else null;
                     end if; 
 
                 when WAIT_FOR_REPLY_MAKER =>
-                	if(reply_done_i = '1')then 				-- has reply_maker finished?
-                		state 	   <= IDLE;
-                	else null;
-                	end if;
+                
+                    MainFSMstate <= "1101";
+                
+                    if(rst_main_proc_latched = '1')then -- when reply_maker finished, flow_fsm signals the end of config reply
+                        state      <= IDLE;
+                    else null;
+                    end if;
                    
                when others => null;
             end case;
@@ -469,72 +515,90 @@ begin
       end if;
     end process;
 
-reply_maker: process(clk200, cnt_reply, reply_init_i, rst_reply) -- process that creates reply packets
+reply_maker: process(clk200, cnt_reply, reply_init_i, rst_reply, UDP_done_conf) -- process that creates reply packets
 
-	begin
-		if(rising_edge(clk200))then
+    begin
+        if(rising_edge(clk200))then
 
-			if(rst_reply = '1')then
-			
-                we_conf_i 		<= '0';
-				packLen_cnt     <= x"000";
-				user_data_out_i	<= (others => '0');
-				cnt_reply       <=  0;
-				reply_done_i    <= '0';
-				end_packet_conf_i  	 <= '0'; 
+            if(rst_reply = '1' or reset = '1')then
+                reply_state <= IDLE;
+            else
+                case reply_state is
 
-			elsif(reply_init_i = '1' and rst_reply = '0')then
+                when IDLE =>
+                    reply_step           <= "0000";
+                    we_conf_i            <= '0';
+                    packLen_cnt          <= x"000";
+                    user_data_out_i      <= (others => '0');
+                    cnt_reply            <=  0;
+                    reply_done_i         <= '0';
+                    end_packet_conf_i    <= '0'; 
 
-				if(cnt_reply = 0)then
-				    we_conf_i 		<= '0';
-					user_data_out_i <= payload_0;					
-					cnt_reply 		<= cnt_reply + 1;
+                    if(reply_init_i = '1' and rst_reply = '0')then
+                        reply_state <= REPLY;
+                    else null;
+                    end if;
 
-				elsif(cnt_reply = 1)then
-					we_conf_i 		<= '1';
-					packLen_cnt     <= packLen_cnt + 1; -- payload_0 just written in the FIFO
-					cnt_reply 		<= cnt_reply + 1;
+                when REPLY =>
+                    case reply_step is
 
-				elsif(cnt_reply = 2)then
-				    we_conf_i 		<= '0';
-					user_data_out_i <= trailer;					
-					cnt_reply 		<= cnt_reply + 1;
+                    when "0000" =>
+                        we_conf_i       <= '0';
+                        user_data_out_i <= payload_0;                   
+                        reply_step      <= "0001";
 
-				elsif(cnt_reply = 3)then
-					we_conf_i 		<= '1';
-					packLen_cnt     <= packLen_cnt + 1; -- trailer just written in the FIFO
-					cnt_reply 		<= cnt_reply + 1;
+                    when "0001" =>
+                        we_conf_i       <= '1';
+                        packLen_cnt     <= packLen_cnt + 1; -- payload_0 just written in the FIFO
+                        reply_step      <= "0010";
 
-				elsif(cnt_reply = 4)then
-				    we_conf_i 		<= '0';															
-					cnt_reply 		<= cnt_reply + 1;
-					
-                elsif(cnt_reply = 5)then
-                    packLen_i       <= std_logic_vector(packLen_cnt); -- send reply length
-                    cnt_reply 		<= cnt_reply + 1;
+                    when "0010" =>
+                        we_conf_i       <= '0';
+                        user_data_out_i <= trailer;                 
+                        reply_step      <= "0011";
 
-				elsif(cnt_reply >= 6 and cnt_reply < 8)then -- send end_packet
-					end_packet_conf_i    <= '1';
-					cnt_reply 		     <= cnt_reply + 1;
+                    when "0011" =>
+                        we_conf_i       <= '1';
+                        packLen_cnt     <= packLen_cnt + 1; -- trailer just written in the FIFO
+                        reply_step      <= "0100";
 
-				elsif(cnt_reply >= 8 and cnt_reply < 200)then -- delay and wait for FIFO2UDP
-					end_packet_conf_i  	 <= '0';
-					cnt_reply 		     <= cnt_reply + 1; 					
-					
-				elsif(cnt_reply >=200 and cnt_reply < 300)then -- hold reply_done high for flow_fsm and go back to config_fsm
-				    reply_done_i         <= '1';
-				    cnt_reply 		     <= cnt_reply + 1;
+                    when "0100" =>
+                        we_conf_i       <= '0';                                                        
+                        reply_step      <= "0101";
+                    
+                    when "0101" =>
+                        packLen_i       <= std_logic_vector(packLen_cnt); -- send reply length
+                        reply_step      <= "0110";
 
-				else null;
-								
-				end if;
+                    when "0110" =>
+                        end_packet_conf_i    <= '1'; -- send end_packet_conf
+                        reply_step           <= "0111";
 
-			else null;
-			end if;
+                    when "0111" => 
+                        end_packet_conf_i    <= '1'; -- send end_packet_conf (pulse twice)
+                        reply_step           <= "1000";
+                        reply_state          <= DONE_AND_WAIT;
 
-		end if; --clk
+                    when others => null;
+                    end case;
 
-	end process;
+
+                when DONE_AND_WAIT => -- pulses reply_done and waits for reset to fall back to idle state
+                    end_packet_conf_i    <= '0';
+                    if(UDP_done_conf = '1')then -- wait for FIFO to finish sending
+                        reply_step          <= "1001";
+                        reply_done_i         <= '1'; -- signals flow_fsm that the reply process is done
+                    else null;
+                    end if;
+
+                when others => null;
+                end case;       
+
+            end if;
+
+        end if; --clk
+
+    end process;
            
         
 --synced_to_clkin: process(clk_in) 
@@ -652,15 +716,16 @@ sync_start_vmm_conf: process(clk200)
     cfg_bit_out     <= cfg_bit_out_i;
     vmm_cktk        <=vmm_cktk_i;     
     
---    ila_conf_logic :  ila_user_FIFO
---        port map(
---              clk         => clk125,
---              probe0      => sig_out 
---        );              
+    ila_conf_logic :  ila_user_FIFO
+        port map(
+              clk         => clk200,
+              probe0      => sig_out 
+        );              
                      
 
 we_conf     <= we_conf_i;
-
+rst_reply_i <= rst_reply;
+reply_step_ila  <= reply_step;
 --vmm_we_int  <= vmm_we;
                          
 sig_out(7 downto 0)         <= delay_data;     
@@ -695,15 +760,16 @@ sig_out(190 downto 175)     <= std_logic_vector(to_unsigned(counter, sig_out(190
 sig_out(198 downto 191)     <= std_logic_vector(to_unsigned(k, sig_out(198 downto 191)'length));
 sig_out(214 downto 199)     <= dest_port;
 
-sig_out(246 downto 215)     <= DAQ_START_STOP;
-sig_out(262 downto 247)     <= vmm_id_xadc_i;
-sig_out(273 downto 263)     <= xadc_sample_size_i;
-sig_out(291 downto 274)     <= xadc_delay_i;
-sig_out(292)                <= '0';
+sig_out(218 downto 215)     <= reply_step_ila;
+sig_out(219)                <= reply_init_i;
+sig_out(220)                <= rst_reply_i;
+sig_out(221)                <= rst_main_proc_latched;
+
+sig_out(292 downto 222)     <= (others => '0');
 
 
 
 
---sig_out(255 downto 247)     <= (others => '0');                 
+              
 
 end rtl;

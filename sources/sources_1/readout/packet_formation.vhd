@@ -12,7 +12,8 @@
 -- Changelog:
 -- 25.07.2016 Added DAQ FIFO reset every vmm packet sent XXXXXX (NOW REMOVED) XXXXX
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
-----------------------------------------------------------------------------------
+-- 01.09.2016 Changed the data bus width, making it 32-bit-wide. (Christos Bakalis) 
+-----------------------------------------------------------------------------------
 
 library IEEE;
 library UNISIM;
@@ -148,7 +149,7 @@ architecture Behavioral of packet_formation is
     attribute keep of triggerVmmReadout_i   :   signal  is  "true";
     
     attribute keep of trigger               :   signal is "TRUE";
-    attribute dont_touch of trigger         : signal is "TRUE";
+    attribute dont_touch of trigger         :   signal is "TRUE";
 
 
     component ila_pf

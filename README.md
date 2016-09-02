@@ -21,9 +21,9 @@ $ eval "$(ssh-agent -s)"
 
 Then adding the ssh key:
 
-$ ssh-add ~/../../"KEY LOCATION"
+$ ssh-add ~/../../"<KEY LOCATION>"
 
-Where "KEY LOCATION>"is the location where the key was saved in step 2.
+Where "<KEY LOCATION>"is the location where the key was saved in step 2.
 And finally one must open the ~/.ssh/id_rsa.pub and copy the contents of the
 file.
 
@@ -34,9 +34,9 @@ Open the settings of the account (top right of the gitlab page), click on
 5)Now the user is ready to clone the gitlab repository via ssh on his/her
 local machine:
 
-$ git clone <SSH URL>
+$ git clone "<SSH URL>"
 
-Where <SSH URL> can be found at the main page of the project.
+Where "<SSH URL>" can be found at the main page of the project.
 
 
 In order to build the firmware, run the following command:

@@ -502,6 +502,10 @@ architecture Behavioral of mmfe8_top is
     signal etr_vmm_wen_vec  : std_logic_vector(8 downto 1) := ( others => '0' );
     signal etr_vmm_ena_vec  : std_logic_vector(8 downto 1) := ( others => '0' );
     signal etr_reset_latched: std_logic;
+    signal pfBusy_i 		: std_logic := '0';
+    signal glBCID_i 		: std_logic_vector(11 downto 0) := ( others => '0' );
+    signal state_rst_ila 	: std_logic_vector(2 downto 0)  := ( others => '0' );
+    signal rst_etr_ila 		: std_logic := '0';
 
     -------------------------------------------------
     -- Packet Formation Signals
@@ -599,6 +603,14 @@ architecture Behavioral of mmfe8_top is
     attribute keep of rst_vmm                : signal is "true";
     attribute keep of etr_vmm_ena_vec        : signal is "true";
     attribute keep of daq_enable_i           : signal is "true";
+    attribute keep of pfBusy_i           	 : signal is "true";
+    attribute dont_touch of pfBusy_i         : signal is "true";
+    attribute keep of glBCID_i           	 : signal is "true";
+    attribute dont_touch of glBCID_i         : signal is "true";
+    attribute keep of state_rst_ila          : signal is "true";
+    attribute dont_touch of state_rst_ila    : signal is "true";
+    attribute keep of rst_etr_ila            : signal is "true";
+    attribute dont_touch of rst_etr_ila      : signal is "true";
     
     -------------------------------------------------------------------
     -- Packet Formation
@@ -723,22 +735,23 @@ architecture Behavioral of mmfe8_top is
     -- 5
     component event_timing_reset
       port(
-          hp_clk          : in std_logic;
-          clk_200         : in std_logic;
-          clk_10_phase45  : in std_logic;
-          bc_clk          : in std_logic;
-          
-          daqEnable       : in std_logic;
-          readout_done    : in std_logic;
-          reset           : in std_logic;
+        hp_clk          : in std_logic;     -- High precision clock 1 GHz
+        clk_200         : in std_logic;
+        clk_10_phase45  : in std_logic;     -- Drives the reset
+        bc_clk          : in std_logic;     -- 10MHz
+        
+        daqEnable       : in std_logic;     -- From flow FSM
+        pfBusy          : in std_logic;     -- From packet formation
+        reset           : in std_logic;     -- Request for VMMs soft reset
 
-          bcid            : out std_logic_vector(12 downto 0);
-          prec_cnt        : out std_logic_vector(4 downto 0);
+        glBCID          : out std_logic_vector(11 downto 0);
+        state_rst_out   : out std_logic_vector(2 downto 0);
+        rst_o           : out std_logic;
 
-		  vmm_ena_vec     : out std_logic_vector(8 downto 1);
-          vmm_wen_vec     : out std_logic_vector(8 downto 1);
-          reset_latched   : out std_logic
-      );
+        vmm_ena_vec     : out std_logic_vector(8 downto 1);
+        vmm_wen_vec     : out std_logic_vector(8 downto 1);
+        reset_latched   : out std_logic
+        );
     end component;    
     -- 6
     component select_vmm 
@@ -864,7 +877,9 @@ architecture Behavioral of mmfe8_top is
             vmmWordReady: in std_logic;
             vmmEventDone: in std_logic;
         
-            UDPDone     : in std_logic;
+            UDPDone     : in  std_logic;
+            pfBusy 		: out std_logic;
+            glBCID 		: in  std_logic_vector(11 downto 0);
         
             packLen     : out std_logic_vector(11 downto 0);
             dataout     : out std_logic_vector(63 downto 0);
@@ -1495,12 +1510,14 @@ event_timing_reset_instance: event_timing_reset
         clk_200         => clk_200,
         clk_10_phase45  => clk_10_phase45,
         bc_clk          => clk_10,
+
         daqEnable       => daq_enable_i,
-        readout_done    => '0',
+        pfBusy    		=> pfBusy_i,
         reset           => rst_vmm,
 
-        bcid            => open,
-        prec_cnt        => open,
+        glBCID          => glBCID_i,
+        state_rst_out   => state_rst_ila,
+        rst_o 			=> rst_etr_ila, 
 
         vmm_ena_vec     => etr_vmm_ena_vec,
         vmm_wen_vec     => etr_vmm_wen_vec,
@@ -1606,6 +1623,9 @@ packet_formation_instance: packet_formation
         vmmEventDone    => vmmEventDone_i,
         
         UDPDone         => UDPDone,
+        pfBusy 			=> pfBusy_i,
+        glBCID 			=> glBCID_i,
+
         
         packLen         => pf_packLen,
         dataout         => daq_data_out_i,
@@ -2100,7 +2120,11 @@ ila_top: ila_top_level
     read_out(107)               <= pf_rst_FIFO;
     read_out(171 downto 108)    <= daq_data_out_i;
     read_out(172)               <= trigger_i;
+    read_out(173) 				<= pfBusy_i;
+    read_out(185 downto 174) 	<= glBCID_i;
+    read_out(186) 				<= rst_etr_ila;
+    read_out(189 downto 187) 	<= state_rst_ila;
 
-    read_out(255 downto 173)    <= (others => '0');
+    read_out(255 downto 190)    <= (others => '0');
 
 end Behavioral;

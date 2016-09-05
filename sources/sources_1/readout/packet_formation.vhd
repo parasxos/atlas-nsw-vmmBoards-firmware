@@ -12,6 +12,8 @@
 -- Changelog:
 -- 25.07.2016 Added DAQ FIFO reset every vmm packet sent XXXXXX (NOW REMOVED) XXXXX
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
+-- 05.09.2016 Added two signals for interconnection with the event_timing_reset
+-- module. (Christos Bakalis)
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -34,6 +36,8 @@ entity packet_formation is
         vmmEventDone: in std_logic;
 
         UDPDone     : in std_logic;
+        pfBusy      : out std_logic;
+        glBCID      : in std_logic_vector(11 downto 0);
 
         packLen     : out std_logic_vector(11 downto 0);
         dataout     : out std_logic_vector(63 downto 0);
@@ -57,10 +61,11 @@ architecture Behavioral of packet_formation is
 
     signal header           : std_logic_vector(63 downto 0) := ( others => '0' );
     signal vmmId_i          : std_logic_vector(2 downto 0)  := b"000";
-    signal globBcid         : std_logic_vector(15 downto 0) := x"FFFF"; --( others => '0' );
     signal precCnt          : std_logic_vector(7 downto 0)  := x"00"; --( others => '0' );
-    signal globBcid_i       : std_logic_vector(15 downto 0);
+    signal glBCID_i         : std_logic_vector(15 downto 0) := x"FFFF";
+    signal glBCID_etr       : std_logic_vector(11 downto 0) := ( others => '0' ); -- to be used once the glBCID can be received from ETR
     signal eventCounter_i   : std_logic_vector(31 downto 0) := ( others => '0' );
+    signal pfBusy_i         : std_logic                     := '0';               -- control signal to be sent to ETR
     signal wait_Cnt         : integer := 0;
 --    signal packetCounter    : integer := 0;
     signal vmmId_cnt        : integer := 0;
@@ -94,8 +99,9 @@ architecture Behavioral of packet_formation is
     attribute mark_debug : string;
 
     attribute mark_debug of header                :    signal    is    "true";
-    attribute mark_debug of globBcid              :    signal    is    "true";
-    attribute mark_debug of globBcid_i            :    signal    is    "true";
+    attribute mark_debug of glBCID_i              :    signal    is    "true";
+    attribute mark_debug of glBCID_etr            :    signal    is    "true";
+    attribute mark_debug of pfBusy_i              :    signal    is    "true";
     attribute mark_debug of precCnt               :    signal    is    "true";
     attribute mark_debug of vmmId_i               :    signal    is    "true";
     attribute mark_debug of daqFIFO_din           :    signal    is    "true";
@@ -110,8 +116,9 @@ architecture Behavioral of packet_formation is
     attribute dont_touch : string;
 
     attribute dont_touch of header                :    signal    is    "true";
-    attribute dont_touch of globBcid              :    signal    is    "true";
-    attribute dont_touch of globBcid_i            :    signal    is    "true";
+    attribute dont_touch of glBCID_i              :    signal    is    "true";
+    attribute dont_touch of glBCID_etr            :    signal    is    "true";
+    attribute dont_touch of pfBusy_i              :    signal    is    "true";
     attribute dont_touch of precCnt               :    signal    is    "true";
     attribute dont_touch of vmmId_i               :    signal    is    "true";
     attribute dont_touch of daqFIFO_din           :    signal    is    "true";
@@ -125,11 +132,12 @@ architecture Behavioral of packet_formation is
     
     attribute keep : string;
 
-    attribute keep of header                :	signal	is	"true";
-    attribute keep of globBcid              :	signal	is	"true";
-    attribute keep of globBcid_i            :	signal	is	"true";
-    attribute keep of precCnt               :	signal	is	"true";
-    attribute keep of vmmId_i               :	signal	is	"true";
+    attribute keep of header                :   signal  is  "true";
+    attribute keep of glBCID_i              :   signal  is  "true";
+    attribute keep of glBCID_etr            :   signal  is  "true";
+    attribute keep of pfBusy_i              :   signal  is  "true";
+    attribute keep of precCnt               :   signal  is  "true";
+    attribute keep of vmmId_i               :   signal  is  "true";
     attribute keep of daqFIFO_din           :   signal  is  "true";
     attribute keep of vmmWord_i             :   signal  is  "true";
     attribute keep of packLen_i             :   signal  is  "true";
@@ -160,6 +168,8 @@ architecture Behavioral of packet_formation is
 
 begin
 
+
+
 packetCaptureProc: process(clk_200, newCycle, vmmEventDone)
 begin
 -- Upon a signal from trigger capture the current global BCID
@@ -169,7 +179,8 @@ begin
         else
         case state is
             when waitingForNewCycle =>
-                debug_state <= "00000";
+                pfBusy_i                <= '0';
+                debug_state             <= "00000";
                 triggerVmmReadout_i     <= '0';
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
@@ -193,7 +204,8 @@ begin
                 end if;
 
             when S2 =>          -- wait for the header elements to be formed
-                debug_state <= "00010";
+                pfBusy_i        <= '1';                 -- packet formation is now busy
+                debug_state     <= "00010";
                 tr_hold         <= '1';                 -- Prevent new triggers
                 packLen_cnt     <= x"000";              -- Reset length count
                 vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
@@ -202,7 +214,7 @@ begin
             when captureEventID =>      -- Form Header
                 debug_state <= "00011";
                 rst_FIFO                <= '0';
-                header(63 downto 0)     <=    eventCounter_i & precCnt & globBcid & b"00000" & vmmId_i;
+                header(63 downto 0)     <=    eventCounter_i & precCnt & glBCID_i & b"00000" & vmmId_i;
                                         --          32       &    8    &    16    &     5    &   3
                 state                   <= setEventID;
                 
@@ -337,7 +349,6 @@ begin
 end if;
 end process;
 
-    globBcid_i      <= globBcid;
     daqFIFO_wr_en_i <= daqFIFO_wr_en;
     vmmWord_i       <= vmmWord;
     dataout         <= daqFIFO_din;
@@ -347,6 +358,8 @@ end process;
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
     trigLatency     <= to_integer(unsigned(latency));
+    glBCID_etr      <= glBCID; -- connect with top level
+    pfBusy          <= pfBusy_i;
 
 debugVIO: vio_0
   PORT MAP (

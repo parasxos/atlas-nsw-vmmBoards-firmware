@@ -107,8 +107,6 @@ architecture Behavioral of packet_formation is
     attribute mark_debug of pfBusy_i              :    signal    is    "true";
     attribute mark_debug of header_0              :    signal    is    "true";
     attribute mark_debug of header_1              :    signal    is    "true";
-    attribute mark_debug of globBcid              :    signal    is    "true";
-    attribute mark_debug of globBcid_i            :    signal    is    "true";
     attribute mark_debug of precCnt               :    signal    is    "true";
     attribute mark_debug of vmmId_i               :    signal    is    "true";
     attribute mark_debug of daqFIFO_din           :    signal    is    "true";
@@ -128,8 +126,6 @@ architecture Behavioral of packet_formation is
     attribute dont_touch of pfBusy_i              :    signal    is    "true";
     attribute dont_touch of header_0              :    signal    is    "true";
     attribute dont_touch of header_1              :    signal    is    "true";
-    attribute dont_touch of globBcid              :    signal    is    "true";
-    attribute dont_touch of globBcid_i            :    signal    is    "true";
     attribute dont_touch of precCnt               :    signal    is    "true";
     attribute dont_touch of vmmId_i               :    signal    is    "true";
     attribute dont_touch of daqFIFO_din           :    signal    is    "true";
@@ -149,8 +145,6 @@ architecture Behavioral of packet_formation is
     attribute keep of pfBusy_i              :   signal  is  "true";
     attribute keep of header_0              :   signal  is  "true";
     attribute keep of header_1              :   signal  is  "true";
-    attribute keep of globBcid              :   signal  is  "true";
-    attribute keep of globBcid_i            :   signal  is  "true";
     attribute keep of precCnt               :   signal  is  "true";
     attribute keep of vmmId_i               :   signal  is  "true";
     attribute keep of daqFIFO_din           :   signal  is  "true";
@@ -229,7 +223,7 @@ begin
                 debug_state <= "00011";
                 rst_FIFO                <= '0';
                 header_0(31 downto 0)   <= eventCounter_i;
-                header_1(31 downto 0)   <= precCnt & globBcid & b"00000" & vmmId_i;
+                header_1(31 downto 0)   <= precCnt & glBCID_i & b"00000" & vmmId_i;
                 state                   <= setEventID;
                 
             when setEventID =>
@@ -400,7 +394,7 @@ begin
 end if;
 end process;
 
-    globBcid_i      <= globBcid;
+    glBCID_etr      <= glBCID;            
     daqFIFO_wr_en_i <= daqFIFO_wr_en;
     vmmWord_0_i     <= vmmWord_0;
     vmmWord_1_i     <= vmmWord_1;

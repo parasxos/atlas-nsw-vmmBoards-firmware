@@ -850,19 +850,21 @@ architecture Behavioral of mmfe8_top is
     end component;
     -- 10
     component trigger is
-      port (
-          clk_200         : in std_logic;
-          
-          tren            : in std_logic;
-          tr_hold         : in std_logic;
-          trmode          : in std_logic;
-          trext           : in std_logic;
-          trint           : in std_logic;
-          reset           : in std_logic;
-          
-          event_counter   : out std_logic_vector(31 DOWNTO 0);
-          tr_out          : out std_logic
-      );
+    Port (
+            clk_200         : in STD_LOGIC;
+            
+            tren            : in STD_LOGIC;
+            tr_hold         : in STD_LOGIC;
+			rst_hold		: in std_logic;
+            trmode          : in STD_LOGIC;
+            trext           : in STD_LOGIC;
+            trint           : in STD_LOGIC;
+
+            reset           : in STD_LOGIC;
+
+            event_counter   : out STD_LOGIC_VECTOR(31 DOWNTO 0);
+            tr_out          : out STD_LOGIC
+		);
     end component;
     -- 11
     component packet_formation is
@@ -1551,7 +1553,8 @@ trigger_instance: trigger
         clk_200         => clk_200,
 
         tren            => tren,                -- Trigger module enabled
-        tr_hold         => tr_hold,             -- Prevents trigger while high
+        tr_hold         => tr_hold,             -- Prevents trigger while high (Packet Formation)
+		rst_hold		=> etr_reset_latched,   -- Prevents trigger while high (resetting)
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
         trext           => ext_trigger_in,      -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)

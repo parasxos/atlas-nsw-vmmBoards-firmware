@@ -14,7 +14,6 @@
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 -- 01.09.2016 Changed the data bus width, making it 32-bit-wide. (Christos Bakalis) 
 -- 05.09.2016 Connection with event_timing_reset. (Christos Bakalis)
--- 06.09.2016 Added hotfix for correct pfBusy assertion. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------
 

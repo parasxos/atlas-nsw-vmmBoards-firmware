@@ -1,18 +1,10 @@
-create_clock -period 5.000  -waveform {0.000 2.500}   [get_ports X_2V5_DIFF_CLK_P]
-create_clock -period 8.000  -waveform {0.000 4.000}   [get_ports gtrefclk_p]
-#create_clock -period 25.000 -waveform {0.000 12.50}   [get_ports clk_in]
+#create_clock -period 5.000 -name independent_clock [get_pins independent_clock]
+create_clock -period 5.000 -name X_2V5_DIFF_CLK_P -waveform {0.000 2.500} [get_ports independent_clock_p]
+#create_clock -period 8.000 -name gtrefclk [get_pins gtrefclk]
+create_clock -period 8.000 -name gtrefclk_p -waveform {0.000 4.000} [get_ports gtrefclk_p] 
 
-##### To be added later? C.B. ###
-
-#create_generated_clock -multiply_by 2          -source [get_pins clk_200_to_400_inst/clk_in1_p] [get_pins clk_200_to_400_inst/clk_out_400] 
-#create_generated_clock -edges {1 2 3}          -source [get_pins clk_400_low_jitter_inst/clk_in1] [get_pins clk_400_low_jitter_inst/clk_out1]
-
-#create_generated_clock  -edges {1 41 81}       -source [get_pins clk_user_inst/clk_in1] [get_pins clk_user_inst/clk_10_o]
-##create_generated_clock                         -source [get_pins clk_user_inst/clk_in1] [get_pins clk_user_inst/clk_10_phase45_o] #How to add phase shift correctly?
-#create_generated_clock  -edges {1 11 21}       -source [get_pins clk_user_inst/clk_in1] [get_pins clk_user_inst/clk_40_o]
-#create_generated_clock  -edges {1 9 17}        -source [get_pins clk_user_inst/clk_in1] [get_pins clk_user_inst/clk_50_o]
-#create_generated_clock  -edges {1 5 9}         -source [get_pins clk_user_inst/clk_in1] [get_pins clk_user_inst/clk_200_o]
-#create_generated_clock  -multiply_by 2         -source [get_pins clk_user_inst/clk_in1] [get_pins clk_user_inst/clk_800_o]
+#create_clock -period 16.000 -name txoutclk [get_pins core_wrapper/transceiver_inst/gtwizard_inst/gt0_txoutclk_i_bufg/O]
+create_clock -period 25.000 -name clk_in [get_ports clk_in] 
 
 #####################
 

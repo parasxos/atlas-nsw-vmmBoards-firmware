@@ -32,6 +32,3 @@ Tools -> Run Tcl Script
 ############# Christos Bakalis, christos.bakalis@cern.ch #######################
 
 ############# Paris Moschovakos, paris.moschovakos@cern.ch #####################
-
-
-

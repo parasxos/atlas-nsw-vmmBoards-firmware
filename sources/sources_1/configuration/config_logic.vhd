@@ -20,6 +20,7 @@
 -- of the VMM. (Reid Pinkham)
 -- 01.09.2016 New, dynamic configuration reply packet is being created in this 
 -- module. (Christos Bakalis)
+-- 
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -85,10 +86,8 @@ end config_logic;
 
 architecture rtl of config_logic is
 
-    ----------- REPLY CONSTANTS ----------------------------------------------
     constant payload_0          : std_logic_vector(31 downto 0) := x"C0CAC01A";
     constant trailer            : std_logic_vector(31 downto 0) := x"FFFFFFFF";
-    --------------------------------------------------------------------------
 
     signal packet_length_int    : integer := 0;
     signal reading_packet       : std_logic := '0';
@@ -740,7 +739,6 @@ sig_out(83 downto 76)       <= std_logic_vector(to_unsigned(count, sig_out(83 do
 sig_out(91 downto 84)      <= std_logic_vector(to_unsigned(cnt_array, 8));   
 sig_out(92)                <= user_last_int;
 sig_out(93)                <= last_synced200;
---sig_out(110)                <= reading_packet;
 sig_out(101 downto 94)     <= user_data_in_int;
 sig_out(102)                <= user_wr_en_int;
 sig_out(103)                <= vmm_cktk_i;--user_conf_int;
@@ -766,10 +764,5 @@ sig_out(220)                <= rst_reply_i;
 sig_out(221)                <= rst_main_proc_latched;
 
 sig_out(292 downto 222)     <= (others => '0');
-
-
-
-
-              
 
 end rtl;

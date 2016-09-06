@@ -14,6 +14,7 @@
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 -- 01.09.2016 Changed the data bus width, making it 32-bit-wide. (Christos Bakalis) 
 -- 05.09.2016 Connection with event_timing_reset. (Christos Bakalis)
+-- 06.09.2016 Added hotfix for correct pfBusy assertion. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------
 
@@ -193,9 +194,10 @@ begin
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
                 if newCycle = '1' then
+                    pfBusy_i        <= '1';
                     eventCounter_i  <= eventCounter_i + 1;
                     daqFIFO_wr_en   <= '0';
-                    state           <= S2;
+                    state           <= waitForLatency;
                 else
                     tr_hold         <= '0';
                 end if;
@@ -212,8 +214,7 @@ begin
                 end if;
 
             when S2 =>          -- wait for the header elements to be formed
-                debug_state     <= "00010";
-                pfBusy_i        <= '1';                 -- packet formation is now busy
+                debug_state     <= "00010";                
                 tr_hold         <= '1';                 -- Prevent new triggers
                 packLen_cnt     <= x"000";              -- Reset length count
                 vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
@@ -366,13 +367,13 @@ begin
             when resetDone =>
                 debug_state <= "10110";
                 if resetting = '0' then
-                	rst_vmm     <= '0';
                     state       <= isUDPDone;
                     rst_vmm     <= '0'; -- Prevent from continuously resetting while waiting for UDP Packet
                 end if;
 
             when isUDPDone =>
-                debug_state <= "10111";
+                debug_state     <= "10111";
+                pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for all 8 UDP packets to be sent
                     state       <= isTriggerOff;
                 else
@@ -393,8 +394,7 @@ begin
     end if;
 end if;
 end process;
-
-    glBCID_etr      <= glBCID;            
+      
     daqFIFO_wr_en_i <= daqFIFO_wr_en;
     vmmWord_0_i     <= vmmWord_0;
     vmmWord_1_i     <= vmmWord_1;

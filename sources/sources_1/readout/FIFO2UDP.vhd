@@ -1,10 +1,10 @@
 ----------------------------------------------------------------------------------
 -- Company: NTU ATHNENS - BNL - Michigan
--- Engineer: Panagiotis Gkountoumis
+-- Engineer: Panagiotis Gkountoumis ,rewritten by Reid Pinkham
 -- 
 -- Create Date: 18.04.2016 13:00:21
 -- Design Name: 
--- Module Name: config_logic - Behavioral
+-- Module Name: FIFO2UDP - Behavioral
 -- Project Name: MMFE8 
 -- Target Devices: Arix7 xc7a200t-2fbg484 and xc7a200t-3fbg484 
 -- Tool Versions: Vivado 2016.2

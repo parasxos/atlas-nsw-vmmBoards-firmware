@@ -1,4 +1,4 @@
------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 -- Company: NTU ATHNENS - BNL
 -- Engineer: Panagiotis Gkountoumis
 -- 
@@ -20,8 +20,7 @@
 -- 19.07.2016 Reverted component to work asynchronously (Reid Pinkham)
 -- 20.07.2016 Changed packet length from integer to std_logic_vector (Reid Pinkham)
 -- 04.08.2016 Added XADC support (Reid Pinkham)
--- 01.09.2016 Changed the data bus width, making it 32-bit-wide. (Christos Bakalis) 
------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 
 library unisim;
 use unisim.vcomponents.all;
@@ -41,12 +40,11 @@ port(
     we_data                     : in  std_logic;
     we_conf                     : in  std_logic;
     we_xadc                     : in  std_logic;
-    daq_data_in                 : in  std_logic_vector(31 downto 0);
-    conf_data_in                : in  std_logic_vector(31 downto 0);
-    xadc_data_in                : in  std_logic_vector(31 downto 0);
+    daq_data_in                 : in  std_logic_vector(63 downto 0);
+    conf_data_in                : in  std_logic_vector(63 downto 0);
+    xadc_data_in                : in  std_logic_vector(63 downto 0);
     data_packet_length          : in  std_logic_vector(11 downto 0);
     xadc_packet_length          : in  std_logic_vector(11 downto 0);
-    conf_packet_length          : in  std_logic_vector(11 downto 0);
     end_packet_conf             : in  std_logic;
     end_packet_daq              : in  std_logic;
     end_packet_xadc             : in  std_logic;
@@ -54,7 +52,7 @@ port(
     fifo_rst_xadc               : in  std_logic;
     rstFIFO_top                 : in std_logic;
 
-    data_out                    : out std_logic_vector(31 downto 0);
+    data_out                    : out std_logic_vector(63 downto 0);
     packet_length               : out std_logic_vector(11 downto 0);
     we                          : out std_logic;
     end_packet                  : out std_logic;
@@ -75,7 +73,7 @@ begin
             when "100" => -- Configuration
                 we              <= we_conf;
                 data_out        <= conf_data_in;
-                packet_length   <= conf_packet_length; -- constant length
+                packet_length   <= x"002"; -- constant length
                 end_packet      <= end_packet_conf;
                 fifo_rst_i      <= '0';
             when "010" => -- DAQ

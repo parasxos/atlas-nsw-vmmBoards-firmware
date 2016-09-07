@@ -1,15 +1,10 @@
 #create_clock -period 5.000 -name independent_clock [get_pins independent_clock]
 create_clock -period 5.000 -name X_2V5_DIFF_CLK_P -waveform {0.000 2.500} [get_ports independent_clock_p]
 #create_clock -period 8.000 -name gtrefclk [get_pins gtrefclk]
-create_clock -period 8.000 -name gtrefclk_p -waveform {0.000 4.000} [get_ports gtrefclk_p] 
+create_clock -period 8.000 -name gtrefclk_p -waveform {0.000 4.000} [get_ports gtrefclk_p]
 
 #create_clock -period 16.000 -name txoutclk [get_pins core_wrapper/transceiver_inst/gtwizard_inst/gt0_txoutclk_i_bufg/O]
-create_clock -period 25.000 -name clk_in [get_ports clk_in] 
-
-#####################
-
-#set_max_delay -from [get_pins {packet_formation_instance/daqFIFO_wr_en_reg/Q}] -datapath_only 1
-#set_max_delay -from [get_pins {FIFO2UDP_instance/wr_en_latched_reg/Q}]         -datapath_only 1
+create_clock -period 25.000 -name clk_in [get_ports clk_in]
 
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets gtx_clk]
 

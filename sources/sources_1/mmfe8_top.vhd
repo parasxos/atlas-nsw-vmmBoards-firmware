@@ -15,6 +15,7 @@
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals
 -- (Reid Pinkham)
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
+--
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -499,9 +500,13 @@ architecture Behavioral of mmfe8_top is
     -- Event Timing & Soft Reset
     -------------------------------------------------
     --    signal tr_out_i         : std_logic;
-    signal etr_vmm_wen_vec  : std_logic_vector(8 downto 1) := ( others => '0' );
-    signal etr_vmm_ena_vec  : std_logic_vector(8 downto 1) := ( others => '0' );
+    signal etr_vmm_wen_vec  : std_logic_vector(8 downto 1)  := ( others => '0' );
+    signal etr_vmm_ena_vec  : std_logic_vector(8 downto 1)  := ( others => '0' );
     signal etr_reset_latched: std_logic;
+    signal glBCID_i         : std_logic_vector(11 downto 0) := ( others => '0' );
+    signal state_rst_etr_i  : std_logic_vector(2 downto 0)  := ( others => '0' );
+    signal rst_etr_i        : std_logic;
+    signal rst_done_etr_i   : std_logic;
 
     -------------------------------------------------
     -- Packet Formation Signals
@@ -516,6 +521,7 @@ architecture Behavioral of mmfe8_top is
     signal pf_reset     : std_logic := '0';
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
+    signal pfBusy_i     : std_logic := '0';
 
     -------------------------------------------------
     -- Flow FSM signals
@@ -599,6 +605,14 @@ architecture Behavioral of mmfe8_top is
     attribute keep of rst_vmm                : signal is "true";
     attribute keep of etr_vmm_ena_vec        : signal is "true";
     attribute keep of daq_enable_i           : signal is "true";
+    attribute keep of glBCID_i               : signal is "true";
+    attribute dont_touch of glBCID_i         : signal is "true";
+    attribute keep of state_rst_etr_i        : signal is "true";
+    attribute dont_touch of state_rst_etr_i  : signal is "true";
+    attribute keep of rst_etr_i              : signal is "true";
+    attribute dont_touch of rst_etr_i        : signal is "true";
+    attribute keep of rst_done_etr_i         : signal is "true";
+    attribute dont_touch of rst_done_etr_i   : signal is "true";
     
     -------------------------------------------------------------------
     -- Packet Formation
@@ -607,6 +621,8 @@ architecture Behavioral of mmfe8_top is
     attribute keep of pf_newCycle           :  signal  is  "true";
 --      attribute keep of pf_dataout            :  signal  is  "true";
 --      attribute keep of pf_wren               :  signal  is  "true";
+    attribute keep of pfBusy_i              : signal is "true";
+    attribute dont_touch of pfBusy_i        : signal is "true";
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------
@@ -729,13 +745,17 @@ architecture Behavioral of mmfe8_top is
           bc_clk          : in std_logic;
           
           daqEnable       : in std_logic;
-          readout_done    : in std_logic;
+          pfBusy          : in std_logic;
           reset           : in std_logic;
 
-          bcid            : out std_logic_vector(12 downto 0);
+          glBCID          : out std_logic_vector(11 downto 0);
           prec_cnt        : out std_logic_vector(4 downto 0);
 
-		  vmm_ena_vec     : out std_logic_vector(8 downto 1);
+          state_rst_out   : out std_logic_vector(2 downto 0);
+          rst_o           : out std_logic;
+          rst_done_o      : out std_logic;
+
+          vmm_ena_vec     : out std_logic_vector(8 downto 1);
           vmm_wen_vec     : out std_logic_vector(8 downto 1);
           reset_latched   : out std_logic
       );
@@ -865,7 +885,9 @@ architecture Behavioral of mmfe8_top is
             vmmEventDone: in std_logic;
         
             UDPDone     : in std_logic;
-        
+            pfBusy      : out std_logic;
+            glBCID      : in std_logic_vector(11 downto 0);
+
             packLen     : out std_logic_vector(11 downto 0);
             dataout     : out std_logic_vector(63 downto 0);
             wrenable    : out std_logic;
@@ -1495,12 +1517,17 @@ event_timing_reset_instance: event_timing_reset
         clk_200         => clk_200,
         clk_10_phase45  => clk_10_phase45,
         bc_clk          => clk_10,
+
         daqEnable       => daq_enable_i,
-        readout_done    => '0',
+        pfBusy          => pfBusy_i,
         reset           => rst_vmm,
 
-        bcid            => open,
+        glBCID          => glBCID_i,
         prec_cnt        => open,
+
+        state_rst_out   => state_rst_etr_i,
+        rst_o           => rst_etr_i,
+        rst_done_o      => rst_done_etr_i,
 
         vmm_ena_vec     => etr_vmm_ena_vec,
         vmm_wen_vec     => etr_vmm_wen_vec,
@@ -1606,6 +1633,8 @@ packet_formation_instance: packet_formation
         vmmEventDone    => vmmEventDone_i,
         
         UDPDone         => UDPDone,
+        pfBusy          => pfBusy_i,
+        glBCID          => glBCID_i,
         
         packLen         => pf_packLen,
         dataout         => daq_data_out_i,
@@ -2100,7 +2129,12 @@ ila_top: ila_top_level
     read_out(107)               <= pf_rst_FIFO;
     read_out(171 downto 108)    <= daq_data_out_i;
     read_out(172)               <= trigger_i;
+    read_out(184 downto 173)    <= glBCID_i;
+    read_out(185)               <= pfBusy_i;
+    read_out(188 downto 186)    <= state_rst_etr_i;
+    read_out(189)               <= rst_etr_i;
+    read_out(190)               <= rst_done_etr_i;
 
-    read_out(255 downto 173)    <= (others => '0');
+    read_out(255 downto 191)    <= (others => '0');
 
 end Behavioral;

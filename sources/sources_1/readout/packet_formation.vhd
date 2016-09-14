@@ -12,6 +12,8 @@
 -- Changelog:
 -- 25.07.2016 Added DAQ FIFO reset every vmm packet sent XXXXXX (NOW REMOVED) XXXXX
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
+-- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -34,6 +36,8 @@ entity packet_formation is
         vmmEventDone: in std_logic;
 
         UDPDone     : in std_logic;
+        pfBusy      : out std_logic;				-- Control signal to ETR
+        glBCID      : in std_logic_vector(11 downto 0);		-- glBCID counter from ETR
 
         packLen     : out std_logic_vector(11 downto 0);
         dataout     : out std_logic_vector(63 downto 0);
@@ -60,12 +64,14 @@ architecture Behavioral of packet_formation is
     signal globBcid         : std_logic_vector(15 downto 0) := x"FFFF"; --( others => '0' );
     signal precCnt          : std_logic_vector(7 downto 0)  := x"00"; --( others => '0' );
     signal globBcid_i       : std_logic_vector(15 downto 0);
+    signal globBCID_etr		: std_logic_vector(11 downto 0) := (others => '0'); --globBCID counter as it is coming from ETR
     signal eventCounter_i   : std_logic_vector(31 downto 0) := ( others => '0' );
     signal wait_Cnt         : integer := 0;
 --    signal packetCounter    : integer := 0;
     signal vmmId_cnt        : integer := 0;
     signal trigLatencyCnt   : integer := 0;
     signal trigLatency      : integer := 140; -- 700ns (140x5ns)
+    signal pfBusy_i         : std_logic	:= '0';               -- control signal to be sent to ETR
 
     signal daqFIFO_wr_en        : std_logic                     := '0';
     signal daqFIFO_wr_en_i      : std_logic                     := '0';
@@ -138,7 +144,7 @@ architecture Behavioral of packet_formation is
     attribute keep of triggerVmmReadout_i   :   signal  is  "true";
     
     attribute keep of trigger               :   signal is "TRUE";
-    attribute dont_touch of trigger         : signal is "TRUE";
+    attribute dont_touch of trigger         : 	signal is "TRUE";
 
 
     component ila_pf
@@ -165,18 +171,21 @@ begin
 -- Upon a signal from trigger capture the current global BCID
     if rising_edge(clk_200) then
         if reset = '1' then
-            eventCounter_i <= x"00000000";
+            eventCounter_i	<= x"00000000";
+            pfBusy_i		<= '0';
         else
         case state is
             when waitingForNewCycle =>
                 debug_state <= "00000";
+                pfBusy_i                <= '0';
                 triggerVmmReadout_i     <= '0';
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
-                if newCycle = '1' then
-                    eventCounter_i  <= eventCounter_i + 1;
-                    daqFIFO_wr_en   <= '0';
-                    state           <= S2;
+		if newCycle = '1' then
+			pfBusy_i        <= '1';
+                	eventCounter_i  <= eventCounter_i + 1;
+                	daqFIFO_wr_en   <= '0';
+                	state           <= S2;
                 else
                     tr_hold         <= '0';
                 end if;
@@ -315,7 +324,8 @@ begin
                 end if;
 
             when isUDPDone =>
-                debug_state <= "10001";
+                debug_state 	<= "10001";
+                pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for all 8 UDP packets to be sent
                     state       <= isTriggerOff;
                 else
@@ -347,6 +357,8 @@ end process;
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
     trigLatency     <= to_integer(unsigned(latency));
+    pfBusy		<= pfBusy_i;
+    globBCID_etr	<= glBCID;
 
 debugVIO: vio_0
   PORT MAP (

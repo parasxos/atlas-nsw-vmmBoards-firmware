@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
 -- Company: NTU ATHENS - BNL
 -- Engineer: Paris Moschovakos
 -- 
@@ -12,8 +12,9 @@
 -- Changelog:
 -- 09.09.2016 Added a glBCID counter for periodic soft reset of VMMs which takes place
 -- every 102us if DAQ is on and if not in the middle of read-out. (Christos Bakalis)
--- 
-----------------------------------------------------------------------------------------
+-- 10.09.2016 Added a new process to assert the periodic soft reset signal. (Christos Bakalis)
+--
+---------------------------------------------------------------------------------------------
 
 library UNISIM;
 library ieee;
@@ -66,6 +67,7 @@ architecture Behavioral of event_timing_reset is
     signal vmm_wen_vec_i            : std_logic_vector(8 downto 1)	:= ( others => '0' );
     signal rst_i                    : std_logic := '0';                                     -- Internal reset related to glBCID counter
     constant glBCID_limit           : std_logic_vector(11 downto 0) := b"010000000000";     -- 1024*T(10MHz~100ns) = 102 us
+    signal limit_reached_i			: std_logic := '0';
 -- Components if any
 
 begin
@@ -129,24 +131,37 @@ begin
     end if;
 end process;
 
-globalBCIDproc: process (bc_clk, rst_done, daqEnable, pfBusy, glBCID_i)
+globalBCIDproc: process (bc_clk, rst_done, glBCID_i)
 begin
     if(rst_done = '1')then
-        glBCID_i    <= b"000000000000";
-        rst_i       <= '0';
+        glBCID_i    	<= b"000000000000";
+        limit_reached_i <= '0';
     elsif(rising_edge(bc_clk))then 
     
         glBCID_i    <= glBCID_i + 1;
         
         if(glBCID_i >= glBCID_limit)then
         
-            if(daqEnable = '1' and pfBusy /= '1')then
+        	limit_reached_i <= '1';
+        else
+            limit_reached_i <= '0';
+        end if;
+    end if;
+end process;
+
+rstAsserterProc: process(clk_200, limit_reached_i, rst_done, daqEnable, pfBusy)
+begin
+	if(rst_done = '1')then
+		rst_i	<= '0';
+	elsif(rising_edge(clk_200))then
+		if(limit_reached_i = '1')then
+			if(daqEnable = '1' and pfBusy /= '1')then
                 rst_i   <= '1';
             else
                 rst_i   <= '0';
             end if;
         else
-            rst_i   <= '0';
+            rst_i <= '0';
         end if;
     end if;
 end process;

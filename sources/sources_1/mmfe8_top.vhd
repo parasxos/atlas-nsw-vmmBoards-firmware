@@ -862,6 +862,7 @@ architecture Behavioral of mmfe8_top is
           
           tren            : in std_logic;
           tr_hold         : in std_logic;
+          rst_hold        : in std_logic;
           trmode          : in std_logic;
           trext           : in std_logic;
           trint           : in std_logic;
@@ -1562,6 +1563,7 @@ trigger_instance: trigger
 
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
+        rst_hold        => etr_reset_latched,   -- Prevents trigger while high (resetting)
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
         trext           => ext_trigger_in,      -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)

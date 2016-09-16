@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 -- Company: NTU ATHENS - BNL
 -- Engineer: Paris Moschovakos
 -- 
@@ -11,8 +11,9 @@
 --
 -- Changelog:
 -- 18.08.2016 Added tr_hold signal to hold triggerwhen reading out (Reid Pinkham)
--- 
-----------------------------------------------------------------------------------
+-- 05.09.2016 Added protection against accepting a trigger during reset (Reid Pinkham)
+--
+---------------------------------------------------------------------------------------
 
 library IEEE;
 library UNISIM;
@@ -27,6 +28,7 @@ entity trigger is
             
             tren            : in STD_LOGIC;
             tr_hold         : in STD_LOGIC;
+            rst_hold		: in STD_LOGIC;
             trmode          : in STD_LOGIC;
             trext           : in STD_LOGIC;
             trint           : in STD_LOGIC;
@@ -159,7 +161,7 @@ begin
 
 trenAnd: process(tren, tr_hold)
 begin
-    if (tren = '1' and tr_hold = '0') then -- No hold command, trigger enabled
+    if (tren = '1' and tr_hold = '0' and rst_hold = '0') then -- No hold command, trigger enabled
         tren_buff <= '1';
     else
         tren_buff <= '0';

@@ -18,6 +18,9 @@
 -- Changelog:
 -- 02.08.2016 Added ONLY_CONF_ONCE as a state to prevent multiple configuratoins
 --      of the VMM. (Reid Pinkham)
+-- 16.09.2016 Added additional elsif in state = CHECK for dynamic IP configuration
+-- (Lev Kurilenko)
+--
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -70,7 +73,12 @@ entity config_logic is
         xadc_start          : out std_logic;
         vmm_id_xadc         : out std_logic_vector(15 downto 0);
         xadc_sample_size    : out std_logic_vector(10 downto 0);
-        xadc_delay          : out std_logic_vector(17 downto 0)
+        xadc_delay          : out std_logic_vector(17 downto 0);
+        
+        myIP_set            : out std_logic_vector(31 downto 0);        --Lev
+        myMAC_set           : out std_logic_vector(47 downto 0);        --Lev
+        destIP_set          : out std_logic_vector(31 downto 0);        --Lev
+        newip_start         : out std_logic                             --Lev        
     );
 end config_logic;
 
@@ -123,7 +131,10 @@ architecture rtl of config_logic is
     signal xadc_sample_size_i   : std_logic_vector(10 downto 0);
     signal xadc_delay_i         : std_logic_vector(17 downto 0);
     
-    
+    -----------------------------------------------------------
+    --                  IP Signal LEV
+    signal newip_counter        : integer := 0;         --Lev
+    -----------------------------------------------------------
     
     type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC_Init, XADC, SEND_REPLY, TEST, REPLY);
     signal state     : tx_state;  
@@ -195,7 +206,14 @@ architecture rtl of config_logic is
 --        );
 --    end component;    
 
-     
+     -----------------------------------------------------------
+    --                  NEW IP Signals LEV
+    -----------------------------------------------------------  
+    --attribute keep of conf_data                       : signal is "true";   --Lev
+    attribute keep of newip_counter                   : signal is "true";   --Lev
+    attribute keep of myIP_set                        : signal is "true";   --Lev
+    attribute keep of myMAC_set                       : signal is "true";   --Lev
+    attribute keep of destIP_set                      : signal is "true";   --Lev
 
 
 begin
@@ -306,6 +324,21 @@ begin
                         state <= FPGA_CONF;
                         status_int  <= "1001";   
                         count   <= 0;
+                    elsif dest_port = x"19CC" then          -- 6604 Flash Configuration     --Lev
+                        -- wait a few clock cycles to initatiate New IP Set                 --Lev
+                        -- wait around 10 clock cycles                                      --Lev
+                        newip_start   <= '1';                                               --Lev
+                        newip_counter <= newip_counter + 1;                                 --Lev
+                        myIP_set                    <= conf_data(2)(31 downto 0);           --Lev
+                        myMAC_set(47 downto 32)    <= conf_data(3)(15 downto 0);            --Lev
+                        myMAC_set(31 downto 0)     <= conf_data(4)(31 downto 0);            --Lev
+                        destIP_set                  <= conf_data(5)(31 downto 0);           --Lev
+                        
+                        if (newip_counter = 10) then
+                            newip_counter       <= 0;
+                            newip_start         <= '0';
+                            state               <= IDLE;
+                        end if;
                     elsif dest_port = x"19D0"  then           -- 6608 XADC
                         state               <= XADC_Init;
                         status_int          <= "0100";

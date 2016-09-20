@@ -495,6 +495,69 @@ set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_p]
 set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_n]
 set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_p]
 
+
+
+set_property CONFIG_MODE SPIx1 [current_design]
+#set_property IOSTANDARD LVCMOS25 [get_ports SPI_CLK]
+set_property IOSTANDARD LVCMOS25 [get_ports IO0_IO]
+set_property IOSTANDARD LVCMOS25 [get_ports IO1_IO]
+set_property IOSTANDARD LVCMOS25 [get_ports SS_IO]
+#set_property PACKAGE_PIN V22 [get_ports SPI_CLK]
+set_property PACKAGE_PIN P22 [get_ports IO0_IO]
+set_property PACKAGE_PIN R22 [get_ports IO1_IO]
+set_property PACKAGE_PIN T19 [get_ports SS_IO]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 1 [current_design]
+#set_property OFFCHIP_TERM NONE [get_ports SPI_CLK]
+set_property OFFCHIP_TERM NONE [get_ports IO0_IO]
+set_property OFFCHIP_TERM NONE [get_ports IO1_IO]
+set_property OFFCHIP_TERM NONE [get_ports SS_IO]
+
+#======================= SPI Flash Constraints =======================
+# You must provide all the delay numbers
+# CCLK delay is 0.5, 6.7 ns min/max for K7-2; refer Data sheet
+# Consider the max delay for worst case analysis
+set cclk_delay 6.7
+# Following are the SPI device parameters
+# Max Tco
+set tco_max 7
+# Min Tco
+set tco_min 1
+# Setup time requirement
+set tsu 2
+# Hold time requirement
+set th 3
+# Following are the board/trace delay numbers
+# Assumption is that all Data lines are matched
+set tdata_trace_delay_max 0.25
+set tdata_trace_delay_min 0.25
+set tclk_trace_delay_max 0.2
+set tclk_trace_delay_min 0.2
+### End of user provided delay numbers
+
+# this is to ensure min routing delay from SCK generation to STARTUP input
+# User should change this value based on the results
+# having more delay on this net reduces the Fmax
+set_max_delay -datapath_only -from [get_pins -hier *SCK_O_reg_reg/C] -to [get_pins -hier *USRCCLKO] 1.500
+set_min_delay -from [get_pins -hier *SCK_O_reg_reg/C] -to [get_pins -hier *USRCCLKO] 0.100
+# Following command creates a divide by 2 clock
+# It also takes into account the delay added by STARTUP block to route the CCLK
+# create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_quad_spi_0/ext_spi_clk] [get_pins -hierarchical *USRCCLKO] -edges {3 5 7} -edge_shift [list $cclk_delay $cclk_delay $cclk_delay]
+create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_SPI/ext_spi_clk] [get_pins -hierarchical *USRCCLKO] -edges {3 5 7} -edge_shift {6.700 6.700 6.700}
+# Data is captured into FPGA on the second rising edge of ext_spi_clk after the SCK falling edge
+# Data is driven by the FPGA on every alternate rising_edge of ext_spi_clk
+set_input_delay -clock clk_sck -clock_fall -max 7.450 [get_ports IO*_IO]
+set_input_delay -clock clk_sck -clock_fall -min 1.450 [get_ports IO*_IO]
+set_multicycle_path -setup -from clk_sck -to [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] 2
+set_multicycle_path -hold -end -from clk_sck -to [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] 1
+# Data is captured into SPI on the following rising edge of SCK
+# Data is driven by the IP on alternate rising_edge of the ext_spi_clk
+set_output_delay -clock clk_sck -max 2.050 [get_ports IO*_IO]
+set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
+set_multicycle_path -setup -start -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 2
+set_multicycle_path -hold -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 1
+#======================= SPI Flash Constraints =======================
+
+
 set_max_delay 10.000 -from [get_cells *user_side_FIFO/tx_fifo_i/*rd_addr_txfer*] -to [get_cells *user_side_FIFO/tx_fifo_i/wr_rd_addr*]
 connect_debug_port dbg_hub/clk [get_nets clk]
 set_property IOSTANDARD LVCMOS25 [get_ports EXT_TRIG_IN]

@@ -2205,7 +2205,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
     end if;
 end process;
 
-    vmm_ckbc        <=  clk_10;
+    vmm_ckbc        <=  clk_40;
 
     cktk_out_vec    <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
     vmm_ena_vec     <= conf_vmm_ena_vec or (etr_vmm_ena_vec and daq_vmm_ena_wen_enable);

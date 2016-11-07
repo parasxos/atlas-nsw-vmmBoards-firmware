@@ -203,7 +203,7 @@ begin
 						    else
                                 dt_state    <= x"3";			-- Send new CKTK strobe
 						    end if;
-						    NoFlg_counter <= NoFlg_counter  + 1;
+						    --NoFlg_counter <= NoFlg_counter  + 1;
 					    end if;
 
                 	when x"6" =>                                -- Wait until word readout is done

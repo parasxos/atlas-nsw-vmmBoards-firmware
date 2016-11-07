@@ -301,7 +301,7 @@ begin
 
             when eventDone =>
                 debug_state <= "01110";
-                if vmmId_cnt >= 7 then
+                if vmmId_cnt >= 0 then
                     vmmId_cnt   <= 0;
                     state       <= resetVMMs;
                 else
@@ -312,8 +312,8 @@ begin
                 
             when resetVMMs =>
                 debug_state <= "01111";
-                rst_vmm     <= '1';
-                state       <= resetDone;
+                -- rst_vmm     <= '1';
+                state       <= isUDPDone;
                 
             when resetDone =>
                 debug_state <= "10000";

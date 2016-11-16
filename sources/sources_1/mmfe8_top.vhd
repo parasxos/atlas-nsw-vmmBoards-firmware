@@ -15,6 +15,8 @@
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals
 -- (Reid Pinkham)
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
+-- 16.09.2016 Added AXI4_SPI, QSPI_IO0_0: IOBUF, QSPI_IO1_0: IOBUF, QSPI_SS_0: IOBUF
+-- The modules and buffers are used for Dynamic IP configuration. (Lev Kurilenko)
 --
 ----------------------------------------------------------------------------------
 
@@ -176,17 +178,26 @@ entity mmfe8_top is
         MuxAddr1              : OUT STD_LOGIC;
         MuxAddr2              : OUT STD_LOGIC;
         MuxAddr3_p            : OUT STD_LOGIC;
-        MuxAddr3_n            : OUT STD_LOGIC
+        MuxAddr3_n            : OUT STD_LOGIC;
+        
+        IO0_IO                : inout std_logic;        --Lev
+        IO1_IO                : inout std_logic;        --Lev
+        SS_IO                 : inout std_logic        --Lev
+        --SPI_CLK               : in    std_logic         --Lev
 	  );
 end mmfe8_top;
 
 architecture Behavioral of mmfe8_top is
 
     -- IP and MAC address of the MMFE8
-    constant myIP   : std_logic_vector(31 downto 0) := x"c0a80002";
-    constant myMAC  : std_logic_vector(47 downto 0) := x"002320212223";
-    constant destIP : std_logic_vector(31 downto 0) := x"c0a80010";
-
+    --constant myIP   : std_logic_vector(31 downto 0) := x"c0a80002";
+    --constant myMAC  : std_logic_vector(47 downto 0) := x"002320212223";
+    --constant destIP : std_logic_vector(31 downto 0) := x"c0a80010";
+    
+    signal myIP   : std_logic_vector(31 downto 0) := x"c0a80002";       --Lev
+    signal myMAC  : std_logic_vector(47 downto 0) := x"002320212223";   --Lev
+    signal destIP : std_logic_vector(31 downto 0) := x"c0a80010";       --Lev
+    
   -- clock generation signals for tranceiver
   signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.
   signal txoutclk              : std_logic;                    -- txoutclk from GT transceiver
@@ -533,7 +544,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Debugging Signals
     -------------------------------------------------
-    signal read_out           : std_logic_vector(255 downto 0);
+    signal read_out           : std_logic_vector(302 downto 0); --Lev
     signal trigger_i          : std_logic;
 
     ------------------------------------------------------------------
@@ -548,6 +559,25 @@ architecture Behavioral of mmfe8_top is
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
     signal xadc_busy            : std_logic;
+
+    ------------------------------------------------------------------
+    -- Dynamic IP signals
+    ------------------------------------------------------------------
+    signal myIP_set             : std_logic_vector (31 downto 0);       --Lev
+    signal myMAC_set            : std_logic_vector (47 downto 0);       --Lev
+    signal destIP_set           : std_logic_vector (31 downto 0);       --Lev
+    signal newip_start          : std_logic;                            --Lev
+
+    signal   io0_i : std_logic:= '0';   --Lev
+    signal   io0_o : std_logic:= '0';   --Lev
+    signal   io0_t : std_logic:= '0';   --Lev
+    signal   io1_i : std_logic:= '0';   --Lev
+    signal   io1_o : std_logic:= '0';   --Lev
+    signal   io1_t : std_logic:= '0';   --Lev
+
+    signal   ss_i  : STD_LOGIC_VECTOR(0 DOWNTO 0):=(others => '0');     --Lev
+    signal   ss_o  : STD_LOGIC_VECTOR(0 DOWNTO 0):=(others => '0');     --Lev
+    signal   ss_t  : std_logic:= '0';                                   --Lev
 
     -------------------------------------------------------------------
     -- These attribute will stop timing errors being reported in back
@@ -623,6 +653,20 @@ architecture Behavioral of mmfe8_top is
 --      attribute keep of pf_wren               :  signal  is  "true";
     attribute keep of pfBusy_i              : signal is "true";
     attribute dont_touch of pfBusy_i        : signal is "true";
+    
+    -------------------------------------------------------------------
+    -- Dynamic IP
+    -------------------------------------------------------------------   
+    attribute keep of io0_i                         : signal is "TRUE";     --Lev
+    attribute keep of io0_o                         : signal is "TRUE";     --Lev
+    attribute keep of io0_t                         : signal is "TRUE";     --Lev
+    attribute keep of io1_i                         : signal is "TRUE";     --Lev
+    attribute keep of io1_o                         : signal is "TRUE";     --Lev
+    attribute keep of io1_t                         : signal is "TRUE";     --Lev
+    attribute keep of ss_i                          : signal is "TRUE";     --Lev
+    attribute keep of ss_o                          : signal is "TRUE";     --Lev
+    attribute keep of ss_t                          : signal is "TRUE";     --Lev
+    
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------
@@ -697,6 +741,7 @@ architecture Behavioral of mmfe8_top is
     -- 19. select_data
     -- 20. ila_top_level
     -- 21. xadc
+    -- 22. AXI4_SPI
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -1126,7 +1171,12 @@ architecture Behavioral of mmfe8_top is
         xadc_start          : out std_logic;
         vmm_id_xadc         : out std_logic_vector(15 downto 0);
         xadc_sample_size    : out std_logic_vector(10 downto 0);
-        xadc_delay          : out std_logic_vector(17 downto 0)
+        xadc_delay          : out std_logic_vector(17 downto 0);
+        
+        myIP_set            : out std_logic_vector(31 downto 0);        --Lev
+        myMAC_set           : out std_logic_vector(47 downto 0);        --Lev
+        destIP_set          : out std_logic_vector(31 downto 0);        --Lev
+        newip_start         : out std_logic                             --Lev
         );
     end component;
     -- 19
@@ -1160,7 +1210,7 @@ architecture Behavioral of mmfe8_top is
     -- 20
     component ila_top_level
         PORT (  clk     : IN std_logic;
-                probe0  : IN std_logic_vector(255 DOWNTO 0)
+                probe0  : IN std_logic_vector(302 DOWNTO 0)     --Lev
                 );
     end component;
     -- 21
@@ -1203,6 +1253,35 @@ architecture Behavioral of mmfe8_top is
         data_fifo_enable    : out std_logic;
         packet_len          : out std_logic_vector(11 downto 0);
         xadc_busy           : out std_logic
+    );
+    end component;
+
+    component AXI4_SPI                  -- Lev
+    port(
+        clk_200                 : in  std_logic;
+        --clk_100                 : in  std_logic;
+        clk_50                  : in  std_logic;
+        
+        myIP                    : out std_logic_vector(31 downto 0);
+        myMAC                   : out std_logic_vector(47 downto 0);
+        destIP                  : out std_logic_vector(31 downto 0);
+        
+        myIP_set                : in std_logic_vector(31 downto 0);
+        myMAC_set               : in std_logic_vector(47 downto 0);
+        destIP_set              : in std_logic_vector(31 downto 0);
+        
+        newip_start            : in std_logic;
+        
+        io0_i : IN STD_LOGIC;
+        io0_o : OUT STD_LOGIC;
+        io0_t : OUT STD_LOGIC;
+        io1_i : IN STD_LOGIC;
+        io1_o : OUT STD_LOGIC;
+        io1_t : OUT STD_LOGIC;
+        ss_i : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+        ss_o : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+        ss_t : OUT STD_LOGIC
+        --SPI_CLK                 : in    std_logic
     );
     end component;
 
@@ -1475,7 +1554,11 @@ configuration_logic: config_logic
             xadc_start          => xadc_start,
             vmm_id_xadc         => vmm_id_xadc,
             xadc_sample_size    => xadc_sample_size,
-            xadc_delay          => xadc_delay
+            xadc_delay          => xadc_delay,
+            myIP_set            => myIP_set,    --Lev
+            myMAC_set           => myMAC_set,   --Lev
+            destIP_set          => destIP_set,  --Lev
+            newip_start         => newip_start  --Lev
             );
 
 clk_200_to_400_inst: clk_wiz_200_to_400
@@ -1722,6 +1805,58 @@ xadc_instance: xadc
         packet_len                  => xadc_packet_len,
         xadc_busy                   => xadc_busy
     );
+
+axi4_spi_instance: AXI4_SPI     --Lev
+    port map(
+        clk_200                => clk_200,
+        --clk_100                => clk_100,
+        clk_50                 => clk_50,
+        
+        myIP                   => myIP,
+        myMAC                  => myMAC,
+        destIP                 => destIP,
+        
+        myIP_set               => myIP_set,
+        myMAC_set              => myMAC_set,
+        destIP_set             => destIP_set,
+
+        newip_start            => newip_start,
+
+        io0_i                  => io0_i,
+        io0_o                  => io0_o,
+        io0_t                  => io0_t,
+        io1_i                  => io1_i,
+        io1_o                  => io1_o,
+        io1_t                  => io1_t,
+        ss_i                   => ss_i,
+        ss_o                   => ss_o,
+        ss_t                   => ss_t
+        --SPI_CLK                => 
+    );
+
+QSPI_IO0_0: IOBUF       --Lev
+   port map (
+      O  => io0_i,
+      IO => IO0_IO,
+      I  => io0_o,
+      T  => io0_t
+   );
+           
+QSPI_IO1_0: IOBUF       --Lev
+   port map (
+      O  => io1_i,
+      IO => IO1_IO,
+      I  => io1_o,
+      T  => io1_t
+   );
+	
+QSPI_SS_0: IOBUF        --Lev
+   port map (
+      O  => ss_i(0),
+      IO => SS_IO,
+      I  => ss_o(0),
+      T  => ss_t
+   );
 
 --FIFO2Elink_instance: FIFO2Elink
 --    generic map(OutputDataRate  => 80) -- 80 or 160 MHz
@@ -2136,7 +2271,10 @@ ila_top: ila_top_level
     read_out(188 downto 186)    <= state_rst_etr_i;
     read_out(189)               <= rst_etr_i;
     read_out(190)               <= rst_done_etr_i;
+    read_out(222 downto 191)    <= myIP;        --Lev
+    read_out(270 downto 223)    <= myMAC;       --Lev
+    read_out(302 downto 271)    <= destIP;      --Lev
 
-    read_out(255 downto 191)    <= (others => '0');
+    --read_out(255 downto 191)    <= (others => '0');       --Lev
 
 end Behavioral;

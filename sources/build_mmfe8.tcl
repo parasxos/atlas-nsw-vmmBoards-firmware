@@ -140,6 +140,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/mmfe8_top.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/config_logic.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/select_vmm.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/axi_quad_top.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_REQ.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_RX.vhd"]"\
@@ -185,6 +186,8 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
@@ -196,6 +199,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/xadc/xadc.v"]"\
  "[file normalize "$origin_dir/sources_1/xadc/xadc_read.v"]"\
 ]
+
 add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
@@ -205,6 +209,11 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/configuration/config_logic.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/axi_quad_top.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -527,6 +536,19 @@ set files [list \
 ]
 add_files -norecurse -fileset $obj $files
 
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
 
 # Set 'sources_1' fileset file properties for remote files
 # None

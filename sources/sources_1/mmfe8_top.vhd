@@ -589,132 +589,117 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -------------------------------------------------------------------
-    attribute keep          : string;
-    attribute dont_touch    : string;
+    attribute mark_debug    : string;
+   -- attribute keep          : string;
+   -- attribute dont_touch    : string;
   
     -------------------------------------------------------------------
     -- Readout Monitoring
     -------------------------------------------------------------------
-    attribute keep of vmm_ena_vec           : signal is "true";
-    attribute dont_touch of vmm_ena_vec     : signal is "true";
-    attribute keep of vmm_wen_vec           : signal is "true";
-    attribute dont_touch of vmm_wen_vec     : signal is "true";
-    attribute keep of cktk_out_vec          : signal is "true";
-    attribute dont_touch of cktk_out_vec    : signal is "true";
-    attribute keep of vmm_cktp_8            : signal is "true";
+--    attribute mark_debug of vmm_ena_vec           : signal is "true";
+--    attribute mark_debug of vmm_wen_vec     : signal is "true";
+--    attribute mark_debug of cktk_out_vec          : signal is "true";
+--    attribute mark_debug of vmm_cktp_8            : signal is "true";
 
-    attribute keep of cktk_out_i            : signal is "true";
-    attribute keep of ckdt_out_vec          : signal is "true";
-    attribute keep of vmm_do_vec_i          : signal is "true";
-    attribute keep of daq_vmm_ena_wen_enable: signal is "true";
-    attribute keep of vmm_id_int            : signal is "true";
+--    attribute mark_debug of cktk_out_i            : signal is "true";
+--    attribute mark_debug of ckdt_out_vec          : signal is "true";
+--    attribute mark_debug of vmm_do_vec_i          : signal is "true";
+--    attribute mark_debug of daq_vmm_ena_wen_enable: signal is "true";
+--    attribute mark_debug of vmm_id_int            : signal is "true";
     
-    attribute keep of data0_in_vec          : signal is "true";
-    attribute dont_touch of data0_in_vec    : signal is "true";
-    attribute keep of ro_cktk_out_vec       : signal is "true";
-    attribute dont_touch of ro_cktk_out_vec : signal is "true";
+--    attribute mark_debug of data0_in_vec          : signal is "true";
+--    attribute mark_debug of ro_cktk_out_vec       : signal is "true";
 
-    -------------------------------------------------------------------
-    -- Trigger
-    -------------------------------------------------------------------
---      attribute keep of event_counter_i       : signal is "true";
---      attribute keep of tr_out_i              : signal is "true";
---      attribute keep of ext_trigger           : signal is "true";
---      attribute keep of trigger_loop_i        : signal is "true";
---      attribute keep of ext_trigger_i         : signal is "true";
-    attribute keep of trint               : signal is "true";
-    attribute keep of tren                : signal is "true";
-    attribute keep of ext_trigger_in      : signal is "true";
-    attribute keep of trig_mode_int       : signal is "true";
+--    -------------------------------------------------------------------
+--    -- Trigger
+--    -------------------------------------------------------------------
+----      attribute mark_debug of event_counter_i       : signal is "true";
+----      attribute mark_debug of tr_out_i              : signal is "true";
+----      attribute mark_debug of ext_trigger           : signal is "true";
+----      attribute mark_debug of trigger_loop_i        : signal is "true";
+----      attribute mark_debug of ext_trigger_i         : signal is "true";
+--    attribute mark_debug of trint               : signal is "true";
+--    attribute mark_debug of tren                : signal is "true";
+--    attribute mark_debug of ext_trigger_in      : signal is "true";
+--    attribute mark_debug of trig_mode_int       : signal is "true";
 
-    -------------------------------------------------------------------
-    -- Event Timing & Soft Reset
-    -------------------------------------------------------------------
-  --   attribute keep of tr_out_i               :   signal  is  "true";
-    attribute keep of etr_reset_latched      : signal is "true";
-    attribute keep of rst_vmm                : signal is "true";
-    attribute keep of etr_vmm_ena_vec        : signal is "true";
-    attribute keep of daq_enable_i           : signal is "true";
-    attribute keep of glBCID_i               : signal is "true";
-    attribute dont_touch of glBCID_i         : signal is "true";
-    attribute keep of state_rst_etr_i        : signal is "true";
-    attribute dont_touch of state_rst_etr_i  : signal is "true";
-    attribute keep of rst_etr_i              : signal is "true";
-    attribute dont_touch of rst_etr_i        : signal is "true";
-    attribute keep of rst_done_etr_i         : signal is "true";
-    attribute dont_touch of rst_done_etr_i   : signal is "true";
+--    -------------------------------------------------------------------
+--    -- Event Timing & Soft Reset
+--    -------------------------------------------------------------------
+--  --   attribute mark_debug of tr_out_i               :   signal  is  "true";
+--    attribute mark_debug of etr_reset_latched      : signal is "true";
+--    attribute mark_debug of rst_vmm                : signal is "true";
+--    attribute mark_debug of etr_vmm_ena_vec        : signal is "true";
+--    attribute mark_debug of daq_enable_i           : signal is "true";
+--    attribute mark_debug of glBCID_i               : signal is "true";
+--    attribute mark_debug of state_rst_etr_i        : signal is "true";
+--    attribute mark_debug of rst_etr_i              : signal is "true";
+--    attribute mark_debug of rst_done_etr_i         : signal is "true";
     
-    -------------------------------------------------------------------
-    -- Packet Formation
-    -------------------------------------------------------------------
---      attribute keep of pf_datain_i           :  signal  is  "true";
-    attribute keep of pf_newCycle           :  signal  is  "true";
---      attribute keep of pf_dataout            :  signal  is  "true";
---      attribute keep of pf_wren               :  signal  is  "true";
-    attribute keep of pfBusy_i              : signal is "true";
-    attribute dont_touch of pfBusy_i        : signal is "true";
+--    -------------------------------------------------------------------
+--    -- Packet Formation
+--    -------------------------------------------------------------------
+----      attribute mark_debug of pf_datain_i           :  signal  is  "true";
+--    attribute mark_debug of pf_newCycle           :  signal  is  "true";
+----      attribute mark_debug of pf_dataout            :  signal  is  "true";
+----      attribute mark_debug of pf_wren               :  signal  is  "true";
+--    attribute mark_debug of pfBusy_i              : signal is "true";
     
-    -------------------------------------------------------------------
-    -- Dynamic IP
-    -------------------------------------------------------------------   
-    attribute keep of io0_i                         : signal is "TRUE";     --Lev
-    attribute keep of io0_o                         : signal is "TRUE";     --Lev
-    attribute keep of io0_t                         : signal is "TRUE";     --Lev
-    attribute keep of io1_i                         : signal is "TRUE";     --Lev
-    attribute keep of io1_o                         : signal is "TRUE";     --Lev
-    attribute keep of io1_t                         : signal is "TRUE";     --Lev
-    attribute keep of ss_i                          : signal is "TRUE";     --Lev
-    attribute keep of ss_o                          : signal is "TRUE";     --Lev
-    attribute keep of ss_t                          : signal is "TRUE";     --Lev
+--    -------------------------------------------------------------------
+--    -- Dynamic IP
+--    -------------------------------------------------------------------   
+--    attribute mark_debug of io0_i                         : signal is "TRUE";     --Lev
+--    attribute mark_debug of io0_o                         : signal is "TRUE";     --Lev
+--    attribute mark_debug of io0_t                         : signal is "TRUE";     --Lev
+--    attribute mark_debug of io1_i                         : signal is "TRUE";     --Lev
+--    attribute mark_debug of io1_o                         : signal is "TRUE";     --Lev
+--    attribute mark_debug of io1_t                         : signal is "TRUE";     --Lev
+--    attribute mark_debug of ss_i                          : signal is "TRUE";     --Lev
+--    attribute mark_debug of ss_o                          : signal is "TRUE";     --Lev
+--    attribute mark_debug of ss_t                          : signal is "TRUE";     --Lev
     
-    -------------------------------------------------------------------
-    -- Other
-    -------------------------------------------------------------------
-    attribute keep of set_reset                 : signal is "TRUE";
-    attribute dont_touch of set_reset           : signal is "TRUE";
-    attribute keep of tx_axis_mac_tready_int    : signal is "TRUE";
-    attribute keep of test_data                 : signal is "TRUE";
-    attribute keep of status_int                : signal is "TRUE";
-    attribute keep of status_int_synced         : signal is "TRUE";
-    attribute keep of user_data_out_i           : signal is "TRUE";
-    attribute dont_touch of user_data_out_i     : signal is "TRUE";
-    attribute keep of we_conf_int               : signal is "TRUE";
-    attribute keep of fifo_data_out_int         : signal is "TRUE";
-    attribute keep of re_out_int                : signal is "TRUE";
-    attribute keep of daqFIFO_wr_en_i           : signal is "TRUE";
-    attribute keep of daqFIFO_din_i             : signal is "TRUE";
-    attribute keep of user_conf_i               : signal is "TRUE";
-    attribute keep of send_error_int            : signal is "TRUE";
-    attribute keep of send_error_done_int       : signal is "TRUE";
-    attribute keep of test_data_out             : signal is "TRUE";
-    attribute keep of test_valid_out            : signal is "TRUE";
-    attribute keep of test_last_out             : signal is "TRUE";
-    attribute keep of udp_tx_start_int          : signal is "TRUE";
-    attribute keep of udp_tx_data_out_ready_int : signal is "TRUE";
-    attribute keep of vmm_id                    : signal is "TRUE";
-    attribute keep of configuring_i             : signal is "TRUE";
-    attribute keep of vmm_id_synced             : signal is "TRUE";
-    attribute keep of vmm_id_old                : signal is "TRUE";
-    attribute keep of cnt_vmm                   : signal is "TRUE";
-    attribute keep of conf_done_int             : signal is "TRUE";
-    attribute keep of conf_done_int_synced      : signal is "TRUE";
-    attribute keep of conf_wen_i                : signal is "TRUE";
-    attribute dont_touch of conf_wen_i          : signal is "TRUE";
-    attribute keep of conf_ena_i                : signal is "TRUE";
-    attribute dont_touch of conf_ena_i          : signal is "TRUE";
-    attribute keep of conf_di_i                 : signal is "TRUE";
-    attribute keep of vmm_di_vec_i              : signal is "TRUE";
-    attribute dont_touch of vmm_di_vec_i        : signal is "TRUE";
-    attribute keep of start_conf_proc_int       : signal is "TRUE";
-    attribute keep of cnt_reply                 : signal is "TRUE";
-    attribute keep of end_packet_conf_int       : signal is "TRUE";
-    attribute keep of xadc_busy                 : signal is "TRUE";
-    attribute keep of daqFIFO_reset             : signal is "TRUE";
-    attribute keep of rstFIFO_top               : signal is "TRUE";
-    attribute keep of pf_rst_FIFO               : signal is "TRUE";
+--    -------------------------------------------------------------------
+--    -- Other
+--    -------------------------------------------------------------------
+--    attribute mark_debug of set_reset                 : signal is "TRUE";
+--    attribute mark_debug of tx_axis_mac_tready_int    : signal is "TRUE";
+--    attribute mark_debug of test_data                 : signal is "TRUE";
+--    attribute mark_debug of status_int                : signal is "TRUE";
+--    attribute mark_debug of status_int_synced         : signal is "TRUE";
+--    attribute mark_debug of user_data_out_i           : signal is "TRUE";
+--    attribute mark_debug of we_conf_int               : signal is "TRUE";
+--    attribute mark_debug of fifo_data_out_int         : signal is "TRUE";
+--    attribute mark_debug of re_out_int                : signal is "TRUE";
+--    attribute mark_debug of daqFIFO_wr_en_i           : signal is "TRUE";
+--    attribute mark_debug of daqFIFO_din_i             : signal is "TRUE";
+--    attribute mark_debug of user_conf_i               : signal is "TRUE";
+--    attribute mark_debug of send_error_int            : signal is "TRUE";
+--    attribute mark_debug of send_error_done_int       : signal is "TRUE";
+--    attribute mark_debug of test_data_out             : signal is "TRUE";
+--    attribute mark_debug of test_valid_out            : signal is "TRUE";
+--    attribute mark_debug of test_last_out             : signal is "TRUE";
+--    attribute mark_debug of udp_tx_start_int          : signal is "TRUE";
+--    attribute mark_debug of udp_tx_data_out_ready_int : signal is "TRUE";
+--    attribute mark_debug of vmm_id                    : signal is "TRUE";
+--    attribute mark_debug of configuring_i             : signal is "TRUE";
+--    attribute mark_debug of vmm_id_synced             : signal is "TRUE";
+--    attribute mark_debug of vmm_id_old                : signal is "TRUE";
+--    attribute mark_debug of cnt_vmm                   : signal is "TRUE";
+--    attribute mark_debug of conf_done_int             : signal is "TRUE";
+--    attribute mark_debug of conf_done_int_synced      : signal is "TRUE";
+--    attribute mark_debug of conf_wen_i                : signal is "TRUE";
+--    attribute mark_debug of conf_ena_i                : signal is "TRUE";
+--    attribute mark_debug of conf_di_i                 : signal is "TRUE";
+--    attribute mark_debug of vmm_di_vec_i              : signal is "TRUE";
+--    attribute mark_debug of start_conf_proc_int       : signal is "TRUE";
+--    attribute mark_debug of cnt_reply                 : signal is "TRUE";
+--    attribute mark_debug of end_packet_conf_int       : signal is "TRUE";
+--    attribute mark_debug of xadc_busy                 : signal is "TRUE";
+--    attribute mark_debug of daqFIFO_reset             : signal is "TRUE";
+--    attribute mark_debug of rstFIFO_top               : signal is "TRUE";
+--    attribute mark_debug of pf_rst_FIFO               : signal is "TRUE";
     
-    attribute keep of trigger_i                 : signal is "TRUE";
-    attribute dont_touch of trigger_i           : signal is "TRUE";
+--    attribute mark_debug of trigger_i                 : signal is "TRUE";
 
     
     -------------------------------------------------------------------
@@ -2225,55 +2210,55 @@ end process;
 	re_out                  <= re_out_int;
 
 
-ila_top: ila_top_level
-    port map (
-        clk     => clk_200,
-        probe0  => read_out
-    );
+--ila_top: ila_top_level
+--    port map (
+--        clk     => clk_200,
+--        probe0  => read_out
+--    );
 
-    read_out(7 downto 0)        <= vmm_ena_vec;
-    read_out(15 downto 8)       <= vmm_wen_vec;
-    read_out(23 downto 16)      <= cktk_out_vec;
-    read_out(31 downto 24)      <= ckdt_out_vec;
-    read_out(35 downto 32)      <= is_state;
-    read_out(39 downto 36)      <= status_int;
-    read_out(55 downto 40)      <= vmm_id_int;
-    read_out(59 downto 56)      <= status_int_synced;
-    read_out(67 downto 60)      <= daq_vmm_ena_wen_enable;
-    read_out(75 downto 68)      <= data0_in_vec;
-    read_out(76)                <= trint;
-    read_out(77)                <= tren;
-    read_out(78)                <= vmm_cktp;
-    read_out(79)                <= pf_newCycle;
-    read_out(80)                <= tx_axis_mac_tready_int;
-    read_out(81)                <= glbl_rst_i;
-    read_out(82)                <= start_conf_proc_int;
-    read_out(83)                <= daqFIFO_wr_en_i;
-    read_out(84)                <= daq_wr_en_i;
-    read_out(85)                <= trig_mode_int;
-    read_out(86)                <= ext_trigger_in;
-    read_out(87)                <= conf_wen_i;
-    read_out(88)                <= cktk_out_i;
-    read_out(89)                <= conf_di_i;
-    read_out(90)                <= etr_reset_latched;
-    read_out(91)                <= rst_vmm;
-    read_out(99 downto 92)      <= etr_vmm_ena_vec;
-    read_out(102 downto 100)    <= pf_vmmIdRo;
-    read_out(103)               <= daq_enable_i;
-    read_out(104)               <= xadc_busy;
-    read_out(105)               <= daqFIFO_reset;
-    read_out(106)               <= rstFIFO_top;
-    read_out(107)               <= pf_rst_FIFO;
-    read_out(171 downto 108)    <= daq_data_out_i;
-    read_out(172)               <= trigger_i;
-    read_out(184 downto 173)    <= glBCID_i;
-    read_out(185)               <= pfBusy_i;
-    read_out(188 downto 186)    <= state_rst_etr_i;
-    read_out(189)               <= rst_etr_i;
-    read_out(190)               <= rst_done_etr_i;
-    read_out(222 downto 191)    <= myIP;        --Lev
-    read_out(270 downto 223)    <= myMAC;       --Lev
-    read_out(302 downto 271)    <= destIP;      --Lev
+--    read_out(7 downto 0)        <= vmm_ena_vec;
+--    read_out(15 downto 8)       <= vmm_wen_vec;
+--    read_out(23 downto 16)      <= cktk_out_vec;
+--    read_out(31 downto 24)      <= ckdt_out_vec;
+--    read_out(35 downto 32)      <= is_state;
+--    read_out(39 downto 36)      <= status_int;
+--    read_out(55 downto 40)      <= vmm_id_int;
+--    read_out(59 downto 56)      <= status_int_synced;
+--    read_out(67 downto 60)      <= daq_vmm_ena_wen_enable;
+--    read_out(75 downto 68)      <= data0_in_vec;
+--    read_out(76)                <= trint;
+--    read_out(77)                <= tren;
+--    read_out(78)                <= vmm_cktp;
+--    read_out(79)                <= pf_newCycle;
+--    read_out(80)                <= tx_axis_mac_tready_int;
+--    read_out(81)                <= glbl_rst_i;
+--    read_out(82)                <= start_conf_proc_int;
+--    read_out(83)                <= daqFIFO_wr_en_i;
+--    read_out(84)                <= daq_wr_en_i;
+--    read_out(85)                <= trig_mode_int;
+--    read_out(86)                <= ext_trigger_in;
+--    read_out(87)                <= conf_wen_i;
+--    read_out(88)                <= cktk_out_i;
+--    read_out(89)                <= conf_di_i;
+--    read_out(90)                <= etr_reset_latched;
+--    read_out(91)                <= rst_vmm;
+--    read_out(99 downto 92)      <= etr_vmm_ena_vec;
+--    read_out(102 downto 100)    <= pf_vmmIdRo;
+--    read_out(103)               <= daq_enable_i;
+--    read_out(104)               <= xadc_busy;
+--    read_out(105)               <= daqFIFO_reset;
+--    read_out(106)               <= rstFIFO_top;
+--    read_out(107)               <= pf_rst_FIFO;
+--    read_out(171 downto 108)    <= daq_data_out_i;
+--    read_out(172)               <= trigger_i;
+--    read_out(184 downto 173)    <= glBCID_i;
+--    read_out(185)               <= pfBusy_i;
+--    read_out(188 downto 186)    <= state_rst_etr_i;
+--    read_out(189)               <= rst_etr_i;
+--    read_out(190)               <= rst_done_etr_i;
+--    read_out(222 downto 191)    <= myIP;        --Lev
+--    read_out(270 downto 223)    <= myMAC;       --Lev
+--    read_out(302 downto 271)    <= destIP;      --Lev
 
     --read_out(255 downto 191)    <= (others => '0');       --Lev
 

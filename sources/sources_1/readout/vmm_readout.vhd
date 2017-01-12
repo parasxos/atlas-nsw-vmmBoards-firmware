@@ -95,26 +95,26 @@ architecture Behavioral of vmm_readout is
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -------------------------------------------------------------------
-    attribute keep : string;
+    attribute mark_debug : string;
 
-    attribute keep of NoFlg                 :	signal	is	"true";
-    attribute keep of dt_state              :	signal	is	"true";
-    attribute keep of NoFlg_counter         :	signal	is	"true";
-    attribute keep of reading_out_word      :	signal	is	"true";
-    attribute keep of dt_done               :	signal	is	"true";
-    attribute keep of vmm_ckdt_i            :	signal	is	"true";
-    attribute keep of vmm_cktk_i            :	signal	is	"true";
-    attribute keep of vmm_data0_i           :   signal	is	"true";
-    attribute keep of vmm_data1_i           :   signal	is	"true";
-    attribute keep of dataBitRead           :   signal	is	"true";
-    attribute keep of dt_cntr_st            :   signal	is	"true";
-    attribute keep of vmmEventDone_i        :   signal  is  "true";
-    attribute keep of hitsLen_cnt           :   signal  is  "true";
-    attribute keep of daq_enable_i          :   signal  is  "true";
-    attribute keep of vmmWordReady_i        :   signal	is	"true";
-    attribute keep of vmmWord_i             :   signal	is	"true";
-    attribute keep of trigger_pulse         :   signal  is  "true";
-    attribute keep of trigger_pulse_i       :   signal  is  "true";
+--    attribute mark_debug of NoFlg                 :	signal	is	"true";
+--    attribute mark_debug of dt_state              :	signal	is	"true";
+--    attribute mark_debug of NoFlg_counter         :	signal	is	"true";
+--    attribute mark_debug of reading_out_word      :	signal	is	"true";
+--    attribute mark_debug of dt_done               :	signal	is	"true";
+--    attribute mark_debug of vmm_ckdt_i            :	signal	is	"true";
+--    attribute mark_debug of vmm_cktk_i            :	signal	is	"true";
+--    attribute mark_debug of vmm_data0_i           : signal	is	"true";
+--    attribute mark_debug of vmm_data1_i           : signal	is	"true";
+--    attribute mark_debug of dataBitRead           : signal	is	"true";
+--    attribute mark_debug of dt_cntr_st            : signal	is	"true";
+--    attribute mark_debug of vmmEventDone_i        : signal  is  "true";
+--    attribute mark_debug of hitsLen_cnt           : signal  is  "true";
+--    attribute mark_debug of daq_enable_i          : signal  is  "true";
+--    attribute mark_debug of vmmWordReady_i        : signal	is	"true";
+--    attribute mark_debug of vmmWord_i             : signal	is	"true";
+--    attribute mark_debug of trigger_pulse         : signal  is  "true";
+--    attribute mark_debug of trigger_pulse_i       : signal  is  "true";
 
 component vmmSignalsDemux
 port(
@@ -340,29 +340,29 @@ port map(
     vmm_cktk_vec    => vmm_cktk_vec
     );
 
-ilaDAQ: ila_readout
-port map
-    (
-        clk                     =>  clk_200,
-        probe0                  =>  probe0_out
-    );
+--ilaDAQ: ila_readout
+--port map
+--    (
+--        clk                     =>  clk_200,
+--        probe0                  =>  probe0_out
+--    );
 
-    probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
-    probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK
-    probe0_out(7 downto 5)      <=  std_logic_vector(to_unsigned(NoFlg, probe0_out(7 downto 5)'length));            -- OK
-    probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
-    probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                   -- OK
-    probe0_out(15)              <=  daq_enable_i;                                                                   -- OK
-    probe0_out(16)              <=  reading_out_word;                                                               -- OK
-    probe0_out(17)              <=  dt_done;                                                                        -- OK
-    probe0_out(18)              <=  vmm_ckdt_i;                                                                     -- OK
-    probe0_out(19)              <=  vmm_data0_i;                                                                    -- OK
-    probe0_out(20)              <=  vmm_data1_i;                                                                    -- OK
-    probe0_out(25 downto 21)    <=  std_logic_vector(to_unsigned(dataBitRead, probe0_out(28 downto 24)'length));    -- OK
-    probe0_out(26)              <=  vmmWordReady_i;                                                                 -- OK
-    probe0_out(90 downto 27)    <=  vmmWord_i;                                                                      -- OK
-    probe0_out(91)              <=  trigger_pulse_i;                                                                -- OK
-    probe0_out(99 downto 92)    <=  std_logic_vector(to_unsigned(hitsLen_cnt, probe0_out(101 downto 94)'length));   -- OK
-    probe0_out(127 downto 100)  <=  (others => '0');
+--    probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
+--    probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK
+--    probe0_out(7 downto 5)      <=  std_logic_vector(to_unsigned(NoFlg, probe0_out(7 downto 5)'length));            -- OK
+--    probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
+--    probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                   -- OK
+--    probe0_out(15)              <=  daq_enable_i;                                                                   -- OK
+--    probe0_out(16)              <=  reading_out_word;                                                               -- OK
+--    probe0_out(17)              <=  dt_done;                                                                        -- OK
+--    probe0_out(18)              <=  vmm_ckdt_i;                                                                     -- OK
+--    probe0_out(19)              <=  vmm_data0_i;                                                                    -- OK
+--    probe0_out(20)              <=  vmm_data1_i;                                                                    -- OK
+--    probe0_out(25 downto 21)    <=  std_logic_vector(to_unsigned(dataBitRead, probe0_out(28 downto 24)'length));    -- OK
+--    probe0_out(26)              <=  vmmWordReady_i;                                                                 -- OK
+--    probe0_out(90 downto 27)    <=  vmmWord_i;                                                                      -- OK
+--    probe0_out(91)              <=  trigger_pulse_i;                                                                -- OK
+--    probe0_out(99 downto 92)    <=  std_logic_vector(to_unsigned(hitsLen_cnt, probe0_out(101 downto 94)'length));   -- OK
+--    probe0_out(127 downto 100)  <=  (others => '0');
 
 end behavioral;

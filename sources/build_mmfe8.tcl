@@ -571,7 +571,7 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/constrs_1/mmfe8.xdc"]"
+set file "[file normalize "$origin_dir/constrs_1/mmfe8_constr.xdc"]"
 set file_added [add_files -norecurse -fileset $obj $file]
 set file "$origin_dir/constrs_1/mmfe8_constr.xdc"
 set file [file normalize $file]

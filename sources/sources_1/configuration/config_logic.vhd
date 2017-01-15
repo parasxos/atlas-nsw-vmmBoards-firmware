@@ -20,6 +20,9 @@
 --      of the VMM. (Reid Pinkham)
 -- 16.09.2016 Added additional elsif in state = CHECK for dynamic IP configuration
 -- (Lev Kurilenko)
+-- 15.01.2016 Added Clock-Domain-Crossing circuits in between the FSM clocked by
+-- the 125 Mhz clock, and the FSM clocked by the 40 Mhz clock, as the two clocks
+-- are unrelated and asynchronous to each other. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -84,7 +87,23 @@ end config_logic;
 
 architecture rtl of config_logic is
 
+    component CDCC
+    generic(
+        NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
+    port(
+        clk_src     : in  std_logic;                                        -- input clk (source clock)
+        clk_dst     : in  std_logic;                                        -- input clk (dest clock)
+        data_in     : in  std_logic_vector(NUMBER_OF_BITS - 1 downto 0);    -- data to be synced
+        data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
+        );
+    end component;
+
     signal packet_length_int    : integer := 0;
+    signal packet_length_int_40 : integer := 0;
+    signal packet_length_sig    : std_logic_vector(15 downto 0);
+    signal packet_length_sig_40 : std_logic_vector(15 downto 0);
+    signal rst_40               : std_logic := '0';
+    signal rst_40_s40           : std_logic := '0';
     signal reading_packet       : std_logic := '0';
     signal user_last_int        : std_logic := '0';
     signal count, timeout       : integer := 0;
@@ -103,6 +122,7 @@ architecture rtl of config_logic is
     signal vmm_cktk_i           : std_logic := '0';
     signal start_conf_process   : std_logic := '0';
     signal conf_done_i          : std_logic := '0';
+    signal conf_done_i_s125     : std_logic := '0';
     signal cnt_array            : integer := 0;    
     signal MainFSMstate         : std_logic_vector(3 downto 0); 
     signal ConfFSMstate         : std_logic_vector(3 downto 0); 
@@ -142,60 +162,52 @@ architecture rtl of config_logic is
     type state_t is (START, SEND1,SEND0, FINISHED, ONLY_CONF_ONCE);
     signal conf_state  : state_t; 
 
-    attribute keep : string;
-    attribute dont_touch : string;
-    attribute keep of sn                          : signal is "true";
-    attribute keep of vmm_id_int                  : signal is "true";
-    attribute keep of user_last_int               : signal is "true";    
-    attribute keep of cmd                         : signal is "true";
-    attribute keep of count                       : signal is "true";
-    attribute keep of last_synced200              : signal is "true";
-    attribute keep of reading_packet              : signal is "true";
-    attribute keep of user_data_in_int            : signal is "true";
-    attribute keep of user_wr_en_int              : signal is "true";   
-    attribute keep of packet_length_int           : signal is "true";
-    attribute keep of cfg_bit_out_i               : signal is "true";  
-    attribute keep of status_int                  : signal is "true";
-    attribute keep of start_conf_process          : signal is "true";
-    attribute keep of conf_done_i                 : signal is "true";
-    attribute keep of cnt_array                   : signal is "true";
+--    attribute mark_debug : string;
+--    attribute mark_debug of sn                          : signal is "true";
+--    attribute mark_debug of vmm_id_int                  : signal is "true";
+--    attribute mark_debug of user_last_int               : signal is "true";    
+--    attribute mark_debug of cmd                         : signal is "true";
+--    attribute mark_debug of count                       : signal is "true";
+--    attribute mark_debug of last_synced200              : signal is "true";
+--    attribute mark_debug of reading_packet              : signal is "true";
+--    attribute mark_debug of user_data_in_int            : signal is "true";
+--    attribute mark_debug of user_wr_en_int              : signal is "true";   
+--    attribute mark_debug of packet_length_int           : signal is "true";
+--    attribute mark_debug of cfg_bit_out_i               : signal is "true";  
+--    attribute mark_debug of status_int                  : signal is "true";
+--    attribute mark_debug of start_conf_process          : signal is "true";
+--    attribute mark_debug of conf_done_i                 : signal is "true";
+--    attribute mark_debug of cnt_array                   : signal is "true";
     
-    attribute keep of DAQ_START_STOP                  : signal is "true";
-    attribute dont_touch of DAQ_START_STOP            : signal is "true";    
+--    attribute mark_debug of DAQ_START_STOP              : signal is "true";    
     
-    attribute keep of user_wr_en                  : signal is "true";
-    attribute dont_touch of user_wr_en            : signal is "true";      
+--    attribute mark_debug of user_wr_en                  : signal is "true";     
      
-    attribute keep of MainFSMstate                : signal is "true";
-    attribute keep of ConfFSMstate                : signal is "true";
-    attribute keep of test_data_int               : signal is "true";   
-    attribute keep of delay_data                  : signal is "true"; 
-    attribute keep of i                           : signal is "true";
-    attribute keep of vmm_cktk_i                  : signal is "true";
-    attribute keep of udp_header_int              : signal is "true"; 
-    attribute keep of j                           : signal is "true";     
-    attribute keep of start_vmm_conf_int          : signal is "true";   
-    attribute keep of start_vmm_conf_synced       : signal is "true";
-    attribute keep of dest_port                   : signal is "true";
+--    attribute mark_debug of MainFSMstate                : signal is "true";
+--    attribute mark_debug of ConfFSMstate                : signal is "true";
+--    attribute mark_debug of test_data_int               : signal is "true";   
+--    attribute mark_debug of delay_data                  : signal is "true"; 
+--    attribute mark_debug of i                           : signal is "true";
+--    attribute mark_debug of vmm_cktk_i                  : signal is "true";
+--    attribute mark_debug of udp_header_int              : signal is "true"; 
+--    attribute mark_debug of j                           : signal is "true";     
+--    attribute mark_debug of start_vmm_conf_int          : signal is "true";   
+--    attribute mark_debug of start_vmm_conf_synced       : signal is "true";
+--    attribute mark_debug of dest_port                   : signal is "true";
     
-    attribute keep of vmm_id_xadc_i               : signal is "true";
-    attribute keep of xadc_sample_size_i          : signal is "true";
-    attribute keep of xadc_delay_i                : signal is "true";
+--    attribute mark_debug of vmm_id_xadc_i               : signal is "true";
+--    attribute mark_debug of xadc_sample_size_i          : signal is "true";
+--    attribute mark_debug of xadc_delay_i                : signal is "true";
     
---    attribute keep of vmm_we_int                      : signal is "true";
---    attribute dont_touch of vmm_we_int                : signal is "true";  
+--    attribute mark_debug of vmm_we_int                  : signal is "true";
     
-    attribute keep of cnt_cktk                      : signal is "true";
-    attribute dont_touch of cnt_cktk                : signal is "true";      
+--    attribute mark_debug of cnt_cktk                    : signal is "true";  
 
-    attribute keep of k                      : signal is "true";
-    attribute dont_touch of k                : signal is "true"; 
+--    attribute mark_debug of k                           : signal is "true";
     
-    attribute keep of counter                      : signal is "true";
-    attribute dont_touch of counter                : signal is "true";       
+--    attribute mark_debug of counter                     : signal is "true";   
     
-    attribute keep of del_cnt                      : signal is "true";
-    attribute dont_touch of del_cnt                : signal is "true";        
+--    attribute mark_debug of del_cnt                     : signal is "true";       
       
     
   
@@ -210,10 +222,10 @@ architecture rtl of config_logic is
     --                  NEW IP Signals LEV
     -----------------------------------------------------------  
     --attribute keep of conf_data                       : signal is "true";   --Lev
-    attribute keep of newip_counter                   : signal is "true";   --Lev
-    attribute keep of myIP_set                        : signal is "true";   --Lev
-    attribute keep of myMAC_set                       : signal is "true";   --Lev
-    attribute keep of destIP_set                      : signal is "true";   --Lev
+--    attribute mark_debug of newip_counter                   : signal is "true";   --Lev
+--    attribute mark_debug of myIP_set                        : signal is "true";   --Lev
+--    attribute mark_debug of myMAC_set                       : signal is "true";   --Lev
+--    attribute mark_debug of destIP_set                      : signal is "true";   --Lev
 
 
 begin
@@ -265,6 +277,7 @@ begin
                     sn              <= (others=> '0');
                     vmm_id_int      <= x"0000";
                     cmd             <= x"0000";
+                    rst_40          <= '0';
                     
                     if user_wr_en = '1' then
                         state   <= DATA;
@@ -369,7 +382,7 @@ begin
                         timeout <= timeout + 1;
                     end if;        
                                 
-                    if conf_done_i = '1' then 
+                    if conf_done_i_s125 = '1' then 
 --                        user_data_out   <= reply_package;
                         state           <= DELAY;-- SEND_REPLY;   
 --                        reading_packet  <= '0';
@@ -440,7 +453,8 @@ begin
                         state   <= TEST;
                     elsif conf_data(4) = x"ffffffff" and conf_data(5) = x"ffff8000" then        -- RESET FPGA
                         status_int  <= "0011";
-                        state   <= IDLE;
+                        rst_40      <= '1';
+                        state       <= IDLE;
                     elsif conf_data(4) = x"00000005" then
                         ACQ_sync    <= conf_data(5)(15 downto 0);
                         state       <= IDLE;
@@ -514,7 +528,7 @@ sync_start_vmm_conf: process(clk200)
        begin
        
        if rising_edge( clk_in) then
-        if reset = '1' or status_int = "0011" then
+        if reset = '1' or rst_40_s40 = '1' then
             conf_state   <= START;
         else
                case conf_state is
@@ -537,7 +551,7 @@ sync_start_vmm_conf: process(clk200)
                        conf_state          <= SEND1;   
                        cnt_cktk           <= cnt_cktk + 1;
 
-                       if k <= packet_length_int - 1 then 
+                       if k <= packet_length_int_40 - 1 then 
                           test_data_int       <= conf_data(k);
                           if i /= 0 then
                               cfg_bit_out_i          <= conf_data(k)(i);--(0);
@@ -600,7 +614,31 @@ sync_start_vmm_conf: process(clk200)
     status          <= status_int;   
     conf_done       <= conf_done_i; 
     cfg_bit_out     <= cfg_bit_out_i;
-    vmm_cktk        <=vmm_cktk_i;     
+    vmm_cktk        <= vmm_cktk_i;
+    
+    packet_length_sig <= std_logic_vector(to_unsigned(packet_length_int, 16));
+    packet_length_int_40 <= to_integer(unsigned(packet_length_sig_40));
+    
+CDCC_125to40: CDCC
+    generic map(NUMBER_OF_BITS => 17)
+    port map(
+        clk_src                 => clk125,
+        clk_dst                 => clk_in,
+        data_in(0)              => rst_40,
+        data_in(16 downto 1)    => packet_length_sig,
+        data_out_s(0)           => rst_40_s40,
+        data_out_s(16 downto 1) => packet_length_sig_40
+    );
+    
+CDCC_40to125: CDCC
+    generic map(NUMBER_OF_BITS => 1)
+    port map(
+        clk_src                 => clk_in,
+        clk_dst                 => clk125,
+        data_in(0)              => conf_done_i,
+        data_out_s(0)           => conf_done_i_s125
+    );
+    
     
 --    ila_conf_logic :  ila_user_FIFO
 --        port map(
@@ -613,43 +651,43 @@ sync_start_vmm_conf: process(clk200)
 
 --vmm_we_int  <= vmm_we;
                          
-sig_out(7 downto 0)         <= delay_data;     
-sig_out(8)                  <= start_vmm_conf_int;--user_fifo_empty;
-sig_out(9)                  <= start_vmm_conf_synced;--user_fifo_en_main;--'0'; --user_fifo_en;
-sig_out(10)                 <= udp_header_int;--send_error_int;
-sig_out(11)                 <= user_wr_en;
-sig_out(43 downto 12)       <= sn;
-sig_out(59 downto 44)       <= vmm_id_int;
-sig_out(75 downto 60)       <= cmd;
-sig_out(83 downto 76)       <= std_logic_vector(to_unsigned(count, sig_out(83 downto 76)'length));
-sig_out(91 downto 84)      <= std_logic_vector(to_unsigned(cnt_array, 8));   
-sig_out(92)                <= user_last_int;
-sig_out(93)                <= last_synced200;
---sig_out(110)                <= reading_packet;
-sig_out(101 downto 94)     <= user_data_in_int;
-sig_out(102)                <= user_wr_en_int;
-sig_out(103)                <= vmm_cktk_i;--user_conf_int;
-sig_out(104)                <= cfg_bit_out_i;--reset_fifo_int;
-sig_out(112 downto 105)     <= std_logic_vector(to_unsigned(packet_length_int, sig_out(112 downto 105)'length));
-sig_out(113)                <= conf_done_i;--configuring_int;
-sig_out(117 downto 114)     <= status_int;
-sig_out(118)                <= start_conf_process;
-sig_out(122 downto 119)     <= MainFSMstate;
-sig_out(126 downto 123)     <= ConfFSMstate;
-sig_out(134 downto 127)     <= std_logic_vector(to_unsigned(i, sig_out(135 downto 128)'length));
+--sig_out(7 downto 0)         <= delay_data;     
+--sig_out(8)                  <= start_vmm_conf_int;--user_fifo_empty;
+--sig_out(9)                  <= start_vmm_conf_synced;--user_fifo_en_main;--'0'; --user_fifo_en;
+--sig_out(10)                 <= udp_header_int;--send_error_int;
+--sig_out(11)                 <= user_wr_en;
+--sig_out(43 downto 12)       <= sn;
+--sig_out(59 downto 44)       <= vmm_id_int;
+--sig_out(75 downto 60)       <= cmd;
+--sig_out(83 downto 76)       <= std_logic_vector(to_unsigned(count, sig_out(83 downto 76)'length));
+--sig_out(91 downto 84)      <= std_logic_vector(to_unsigned(cnt_array, 8));   
+--sig_out(92)                <= user_last_int;
+--sig_out(93)                <= last_synced200;
+----sig_out(110)                <= reading_packet;
+--sig_out(101 downto 94)     <= user_data_in_int;
+--sig_out(102)                <= user_wr_en_int;
+--sig_out(103)                <= vmm_cktk_i;--user_conf_int;
+--sig_out(104)                <= cfg_bit_out_i;--reset_fifo_int;
+--sig_out(112 downto 105)     <= std_logic_vector(to_unsigned(packet_length_int, sig_out(112 downto 105)'length));
+--sig_out(113)                <= conf_done_i;--configuring_int;
+--sig_out(117 downto 114)     <= status_int;
+--sig_out(118)                <= start_conf_process;
+--sig_out(122 downto 119)     <= MainFSMstate;
+--sig_out(126 downto 123)     <= ConfFSMstate;
+--sig_out(134 downto 127)     <= std_logic_vector(to_unsigned(i, sig_out(135 downto 128)'length));
 
-sig_out(166 downto 135)     <= test_data_int;
-sig_out(174 downto 167)     <= std_logic_vector(to_unsigned(j, sig_out(175 downto 168)'length));
-sig_out(190 downto 175)     <= std_logic_vector(to_unsigned(counter, sig_out(190 downto 175)'length));
+--sig_out(166 downto 135)     <= test_data_int;
+--sig_out(174 downto 167)     <= std_logic_vector(to_unsigned(j, sig_out(175 downto 168)'length));
+--sig_out(190 downto 175)     <= std_logic_vector(to_unsigned(counter, sig_out(190 downto 175)'length));
 
-sig_out(198 downto 191)     <= std_logic_vector(to_unsigned(k, sig_out(198 downto 191)'length));
-sig_out(214 downto 199)     <= dest_port;
+--sig_out(198 downto 191)     <= std_logic_vector(to_unsigned(k, sig_out(198 downto 191)'length));
+--sig_out(214 downto 199)     <= dest_port;
 
-sig_out(246 downto 215)     <= DAQ_START_STOP;
-sig_out(262 downto 247)     <= vmm_id_xadc_i;
-sig_out(273 downto 263)     <= xadc_sample_size_i;
-sig_out(291 downto 274)     <= xadc_delay_i;
-sig_out(292)                <= '0';
+--sig_out(246 downto 215)     <= DAQ_START_STOP;
+--sig_out(262 downto 247)     <= vmm_id_xadc_i;
+--sig_out(273 downto 263)     <= xadc_sample_size_i;
+--sig_out(291 downto 274)     <= xadc_delay_i;
+--sig_out(292)                <= '0';
 
 
 

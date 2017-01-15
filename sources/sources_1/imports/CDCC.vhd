@@ -14,8 +14,8 @@
 -- to be synchronized.
 -- 
 -- Changelog:
--- 12.01.2017 Added ASYNC_REG attribute to the internal interconnecting signals.
--- Added an extra stage of registers for the input signals (Christos Bakalis).
+-- 13.01.2017 Added ASYNC_REG attribute to the XDC constraints file, and also
+-- added an extra layer of registers for the input signals. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -37,16 +37,9 @@ end CDCC;
 
 architecture RTL of CDCC is
     
-    signal data_in_int          : std_logic_vector(NUMBER_OF_BITS - 1 downto 0) := (others => '0');
     signal data_in_reg          : std_logic_vector(NUMBER_OF_BITS - 1 downto 0) := (others => '0');
     signal data_sync_stage_0    : std_logic_vector(NUMBER_OF_BITS - 1 downto 0) := (others => '0');
     signal data_out_s_int       : std_logic_vector(NUMBER_OF_BITS - 1 downto 0) := (others => '0');
-
-    attribute ASYNC_REG                         : string;
-    attribute ASYNC_REG of data_in_int          : signal is "true";
-    attribute ASYNC_REG of data_in_reg          : signal is "true";
-    attribute ASYNC_REG of data_sync_stage_0    : signal is "true";
-    attribute ASYNC_REG of data_out_s_int       : signal is "true";
 
 begin
 
@@ -61,7 +54,7 @@ FDRE_reg_input_CDCC: FDRE
         C   => clk_src,
         CE  => '1',
         R   => '0',
-        D   => data_in_int(I)
+        D   => data_in(I)
         );
 end generate reg_input_CDCC;
 
@@ -95,7 +88,6 @@ FDRE_sync_CDCC_1: FDRE
         );
 end generate sync_block_CDCC_1;
 
-    data_in_int <= data_in;
     data_out_s  <= data_out_s_int;
 
 end RTL;

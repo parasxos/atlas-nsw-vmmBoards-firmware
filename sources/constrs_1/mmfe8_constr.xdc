@@ -10,7 +10,7 @@ create_clock -period 8.000 -name gtrefclk_p -waveform {0.000 4.000} [get_ports g
 create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_SPI/ext_spi_clk] -edges {3 5 7} -edge_shift {6.700 6.700 6.700} [get_pins -hierarchical *USRCCLKO]
 #SPI Flash end
 #============================= Clock Groups ===========================
-#set_clock_groups -group [get_clocks -include_generated_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKIN1]] -group [get_clocks -include_generated_clocks -of_objects [get_pins core_wrapper/U0/core_clocking_i/mmcm_adv_inst/CLKIN1]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKIN1]] -group [get_clocks -include_generated_clocks -of_objects [get_pins core_wrapper/U0/core_clocking_i/mmcm_adv_inst/CLKIN1]] -asynchronous
 #============================= I/O Delays =============================
 #SPI Flash begin
 set_input_delay -clock clk_sck -clock_fall -max 7.450 [get_ports IO*_IO]
@@ -23,8 +23,10 @@ set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 
 #======================= TIMING EXCEPTIONS SECTION ====================
 #=============================== False Paths ==========================
-#set_false_path -reset_path -from [get_pins glbl_rst_i_reg/C]
-#set_false_path -reset_path -from [get_pins rstFIFO_top_reg/C]
+set_false_path -reset_path -from [get_cells glbl_rst_i_reg]
+set_false_path -reset_path -from [get_cells rstFIFO_top_reg]
+set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
+#set_false_path -from [get_cells xadc_instance/xadc_busy_r_reg] -to get_cells FIFO2UDP_instance/daq_FIFO_instance/U0/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.mem/gbm.gbmg.gbmga.ngecc.bmg/inst_blk_mem_gen/gnbram.gnativebmg.native_blk_mem_gen/valid.cstr/ramloop[*].ram.r/prim_noinit.ram/DEVICE_7SERIES.NO_BMM_INFO.SDP.WIDE_PRIM36_NO_ECC.ram/DIBDI[*]]
 #set_false_path -from [get_pins {clk_400_low_jitter_inst/inst/seq_reg1_reg[7]/C}] -to [get_pins clk_400_low_jitter_inst/inst/clkout1_buf/CE0]
 #============================== Min/Max Delay =========================
 #SPI Flash begin
@@ -36,140 +38,42 @@ set_min_delay -from [get_pins -hier *SCK_O_reg_reg/C] -to [get_pins -hier *USRCC
 #SPI Flash end
 
 ##------- clkout0 (userclk2) to clk_10_phase45 ---------------------------------------
-#set_max_delay -from [get_cells configuration_logic/ext_trigger_reg] -to [get_cells CDCC_syncTo10_45/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells configuration_logic/ext_trigger_reg] -to [get_cells CDCC_syncTo10_45/sync_block_0[*].FDRE_inst_0] 1.500
 ##------------------------------------------------------------------------------------
 
 #------- clk_200 to clk_10_phase45 --------------------------------------------------
-#set_max_delay -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/NoFlg_counter_reg[*]] 4.900
-#set_min_delay -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/NoFlg_counter_reg[*]] 1.000
-
-#set_max_delay  -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/hitsLen_cnt_reg[*]] 4.900
-#set_min_delay  -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/hitsLen_cnt_reg[*]] 1.000
 #------------------------------------------------------------------------------------
 
 #------ clk_40 to clk_200 -----------------------------------------------------------
-#set_max_delay -from [get_cells configuration_logic/cfg_bit_out_i_reg] -to [get_cells select_vmm_block/conf_di_vec_reg[*]]  3.900
-#set_min_delay -from [get_cells configuration_logic/cfg_bit_out_i_reg] -to [get_cells select_vmm_block/conf_di_vec_reg[*]]  2.000
-
-#set_max_delay -from [get_cells configuration_logic/vmm_cktk_i_reg]    -to [get_cells select_vmm_block/cktk_out_vec_reg[*]] 3.900
-#set_min_delay -from [get_cells configuration_logic/vmm_cktk_i_reg]    -to [get_cells select_vmm_block/cktk_out_vec_reg[*]] 2.000
 #------------------------------------------------------------------------------------
 
 #------ clk_50 to clk_200 -----------------------------------------------------------
-#set_max_delay -from [get_cells readout_vmm/vmmWordReady_i_reg] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells readout_vmm/vmmWordReady_i_reg] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 2.000
 #------------------------------------------------------------------------------------
 
 ##------ clkout0 (userclk2) to clk_200 -----------------------------------------------
-#set_max_delay -from [get_cells configuration_logic/xadc_delay_i_reg[*]] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 3.900
-#set_min_delay -from [get_cells configuration_logic/xadc_delay_i_reg[*]] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 2.000
-
-##set_max_delay -from [get_cells configuration_logic/vmm_id_int_reg[*]]   -to [get_cells vmm_id_synced_reg[*]] 3.900
-##set_min_delay -from [get_cells configuration_logic/vmm_id_int_reg[*]]   -to [get_cells vmm_id_synced_reg[*]] 1.000
-
-##set_max_delay -from [get_cells configuration_logic/vmm_id_int_reg[*]]   -to [get_cells vmm_id_old_reg[*]] 3.900
-##set_min_delay -from [get_cells configuration_logic/vmm_id_int_reg[*]]   -to [get_cells vmm_id_old_reg[*]] 1.000
-
-#set_max_delay -from [get_cells configuration_logic/xadc_sample_size_i_reg[*]] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells configuration_logic/xadc_sample_size_i_reg[*]] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells configuration_logic/vmm_id_xadc_i_reg[*]] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 3.900
-#set_min_delay -from [get_cells configuration_logic/vmm_id_xadc_i_reg[*]] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 2.000
-
-##set_max_delay -from [get_cells configuration_logic/status_int_reg[*]] -to [get_cells status_int_synced_reg[*]] 3.900
-##set_min_delay -from [get_cells configuration_logic/status_int_reg[*]] -to [get_cells status_int_synced_reg[*]] 1.000
-
-##set_max_delay -from [get_cells configuration_logic/status_int_reg[*]] -to [get_cells status_int_old_reg[*]] 3.900
-##set_min_delay -from [get_cells configuration_logic/status_int_reg[*]] -to [get_cells status_int_old_reg[*]] 1.000
-
-#set_max_delay -from [get_cells configuration_logic/xadc_start_reg] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells configuration_logic/xadc_start_reg] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells FIFO2UDP_instance/daq_FIFO_instance/U0/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gras.rsts/ram_empty_i_reg] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 3.900
-#set_min_delay -from [get_cells FIFO2UDP_instance/daq_FIFO_instance/U0/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gras.rsts/ram_empty_i_reg] -to [get_cells CDCC_syncTo200/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 ##------ clkout0 (userclk2) to clk_40 -----------------------------------------------
-#set_max_delay -from [get_cells configuration_logic/conf_data_reg[*][*]] -to [get_cells configuration_logic/cfg_bit_out_i_reg] 5.900
-#set_min_delay -from [get_cells configuration_logic/conf_data_reg[*][*]] -to [get_cells configuration_logic/cfg_bit_out_i_reg] 2.000
-
-#set_max_delay -from [get_cells configuration_logic/packet_length_int_reg[*]] -to [get_cells configuration_logic/CDCC_config_SyncTo40/sync_block_0[*].FDRE_inst_0] 5.900
-#set_min_delay -from [get_cells configuration_logic/packet_length_int_reg[*]] -to [get_cells configuration_logic/CDCC_config_SyncTo40/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells configuration_logic/status_int_reg[*]] -to [get_cells configuration_logic/CDCC_config_SyncTo40/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells configuration_logic/status_int_reg[*]] -to [get_cells configuration_logic/CDCC_config_SyncTo40/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 #------ clk_200 to clk_40 -----------------------------------------------------------
-#set_max_delay -from [get_cells conf_wen_i_reg] -to [get_cells configuration_logic/conf_state_reg[*]] 3.900
-#set_min_delay -from [get_cells conf_wen_i_reg] -to [get_cells configuration_logic/conf_state_reg[*]] 2.000
 #------------------------------------------------------------------------------------
 
 #------ clk_200 to clk_50 -----------------------------------------------------------
-#set_max_delay -from [get_cells packet_formation_instance/vmmId_i_reg[*]] -to [get_cells readout_vmm/vmm_data_buf_reg[*]] 4.900
-#set_min_delay -from [get_cells packet_formation_instance/vmmId_i_reg[*]] -to [get_cells readout_vmm/vmm_data_buf_reg[*]] 1.000
 #------------------------------------------------------------------------------------
 
 ##------- clk_10_phase45 to clkout0 (userclk2) ---------------------------------------
-#set_max_delay -from [get_cells trint_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells trint_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 ##------ clk_200 to clkout0 (userclk2) -----------------------------------------------
-#set_max_delay -from [get_cells daq_enable_i_reg]   -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 3.000
-#set_min_delay -from [get_cells daq_enable_i_reg]   -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells xadc_instance/xadc_busy_r_reg] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 3.000
-#set_min_delay -from [get_cells xadc_instance/xadc_busy_r_reg] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells xadc_instance/xadc_busy_r_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 3.900
-#set_min_delay -from [get_cells xadc_instance/xadc_busy_r_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells start_conf_proc_int_reg]       -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells start_conf_proc_int_reg]       -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells packet_formation_instance/packLen_i_reg[*]] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells packet_formation_instance/packLen_i_reg[*]] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells packet_formation_instance/end_packet_int_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells packet_formation_instance/end_packet_int_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells xadc_instance/end_of_data_r_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells xadc_instance/end_of_data_r_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells xadc_instance/packet_len_r_reg[*]] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells xadc_instance/packet_len_r_reg[*]] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells end_packet_conf_int_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 4.900
-#set_min_delay -from [get_cells end_packet_conf_int_reg] -to [get_cells CDCC_syncTo125_FIFO2UDP/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 ##------- clk_40 to clkout0 (userclk2) -----------------------------------------------
-#set_max_delay -from [get_cells configuration_logic/conf_done_i_reg] -to [get_cells configuration_logic/CDCC_config_SyncTo125/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells configuration_logic/conf_done_i_reg] -to [get_cells configuration_logic/CDCC_config_SyncTo125/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 ##------- clk_50 to clkout0 (userclk2) -----------------------------------------------
-#set_max_delay -from [get_cells axi4_spi_instance/myMAC_reg[*]] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells axi4_spi_instance/myMAC_reg[*]] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells axi4_spi_instance/myIP_reg[*]] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells axi4_spi_instance/myIP_reg[*]] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells axi4_spi_instance/destIP_reg[*]] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 7.900
-#set_min_delay -from [get_cells axi4_spi_instance/destIP_reg[*]] -to [get_cells CDCC_syncTo125_config/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 ##------- clkout0 (userclk2) to clk_50 -----------------------------------------------
-#set_max_delay -from [get_cells configuration_logic/myMAC_set_reg[*]] -to [get_cells CDCC_syncTo50/sync_block_0[*].FDRE_inst_0] 5.900
-#set_min_delay -from [get_cells configuration_logic/myMAC_set_reg[*]] -to [get_cells CDCC_syncTo50/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells configuration_logic/myIP_set_reg[*]] -to [get_cells CDCC_syncTo50/sync_block_0[*].FDRE_inst_0] 5.900
-#set_min_delay -from [get_cells configuration_logic/myIP_set_reg[*]] -to [get_cells CDCC_syncTo50/sync_block_0[*].FDRE_inst_0] 2.000
-
-#set_max_delay -from [get_cells configuration_logic/destIP_set_reg[*]] -to [get_cells CDCC_syncTo50/sync_block_0[*].FDRE_inst_0] 5.900
-#set_min_delay -from [get_cells configuration_logic/destIP_set_reg[*]] -to [get_cells CDCC_syncTo50/sync_block_0[*].FDRE_inst_0] 2.000
 ##------------------------------------------------------------------------------------
 
 #============================= Multicycle Paths =======================
@@ -209,6 +113,58 @@ set tclk_trace_delay_min 0.2
 #======================================================================
 
 #====================== PHYSICAL CONSTRAINTS SECTION ==================
+
+#---------------------- ASYNC_REG for synchronizers -------------------
+set_property ASYNC_REG true [get_cells CDCC_125to10_45/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_125to10_45/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to10_45/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_125to200/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_125to200/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to200/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_125to50/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_125to50/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to50/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_200to125/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_200to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_200to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_50to125/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_50to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_50to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_200to10_45/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_200to10_45/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_200to10_45/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_10_45to200/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_10_45to200/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_10_45to200/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_40to200/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_40to200/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_40to200/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_50to200/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_50to200/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_50to200/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_200to50/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_200to50/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_200to50/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells configuration_logic/CDCC_40to125/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells configuration_logic/CDCC_40to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells configuration_logic/CDCC_40to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells configuration_logic/CDCC_125to40/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells configuration_logic/CDCC_125to40/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells configuration_logic/CDCC_125to40/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+#----------------------------------------------------------------------
+
+#---------------- I/O Placement ---------------------------------------
 set_property PACKAGE_PIN E6 [get_ports gtrefclk_n]
 set_property PACKAGE_PIN F6 [get_ports gtrefclk_p]
 

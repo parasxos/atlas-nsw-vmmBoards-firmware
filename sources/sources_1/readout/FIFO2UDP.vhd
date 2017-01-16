@@ -23,6 +23,9 @@
 -- jumbo UDP frames. (P.M.)
 -- 22.08.2016 Re-wrote the main logic into a single state machine to fix the freezing
 -- bug. (Reid Pinkham)
+-- 17.10.2016 Changed the data bus width to 32-bit wide and changed the FIFO depth
+-- to adapt it to the new parallel readout standards. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -39,25 +42,23 @@ entity FIFO2UDP is
     Port ( 
         clk_200                     : in std_logic;
         clk_125                     : in std_logic;
-        destinationIP               : in std_logic_vector(31 downto 0);
-        daq_data_in                 : in  std_logic_vector(63 downto 0);
-        fifo_data_out               : out std_logic_vector (7 downto 0);
-        udp_txi		                : out udp_tx_type;	
-        udp_tx_start                : out std_logic;
+        conf_xadc_data_in           : in  std_logic_vector(31 downto 0);	
         re_out					    : out std_logic;
         control					    : out std_logic;
-        UDPDone                     : out std_logic;
-        udp_tx_data_out_ready       : in  std_logic;
+        fifo_empty                  : out std_logic;
         wr_en                       : in  std_logic;
         end_packet                  : in  std_logic;
         global_reset                : in  std_logic;
         packet_length_in            : in  std_logic_vector(11 downto 0);
-        reset_DAQ_FIFO              : in  std_logic;
+        reset_FIFO                  : in  std_logic;
         sending_o                   : out std_logic;
-
-        vmmID                       : in  std_logic_vector(2 downto 0);
         
-        trigger_out                 : out std_logic
+        udp_tx_data_out_ready       : in  std_logic;
+        udp_tx_start_fifo           : out std_logic;
+        data_length_fifo            : out std_logic_vector(15 downto 0);
+        data_out_last_fifo          : out std_logic;
+        data_out_valid_fifo         : out std_logic;
+        data_out_fifo               : out std_logic_vector(7 downto 0)
     );
 end FIFO2UDP;
 
@@ -74,7 +75,6 @@ architecture Behavioral of FIFO2UDP is
     signal data_out                    : std_logic_vector(7 downto 0) := x"00";
     signal data_out_valid              : std_logic := '0';
     signal packet_length               : unsigned(15 downto 0) := x"0000";
-    signal daq_data_in_int             : std_logic_vector(63 downto 0);
     signal data_out_last               : std_logic := '0';
     signal sending                     : std_logic := '0';
     signal end_packet_synced           : std_logic := '0';
@@ -87,7 +87,6 @@ architecture Behavioral of FIFO2UDP is
     signal state                       : std_logic_vector(3 downto 0) := "0000";
     
     signal is_trailer                  : integer := 0;
-    signal temp_buffer                 : std_logic_vector(63 downto 0) := (others=> '0');
     
     signal daq_data_out                : std_logic_vector(7 downto 0) := x"00";
     
@@ -97,54 +96,42 @@ architecture Behavioral of FIFO2UDP is
 
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
   
-    attribute keep : string;
-    attribute dont_touch : string;
-    attribute keep of prog_fifo_empty         : signal is "true";
-    attribute keep of fifo_empty_UDP          : signal is "true";     
-    attribute keep of daq_fifo_re             : signal is "true";     
-    attribute keep of data_out_last           : signal is "true";           
-    attribute keep of data_out                : signal is "true";
-    attribute keep of data_out_valid          : signal is "true";
-    attribute keep of sending                 : signal is "true";
-    attribute keep of udp_tx_data_out_ready   : signal is "true";
-    attribute dont_touch of udp_tx_data_out_ready   : signal is "true";
-    attribute keep of daq_data_out            : signal is "true";
-    attribute keep of udp_tx_start            : signal is "true";
-    attribute keep of end_packet_synced       : signal is "true";     
-    attribute keep of i                       : signal is "true";     
-    attribute keep of packet_length           : signal is "true";
-    attribute dont_touch of packet_length           : signal is "true";             
-    attribute keep of count                   : signal is "true";
-    attribute keep of count_length            : signal is "true";
-    attribute keep of daq_data_in_int         : signal is "true";
-    attribute keep of wr_en_int               : signal is "true";
-    attribute keep of fifo_full_UDP           : signal is "true";
-    attribute dont_touch of wr_en_int         : signal is "true";
-    attribute dont_touch of fifo_empty_len    : signal is "true";
-    attribute keep of wr_en                   : signal is "true";
-    attribute dont_touch of wr_en             : signal is "true";
-    
-    attribute keep of packet_length_in               : signal is "true";
-    attribute dont_touch of packet_length_in         : signal is "true";
-    attribute dont_touch of vmmID_i           : signal is "true";
-    attribute dont_touch of trigger           : signal is "true";
-    attribute keep of trigger                 : signal is "true";
+    attribute mark_debug : string;
 
-    attribute keep of len_cnt                 : signal is "true";
-    attribute keep of fifo_len_wr_en          : signal is "true";
-    attribute keep of fifo_len_rd_en          : signal is "true";
-    attribute keep of packet_len_r            : signal is "true";
+--    attribute mark_debug of prog_fifo_empty         : signal is "true";
+--    attribute mark_debug of fifo_empty_UDP          : signal is "true";     
+--    attribute mark_debug of daq_fifo_re             : signal is "true";     
+--    attribute mark_debug of data_out_last           : signal is "true";           
+--    attribute mark_debug of data_out                : signal is "true";
+--    attribute mark_debug of data_out_valid          : signal is "true";
+--    attribute mark_debug of sending                 : signal is "true";
+--    attribute mark_debug of udp_tx_data_out_ready   : signal is "true";
+--    attribute mark_debug of daq_data_out            : signal is "true";
+--    attribute mark_debug of udp_tx_start            : signal is "true";
+--    attribute mark_debug of end_packet_synced       : signal is "true";     
+--    attribute mark_debug of i                       : signal is "true";     
+--    attribute mark_debug of packet_length           : signal is "true";        
+--    attribute mark_debug of count                   : signal is "true";
+--    attribute mark_debug of count_length            : signal is "true";
+--    attribute mark_debug of wr_en_int               : signal is "true";
+--    attribute mark_debug of fifo_full_UDP           : signal is "true";
+--    attribute mark_debug of fifo_empty_len          : signal is "true";
+--    attribute mark_debug of wr_en                   : signal is "true";    
+--    attribute mark_debug of packet_length_in        : signal is "true";
+--    attribute mark_debug of vmmID_i                 : signal is "true";
+--    attribute mark_debug of trigger                 : signal is "true";
+--    attribute mark_debug of len_cnt                 : signal is "true";
+--    attribute mark_debug of fifo_len_wr_en          : signal is "true";
+--    attribute mark_debug of fifo_len_rd_en          : signal is "true";
+--    attribute mark_debug of packet_len_r            : signal is "true";
   
-  
-  
-  
-component readout_fifo is
+component conf_xadc_fifo is
 
 port(
     rst         : in std_logic;
     wr_clk      : in std_logic;
     rd_clk      : in std_logic;
-    din         : in std_logic_vector(63 downto 0);
+    din         : in std_logic_vector(31 downto 0);
     wr_en       : in std_logic;
     rd_en       : in std_logic;
     dout        : out std_logic_vector(7 downto 0);
@@ -165,37 +152,17 @@ port (
     empty : out std_logic
 );
 end component;
-
-component ila_0
-PORT (
-    clk     : IN std_logic;
-    probe0  : IN std_logic_vector(255 DOWNTO 0);
-    probe1  : IN std_logic);
-end component;    
+  
 
 begin
 
 
--- process ot trigger ILAs
-trigger_proc: process (clk_200, vmmID_i, data_out_last)
-begin
-    if rising_edge(clk_200) then
-        if (vmmID_i = "111" and data_out_last = '1') then
-            trigger <= '1';
-        else
-            trigger <= '0';
-        end if;
-    end if;
-end process;
-
-
-
-daq_FIFO_instance: readout_fifo
+conf_xadc_fifo_instance: conf_xadc_fifo
     port map(
-        rst         => reset_DAQ_FIFO,
+        rst         => reset_FIFO,
         wr_clk      => clk_200,
         rd_clk      => clk_125,
-        din         => daq_data_in,
+        din         => conf_xadc_data_in,
         wr_en       => wr_en,
         rd_en       => daq_fifo_re,
         dout        => daq_data_out,
@@ -206,7 +173,7 @@ daq_FIFO_instance: readout_fifo
 packet_len_fifo_instance: packet_len_fifo
     port map (
         clk => clk_125,
-        srst => reset_DAQ_FIFO,
+        srst => reset_FIFO,
         din => packet_length_in,
         wr_en => fifo_len_wr_en,
         rd_en => fifo_len_rd_en,
@@ -257,14 +224,14 @@ begin
     end if;
 end process;
 
-UDPDone_proc: process (clk_125, fifo_empty_UDP, sending)
-begin
-    if fifo_empty_UDP = '1' and sending = '0' then -- IF Statement to inidcate when packets have been sent
-        UDPDone <= '1';
-    else
-        UDPDone <= '0';
-    end if;
-end process;
+--UDPDone_proc: process (clk_200, fifo_empty_UDP, sending)
+--begin
+--    if fifo_empty_UDP = '1' and sending = '0' then -- IF Statement to inidcate when packets have been sent
+--        UDPDone <= '1';
+--    else
+--        UDPDone <= '0';
+--    end if;
+--end process;
 
 process (clk_125, count, udp_tx_data_out_ready, fifo_empty_UDP, prog_fifo_empty, data_out_valid, end_packet_synced)
 begin
@@ -288,8 +255,8 @@ begin
                     fifo_len_rd_en  <= '0';
 
                 when x"2" =>
-                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 8 + 4, 16);
-                    count_length    <= resize(unsigned("0000" & packet_len_r) * 8, 16);
+                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 4, 16);
+                    count_length    <= resize(unsigned("0000" & packet_len_r) * 4, 16);
                     fifo_len_rd_en  <= '0';
                     count <= x"3";
 
@@ -301,14 +268,9 @@ begin
                       count <= x"4";
 
                 when x"4" =>
-                      udp_tx_start_int             <= '1';
-                      udp_txi.hdr.dst_ip_addr  <= destinationIP;         -- set a generic ip adrress (192.168.0.255)
-                      udp_txi.hdr.src_port     <= x"19CB";                -- set src and dst ports
-                      udp_txi.hdr.dst_port     <= x"1778";                     -- x"6af0"; 
-                      udp_txi.hdr.data_length  <= std_logic_vector(packet_length); -- defined to be 16 bits in UDP
-                      daq_fifo_re              <= '0';                           
-                      udp_txi.hdr.checksum     <= x"0000";     
-                      count <= x"5";
+                      udp_tx_start_int  <= '1';
+                      daq_fifo_re       <= '0';                              
+                      count             <= x"5";
 
                 when x"5" =>
                     if udp_tx_data_out_ready = '1' then     
@@ -319,82 +281,48 @@ begin
 
                 when x"6" =>
                     if udp_tx_data_out_ready = '1' then   
-                      count_length  <= count_length - 1;      
-                      udp_tx_start_int          <= '0'; 
-                      data_out                    <= daq_data_out;
-                      count                     <= x"7";
+                        count_length              <= count_length - 1;      
+                        udp_tx_start_int          <= '0'; 
+                        data_out                  <= daq_data_out;
+                        count                     <= x"7";
                     end if;
-
+                    
                 when x"7" =>
                     if udp_tx_data_out_ready = '1' then
                         if count_length = 1 then
                             daq_fifo_re                 <= '0';
+                            data_out_last               <= '0';
                         elsif count_length = 0 then
                             count                       <= x"8"; 
                             daq_fifo_re                 <= '0';
+                            data_out_last               <= '1';
                         else
                             daq_fifo_re                 <= '1';
-                        end if; 
-                        count_length  <= count_length - 1;    
-                        udp_tx_start_int                             <= '0';                
-                        data_out_valid                               <= '1';   
-                        control                                      <= '0';         
-                        data_out_last                                <= '0';       
-                        data_out                    <= daq_data_out;
-                    else
-                        daq_fifo_re               <= '0';
-                    end if;
-
+                        end if;
+                         
+                            count_length     <= count_length - 1;    
+                            udp_tx_start_int                             <= '0';                
+                            data_out_valid                               <= '1';   
+                            control                                      <= '0';                                       
+                            data_out                    <= daq_data_out;
+                        else
+                            daq_fifo_re               <= '0';
+                        end if;
+                    
                 when x"8" =>
-                  if udp_tx_data_out_ready = '1' then    
-                      daq_fifo_re                 <= '0';
-                      udp_tx_start_int            <= '0';
-                      data_out_last               <= '0';
-                      data_out <= x"ff";
-                      count <= x"9";
-                  end if;
-
+                    data_out_last   <= '0';    
+                    data_out_valid  <= '0';
+                    data_out        <= (others => '0');
+                    udp_tx_start_int                 <= '0';
+                    count <= x"9";
+                    
                 when x"9" =>
-                  if udp_tx_data_out_ready = '1' then    
-                      daq_fifo_re                 <= '0';
-                      udp_tx_start_int            <= '0';
-                      data_out_last               <= '0';
-                      data_out <= x"ff";
-                      count <= x"a";
-                  end if;
-
-                when x"a" =>
-                  if udp_tx_data_out_ready = '1' then    
-                      daq_fifo_re                 <= '0';
-                      udp_tx_start_int            <= '0';
-                      data_out_last               <= '0';
-                      data_out <= x"ff";
-                      count <= x"b";
-                  end if;
-
-                when x"b" =>
-                    if udp_tx_data_out_ready = '1' then
-                        daq_fifo_re                 <= '0';    
-                        udp_tx_start_int            <= '0';
-                        data_out_last               <= '1';
-                        data_out <= x"ff";
-                        count <= x"c";
-                    end if;
-
-                when x"c" =>
-                      data_out_last   <= '0';    
-                      data_out_valid  <= '0';
-                      data_out        <= (others => '0');
-                      udp_tx_start_int                 <= '0';
-                      count <= x"d";
-
-                when x"d" =>
-                      count                         <= x"0";
-                      count_length                  <= x"0000";
-                      data_out_last    <= '0';    
-                      data_out_valid   <= '0';                  
-                      udp_tx_start_int              <= '0';
-
+                    count                         <= x"0";
+                    count_length                  <= x"0000";
+                    data_out_last                 <= '0';    
+                    data_out_valid                <= '0';                  
+                    udp_tx_start_int              <= '0';
+                    
                 when others =>
                     count <= x"0";                      
             end case;
@@ -403,56 +331,18 @@ begin
 end process;
 
 
-vmmID_i <= vmmID; -- assign external signal to internal
-       
-udp_tx_start                <= udp_tx_start_int;
-udp_txi.data.data_out_last  <= data_out_last;
-udp_txi.data.data_out_valid <= data_out_valid ;
-udp_txi.data.data_out       <= data_out;
 
-daq_data_in_int             <= daq_data_in;
-wr_en_int                   <= wr_en;
-sending_o                   <= sending;
 
-trigger_out                 <= trigger;
+    -- to mux ---------
+    udp_tx_start_fifo           <= udp_tx_start_int;
+    data_length_fifo            <= std_logic_vector(packet_length);
+    data_out_last_fifo          <= data_out_last;
+    data_out_valid_fifo         <= data_out_valid;
+    data_out_fifo               <= data_out;
+    -------------------
+    
+    fifo_empty                  <= fifo_empty_UDP;
+    wr_en_int                   <= wr_en;
+    sending_o                   <= sending;
    
-ila_daq_send : ila_0
-    port map
-    (
-        clk           => clk_125, 
-        probe0        => daq_out,
-        probe1        => udp_tx_data_out_ready
-    );   
-
-daq_out(0)              <= end_packet_synced;
-daq_out(1)              <= fifo_empty_UDP;
-daq_out(2)              <= daq_fifo_re;
-daq_out(3)              <= data_out_valid;
-daq_out(4)              <= data_out_last;   
-daq_out(12 downto 5)    <= data_out;
-daq_out(16 downto 13)   <= std_logic_vector(count);
-daq_out(38 downto 17)   <= (others => '0');
-daq_out(39)             <= udp_tx_start_int;
-daq_out(40)             <= '0'; --udp_tx_data_out_ready;
-daq_out(48 downto 41)   <= daq_data_out;
-daq_out(112 downto 49)  <= daq_data_in;
-daq_out(113)            <= sending;
-daq_out(129 downto 114) <= std_logic_vector(packet_length);
-daq_out(145 downto 130) <= std_logic_vector(count_length);     
-daq_out(157 downto 146) <= packet_len_r;
-daq_out(221 downto 158) <= daq_data_in_int;
-daq_out(222)            <= wr_en_int;
-daq_out(223)            <= wr_en;
-daq_out(235 downto 224) <= packet_length_in;
-daq_out(236)            <= udp_tx_data_out_ready;
-daq_out(237)            <= fifo_len_wr_en;
-daq_out(238)            <= fifo_len_rd_en;
-daq_out(239)            <= fifo_empty_len;
-daq_out(240)            <= fifo_full_UDP;
-daq_out(243 downto 241) <= vmmID_i;
-daq_out(244)            <= trigger;
-daq_out(252 downto 245) <= std_logic_vector(len_cnt);
-daq_out(255 downto 253) <= (others => '0');
-
-
 end Behavioral;

@@ -17,6 +17,9 @@
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added AXI4_SPI, QSPI_IO0_0: IOBUF, QSPI_IO1_0: IOBUF, QSPI_SS_0: IOBUF
 -- The modules and buffers are used for Dynamic IP configuration. (Lev Kurilenko)
+-- 16.01.2017 Added a new, parallel readout scheme and its corresponding components.
+-- UDP Configuration reply now comes from config_logic. Data bus width changed to
+-- 32 bits. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -282,10 +285,7 @@ architecture Behavioral of mmfe8_top is
   signal test_valid_out, test_last_out       : std_logic;  
   signal user_data_out_i             : std_logic_vector(63 downto 0);
   signal sig_out200                  : std_logic_vector(127 downto 0);
-  signal user_conf_i                 : std_logic := '0'; 
-  signal send_error_int              : std_logic := '0';
   signal send_error_done_int         : std_logic := '0';
-  signal resp_data_int               : resp_data;
   signal user_wr_en_int              : std_logic := '0';
   signal reset                       : std_logic := '0';
   signal end_packet_i                : std_logic := '0';    
@@ -293,7 +293,7 @@ architecture Behavioral of mmfe8_top is
   signal we_conf_int                 : std_logic := '0';    
   signal packet_length_int           : std_logic_vector(11 downto 0);
   signal daq_data_out_i              : std_logic_vector(63 downto 0);
-  signal conf_data_out_i             : std_logic_vector(63 downto 0);
+  signal conf_data_out_i             : std_logic_vector(31 downto 0);
   
   signal daq_wr_en_i                 : std_logic := '0';    
   signal end_packet_daq              : std_logic := '0';
@@ -346,7 +346,6 @@ architecture Behavioral of mmfe8_top is
   signal vmm_cfg_sel_i      : std_logic_vector(31 downto 0);
   signal turn_counter_i     : std_logic_vector(15 downto 0);
   signal conf_data_in_i     : std_logic_vector (7 downto 0); 
-  signal udp_response_int   : udp_response; 
   
   signal clk_400_noclean  : std_logic;
   signal clk_400_clean    : std_logic;
@@ -363,7 +362,6 @@ architecture Behavioral of mmfe8_top is
   signal vmm_wen_gbl_rst  : std_logic := '0';
   signal vmm_ena_acq_rst  : std_logic := '0';
   signal vmm_wen_acq_rst  : std_logic := '0';
---  signal conf_data_out_i  : std_logic_vector(7 downto 0);
   signal vmm_data_buf_i   : std_logic_vector(37 downto 0);
 
   -- vmm signals
@@ -421,6 +419,7 @@ architecture Behavioral of mmfe8_top is
   signal status_int_synced  : std_logic_vector(3 downto 0) := "0000";
     signal cnt_reset          : integer := 0;
   signal set_reset          : std_logic := '0';
+  signal wait_Cnt           : integer := 0;
   
   signal conf_done_int      : std_logic := '0';
   signal udp_header_int     : std_logic := '0';
@@ -431,7 +430,12 @@ architecture Behavioral of mmfe8_top is
   signal is_state         : std_logic_vector(3 downto 0) := "1010";
   signal ACQ_sync_int       : std_logic_vector := x"0000";
   signal udp_busy           : std_logic := '0';
-
+  
+  signal we_conf_i          : std_logic := '0';
+  signal packLen_conf_i     : std_logic_vector(11 downto 0) := (others => '0');
+  signal end_packet_conf_i  : std_logic := '0';
+  signal conf_idle_i        : std_logic := '0';
+  
     -------------------------------------------------
     -- VMM2 Signals                   
     -------------------------------------------------
@@ -439,6 +443,7 @@ architecture Behavioral of mmfe8_top is
     signal vmm_ena_vec      : std_logic_vector(8 downto 1);
     signal cktk_out_vec     : std_logic_vector(8 downto 1);
     signal ckdt_out_vec     : std_logic_vector(8 downto 1);
+    signal ckbc_out_vec     : std_logic_vector(8 downto 1);
     signal data0_in_vec     : std_logic_vector(8 downto 1);
     signal data1_in_vec     : std_logic_vector(8 downto 1);
     signal vmm_do_vec       : std_logic_vector(8 downto 1);
@@ -529,7 +534,7 @@ architecture Behavioral of mmfe8_top is
     signal pf_packLen   : std_logic_vector(11 downto 0);
     signal pf_trigVmmRo : std_logic := '0';
     signal pf_vmmIdRo   : std_logic_vector(2 downto 0) := b"000";
-    signal pf_reset     : std_logic := '0';
+    signal ro_reset     : std_logic := '0';
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
     signal pfBusy_i     : std_logic := '0';
@@ -537,8 +542,8 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
-    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, TRIG, DAQ, XADC_run);
-    signal state        : state_t;
+    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DELAY_IDLE, DAQ_INIT, HOLD_RESET, TRIG, DAQ, XADC_run);
+    signal state        : state_t := IDLE;
     signal rstFIFO_top  : std_logic := '0';
 
     -------------------------------------------------
@@ -555,7 +560,7 @@ architecture Behavioral of mmfe8_top is
     signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1023 packets
     signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1023 samples over ~0.7 seconds
     signal xadc_end_of_data     : std_logic;
-    signal xadc_fifo_bus        : std_logic_vector (63 downto 0);
+    signal xadc_fifo_bus        : std_logic_vector (31 downto 0);
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
     signal xadc_busy            : std_logic;
@@ -578,6 +583,30 @@ architecture Behavioral of mmfe8_top is
     signal   ss_i  : STD_LOGIC_VECTOR(0 DOWNTO 0):=(others => '0');     --Lev
     signal   ss_o  : STD_LOGIC_VECTOR(0 DOWNTO 0):=(others => '0');     --Lev
     signal   ss_t  : std_logic:= '0';                                   --Lev
+    
+    -------------------------------------------------------------------
+    -- UDP Data Select                                               --
+    -------------------------------------------------------------------
+    signal fifo2udp_bus     : std_logic_vector(31 downto 0) := (others => '0');
+    signal fifo2udp_packLen : std_logic_vector(11 downto 0) := (others => '0');
+    signal fifo2udp_wrEn    : std_logic := '0';
+    signal fifo2udp_endPack : std_logic := '0';
+    signal sel_conf_xadc_i  : std_logic := '0';
+    signal sel_udp_mux_i    : std_logic := '0';
+    signal fifo_done        : std_logic := '0';
+    
+    signal data_length_ro       : std_logic_vector(15 downto 0) := (others => '0');
+    signal data_out_last_ro     : std_logic := '0';
+    signal data_out_valid_ro    : std_logic := '0';
+    signal data_out_ro          : std_logic_vector(7 downto 0) := (others => '0');
+    signal udp_tx_start_ro      : std_logic := '0';
+    
+    signal data_length_fifo     : std_logic_vector(15 downto 0) := (others => '0');
+    signal data_out_last_fifo   : std_logic := '0';
+    signal data_out_valid_fifo  : std_logic := '0';
+    signal data_out_fifo        : std_logic_vector(7 downto 0) := (others => '0');
+    signal udp_tx_start_fifo    : std_logic := '0';  
+            
 
     -------------------------------------------------------------------
     -- These attribute will stop timing errors being reported in back
@@ -591,6 +620,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     attribute keep          : string;
     attribute dont_touch    : string;
+    attribute mark_debug    : string;
   
     -------------------------------------------------------------------
     -- Readout Monitoring
@@ -683,8 +713,6 @@ architecture Behavioral of mmfe8_top is
     attribute keep of re_out_int                : signal is "TRUE";
     attribute keep of daqFIFO_wr_en_i           : signal is "TRUE";
     attribute keep of daqFIFO_din_i             : signal is "TRUE";
-    attribute keep of user_conf_i               : signal is "TRUE";
-    attribute keep of send_error_int            : signal is "TRUE";
     attribute keep of send_error_done_int       : signal is "TRUE";
     attribute keep of test_data_out             : signal is "TRUE";
     attribute keep of test_valid_out            : signal is "TRUE";
@@ -713,8 +741,21 @@ architecture Behavioral of mmfe8_top is
     attribute keep of rstFIFO_top               : signal is "TRUE";
     attribute keep of pf_rst_FIFO               : signal is "TRUE";
     
-    attribute keep of trigger_i                 : signal is "TRUE";
-    attribute dont_touch of trigger_i           : signal is "TRUE";
+    attribute mark_debug of trigger_i                 : signal is "TRUE";
+    
+    attribute mark_debug of sel_udp_mux_i             : signal is "TRUE";
+    attribute mark_debug of sel_conf_xadc_i           : signal is "TRUE";
+    attribute mark_debug of conf_idle_i               : signal is "TRUE";
+    attribute mark_debug of end_packet_conf_i         : signal is "TRUE";
+    attribute mark_debug of conf_data_out_i           : signal is "TRUE";
+    attribute mark_debug of packLen_conf_i            : signal is "TRUE";
+    attribute mark_debug of udp_tx_start_fifo         : signal is "TRUE";
+    attribute mark_debug of data_length_fifo          : signal is "TRUE";
+    attribute mark_debug of data_out_last_fifo        : signal is "TRUE";
+    attribute mark_debug of data_out_valid_fifo       : signal is "TRUE";
+    attribute mark_debug of data_out_fifo             : signal is "TRUE";
+    attribute mark_debug of fifo_done                 : signal is "TRUE";
+
 
     
     -------------------------------------------------------------------
@@ -851,106 +892,25 @@ architecture Behavioral of mmfe8_top is
       conf_data_out           : out  STD_LOGIC_VECTOR(7 downto 0);        
       vmm_cfg_sel             : in   STD_LOGIC_VECTOR(31 downto 0));
     end component;
+
     -- 8
-    component vmm_readout is
-        port ( 
-            clk_10_phase45          : in std_logic;     -- Used to clock checking for data process
-            clk_50                  : in std_logic;     -- Used to clock word readout process
-            clk_200                 : in std_logic;     -- Used for fast switching between processes
-
-            vmm_data0_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data0 from VMM
-            vmm_data1_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data1 from VMM
-            vmm_ckdt_vec            : out std_logic_vector(8 downto 1);     -- Strobe to VMM CKDT
-            vmm_cktk_vec            : out std_logic_vector(8 downto 1);     -- Strobe to VMM CKTK
-
-            daq_enable              : in std_logic;
-            trigger_pulse           : in std_logic;                     -- Trigger
-            vmmId                   : in std_logic_vector(2 downto 0);  -- VMM to be readout
-            ethernet_fifo_wr_en     : out std_logic;                    -- To be used for reading out seperate FIFOs in VMMx8 parallel readout
-            vmm_data_buf            : buffer std_logic_vector(37 downto 0);
-            
-            vmmWordReady            : out std_logic;
-            vmmWord                 : out std_logic_vector(63 downto 0);
-            vmmEventDone            : out std_logic
-        );
-    end component;
-    -- 9
-    component FIFO2UDP
-        port ( 
-            clk_200                     : in std_logic;
-            clk_125                     : in std_logic;
-            destinationIP               : in std_logic_vector(31 downto 0);
-            daq_data_in                 : in  std_logic_vector(63 downto 0);
-            fifo_data_out               : out std_logic_vector (7 downto 0);
-            udp_txi                        : out udp_tx_type;    
-            udp_tx_start                : out std_logic;
-            re_out                        : out std_logic;
-            control                        : out std_logic;
-            UDPDone                     : out std_logic;
-            udp_tx_data_out_ready       : in  std_logic;
-            wr_en                       : in  std_logic;
-            end_packet                  : in  std_logic;
-            global_reset                : in  std_logic;
-            packet_length_in            : in  std_logic_vector(11 downto 0);
-            reset_DAQ_FIFO              : in  std_logic;
-            sending_o                   : out std_logic;
-    
-            vmmID                       : in  std_logic_vector(2 downto 0);
-            
-            trigger_out                 : out std_logic
-        );
-    end component;
-    -- 10
     component trigger is
       port (
-          clk_200         : in std_logic;
+          clk_200           : in std_logic;
           
-          tren            : in std_logic;
-          tr_hold         : in std_logic;
-          rst_hold        : in std_logic;
-          trmode          : in std_logic;
-          trext           : in std_logic;
-          trint           : in std_logic;
-          reset           : in std_logic;
+          tren              : in std_logic;
+          tr_hold           : in std_logic;
+          rst_hold          : in STD_LOGIC;
+          trmode            : in std_logic;
+          trext             : in std_logic;
+          trint             : in std_logic;
+          reset             : in std_logic;
           
-          event_counter   : out std_logic_vector(31 DOWNTO 0);
-          tr_out          : out std_logic
+          event_counter     : out std_logic_vector(31 DOWNTO 0);
+          tr_out            : out std_logic
       );
     end component;
-    -- 11
-    component packet_formation is
-    port (
-            clk_200     : in std_logic;
-    
-            newCycle    : in std_logic;
-            
-            trigVmmRo   : out std_logic;
-            vmmId       : out std_logic_vector(2 downto 0);
-            vmmWord     : in std_logic_vector(63 downto 0);
-            vmmWordReady: in std_logic;
-            vmmEventDone: in std_logic;
-        
-            UDPDone     : in std_logic;
-            pfBusy      : out std_logic;
-            glBCID      : in std_logic_vector(11 downto 0);
 
-            packLen     : out std_logic_vector(11 downto 0);
-            dataout     : out std_logic_vector(63 downto 0);
-            wrenable    : out std_logic;
-            end_packet  : out std_logic;
-            udp_busy    : in std_logic;
-            
-            tr_hold     : out std_logic;
-            reset       : in std_logic;
-            rst_vmm     : out std_logic;
-            resetting   : in std_logic;
-            rst_FIFO    : out std_logic;
-            
-            latency     : in std_logic_vector(15 downto 0);
-            
-            trigger     : in std_logic
-    );
-    end component;
     -- 12
     component gig_ethernet_pcs_pma_0
         port(
@@ -1136,84 +1096,173 @@ architecture Behavioral of mmfe8_top is
         clk125              : in  std_logic;
         clk200              : in  std_logic;
         clk_in              : in  std_logic;
-        
+               
         reset               : in  std_logic;
-
+        
         user_data_in        : in  std_logic_vector (7 downto 0);
-        user_data_out       : out std_logic_vector (63 downto 0);
-
+              
         udp_rx              : in udp_rx_type;
-        resp_data           : out udp_response;
-
-        send_error          : out std_logic;
-        user_conf           : out std_logic;
+        
         user_wr_en          : in  std_logic;
         user_last           : in  std_logic;
-        configuring         : in  std_logic;
-        
+                
         we_conf             : out std_logic;
-        
+        user_data_out       : out std_logic_vector (31 downto 0);
+        conf_len_out        : out std_logic_vector(11 downto 0);
+        end_packet_conf     : out std_logic;
+        conf_idle           : out std_logic;
+                
         vmm_id              : out std_logic_vector(15 downto 0);
         cfg_bit_out         : out std_logic ;
         vmm_cktk            : out std_logic ;
         status              : out std_logic_vector(3 downto 0);
-        
+                
         start_vmm_conf      : in  std_logic;
         conf_done           : out std_logic;
         ext_trigger         : out std_logic;
-        
+                
         ACQ_sync            : out std_logic_vector(15 downto 0);
-        
-        udp_header          : in std_logic;
+                
         packet_length       : in std_logic_vector (15 downto 0);
-
+        
         xadc_busy           : in std_logic;
         xadc_start          : out std_logic;
         vmm_id_xadc         : out std_logic_vector(15 downto 0);
         xadc_sample_size    : out std_logic_vector(10 downto 0);
         xadc_delay          : out std_logic_vector(17 downto 0);
-        
+               
         myIP_set            : out std_logic_vector(31 downto 0);        --Lev
         myMAC_set           : out std_logic_vector(47 downto 0);        --Lev
         destIP_set          : out std_logic_vector(31 downto 0);        --Lev
         newip_start         : out std_logic                             --Lev
         );
     end component;
+
     -- 19
-    component select_data
-    port(
-        configuring                 : in  std_logic;
-        data_acq                    : in  std_logic;
-        xadc                        : in  std_logic;
-        we_data                     : in  std_logic;
-        we_conf                     : in  std_logic;
-        we_xadc                     : in  std_logic;
-        daq_data_in                 : in  std_logic_vector(63 downto 0);
-        conf_data_in                : in  std_logic_vector(63 downto 0);
-        xadc_data_in                : in  std_logic_vector(63 downto 0);
-        data_packet_length          : in  std_logic_vector(11 downto 0);
-        xadc_packet_length          : in  std_logic_vector(11 downto 0);
-        end_packet_conf             : in  std_logic;
-        end_packet_daq              : in  std_logic;
-        end_packet_xadc             : in  std_logic;
-        fifo_rst_daq                : in  std_logic;
-        fifo_rst_xadc               : in  std_logic;
-        rstFIFO_top                 : in std_logic;
-    
-        data_out                    : out std_logic_vector(63 downto 0);
-        packet_length               : out std_logic_vector(11 downto 0);
-        we                          : out std_logic;
-        end_packet                  : out std_logic;
-        fifo_rst                    : out std_logic
-    );
-    end component;
+   
     -- 20
-    component ila_top_level
-        PORT (  clk     : IN std_logic;
-                probe0  : IN std_logic_vector(302 DOWNTO 0)     --Lev
-                );
-    end component;
-    -- 21
+--    component ila_top_level
+--        PORT (  clk     : IN std_logic;
+--                probe0  : IN std_logic_vector(302 DOWNTO 0)     --Lev
+--                );
+--    end component;
+
+component VMM_parallel_top_wrapper
+    port(
+    ------------- general interface ---------------------
+    -----------------------------------------------------
+    clk_200             : in    std_logic; -- 200 Mhz clk
+    clk_125             : in    std_logic; -- 125 Mhz clk
+    clk_50              : in    std_logic; -- 50 Mhz clk
+    clk_10              : in    std_logic; -- 10 Mhz clk
+    clk_10_phase45      : in    std_logic; -- shifted 10 Mhz clk
+    reset               : in    std_logic;
+    daq_enable          : in    std_logic;
+    ----------- packet formation interface --------------
+    ----------------------------------------------------- 
+    newCycle            : in    std_logic;
+    pfBusy              : out   std_logic;                        -- Control signal to ETR
+    glBCID              : in    std_logic_vector(11 downto 0);    -- glBCID counter from ETR
+    eventCnt            : in    std_logic_vector(31 downto 0);    -- event_counter from trigger module        
+    resetting           : in    std_logic;
+    rst_vmm             : out   std_logic;
+    tr_hold             : out   std_logic;
+    latency             : in    std_logic_vector(15 downto 0);
+    ---------------- vmm readout interface ----------------
+    -------------------------------------------------------       
+    vmm_data0_vec       : in    std_logic_vector(8 downto 1);     -- Single-ended data0 from VMM
+    vmm_data1_vec       : in    std_logic_vector(8 downto 1);     -- Single-ended data1 from VMM
+    vmm_ckdt_vec        : out   std_logic_vector(8 downto 1);     -- Strobe to VMM CKDT
+    vmm_cktk_vec        : out   std_logic_vector(8 downto 1);     -- Strobe to VMM CKTK
+    vmm_ckbc_vec        : out   std_logic_vector(8 downto 1);     -- Strobe to VMM CKBC  
+    ---------- mux2udp block interface --------------------
+    -------------------------------------------------------
+    udp_tx_start        : out   std_logic;
+    data_length_ro      : out   std_logic_vector(15 downto 0);
+    data_out_last_ro    : out   std_logic;
+    data_out_valid_ro   : out   std_logic;
+    data_out_ro         : out   std_logic_vector(7 downto 0);
+    udp_tx_ready        : in    std_logic
+    );
+end component;
+
+component conf_xadc_mux
+    Port(
+        --------------------------------------------------
+        --------- general interface ----------------------
+        sel_conf_xadc   : in std_logic;
+        --------------------------------------------------
+        ---------- xadc interface ------------------------
+        data_xadc       : in std_logic_vector(31 downto 0);
+        packet_len_xadc : in std_logic_vector(11 downto 0);
+        wr_en_xadc      : in std_logic;
+        end_packet_xadc : in std_logic;
+        --------------------------------------------------
+        ----------- config interface ---------------------
+        data_conf       : in std_logic_vector(31 downto 0);
+        packet_len_conf : in std_logic_vector(11 downto 0);
+        wr_en_conf      : in std_logic;
+        end_packet_conf : in std_logic;
+        --------------------------------------------------
+        ----------- FIFO2UDP interface -------------------
+        data_mux        : out std_logic_vector(31 downto 0);
+        packet_len_mux  : out std_logic_vector(11 downto 0);
+        wr_en_mux       : out std_logic;
+        end_packet_mux  : out std_logic
+        );
+end component;
+
+component udp_mux
+   Port(
+    --------------------------------------------------
+    --------- general interface ----------------------
+    sel_udp_mux         : in std_logic;
+    destinationIP       : in std_logic_vector(31 downto 0);
+    --------------------------------------------------
+    --------- readout interface ----------------------
+    data_length_ro      : in std_logic_vector(15 downto 0);
+    data_out_last_ro    : in std_logic;
+    data_out_valid_ro   : in std_logic;
+    data_out_ro         : in std_logic_vector(7 downto 0);
+    udp_tx_start_ro     : in std_logic;
+    --------------------------------------------------
+    --------- fifo2udp interface ---------------------
+    data_length_fifo    : in std_logic_vector(15 downto 0);
+    data_out_last_fifo  : in std_logic;
+    data_out_valid_fifo : in std_logic;
+    data_out_fifo       : in std_logic_vector(7 downto 0);
+    udp_tx_start_fifo   : in std_logic;
+    --------------------------------------------------
+    --------- udp interface --------------------------
+    udp_txi             : out udp_tx_type;
+    udp_tx_start_mux    : out std_logic
+    );
+end component;
+
+component FIFO2UDP
+   Port ( 
+        clk_200                     : in std_logic;
+        clk_125                     : in std_logic;
+        conf_xadc_data_in           : in  std_logic_vector(31 downto 0);	
+        re_out					    : out std_logic;
+        control					    : out std_logic;
+        fifo_empty                  : out std_logic;
+        wr_en                       : in  std_logic;
+        end_packet                  : in  std_logic;
+        global_reset                : in  std_logic;
+        packet_length_in            : in  std_logic_vector(11 downto 0);
+        reset_FIFO                  : in  std_logic;
+        sending_o                   : out std_logic;
+        
+        udp_tx_data_out_ready       : in  std_logic;
+        udp_tx_start_fifo           : out std_logic;
+        data_length_fifo            : out std_logic_vector(15 downto 0);
+        data_out_last_fifo          : out std_logic;
+        data_out_valid_fifo         : out std_logic;
+        data_out_fifo               : out std_logic_vector(7 downto 0)
+    );
+end component;
+
     component xadc
     port(
         clk200              : in std_logic;
@@ -1249,7 +1298,7 @@ architecture Behavioral of mmfe8_top is
         MuxAddr3_p          : out std_logic;
         MuxAddr3_n          : out std_logic;
         end_of_data         : out std_logic;
-        fifo_bus            : out std_logic_vector(63 downto 0);
+        fifo_bus            : out std_logic_vector(31 downto 0);
         data_fifo_enable    : out std_logic;
         packet_len          : out std_logic_vector(11 downto 0);
         xadc_busy           : out std_logic
@@ -1529,32 +1578,38 @@ configuration_logic: config_logic
             clk125              => userclk2,
             clk200              => clk_200,
             clk_in              => clk_40,
+            
             reset               => reset,
-            user_data_in        => udp_rx_int.data.data_in,
-            user_data_out       => conf_data_out_i, 
+            
+            user_data_in        => udp_rx_int.data.data_in, 
             udp_rx              => udp_rx_int,
-            resp_data           => udp_response_int,
-            send_error          => send_error_int,
-            user_conf           => user_conf_i,
             user_wr_en          => udp_rx_int.data.data_in_valid,
             user_last           => udp_rx_int.data.data_in_last,
-            configuring         => '0', --configuring_i,
-            we_conf             => open, --we_conf_int,
+            
+            we_conf             => we_conf_i, --we_conf_int,
+            user_data_out       => conf_data_out_i,
+            conf_len_out        => packLen_conf_i,
+            end_packet_conf     => end_packet_conf_i,
+            conf_idle           => conf_idle_i,
+            
             vmm_id              => vmm_id,
             cfg_bit_out         => conf_di_i,
+            vmm_cktk            => conf_cktk_out_i,
             status              => status_int,
+            
             start_vmm_conf      => conf_wen_i, --start_conf_proc_int, --configuring_i,
             conf_done           => conf_done_int,
             ext_trigger         => trig_mode_int,
+            
             ACQ_sync            => ACQ_sync_int,
-            udp_header          => udp_header_int,
-            vmm_cktk            => conf_cktk_out_i,
+            
             packet_length       => udp_rx_int.hdr.data_length,
             xadc_busy           => xadc_busy,
             xadc_start          => xadc_start,
             vmm_id_xadc         => vmm_id_xadc,
             xadc_sample_size    => xadc_sample_size,
             xadc_delay          => xadc_delay,
+            
             myIP_set            => myIP_set,    --Lev
             myMAC_set           => myMAC_set,   --Lev
             destIP_set          => destIP_set,  --Lev
@@ -1618,35 +1673,13 @@ event_timing_reset_instance: event_timing_reset
         reset_latched   => etr_reset_latched
     );
 
-readout_vmm: vmm_readout
-    port map(
-        clk_10_phase45          => clk_10_phase45,
-        clk_50                  => clk_50,
-        clk_200                 => clk_200,
-        
-        vmm_data0_vec           => data0_in_vec,
-        vmm_data1_vec           => data1_in_vec,
-        vmm_ckdt_vec            => ckdt_out_vec,
-        vmm_cktk_vec            => ro_cktk_out_vec,
-
-        daq_enable              => daq_enable_i,
-        trigger_pulse           => pf_trigVmmRo,
-        vmmId                   => pf_vmmIdRo,
-        ethernet_fifo_wr_en     => open,
-        vmm_data_buf            => open,
-        
-        vmmWordReady            => vmmWordReady_i,
-        vmmWord                 => vmmWord_i,
-        vmmEventDone            => vmmEventDone_i
-    );
-
 trigger_instance: trigger
     port map(
         clk_200         => clk_200,
 
         tren            => tren,                -- Trigger module enabled
-        tr_hold         => tr_hold,             -- Prevents trigger while high
         rst_hold        => etr_reset_latched,   -- Prevents trigger while high (resetting)
+        tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
         trext           => ext_trigger_in,      -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
@@ -1680,90 +1713,119 @@ select_vmm_block: select_vmm
         conf_ena_vec        => conf_vmm_ena_vec
     );
 
-FIFO2UDP_instance: FIFO2UDP
-    Port map( 
-        clk_200                     => clk_200,
-        clk_125                     => userclk2,
-        destinationIP               => destIP,
-        daq_data_in                 => daqFIFO_din_i,
-        fifo_data_out               => fifo_data_out_int,
-        udp_txi                     => udp_txi_int,    
-        udp_tx_start                => udp_tx_start_int,
-        control                     => control.ip_controls.arp_controls.clear_cache,
-        UDPDone                     => UDPDone,   
-        re_out                      => re_out_int,    
-        udp_tx_data_out_ready       => udp_tx_data_out_ready_int,
-        wr_en                       => daqFIFO_wr_en_i,
-        end_packet                  => end_packet_i,
-        global_reset                => glbl_rst_i,
-        packet_length_in            => packet_length_int,
-        reset_DAQ_FIFO              => daqFIFO_reset,
-        sending_o                   => udp_busy,
 
-        vmmID                       => pf_vmmIdRo,
-        
-        trigger_out                 => trigger_i
-    );       
 
-packet_formation_instance: packet_formation
-    port map(
-        clk_200         => clk_200,
+parallel_wrapper: VMM_parallel_top_wrapper
+    Port map(
+        ------------- general interface ---------------------
+        -----------------------------------------------------
+        clk_200             => clk_200,
+        clk_125             => userclk2,
+        clk_50              => clk_50,
+        clk_10              => clk_10,
+        clk_10_phase45      => clk_10_phase45,
+        reset               => ro_reset,
+        daq_enable          => daq_enable_i,
+        ----------- packet formation interface --------------
+        ----------------------------------------------------- 
+        newCycle            => pf_newCycle,
+        pfBusy              => pfBusy_i,            -- Control signal to ETR
+        glBCID              => glBCID_i,            -- glBCID counter from ETR
+        eventCnt            => event_counter_i,     -- event_counter from trigger module
+        resetting           => etr_reset_latched,
+        rst_vmm             => rst_vmm,
+        tr_hold             => tr_hold,
+        latency             => ACQ_sync_int,
+        ---------------- vmm readout interface ----------------
+        -------------------------------------------------------    
+        vmm_data0_vec       => data0_in_vec,
+        vmm_data1_vec       => data1_in_vec,
+        vmm_ckdt_vec        => ckdt_out_vec,
+        vmm_cktk_vec        => ro_cktk_out_vec,
+        vmm_ckbc_vec        => ckbc_out_vec,     
+        ---------- mux2udp block interface --------------------
+        -------------------------------------------------------
+        udp_tx_start        => udp_tx_start_ro,
+        data_length_ro      => data_length_ro,
+        data_out_last_ro    => data_out_last_ro,
+        data_out_valid_ro   => data_out_valid_ro,
+        data_out_ro         => data_out_ro,
+        udp_tx_ready        => udp_tx_data_out_ready_int
+        );
         
-        newCycle        => pf_newCycle,
+conf_xadc_mux_instance: conf_xadc_mux
+    Port map(
+        --------------------------------------------------
+        --------- general interface ----------------------
+        sel_conf_xadc   => sel_conf_xadc_i,
+        --------------------------------------------------
+        ---------- xadc interface ------------------------
+        data_xadc       => xadc_fifo_bus,
+        packet_len_xadc => xadc_packet_len,
+        wr_en_xadc      => xadc_fifo_enable,
+        end_packet_xadc => xadc_end_of_data,
+        --------------------------------------------------
+        ----------- config interface ---------------------
+        data_conf       => conf_data_out_i,
+        packet_len_conf => packLen_conf_i,
+        wr_en_conf      => we_conf_i,
+        end_packet_conf => end_packet_conf_i,
+        --------------------------------------------------
+        ----------- FIFO2UDP interface -------------------
+        data_mux        => fifo2udp_bus,
+        packet_len_mux  => fifo2udp_packLen,
+        wr_en_mux       => fifo2udp_wrEn,
+        end_packet_mux  => fifo2udp_endPack
+        );
         
-        trigVmmRo       => pf_trigVmmRo,
-        vmmId           => pf_vmmIdRo,
-        vmmWord         => vmmWord_i,
-        vmmWordReady    => vmmWordReady_i,
-        vmmEventDone    => vmmEventDone_i,
+fifo2udp_instance: FIFO2UDP
+    Port map(
+        clk_200                 => clk_200,
+        clk_125                 => userclk2,
+        conf_xadc_data_in       => fifo2udp_bus,
+        control                 => control.ip_controls.arp_controls.clear_cache,
+        fifo_empty              => fifo_done,
+        wr_en                   => fifo2udp_wrEn,
+        end_packet              => fifo2udp_endPack,
+        global_reset            => glbl_rst_i,
+        packet_length_in        => fifo2udp_packLen,
+        reset_FIFO              => '0',
+        sending_o               => open,
         
-        UDPDone         => UDPDone,
-        pfBusy          => pfBusy_i,
-        glBCID          => glBCID_i,
+        udp_tx_data_out_ready   => udp_tx_data_out_ready_int,
+        udp_tx_start_fifo       => udp_tx_start_fifo,
+        data_length_fifo        => data_length_fifo,
+        data_out_last_fifo      => data_out_last_fifo,
+        data_out_valid_fifo     => data_out_valid_fifo,
+        data_out_fifo           => data_out_fifo
+    
+        );
         
-        packLen         => pf_packLen,
-        dataout         => daq_data_out_i,
-        wrenable        => daq_wr_en_i,
-        end_packet      => end_packet_daq_int,
-        udp_busy        => udp_busy,
-        
-        tr_hold         => tr_hold,
-        reset           => pf_reset,
-        rst_vmm         => rst_vmm,
-        resetting       => etr_reset_latched,
-        rst_FIFO        => pf_rst_FIFO,
-
-        latency         => ACQ_sync_int,
-        
-        trigger         => trigger_i
-    );   
-        
-data_selection:  select_data
-    port map(
-        configuring                 => start_conf_proc_int,
-        xadc                        => xadc_busy,
-        data_acq                    => daq_enable_i,
-        we_data                     => daq_wr_en_i,
-        we_conf                     => we_conf_int,
-        we_xadc                     => xadc_fifo_enable,
-        daq_data_in                 => daq_data_out_i,
-        conf_data_in                => user_data_out_i,
-        xadc_data_in                => xadc_fifo_bus,
-        data_packet_length          => pf_packLen,
-        xadc_packet_length          => xadc_packet_len,
-        end_packet_conf             => end_packet_conf_int,
-        end_packet_daq              => end_packet_daq_int,
-        end_packet_xadc             => xadc_end_of_data,
-        fifo_rst_daq                => pf_rst_FIFO,
-        fifo_rst_xadc               => '0',
-        rstFIFO_top                 => rstFIFO_top,
-
-        data_out                    => daqFIFO_din_i,
-        packet_length               => packet_length_int,
-        we                          => daqFIFO_wr_en_i,
-        end_packet                  => end_packet_i,
-        fifo_rst                    => daqFIFO_reset
-    );
+udp_mux_instance: udp_mux
+    Port Map(
+        --------------------------------------------------
+        --------- general interface ----------------------
+        sel_udp_mux         => sel_udp_mux_i,
+        destinationIP       => destIP,
+        --------------------------------------------------
+        --------- readout interface ----------------------
+        data_length_ro      => data_length_ro,
+        data_out_last_ro    => data_out_last_ro,
+        data_out_valid_ro   => data_out_valid_ro,
+        data_out_ro         => data_out_ro,
+        udp_tx_start_ro     => udp_tx_start_ro,
+        --------------------------------------------------
+        --------- fifo2udp interface ---------------------
+        data_length_fifo    => data_length_fifo,
+        data_out_last_fifo  => data_out_last_fifo,
+        data_out_valid_fifo => data_out_valid_fifo,
+        data_out_fifo       => data_out_fifo,
+        udp_tx_start_fifo   => udp_tx_start_fifo,
+        --------------------------------------------------
+        --------- udp interface --------------------------
+        udp_txi             => udp_txi_int,
+        udp_tx_start_mux    => udp_tx_start_int
+        );                     
 
 xadc_instance: xadc
     port map(
@@ -1923,14 +1985,14 @@ QSPI_SS_0: IOBUF        --Lev
     di_diff_8 : OBUFDS port map ( O => DI_8_P, OB => DI_8_N, I =>  vmm_di_vec_i(8));      
 
 ----------------------------------------------------SET CKBC--------------------------------------------------------------
-    ckbc_diff_1 : OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I =>  vmm_ckbc);
-    ckbc_diff_2 : OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I =>  vmm_ckbc);
-    ckbc_diff_3 : OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I =>  vmm_ckbc);
-    ckbc_diff_4 : OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I =>  vmm_ckbc);
-    ckbc_diff_5 : OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I =>  vmm_ckbc);
-    ckbc_diff_6 : OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I =>  vmm_ckbc);
-    ckbc_diff_7 : OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I =>  vmm_ckbc);
-    ckbc_diff_8 : OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I =>  vmm_ckbc);
+    ckbc_diff_1 : OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I =>  ckbc_out_vec(1));
+    ckbc_diff_2 : OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I =>  ckbc_out_vec(2));
+    ckbc_diff_3 : OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I =>  ckbc_out_vec(3));
+    ckbc_diff_4 : OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I =>  ckbc_out_vec(4));
+    ckbc_diff_5 : OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I =>  ckbc_out_vec(5));
+    ckbc_diff_6 : OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I =>  ckbc_out_vec(6));
+    ckbc_diff_7 : OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I =>  ckbc_out_vec(7));
+    ckbc_diff_8 : OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I =>  ckbc_out_vec(8));
 
 ----------------------------------------------------SET CKTK--------------------------------------------------------------
     cktk_diff_1 : OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I =>  cktk_out_vec(1));
@@ -2010,10 +2072,10 @@ internalTrigger_proc: process(clk_10_phase45) -- 10MHz/#states.
         if rising_edge(clk_10_phase45) then            
             if state = DAQ and trig_mode_int = '0' then
                 case internalTrigger_state is
-                    when 0 to 9979 =>
+                    when 0 to 9_979 =>                   --(0 to 9_979 EVERY 1 ms).
                         internalTrigger_state <= internalTrigger_state + 1;
                         trint           <= '0';
-                    when 9980 to 10000 =>
+                    when 9_980 to 10_000 =>               -- 9_980 to 10_000
                         internalTrigger_state <= internalTrigger_state + 1;
                         trint           <= '1';        
                     when others =>
@@ -2030,10 +2092,10 @@ testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
         if rising_edge(clk_10_phase45) then            
             if state = DAQ and trig_mode_int = '0' then
                 case cktp_state is
-                    when 0 to 9979 =>
+                    when 0 to 9_979 =>                   --(0 to 9_979 EVERY 1 ms).
                         cktp_state <= cktp_state + 1;
                         vmm_cktp      <= '0';
-                    when 9980 to 10000 =>
+                    when 9_980 to 10_000 =>               -- 9_980 to 10_000
                         cktp_state <= cktp_state + 1;
                         vmm_cktp   <= '1';
                     when others =>
@@ -2084,6 +2146,8 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
             case state is
                 when IDLE =>
                     is_state                <= "1111";
+                    sel_conf_xadc_i         <= '0';
+                    sel_udp_mux_i           <= '0';
                     configuring_i           <= '0';
                     daq_vmm_ena_wen_enable  <= x"00";
                     daq_cktk_out_enable     <= x"00";
@@ -2095,6 +2159,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     we_conf_int             <= '0';
                     end_packet_conf_int     <= '0';
                     start_conf_proc_int     <= '0';
+                    wait_Cnt                <= 0;
 
                     if status_int_synced = "0010" then      -- VMM conf x8: 0010
                         cnt_vmm       <= 8;
@@ -2111,7 +2176,9 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     end if;
             
                when    CONFIGURE    =>        
-                    is_state        <= "0001";    
+                    is_state        <= "0001";
+                    sel_udp_mux_i   <= '1'; -- select conf/xadc data at the udp_mux
+                    sel_conf_xadc_i <= '1'; -- select config reply data at the conf_xadc_mux    
                     if status_int_synced = "1011" then 
                         state   <= CONF_DONE;
                     end if;
@@ -2138,7 +2205,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     conf_wen_i      <= '0';
 
                 when CONFIGURE_DELAY => -- Waits 100 ns to move to next configuration
-                    is_state        <= "1011";
+                    is_state        <= "0011";
                     if (w >= 19) then
                         w           <= 0;
                         state       <= CONFIGURE;
@@ -2147,71 +2214,94 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     end if;
                     
                 when    SEND_CONF_REPLY    =>
-                    is_state            <= "1010"; 
-                    if cnt_reply = 0 then
-                        user_data_out_i <= conf_data_out_i;
-                        cnt_reply   <= cnt_reply + 1;
-                    elsif cnt_reply = 1 then
-                        user_data_out_i <= (others => '0');
-                        cnt_reply   <= cnt_reply + 1;
-                        end_packet_conf_int <= '1';
-                        we_conf_int     <= '0';
-                    elsif cnt_reply > 1 and cnt_reply < 100 then
-                        cnt_reply   <= cnt_reply + 1;
+                    is_state            <= "0100"; 
+                    if(conf_idle_i = '1' and fifo_done = '1')then  -- wait for config logic and FIFO to send the UDP reply
+                        state <= DELAY_IDLE;
+                    elsif(conf_idle_i = '0' or fifo_done = '0')then
+                        state <= SEND_CONF_REPLY;
                     else
-                        cnt_reply           <= 0;
-                        state               <= IDLE;
-                        end_packet_conf_int <= '1';
+                        state <= SEND_CONF_REPLY;
                     end if;
+                    
+                when DELAY_IDLE =>      -- delay mux switching to allow the UDP block to send the data
+                    is_state         <= "0101";
+                    if wait_Cnt < 50 then
+                        wait_Cnt     <= wait_Cnt + 1;
+                        state        <= DELAY_IDLE;
+                    else
+                        wait_Cnt     <= 0;
+                        state        <= IDLE;
+                    end if;                     
 
                 when DAQ_INIT =>
-                    is_state                <= "0011";
+                    is_state                <= "0110";
                     tren                    <= '0';
+                    sel_udp_mux_i           <= '0'; -- select readout data at the udp_mux
                     daq_vmm_ena_wen_enable  <= x"ff";
                     daq_cktk_out_enable     <= x"ff";
-                    daq_enable_i            <= '1';
+                    daq_enable_i            <= '0';
                     rstFIFO_top             <= '1';
-                    pf_reset                <= '1';
+                    ro_reset                <= '1';
                     if status_int_synced = "0000" or status_int_synced = "1000" then    -- Reset came or idle
                         daq_vmm_ena_wen_enable  <= x"00";
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
-                        pf_reset                <= '0';
+                        ro_reset                <= '0';
                         state   <= IDLE;
                     else
-                        state   <= TRIG;
+                        state   <= HOLD_RESET;
                     end if;
+                    
+                when HOLD_RESET => -- make sure all readout components have latched the reset
+                    is_state         <= "0111";
+                    if wait_Cnt < 50 then
+                        ro_reset     <= '1';
+                        wait_Cnt     <= wait_Cnt + 1;
+                        state        <= HOLD_RESET;
+                    elsif(wait_Cnt < 100 and wait_Cnt >= 50)then
+                        ro_reset     <= '0';
+                        wait_Cnt     <= wait_Cnt + 1;
+                        state        <= HOLD_RESET;
+                    else
+                        wait_Cnt     <= 0;
+                        state        <= TRIG;
+                    end if;  
+                    
                 when TRIG =>
-                    is_state        <= "0100";
+                    is_state        <= "1000";
                     rstFIFO_top     <= '0';
-                    pf_reset        <= '0';
+                    ro_reset        <= '0';
+                    daq_enable_i    <= '1';
                     tren            <= '1';
                     state           <= DAQ;
+                    
                 when DAQ =>
-                    is_state            <= "0101";
+                    is_state            <= "1001";
                     if status_int_synced = "1000" then  -- Reset came
                         daq_enable_i    <= '0';
                         state           <= DAQ_INIT;
                     end if;
+                    
                 when XADC_run =>
-                    is_state            <= "0110";
+                    is_state            <= "1010";
+                    sel_udp_mux_i       <= '1'; -- select conf/xadc data at the udp_mux
+                    sel_conf_xadc_i     <= '0'; -- select xadc data at the conf_xadc_mux
+                     
                     if status_int_synced = "0000" then -- done with xADC, back to idle
                         state <= IDLE;
                     end if;
 
                 when others =>
                     state       <= IDLE;
-                    is_state    <= "0110";
+                    is_state    <= "1011";
             end case;
         end if;
     end if;
 end process;
 
-    vmm_ckbc        <=  clk_10;
-
-    cktk_out_vec    <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
-    vmm_ena_vec     <= conf_vmm_ena_vec or (etr_vmm_ena_vec and daq_vmm_ena_wen_enable);
-    vmm_wen_vec     <= conf_vmm_wen_vec or (etr_vmm_wen_vec and daq_vmm_ena_wen_enable);
+    cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
+    vmm_ena_vec             <= conf_vmm_ena_vec or (etr_vmm_ena_vec and daq_vmm_ena_wen_enable);
+    vmm_wen_vec             <= conf_vmm_wen_vec or (etr_vmm_wen_vec and daq_vmm_ena_wen_enable);
 
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;
@@ -2222,59 +2312,82 @@ end process;
     test_last_out           <= udp_txi_int.data.data_out_last;
 
     fifo_data               <= fifo_data_out_int;
-	re_out                  <= re_out_int;
+    re_out                  <= re_out_int;
 
 
-ila_top: ila_top_level
-    port map (
-        clk     => clk_200,
-        probe0  => read_out
-    );
+--ila_top: ila_top_level
+--    port map (
+--        clk     => clk_200,
+--        probe0  => read_out
+--    );
 
-    read_out(7 downto 0)        <= vmm_ena_vec;
-    read_out(15 downto 8)       <= vmm_wen_vec;
-    read_out(23 downto 16)      <= cktk_out_vec;
-    read_out(31 downto 24)      <= ckdt_out_vec;
-    read_out(35 downto 32)      <= is_state;
-    read_out(39 downto 36)      <= status_int;
-    read_out(55 downto 40)      <= vmm_id_int;
-    read_out(59 downto 56)      <= status_int_synced;
-    read_out(67 downto 60)      <= daq_vmm_ena_wen_enable;
-    read_out(75 downto 68)      <= data0_in_vec;
-    read_out(76)                <= trint;
-    read_out(77)                <= tren;
-    read_out(78)                <= vmm_cktp;
-    read_out(79)                <= pf_newCycle;
-    read_out(80)                <= tx_axis_mac_tready_int;
-    read_out(81)                <= glbl_rst_i;
-    read_out(82)                <= start_conf_proc_int;
-    read_out(83)                <= daqFIFO_wr_en_i;
-    read_out(84)                <= daq_wr_en_i;
-    read_out(85)                <= trig_mode_int;
-    read_out(86)                <= ext_trigger_in;
-    read_out(87)                <= conf_wen_i;
-    read_out(88)                <= cktk_out_i;
-    read_out(89)                <= conf_di_i;
-    read_out(90)                <= etr_reset_latched;
-    read_out(91)                <= rst_vmm;
-    read_out(99 downto 92)      <= etr_vmm_ena_vec;
-    read_out(102 downto 100)    <= pf_vmmIdRo;
-    read_out(103)               <= daq_enable_i;
-    read_out(104)               <= xadc_busy;
-    read_out(105)               <= daqFIFO_reset;
-    read_out(106)               <= rstFIFO_top;
-    read_out(107)               <= pf_rst_FIFO;
-    read_out(171 downto 108)    <= daq_data_out_i;
-    read_out(172)               <= trigger_i;
-    read_out(184 downto 173)    <= glBCID_i;
-    read_out(185)               <= pfBusy_i;
-    read_out(188 downto 186)    <= state_rst_etr_i;
-    read_out(189)               <= rst_etr_i;
-    read_out(190)               <= rst_done_etr_i;
-    read_out(222 downto 191)    <= myIP;        --Lev
-    read_out(270 downto 223)    <= myMAC;       --Lev
-    read_out(302 downto 271)    <= destIP;      --Lev
+--    read_out(7 downto 0)        <= vmm_ena_vec;
+--    read_out(15 downto 8)       <= vmm_wen_vec;
+--    read_out(23 downto 16)      <= cktk_out_vec;
+--    read_out(31 downto 24)      <= ckdt_out_vec;
+--    read_out(35 downto 32)      <= is_state;
+--    read_out(39 downto 36)      <= status_int;
+--    read_out(55 downto 40)      <= vmm_id_int;
+--    read_out(59 downto 56)      <= status_int_synced;
+--    read_out(67 downto 60)      <= daq_vmm_ena_wen_enable;
+--    read_out(75 downto 68)      <= data0_in_vec;
+--    read_out(76)                <= trint;
+--    read_out(77)                <= tren;
+--    read_out(78)                <= vmm_cktp;
+--    read_out(79)                <= pf_newCycle;
+--    read_out(80)                <= tx_axis_mac_tready_int;
+--    read_out(81)                <= glbl_rst_i;
+--    read_out(82)                <= start_conf_proc_int;
+--    read_out(83)                <= daqFIFO_wr_en_i;
+--    read_out(84)                <= daq_wr_en_i;
+--    read_out(85)                <= trig_mode_int;
+--    read_out(86)                <= ext_trigger_in;
+--    read_out(87)                <= conf_wen_i;
+--    read_out(88)                <= cktk_out_i;
+--    read_out(89)                <= conf_di_i;
+--    read_out(90)                <= etr_reset_latched;
+--    read_out(91)                <= rst_vmm;
+--    read_out(99 downto 92)      <= etr_vmm_ena_vec;
+--    read_out(102 downto 100)    <= pf_vmmIdRo;
+--    read_out(103)               <= daq_enable_i;
+--    read_out(104)               <= xadc_busy;
+--    read_out(105)               <= daqFIFO_reset;
+--    read_out(106)               <= rstFIFO_top;
+--    read_out(107)               <= pf_rst_FIFO;
+--    read_out(171 downto 108)    <= (others => '0');
+--    read_out(172)               <= trigger_i;
+--    read_out(184 downto 173)    <= glBCID_i;
+--    read_out(185)               <= pfBusy_i;
+--    read_out(188 downto 186)    <= state_rst_etr_i;
+--    read_out(189)               <= rst_etr_i;
+--    read_out(190)               <= rst_done_etr_i;
+--    read_out(191)               <= sel_udp_mux_i;  
+--    read_out(192)               <= sel_conf_xadc_i;
+--    read_out(193)               <= we_conf_i;
+--    read_out(194)               <= conf_idle_i;
+--    read_out(195)               <= end_packet_conf_i;
+--    read_out(227 downto 196)    <= conf_data_out_i;
+--    read_out(239 downto 228)    <= packLen_conf_i;
+--    read_out(240)               <= udp_tx_start_fifo;
+--    read_out(241)               <= data_out_valid_fifo;
+--    read_out(242)               <= data_out_last_fifo;
+--    read_out(258 downto 243)    <= data_length_fifo;
+--    read_out(259)               <= udp_tx_data_out_ready_int;
+--    read_out(267 downto 260)    <= data_out_fifo;
+--    read_out(268)               <= fifo_done;
+--    read_out(302 downto 269)    <= (others => '0');
+    
+    
+--    attribute mark_debug of          : signal is "TRUE";
+--        attribute mark_debug of           : signal is "TRUE";
+--        attribute mark_debug of         : signal is "TRUE";
+--        attribute mark_debug of        : signal is "TRUE";
+--        attribute mark_debug of              : signal is "TRUE";
 
-    --read_out(255 downto 191)    <= (others => '0');       --Lev
+--    read_out(222 downto 191)    <= myIP;        --Lev
+--    read_out(270 downto 223)    <= myMAC;       --Lev
+--    read_out(302 downto 271)    <= destIP;      --Lev
+
+--    --read_out(255 downto 191)    <= (others => '0');       --Lev
 
 end Behavioral;

@@ -20,8 +20,6 @@
 -- 19.07.2016 Reverted component to work asynchronously (Reid Pinkham)
 -- 20.07.2016 Changed packet length from integer to std_logic_vector (Reid Pinkham)
 -- 04.08.2016 Added XADC support (Reid Pinkham)
--- 15.01.2016 Added all input signals to the MUX sensitivity list. (Christos Bakalis)
---
 --------------------------------------------------------------------------------------
 
 library unisim;
@@ -68,9 +66,7 @@ signal sel                      : std_logic_vector(2 downto 0);
 signal fifo_rst_i               : std_logic;
 begin
 
-data_selection : process(configuring, data_acq, xadc, we_conf, conf_data_in, end_packet_conf,
-                        we_data, daq_data_in, data_packet_length, end_packet_daq, fifo_rst_daq,
-                        we_xadc, xadc_data_in, xadc_packet_length, end_packet_xadc, fifo_rst_xadc)
+data_selection : process(configuring, data_acq)
 begin
     sel <= configuring & data_acq & xadc;
         case sel is

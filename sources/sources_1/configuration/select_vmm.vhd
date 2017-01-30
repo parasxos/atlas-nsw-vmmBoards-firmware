@@ -12,9 +12,8 @@
 -- 
 -- Dependencies: 
 -- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
+-- Changelog:
+-- 30.01.2016 Changed the process to make it asynchronous (Christos Bakalis)
 -- 
 ----------------------------------------------------------------------------------
 
@@ -56,63 +55,62 @@ end select_vmm;
 architecture Behavioral of select_vmm is
 
 begin
-    fill_fifo : process(clk_in, vmm_id)
-     begin
-         if rising_edge(clk_in) then
-            if vmm_id = x"0001" then 
-                conf_wen_vec(1)     <= conf_wen;
-                cktk_out_vec(1)     <= cktk_out;
-                conf_ena_vec(1)     <= conf_ena;
-                conf_do             <= conf_do_vec(1);
-                conf_di_vec(1)      <= conf_di;
-            elsif vmm_id = x"0002" then 
-                conf_wen_vec(2)     <= conf_wen;
-                cktk_out_vec(2)     <= cktk_out;
-                conf_ena_vec(2)     <= conf_ena;
-                conf_do             <= conf_do_vec(2);
-                conf_di_vec(2)      <= conf_di;                            
-            elsif vmm_id = x"0003" then 
-                conf_wen_vec(3)     <= conf_wen;
-                cktk_out_vec(3)     <= cktk_out;
-                conf_ena_vec(3)     <= conf_ena;
-                conf_do             <= conf_do_vec(3);
-                conf_di_vec(3)      <= conf_di;         
-            elsif vmm_id = x"0004" then 
-                conf_wen_vec(4)     <= conf_wen;
-                cktk_out_vec(4)     <= cktk_out;
-                conf_ena_vec(4)     <= conf_ena;
-                conf_do             <= conf_do_vec(4);
-                conf_di_vec(4)      <= conf_di;                            
-            elsif vmm_id = x"0005" then 
-                conf_wen_vec(5)     <= conf_wen;
-                cktk_out_vec(5)     <= cktk_out;
-                conf_ena_vec(5)     <= conf_ena;
-                conf_do             <= conf_do_vec(5);
-                conf_di_vec(5)      <= conf_di;                      
-            elsif vmm_id = x"0006" then 
-                conf_wen_vec(6)     <= conf_wen;
-                cktk_out_vec(6)     <= cktk_out;
-                conf_ena_vec(6)     <= conf_ena;
-                conf_do             <= conf_do_vec(6);
-                conf_di_vec(6)      <= conf_di;                            
-            elsif vmm_id = x"0007" then 
-                conf_wen_vec(7)     <= conf_wen;
-                cktk_out_vec(7)     <= cktk_out;
-                conf_ena_vec(7)     <= conf_ena;
-                conf_do             <= conf_do_vec(7);
-                conf_di_vec(7)      <= conf_di;         
-            elsif vmm_id = x"0008" then 
-                conf_wen_vec(8)     <= conf_wen;
-                cktk_out_vec(8)     <= cktk_out;
-                conf_ena_vec(8)     <= conf_ena;
-                conf_do             <= conf_do_vec(8);
-                conf_di_vec(8)      <= conf_di;                            
-            else
-                conf_wen_vec        <= (others => '0');
-                cktk_out_vec        <= (others => '0');
-                conf_ena_vec        <= (others => '0');
-                conf_di_vec         <= (others => '0');    
-            end if;
-        end if;
+    fill_fifo : process(vmm_id, conf_wen, cktk_out, conf_ena, conf_do_vec, conf_di)
+    begin
+    case vmm_id is
+    when x"0001" =>
+        conf_wen_vec(1)     <= conf_wen;
+        cktk_out_vec(1)     <= cktk_out;
+        conf_ena_vec(1)     <= conf_ena;
+        conf_do             <= conf_do_vec(1);
+        conf_di_vec(1)      <= conf_di;
+    when x"0002" =>
+        conf_wen_vec(2)     <= conf_wen;
+        cktk_out_vec(2)     <= cktk_out;
+        conf_ena_vec(2)     <= conf_ena;
+        conf_do             <= conf_do_vec(2);
+        conf_di_vec(2)      <= conf_di;
+    when x"0003" =>                            
+        conf_wen_vec(3)     <= conf_wen;
+        cktk_out_vec(3)     <= cktk_out;
+        conf_ena_vec(3)     <= conf_ena;
+        conf_do             <= conf_do_vec(3);
+        conf_di_vec(3)      <= conf_di;
+    when x"0004" =>         
+        conf_wen_vec(4)     <= conf_wen;
+        cktk_out_vec(4)     <= cktk_out;
+        conf_ena_vec(4)     <= conf_ena;
+        conf_do             <= conf_do_vec(4);
+        conf_di_vec(4)      <= conf_di;
+    when x"0005" =>                            
+        conf_wen_vec(5)     <= conf_wen;
+        cktk_out_vec(5)     <= cktk_out;
+        conf_ena_vec(5)     <= conf_ena;
+        conf_do             <= conf_do_vec(5);
+        conf_di_vec(5)      <= conf_di;
+    when x"0006" =>                      
+        conf_wen_vec(6)     <= conf_wen;
+        cktk_out_vec(6)     <= cktk_out;
+        conf_ena_vec(6)     <= conf_ena;
+        conf_do             <= conf_do_vec(6);
+        conf_di_vec(6)      <= conf_di;
+    when x"0007" =>                            
+        conf_wen_vec(7)     <= conf_wen;
+        cktk_out_vec(7)     <= cktk_out;
+        conf_ena_vec(7)     <= conf_ena;
+        conf_do             <= conf_do_vec(7);
+        conf_di_vec(7)      <= conf_di;
+    when x"0008" =>         
+        conf_wen_vec(8)     <= conf_wen;
+        cktk_out_vec(8)     <= cktk_out;
+        conf_ena_vec(8)     <= conf_ena;
+        conf_do             <= conf_do_vec(8);
+        conf_di_vec(8)      <= conf_di;
+    when others =>                            
+        conf_wen_vec        <= (others => '0');
+        cktk_out_vec        <= (others => '0');
+        conf_ena_vec        <= (others => '0');
+        conf_di_vec         <= (others => '0');
+    end case;    
     end process;
 end Behavioral;

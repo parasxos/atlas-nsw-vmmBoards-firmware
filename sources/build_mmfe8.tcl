@@ -138,7 +138,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set obj [get_filesets sources_1]   
 set files [list \
  "[file normalize "$origin_dir/sources_1/mmfe8_top.vhd"]"\
- "[file normalize "$origin_dir/sources_1/configuration/config_logic.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/configuration_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/select_vmm.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/axi_quad_top.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_REQ.vhd"]"\
@@ -184,6 +184,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_top_level.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
@@ -208,7 +209,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/configuration/config_logic.vhd"
+set file "$origin_dir/sources_1/configuration/configuration_block.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -547,6 +548,13 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

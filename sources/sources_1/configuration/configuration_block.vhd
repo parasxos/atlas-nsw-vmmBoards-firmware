@@ -15,6 +15,8 @@
 -- Dependencies: MMFE8 NTUA Project
 -- 
 -- Changelog:
+-- 31.01.2017 The serialization now starts with a signal coming from the master FSM 
+-- and the MUX select signal is being reset between packets. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -93,8 +95,8 @@ architecture RTL of configuration_block is
     signal cnt_bytes        : unsigned(4 downto 0) := (others => '0');
     signal wait_cnt         : unsigned(1 downto 0) := (others => '0');
     signal vmm_conf         : std_logic := '0';
-    signal vmm_conf_done    : std_logic := '0';
-    signal vmm_id_rdy       : std_logic := '0';
+    signal vmm_ser_done     : std_logic := '0';
+    signal vmm_conf_rdy     : std_logic := '0';
     signal fpga_conf        : std_logic := '0';
     signal flash_conf       : std_logic := '0';
     signal sel_vmm_data     : std_logic := '0';
@@ -111,7 +113,7 @@ architecture RTL of configuration_block is
     signal fifo_full        : std_logic := '0';
     signal fifo_empty       : std_logic := '0';
     
-    type masterFSM is (ST_IDLE, ST_CHK_PORT, ST_COUNT, ST_WAIT_FOR_BUSY, ST_WAIT_FOR_IDLE, ST_RESET_FIFO);
+    type masterFSM is (ST_IDLE, ST_CHK_PORT, ST_COUNT, ST_WAIT_FOR_BUSY, ST_WAIT_FOR_IDLE, ST_RESET_FIFO, ST_WAIT_FOR_CKTK_FSM);
     signal st_master : masterFSM := ST_IDLE;
     
     type confFSM is (ST_IDLE, ST_RD_HIGH, ST_RD_LOW, ST_CKTK_LOW, ST_DONE);
@@ -153,8 +155,8 @@ architecture RTL of configuration_block is
     --attribute mark_debug of user_last_prv     : signal is "true";
     --attribute mark_debug of cnt_bytes         : signal is "true";
     --attribute mark_debug of wait_cnt          : signal is "true";
-    --attribute mark_debug of vmm_conf_done     : signal is "true";
-    --attribute mark_debug of vmm_id_rdy        : signal is "true";
+    --attribute mark_debug of vmm_ser_done      : signal is "true";
+    --attribute mark_debug of vmm_conf_rdy      : signal is "true";
     --attribute mark_debug of fpga_conf         : signal is "true";
     --attribute mark_debug of flash_conf        : signal is "true";
     --attribute mark_debug of sel_vmm_data      : signal is "true";
@@ -205,6 +207,7 @@ begin
             fpga_conf   <= '0';
             flash_conf  <= '0';
             xadc_conf   <= '0';
+            init_ser    <= '0';
             rst_fifo    <= '1';
             st_master   <= ST_IDLE;
         else
@@ -255,7 +258,7 @@ begin
             when ST_COUNT => 
                 cnt_bytes <= cnt_bytes + 1;
 
-                if(xadcPacket_rdy = '1' or flashPacket_rdy = '1' or fpgaPacket_rdy = '1' or vmm_id_rdy = '1')then
+                if(xadcPacket_rdy = '1' or flashPacket_rdy = '1' or fpgaPacket_rdy = '1' or vmm_conf_rdy = '1')then
                     st_master <= ST_WAIT_FOR_BUSY;
                 else
                     st_master <= ST_COUNT;
@@ -273,7 +276,8 @@ begin
                 elsif(fpgaPacket_rdy = '1' and user_valid = '0')then -- no need to wait, jump to idle state
                     fpga_conf   <= '0';
                     st_master   <= ST_IDLE;
-                elsif(vmm_conf_done = '1')then -- reset the process and the FIFO when all is done
+                elsif(vmm_conf_rdy = '1')then -- initialize serialization
+                    init_ser    <= '1';
                     vmm_conf    <= '0';
                     st_master   <= ST_RESET_FIFO;
                 else
@@ -293,18 +297,24 @@ begin
             -- create a reset signal of adequate length. release the reset
             -- only when flow_fsm and cktk_fsm are in the appropriate states
             when ST_RESET_FIFO =>
-                if(vmm_conf_done = '1' and top_rdy = '1')then -- wait for flow_fsm
-                    rst_fifo  <= '0';
-                    st_master <= ST_RESET_FIFO;
-                elsif(vmm_conf_done = '1' and top_rdy = '0')then -- flow_fsm is back to IDLE, reset the FIFO and the cktk_fsm
-                    rst_fifo  <= '1'; 
-                    st_master <= ST_RESET_FIFO;
-                elsif(vmm_conf_done = '0' and top_rdy = '0' and user_valid = '0')then  -- all done
-                    rst_fifo  <= '0';
-                    st_master <= ST_IDLE;
+                if(vmm_ser_done = '1' and top_rdy = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
+                    rst_fifo    <= '1';
+                    init_ser    <= '0';
+                    st_master   <= ST_WAIT_FOR_CKTK_FSM;
                 else
-                    rst_fifo  <= '0';
-                    st_master <= ST_RESET_FIFO;
+                    rst_fifo    <= '0';     -- serialization not finished or flow_fsm is not in IDLE, wait
+                    init_ser    <= '1';
+                    st_master   <= ST_RESET_FIFO;
+                end if;
+
+            -- wait for CKTK FSM to latch the reset signal
+            when ST_WAIT_FOR_CKTK_FSM =>
+                if(vmm_ser_done = '0' and user_valid = '0')then
+                    rst_fifo    <= '0';
+                    st_master   <= ST_IDLE;
+                else
+                    rst_fifo    <= '1';
+                    st_master   <= ST_WAIT_FOR_CKTK_FSM;
                 end if;
 
             when others => 
@@ -474,13 +484,9 @@ begin
         if(rst = '1')then
             vmm_id          <= (others => '0');
             sel_vmm_data    <= '0';
-            vmm_id_rdy      <= '0';
-            init_ser        <= '0';
+            vmm_conf_rdy    <= '0';
         else
-            if(vmm_conf = '0')then
-                init_ser    <= '0';
-                vmm_id_rdy  <= '0';
-            elsif(vmm_conf = '1' and user_last_prv = '0')then
+            if(vmm_conf = '1' and user_last_prv = '0')then
                 case cnt_bytes is 
                 when "00101" => --5
                     vmm_id(15 downto 8) <= user_data_prv;
@@ -488,13 +494,13 @@ begin
                     vmm_id(7 downto 0)  <= user_data_prv;
                 when "01000" => --8
                     sel_vmm_data        <= '1'; -- select the correct data at the MUX
-                    vmm_id_rdy          <= '1';
                 when others => null;
                 end case;
-            elsif(vmm_conf = '1' and user_last_prv = '1')then -- 'last' pulse detected, begin serialization
-                init_ser    <= '1';
+            elsif(vmm_conf = '1' and user_last_prv = '1')then -- 'last' pulse detected, signal master FSM
+                vmm_conf_rdy    <= '1';
             else
-                vmm_id_rdy  <= '0';
+                vmm_conf_rdy    <= '0';
+                sel_vmm_data    <= '0';
             end if;
         end if;
 
@@ -509,16 +515,16 @@ begin
     if(rising_edge(clk_40))then
         if(rst = '1' or rst_fifo = '1')then
             st_conf         <= ST_IDLE;
-            vmm_conf_done   <= '0';
+            vmm_ser_done    <= '0';
             rd_ena          <= '0';
             wait_cnt        <= (others => '0');
             vmm_cktk        <= '0';
         else
             case st_conf is
 
-            -- wait for flow_fsm and VMM_conf_proc
+            -- wait for flow_fsm and master_conf_FSM
             when ST_IDLE =>
-                vmm_conf_done <= '0';
+                vmm_ser_done <= '0';
 
                 if(top_rdy = '1' and init_ser = '1')then
                     st_conf <= ST_RD_HIGH;
@@ -557,7 +563,7 @@ begin
 
             -- stay here until reset by master config FSM
             when ST_DONE =>
-                vmm_conf_done <= '1';
+                vmm_ser_done  <= '1';
                 st_conf       <= ST_DONE;   
 
             when others =>
@@ -593,8 +599,8 @@ FIFO_serializer: vmm_conf_buffer
 
     xadc_rdy        <= xadcPacket_rdy;
     newIP_rdy       <= flashPacket_rdy;
-    vmmConf_rdy     <= vmm_id_rdy;
-    vmmConf_done    <= vmm_conf_done;
+    vmmConf_rdy     <= init_ser;
+    vmmConf_done    <= vmm_ser_done;
     dest_port       <= udp_rx.hdr.dst_port;
 
 end RTL;

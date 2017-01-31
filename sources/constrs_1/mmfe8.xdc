@@ -19,6 +19,41 @@ set_property PACKAGE_PIN W19 [get_ports X_2V5_DIFF_CLK_P]
 set_property PACKAGE_PIN W20 [get_ports X_2V5_DIFF_CLK_N]
 set_property IOSTANDARD LVDS_25 [get_ports X_2V5_DIFF_CLK_N]
 
+
+#---------------- ASYNC REG FOR CDCC -----------------------
+set_property ASYNC_REG true [get_cells CDCC_125to200/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_125to200/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to200/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_125to50/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_125to50/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to50/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_200to50/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells CDCC_200to50/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_200to50/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells config_block/CDCC_200to125/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells config_block/CDCC_200to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells config_block/CDCC_200to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells config_block/CDCC_50to125/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells config_block/CDCC_50to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells config_block/CDCC_50to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells config_block/CDCC_200to40/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells config_block/CDCC_200to40/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells config_block/CDCC_200to40/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells config_block/CDCC_125to40/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells config_block/CDCC_125to40/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells config_block/CDCC_125to40/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells config_block/CDCC_40to125/reg_input_CDCC[*].FDRE_reg_input_CDCC]
+set_property ASYNC_REG true [get_cells config_block/CDCC_40to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells config_block/CDCC_40to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+#-----------------------------------------------------------
+#
 #-----------------------------------------------------------
 # Top level I/O placement:                               -
 #-----------------------------------------------------------

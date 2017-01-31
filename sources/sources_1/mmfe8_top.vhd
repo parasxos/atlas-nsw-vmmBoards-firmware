@@ -421,6 +421,7 @@ architecture Behavioral of mmfe8_top is
   signal status_int         : std_logic_vector(3 downto 0) := "0000";
   signal status_int_synced  : std_logic_vector(3 downto 0) := "0000";
   signal fpga_reset_conf    : std_logic := '0';
+  signal fpga_reset_conf_s200 : std_logic := '0';
   signal cnt_reset          : integer := 0;
   signal set_reset          : std_logic := '0';
   
@@ -432,13 +433,19 @@ architecture Behavioral of mmfe8_top is
   signal end_packet_daq_int     : std_logic := '0';
   signal is_state         : std_logic_vector(3 downto 0) := "1010";
   signal latency_conf       : std_logic_vector(15 downto 0) := x"0000";
+  signal latency_conf_s200  : std_logic_vector(15 downto 0) := x"0000";
   signal udp_busy           : std_logic := '0';
 
   signal daq_off            : std_logic := '0';
+  signal daq_off_s200       : std_logic := '0';
   signal daq_on             : std_logic := '0';
+  signal daq_on_s200        : std_logic := '0';
   signal newIP_ready        : std_logic := '0';
+  signal newIP_ready_s200   : std_logic := '0';
   signal vmm_id_rdy         : std_logic := '0';
+  signal vmm_id_rdy_s200    : std_logic := '0';
   signal vmmConf_done       : std_logic := '0';
+  signal vmmConf_done_s200  : std_logic := '0';
     -------------------------------------------------
     -- VMM2 Signals                   
     -------------------------------------------------
@@ -453,9 +460,7 @@ architecture Behavioral of mmfe8_top is
 
     signal cktk_out_i       : std_logic;
     signal vmm_id           : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_int       : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_synced    : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_old       : std_logic_vector(15 downto 0) := x"0000";
+    signal vmm_id_s200      : std_logic_vector(15 downto 0) := x"0000";
     
     signal vmm_cktp_1       : std_logic;
     signal vmm_cktp_2       : std_logic;
@@ -508,6 +513,7 @@ architecture Behavioral of mmfe8_top is
     signal tr_out_i           : std_logic;
     signal trigger_loop       : std_logic;
     signal trig_mode_int      : std_logic := '0';
+    signal trig_mode_int_s200 : std_logic := '0';
     
     signal trigger_loop_i     : std_logic;
     signal ext_trigger_i      : std_logic;
@@ -562,12 +568,16 @@ architecture Behavioral of mmfe8_top is
     signal vmm_id_xadc          : std_logic_vector (15 downto 0);
     signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1023 packets
     signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1023 samples over ~0.7 seconds
+    signal vmm_id_xadc_s200     : std_logic_vector (15 downto 0);
+    signal xadc_sample_size_s200  : std_logic_vector (10 downto 0) := "01111111111";
+    signal xadc_delay_s200      : std_logic_vector (17 downto 0) := "011111111111111111";
     signal xadc_end_of_data     : std_logic;
     signal xadc_fifo_bus        : std_logic_vector (63 downto 0);
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
     signal xadc_busy            : std_logic;
     signal xadc_conf_rdy        : std_logic;
+    signal xadc_conf_rdy_s200   : std_logic;
 
     ------------------------------------------------------------------
     -- Dynamic IP signals
@@ -576,6 +586,10 @@ architecture Behavioral of mmfe8_top is
     signal myMAC_set            : std_logic_vector (47 downto 0);       --Lev
     signal destIP_set           : std_logic_vector (31 downto 0);       --Lev
     signal newIP_start          : std_logic;                            --Lev
+    signal myIP_set_s50         : std_logic_vector (31 downto 0);
+    signal myMAC_set_s50        : std_logic_vector (47 downto 0);
+    signal destIP_set_s50       : std_logic_vector (31 downto 0);
+    signal newIP_start_s50      : std_logic;
     signal flash_busy           : std_logic;                            -- control signal for config_logic
 
     signal   io0_i : std_logic:= '0';   --Lev
@@ -617,7 +631,6 @@ architecture Behavioral of mmfe8_top is
     attribute keep of ckdt_out_vec          : signal is "true";
     attribute keep of vmm_do_vec_i          : signal is "true";
     attribute keep of daq_vmm_ena_wen_enable: signal is "true";
-    attribute keep of vmm_id_int            : signal is "true";
     
     attribute keep of data0_in_vec          : signal is "true";
     attribute dont_touch of data0_in_vec    : signal is "true";
@@ -702,8 +715,6 @@ architecture Behavioral of mmfe8_top is
     attribute keep of udp_tx_start_int          : signal is "TRUE";
     attribute keep of udp_tx_data_out_ready_int : signal is "TRUE";
     attribute keep of vmm_id                    : signal is "TRUE";
-    attribute keep of vmm_id_synced             : signal is "TRUE";
-    attribute keep of vmm_id_old                : signal is "TRUE";
     attribute keep of conf_done_int             : signal is "TRUE";
     attribute keep of conf_done_int_synced      : signal is "TRUE";
     attribute keep of conf_wen_i                : signal is "TRUE";
@@ -750,6 +761,7 @@ architecture Behavioral of mmfe8_top is
     -- 20. ila_top_level
     -- 21. xadc
     -- 22. AXI4_SPI
+    -- 23. CDCC
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -840,7 +852,9 @@ architecture Behavioral of mmfe8_top is
     port(
     ------------------------------------
     ------- General Interface ----------
+    clk_200             : in  std_logic;
     clk_125             : in  std_logic;
+    clk_50              : in  std_logic;
     clk_40              : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
@@ -1160,54 +1174,54 @@ architecture Behavioral of mmfe8_top is
 	);	
 	end component;
 	-- 18
-    component config_logic is
-        Port ( 
-        clk125              : in  std_logic;
-        clk200              : in  std_logic;
-        clk_in              : in  std_logic;
+    --component config_logic is
+    --    Port ( 
+    --    clk125              : in  std_logic;
+    --    clk200              : in  std_logic;
+    --    clk_in              : in  std_logic;
         
-        reset               : in  std_logic;
+    --    reset               : in  std_logic;
 
-        user_data_in        : in  std_logic_vector (7 downto 0);
-        user_data_out       : out std_logic_vector (63 downto 0);
+    --    user_data_in        : in  std_logic_vector (7 downto 0);
+    --    user_data_out       : out std_logic_vector (63 downto 0);
 
-        udp_rx              : in udp_rx_type;
-        resp_data           : out udp_response;
+    --    udp_rx              : in udp_rx_type;
+    --    resp_data           : out udp_response;
 
-        send_error          : out std_logic;
-        user_conf           : out std_logic;
-        user_wr_en          : in  std_logic;
-        user_last           : in  std_logic;
-        configuring         : in  std_logic;
+    --    send_error          : out std_logic;
+    --    user_conf           : out std_logic;
+    --    user_wr_en          : in  std_logic;
+    --    user_last           : in  std_logic;
+    --    configuring         : in  std_logic;
         
-        we_conf             : out std_logic;
+    --    we_conf             : out std_logic;
         
-        vmm_id              : out std_logic_vector(15 downto 0);
-        cfg_bit_out         : out std_logic ;
-        vmm_cktk            : out std_logic ;
-        status              : out std_logic_vector(3 downto 0);
+    --    vmm_id              : out std_logic_vector(15 downto 0);
+    --    cfg_bit_out         : out std_logic ;
+    --    vmm_cktk            : out std_logic ;
+    --    status              : out std_logic_vector(3 downto 0);
         
-        start_vmm_conf      : in  std_logic;
-        conf_done           : out std_logic;
-        ext_trigger         : out std_logic;
+    --    start_vmm_conf      : in  std_logic;
+    --    conf_done           : out std_logic;
+    --    ext_trigger         : out std_logic;
         
-        ACQ_sync            : out std_logic_vector(15 downto 0);
+    --    ACQ_sync            : out std_logic_vector(15 downto 0);
         
-        udp_header          : in std_logic;
-        packet_length       : in std_logic_vector (15 downto 0);
+    --    udp_header          : in std_logic;
+    --    packet_length       : in std_logic_vector (15 downto 0);
 
-        xadc_busy           : in std_logic;
-        xadc_start          : out std_logic;
-        vmm_id_xadc         : out std_logic_vector(15 downto 0);
-        xadc_sample_size    : out std_logic_vector(10 downto 0);
-        xadc_delay          : out std_logic_vector(17 downto 0);
+    --    xadc_busy           : in std_logic;
+    --    xadc_start          : out std_logic;
+    --    vmm_id_xadc         : out std_logic_vector(15 downto 0);
+    --    xadc_sample_size    : out std_logic_vector(10 downto 0);
+    --    xadc_delay          : out std_logic_vector(17 downto 0);
         
-        myIP_set            : out std_logic_vector(31 downto 0);        --Lev
-        myMAC_set           : out std_logic_vector(47 downto 0);        --Lev
-        destIP_set          : out std_logic_vector(31 downto 0);        --Lev
-        newip_start         : out std_logic                             --Lev
-        );
-    end component;
+    --    myIP_set            : out std_logic_vector(31 downto 0);        --Lev
+    --    myMAC_set           : out std_logic_vector(47 downto 0);        --Lev
+    --    destIP_set          : out std_logic_vector(31 downto 0);        --Lev
+    --    newip_start         : out std_logic                             --Lev
+    --    );
+    --end component;
     -- 19
     component select_data
     port(
@@ -1284,7 +1298,7 @@ architecture Behavioral of mmfe8_top is
         xadc_busy           : out std_logic
     );
     end component;
-
+    -- 22
     component AXI4_SPI                  -- Lev
     port(
         clk_200                 : in  std_logic;
@@ -1313,6 +1327,17 @@ architecture Behavioral of mmfe8_top is
         ss_t : OUT STD_LOGIC
         --SPI_CLK                 : in    std_logic
     );
+    end component;
+    -- 23
+    component CDCC
+    generic(
+        NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
+    port(
+        clk_src     : in  std_logic;                                        -- input clk (source clock)
+        clk_dst     : in  std_logic;                                        -- input clk (dest clock)
+        data_in     : in  std_logic_vector(NUMBER_OF_BITS - 1 downto 0);    -- data to be synced
+        data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
+        );
     end component;
 
 begin
@@ -1558,7 +1583,9 @@ config_block: configuration_block
     port map(
     ------------------------------------
     ------- General Interface ----------
+    clk_200             => clk_200,
     clk_125             => userclk2,
+    clk_50              => clk_50,
     clk_40              => clk_40,
     rst                 => glbl_rst_i,
     ------------------------------------
@@ -1684,7 +1711,7 @@ trigger_instance: trigger
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         rst_hold        => etr_reset_latched,   -- Prevents trigger while high (resetting)
-        trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
+        trmode          => trig_mode_int_s200,  -- Mode 0: internal / Mode 1: external
         trext           => ext_trigger_in,      -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
@@ -1699,7 +1726,7 @@ pf_newCycle     <=      tr_out_i;
 select_vmm_block: select_vmm
     Port map (
         clk_in              => clk_200,
-        vmm_id              => vmm_id_int,
+        vmm_id              => vmm_id_s200,
 
         conf_di             => conf_di_i,
         conf_di_vec         => vmm_di_vec_i,
@@ -1770,7 +1797,7 @@ packet_formation_instance: packet_formation
         resetting       => etr_reset_latched,
         rst_FIFO        => pf_rst_FIFO,
 
-        latency         => latency_conf,
+        latency         => latency_conf_s200,
         
         trigger         => trigger_i
     );   
@@ -1826,9 +1853,9 @@ xadc_instance: xadc
         Vaux11_v_n                  => Vaux11_v_n,
         Vaux11_v_p                  => Vaux11_v_p,
         data_in_rdy                 => xadc_start,
-        vmm_id                      => vmm_id_xadc,
-        sample_size                 => xadc_sample_size,
-        delay_in                    => xadc_delay,
+        vmm_id                      => vmm_id_xadc_s200,
+        sample_size                 => xadc_sample_size_s200,
+        delay_in                    => xadc_delay_s200,
         UDPDone                     => UDPDone,
     
         MuxAddr0                    => MuxAddr0,
@@ -1853,11 +1880,11 @@ axi4_spi_instance: AXI4_SPI     --Lev
         myMAC                  => myMAC,
         destIP                 => destIP,
         
-        myIP_set               => myIP_set,
-        myMAC_set              => myMAC_set,
-        destIP_set             => destIP_set,
+        myIP_set               => myIP_set_s50,
+        myMAC_set              => myMAC_set_s50,
+        destIP_set             => destIP_set_s50,
 
-        newip_start            => newIP_start,
+        newip_start            => newIP_start_s50,
         axi4spi_busy           => flash_busy,
 
         io0_i                  => io0_i,
@@ -1895,6 +1922,72 @@ QSPI_SS_0: IOBUF        --Lev
       I  => ss_o(0),
       T  => ss_t
    );
+
+---------------------------------------------------------
+--------- Clock Domain Crossing Sync Block --------------
+---------------------------------------------------------
+CDCC_125to200: CDCC
+    generic map(NUMBER_OF_BITS => 85)
+    port map(
+        clk_src                     => userclk2,
+        clk_dst                     => clk_200,
+
+        data_in(0)                  => fpga_reset_conf,
+        data_in(1)                  => daq_off,
+        data_in(2)                  => daq_on,
+        data_in(3)                  => trig_mode_int,
+        data_in(19 downto 4)        => latency_conf,
+        data_in(20)                 => vmm_id_rdy,
+        data_in(21)                 => vmmConf_done,
+        data_in(37 downto 22)       => vmm_id,
+        data_in(38)                 => xadc_conf_rdy,
+        data_in(54 downto 39)       => vmm_id_xadc,
+        data_in(65 downto 55)       => xadc_sample_size,
+        data_in(83 downto 66)       => xadc_delay,
+        data_in(84)                 => newIP_ready,
+
+        data_out_s(0)               => fpga_reset_conf_s200,
+        data_out_s(1)               => daq_off_s200,
+        data_out_s(2)               => daq_on_s200,
+        data_out_s(3)               => trig_mode_int_s200,
+        data_out_s(19 downto 4)     => latency_conf_s200,
+        data_out_s(20)              => vmm_id_rdy_s200,
+        data_out_s(21)              => vmmConf_done_s200,
+        data_out_s(37 downto 22)    => vmm_id_s200,
+        data_out_s(38)              => xadc_conf_rdy_s200,
+        data_out_s(54 downto 39)    => vmm_id_xadc_s200,
+        data_out_s(65 downto 55)    => xadc_sample_size_s200,
+        data_out_s(83 downto 66)    => xadc_delay_s200,
+        data_out_s(84)              => newIP_ready_s200
+    );
+
+CDCC_125to50: CDCC
+    generic map(NUMBER_OF_BITS => 112)
+    port map(
+        clk_src                     => userclk2,
+        clk_dst                     => clk_50,
+
+        data_in(47 downto 0)        => myMAC_set,
+        data_in(79 downto 48)       => myIP_set,
+        data_in(111 downto 80)      => destIP_set,
+
+        data_out_s(47 downto 0)     => myMAC_set_s50,
+        data_out_s(79 downto 48)    => myIP_set_s50,
+        data_out_s(111 downto 80)   => destIP_set_s50  
+    );
+
+CDCC_200to50: CDCC
+    generic map(NUMBER_OF_BITS => 1)
+    port map(
+        clk_src         => clk_200,
+        clk_dst         => clk_50,
+        data_in(0)      => newIP_start,
+        data_out_s(0)   => newIP_start_s50
+    );
+---------------------------------------------------------
+---------------------------------------------------------
+---------------------------------------------------------
+
 
 --FIFO2Elink_instance: FIFO2Elink
 --    generic map(OutputDataRate  => 80) -- 80 or 160 MHz
@@ -2083,26 +2176,26 @@ testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
         end if;
 end process;
 
-synced_to_200: process(clk_200)
-    begin
-    if rising_edge(clk_200) then
-        status_int_old       <= status_int;
-        if status_int_old = status_int then
-            status_int_synced   <= status_int_old;
-        end if;
+--synced_to_200: process(clk_200)
+--    begin
+--    if rising_edge(clk_200) then
+--        status_int_old       <= status_int;
+--        if status_int_old = status_int then
+--            status_int_synced   <= status_int_old;
+--        end if;
 
-        vmm_id_old       <= vmm_id;
-        if vmm_id_old = vmm_id then
-            vmm_id_synced   <= vmm_id_old;
-        end if;
-        conf_done_int_synced    <= conf_done_int;
-    end if;
-end process;
+--        vmm_id_old       <= vmm_id;
+--        if vmm_id_old = vmm_id then
+--            vmm_id_synced   <= vmm_id_old;
+--        end if;
+--        conf_done_int_synced    <= conf_done_int;
+--    end if;
+--end process;
 
 FPGA_global_reset: process(clk_200)
     begin
     if rising_edge(clk_200) then
-        if fpga_reset_conf = '1' then
+        if fpga_reset_conf_s200 = '1' then
             glbl_rst_i <= '1';
         else
             glbl_rst_i <= '0';
@@ -2134,7 +2227,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                 end_packet_conf_int     <= '0';
                 sel_config_reply        <= '0';
 
-                if(vmm_id_rdy = '1')then      -- VMM conf
+                if(vmm_id_rdy_s200 = '1')then      -- VMM conf
                     if(wait_cnt = "11111")then -- wait for safe assertion of multi-bit signal
                         wait_cnt    <= (others => '0');
                         state       <= CONFIGURE;
@@ -2143,7 +2236,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                         state       <= IDLE;
                     end if;
 
-                elsif(newIP_ready = '1')then -- start new IP setup
+                elsif(newIP_ready_s200 = '1')then -- start new IP setup
                     if(wait_cnt = "11111")then -- wait for safe assertion of multi-bit signal
                         wait_cnt    <= (others => '0');
                         newIP_start <= '1';
@@ -2154,7 +2247,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                         state       <= IDLE;
                     end if;
 
-                elsif(xadc_conf_rdy = '1')then -- start XADC
+                elsif(xadc_conf_rdy_s200 = '1')then -- start XADC
                     if(wait_cnt = "11111")then -- wait for safe assertion of multi-bit signal
                         wait_cnt    <= (others => '0');
                         xadc_start  <= '1';
@@ -2165,7 +2258,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                         state       <= IDLE;
                     end if;
 
-                elsif(daq_on = '1')then
+                elsif(daq_on_s200 = '1')then
                     state   <= DAQ_INIT;
 
                 else
@@ -2175,10 +2268,9 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
             
                 when CONFIGURE =>
                     is_state    <= "0001";
-                    vmm_id_int  <= vmm_id_synced;
                     conf_wen_i  <= '1';
     
-                    if(vmmConf_done = '1')then 
+                    if(vmmConf_done_s200 = '1')then 
                         state   <= CONF_DONE;
                     else
                         state   <= CONFIGURE;
@@ -2208,7 +2300,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
                     daq_enable_i            <= '1';
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
-                    if(daq_off = '1')then    -- Reset came
+                    if(daq_off_s200 = '1')then    -- Reset came
                         daq_vmm_ena_wen_enable  <= x"00";
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
@@ -2227,7 +2319,7 @@ flow_fsm: process(clk_200, counter, status_int, status_int_synced, state, vmm_id
 
                 when DAQ =>
                     is_state            <= "0101";
-                    if daq_off = '1' then  -- Reset came
+                    if(daq_off_s200 = '1')then  -- Reset came
                         daq_enable_i    <= '0';
                         state           <= DAQ_INIT;
                     end if;
@@ -2304,7 +2396,7 @@ ila_top: ila_top_level
     read_out(31 downto 24)      <= ckdt_out_vec;
     read_out(35 downto 32)      <= is_state;
     read_out(39 downto 36)      <= status_int;
-    read_out(55 downto 40)      <= vmm_id_int;
+    read_out(55 downto 40)      <= (others => '0');
     read_out(59 downto 56)      <= status_int_synced;
     read_out(67 downto 60)      <= daq_vmm_ena_wen_enable;
     read_out(75 downto 68)      <= data0_in_vec;

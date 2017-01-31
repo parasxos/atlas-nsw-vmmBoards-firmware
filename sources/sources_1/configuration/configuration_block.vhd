@@ -31,7 +31,9 @@ entity configuration_block is
     port(
     ------------------------------------
     ------- General Interface ----------
+    clk_200             : in  std_logic;
     clk_125             : in  std_logic;
+    clk_50              : in  std_logic;
     clk_40              : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
@@ -88,6 +90,17 @@ architecture RTL of configuration_block is
     );
     END COMPONENT;
 
+    COMPONENT CDCC
+    GENERIC(
+        NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
+    PORT(
+        clk_src     : in  std_logic;                                        -- input clk (source clock)
+        clk_dst     : in  std_logic;                                        -- input clk (dest clock)
+        data_in     : in  std_logic_vector(NUMBER_OF_BITS - 1 downto 0);    -- data to be synced
+        data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
+    );
+    END COMPONENT;
+
     signal user_data_prv    : std_logic_vector(7 downto 0) := (others => '0');
     signal user_valid_prv   : std_logic := '0';
     signal user_valid_fifo  : std_logic := '0';
@@ -96,16 +109,23 @@ architecture RTL of configuration_block is
     signal wait_cnt         : unsigned(1 downto 0) := (others => '0');
     signal vmm_conf         : std_logic := '0';
     signal vmm_ser_done     : std_logic := '0';
+    signal vmmSer_done_s125 : std_logic := '0';
     signal vmm_conf_rdy     : std_logic := '0';
     signal fpga_conf        : std_logic := '0';
     signal flash_conf       : std_logic := '0';
     signal sel_vmm_data     : std_logic := '0';
     signal xadc_conf        : std_logic := '0';
     signal rst_fifo         : std_logic := '0';
+    signal rst_fifo_s40     : std_logic := '0';
     signal xadcPacket_rdy   : std_logic := '0';
     signal flashPacket_rdy  : std_logic := '0';
     signal fpgaPacket_rdy   : std_logic := '0';
     signal init_ser         : std_logic := '0';
+    signal init_ser_s40     : std_logic := '0';
+    signal top_rdy_s125     : std_logic := '0';
+    signal top_rdy_s40      : std_logic := '0';
+    signal flash_busy_s125  : std_logic := '0';
+    signal xadc_busy_s125   : std_logic := '0';
     signal fpga_conf_1of2   : std_logic_vector(31 downto 0) := (others => '0');
     signal fpga_conf_2of2   : std_logic_vector(31 downto 0) := (others => '0');
     signal dest_port        : std_logic_vector(15 downto 0) := (others => '0');
@@ -267,10 +287,10 @@ begin
             -- stop counting and wait for corresponding sub-module to get the init signal
             -- or wait for sub-process to finish
             when ST_WAIT_FOR_BUSY =>
-                if(xadcPacket_rdy = '1' and xadc_busy = '1')then
+                if(xadcPacket_rdy = '1' and xadc_busy_s125 = '1')then
                     xadc_conf   <= '0';
                     st_master   <= ST_WAIT_FOR_IDLE;
-                elsif(flashPacket_rdy = '1' and flash_busy = '1')then
+                elsif(flashPacket_rdy = '1' and flash_busy_s125 = '1')then
                     flash_conf  <= '0';
                     st_master   <= ST_WAIT_FOR_IDLE;
                 elsif(fpgaPacket_rdy = '1' and user_valid = '0')then -- no need to wait, jump to idle state
@@ -286,9 +306,9 @@ begin
 
             -- wait for corresponding sub-module to finish processing    
             when ST_WAIT_FOR_IDLE =>
-                if(xadc_busy = '0' and user_valid = '0')then
+                if(xadc_busy_s125 = '0' and user_valid = '0')then
                     st_master <= ST_IDLE;
-                elsif(flash_busy = '0' and user_valid = '0')then
+                elsif(flash_busy_s125 = '0' and user_valid = '0')then
                     st_master <= ST_IDLE;
                 else
                     st_master <= ST_WAIT_FOR_IDLE;
@@ -297,7 +317,7 @@ begin
             -- create a reset signal of adequate length. release the reset
             -- only when flow_fsm and cktk_fsm are in the appropriate states
             when ST_RESET_FIFO =>
-                if(vmm_ser_done = '1' and top_rdy = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
+                if(vmmSer_done_s125 = '1' and top_rdy_s125 = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
                     rst_fifo    <= '1';
                     init_ser    <= '0';
                     st_master   <= ST_WAIT_FOR_CKTK_FSM;
@@ -309,7 +329,7 @@ begin
 
             -- wait for CKTK FSM to latch the reset signal
             when ST_WAIT_FOR_CKTK_FSM =>
-                if(vmm_ser_done = '0' and user_valid = '0')then
+                if(vmmSer_done_s125 = '0' and user_valid = '0')then
                     rst_fifo    <= '0';
                     st_master   <= ST_IDLE;
                 else
@@ -513,7 +533,7 @@ end process;
 VMM_conf_CKTK_FSM: process(clk_40)
 begin
     if(rising_edge(clk_40))then
-        if(rst = '1' or rst_fifo = '1')then
+        if(rst = '1' or rst_fifo_s40 = '1')then
             st_conf         <= ST_IDLE;
             vmm_ser_done    <= '0';
             rd_ena          <= '0';
@@ -526,7 +546,7 @@ begin
             when ST_IDLE =>
                 vmm_ser_done <= '0';
 
-                if(top_rdy = '1' and init_ser = '1')then
+                if(top_rdy_s40 = '1' and init_ser_s40 = '1')then
                     st_conf <= ST_RD_HIGH;
                 else
                     st_conf <= ST_IDLE;
@@ -602,5 +622,66 @@ FIFO_serializer: vmm_conf_buffer
     vmmConf_rdy     <= init_ser;
     vmmConf_done    <= vmm_ser_done;
     dest_port       <= udp_rx.hdr.dst_port;
+
+---------------------------------------------------------
+--------- Clock Domain Crossing Sync Block --------------
+---------------------------------------------------------
+CDCC_200to125: CDCC
+    generic map(NUMBER_OF_BITS => 2)
+    port map(
+        clk_src         => clk_200,
+        clk_dst         => clk_125,
+
+        data_in(0)      => top_rdy,
+        data_in(1)      => xadc_busy,
+
+        data_out_s(0)   => top_rdy_s125,
+        data_out_s(1)   => xadc_busy_s125
+    );
+
+CDCC_50to125: CDCC
+    generic map(NUMBER_OF_BITS => 1)
+    port map(
+        clk_src         => clk_50,
+        clk_dst         => clk_125,
+
+        data_in(0)      => flash_busy,
+        data_out_s(0)   => flash_busy_s125
+    );
+
+CDCC_200to40: CDCC
+    generic map(NUMBER_OF_BITS => 1)
+    port map(
+        clk_src         => clk_200,
+        clk_dst         => clk_40,
+
+        data_in(0)      => top_rdy,
+        data_out_s(0)   => top_rdy_s40
+    );
+
+CDCC_125to40: CDCC
+    generic map(NUMBER_OF_BITS => 2)
+    port map(
+        clk_src         => clk_125,
+        clk_dst         => clk_40,
+  
+        data_in(0)      => init_ser,
+        data_in(1)      => rst_fifo,
+        data_out_s(0)   => init_ser_s40,
+        data_out_s(1)   => rst_fifo_s40
+    );
+
+CDCC_40to125: CDCC
+    generic map(NUMBER_OF_BITS => 1)
+    port map(
+        clk_src         => clk_40,
+        clk_dst         => clk_125,
+  
+        data_in(0)      => vmm_ser_done,
+        data_out_s(0)   => vmmSer_done_s125
+    );
+---------------------------------------------------------
+---------------------------------------------------------
+---------------------------------------------------------
 
 end RTL;

@@ -277,6 +277,8 @@ architecture Behavioral of mmfe8_top is
   signal tx_axis_mac_tuser_int       : std_logic := '1';
   signal test_data                   : std_logic_vector(7 downto 0); 
   signal test_valid, test_last       : std_logic;
+  signal icmp_rx_start	             : std_logic;
+  signal icmp_rxo  		     : icmp_rx_type;
   
   signal test_data_out                   : std_logic_vector(7 downto 0); 
   signal test_valid_out, test_last_out       : std_logic;  
@@ -732,7 +734,7 @@ architecture Behavioral of mmfe8_top is
     -- 10. trigger
     -- 11. packet_formation
     -- 12. gig_ethernet_pcs_pma_0
-    -- 13. UDP_Complete_nomac
+    -- 13. UDP_ICMP_Complete_nomac
     -- 14. temac_10_100_1000_fifo_block
     -- 15. temac_10_100_1000_reset_sync
     -- 16. temac_10_100_1000_config_vector_sm
@@ -1016,7 +1018,7 @@ architecture Behavioral of mmfe8_top is
             gt0_pll0lock_out        : out std_logic);
     end component;
 	-- 13
-	component UDP_Complete_nomac
+	component UDP_ICMP_Complete_nomac
 	   Port (
 			-- UDP TX signals
 			udp_tx_start			: in std_logic;							    -- indicates req to tx UDP
@@ -1026,6 +1028,9 @@ architecture Behavioral of mmfe8_top is
 			-- UDP RX signals
 			udp_rx_start			: out std_logic;							-- indicates receipt of udp header
 			udp_rxo					: out udp_rx_type;
+			-- ICMP RX signals
+			icmp_rx_start		    : out std_logic;
+			icmp_rxo		        : out icmp_rx_type;
 			-- IP RX signals
 			ip_rx_hdr				: out ipv4_rx_header_type;
 			-- system signals
@@ -1493,7 +1498,7 @@ gen_gtx_reset: process (userclk2)
       end if;
    end process;
 
-UDP_block: UDP_Complete_nomac
+UDP_ICMP_block: UDP_ICMP_Complete_nomac
 	Port map(
 			udp_tx_start				=> udp_tx_start_int,
 			udp_txi						=> udp_txi_int, 
@@ -1501,6 +1506,8 @@ UDP_block: UDP_Complete_nomac
 			udp_tx_data_out_ready	    => udp_tx_data_out_ready_int, 
 			udp_rx_start				=> udp_header_int,									-- indicates receipt of udp header
 			udp_rxo						=> udp_rx_int,
+			icmp_rx_start		        => icmp_rx_start,
+			icmp_rxo		            => icmp_rxo,
 			ip_rx_hdr					=> ip_rx_hdr_int,	
 			rx_clk						=> userclk2,
 			tx_clk						=> userclk2,

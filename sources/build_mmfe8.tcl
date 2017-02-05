@@ -151,7 +151,11 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/tx_arbitrator.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_SYNC.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/IPv4_RX.vhd"]"\
- "[file normalize "$origin_dir/sources_1/imports/UDP_Complete_nomac.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/UDP_ICMP_Complete_nomac.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/ICMP_RX.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/ICMP_TX.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/ping_reply_handler.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/icmp_udp_mux.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_SYNC.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_TX.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/IPv4_TX.vhd"]"\
@@ -188,6 +192,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
@@ -273,7 +278,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/imports/UDP_Complete_nomac.vhd"
+set file "$origin_dir/sources_1/imports/UDP_ICMP_Complete_nomac.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -294,6 +299,26 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/imports/UDP_RX.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/ICMP_RX.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/ICMP_TX.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/ping_reply_handler.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/icmp_udp_mux.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -540,6 +565,13 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

@@ -65,6 +65,43 @@ package ipv4_types is
 		arp_controls	    : arp_control_type;
 	end record;
 
+    -------------
+    -- ICMP TX --
+    -------------
+
+    type icmp_tx_header_type is record
+        dst_ip_addr     : std_logic_vector (31 downto 0); -- not part of the real header
+        icmp_pay_len    : std_logic_vector (15 downto 0); -- not part of the real header
+        icmp_type       : std_logic_vector (7 downto 0);
+        icmp_code       : std_logic_vector (7 downto 0);
+        icmp_chksum     : std_logic_vector (15 downto 0);
+        icmp_ident      : std_logic_vector (15 downto 0);
+        icmp_seqNum     : std_logic_vector (15 downto 0);
+    end record;
+
+    type icmp_tx_type is record
+        hdr                : icmp_tx_header_type;                       
+        payload            : axi_out_type;                              -- tx axi bus
+    end record;
+
+    -------------
+    -- ICMP RX --
+    -------------
+
+    type icmp_rx_header_type is record
+        src_ip_addr     : std_logic_vector (31 downto 0); -- not part of the real header
+        icmp_type       : std_logic_vector (7 downto 0);
+        icmp_code       : std_logic_vector (7 downto 0);
+        icmp_chksum     : std_logic_vector (15 downto 0);
+        icmp_ident      : std_logic_vector (15 downto 0);
+        icmp_seqNum     : std_logic_vector (15 downto 0);
+    end record;
+
+    type icmp_rx_type is record
+        hdr             : icmp_rx_header_type;
+        payload         : axi_in_type;
+    end record;
+
 	------------
 	-- UDP TX --
 	------------

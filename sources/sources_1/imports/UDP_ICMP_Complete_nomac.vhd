@@ -181,7 +181,7 @@ architecture structural of UDP_ICMP_Complete_nomac is
   -- Component Declaration for the Ping Reply Handling Module
   ------------------------------------------------------------------------------ 
 
-    COMPONENT ping_reply_handler
+    COMPONENT ping_reply_processor
     PORT (
             -- ICMP RX interface
             icmp_rx_start           : in std_logic;
@@ -353,7 +353,7 @@ begin
     );
 
     -- Instantiate the Ping Reply Handler
-    ping_reply_block: ping_reply_handler
+    ping_reply_block: ping_reply_processor
     PORT MAP(
             -- ICMP RX interface
             icmp_rx_start           => icmp_rx_start_int,

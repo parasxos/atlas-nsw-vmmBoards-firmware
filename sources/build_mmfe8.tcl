@@ -154,7 +154,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/UDP_ICMP_Complete_nomac.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/ICMP_RX.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/ICMP_TX.vhd"]"\
- "[file normalize "$origin_dir/sources_1/imports/ping_reply_handler.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/ping_reply_processor.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/icmp_udp_mux.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_SYNC.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_TX.vhd"]"\
@@ -313,7 +313,7 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/imports/ping_reply_handler.vhd"
+set file "$origin_dir/sources_1/imports/ping_reply_processor.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj

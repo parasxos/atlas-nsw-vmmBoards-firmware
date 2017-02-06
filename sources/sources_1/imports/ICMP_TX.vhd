@@ -12,9 +12,7 @@
 --              
 -- Dependencies:
 --
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
+-- Changelog:
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -53,12 +51,14 @@ architecture Behavioral of ICMP_TX is
     signal tx_count             : unsigned (15 downto 0);
     signal ip_tx_start_reg      : std_logic;
     signal data_out_ready_reg   : std_logic;
+    signal icmp_tx_is_idle_reg  : std_logic;
 
     -- tx control signals
     signal next_tx_state        : tx_state_type;
     signal set_tx_state         : std_logic;
     signal tx_count_val         : unsigned (15 downto 0);
     signal tx_count_mode        : settable_cnt_type;
+    signal tx_is_idle_state     : set_clr_type;
     signal tx_data              : std_logic_vector (7 downto 0);
     signal set_last             : std_logic;
     signal set_ip_tx_start      : set_clr_type;
@@ -66,7 +66,6 @@ architecture Behavioral of ICMP_TX is
 
     -- tx temp signals
     signal total_length     : std_logic_vector (15 downto 0);   -- computed combinatorially from header size
-
 
 -- ICMP datagram header format
 --
@@ -98,12 +97,14 @@ begin
         icmp_tx_start, icmp_txi, clk, ip_tx_result, ip_tx_data_out_ready,
         -- state variables
         icmp_tx_state, tx_count, ip_tx_start_reg, data_out_ready_reg,
+        icmp_tx_is_idle_reg,
         -- control signals
         next_tx_state, set_tx_state, tx_count_mode, tx_count_val,
         tx_data, set_last, total_length, set_ip_tx_start, tx_data_valid
         )
 
     begin
+        icmp_tx_is_idle         <= icmp_tx_is_idle_reg;
         -- set output followers
         ip_tx_start             <= ip_tx_start_reg;
         ip_tx.hdr.protocol      <= x"01";    -- ICMP protocol
@@ -136,6 +137,7 @@ begin
         tx_data                 <= x"00";
         set_last                <= '0';
         set_ip_tx_start         <= HOLD;
+        tx_is_idle_state        <= SET;
         tx_count_val            <= (others => '0');
         icmp_tx_data_out_ready  <= '0';
 
@@ -146,10 +148,10 @@ begin
         case icmp_tx_state is
             when IDLE =>
                 icmp_tx_data_out_ready  <= '0';       -- in this state, we are unable to accept user data for tx
-                icmp_tx_is_idle         <= '1';
                 tx_count_mode           <= RST;
+                tx_is_idle_state        <= SET;
 
-                if icmp_tx_start = '1' then                  
+                if icmp_tx_start = '1' then
                     tx_count_mode   <= RST;
                     set_ip_tx_start <= SET;
                     next_tx_state   <= PAUSE;
@@ -158,12 +160,13 @@ begin
 
             when PAUSE =>
                 -- delay one clock for IP layer to respond to ip_tx_start and remove any tx error result
-                next_tx_state   <= SEND_ICMP_HDR;
-                icmp_tx_is_idle <= '0';
-                set_tx_state    <= '1';
+                next_tx_state       <= SEND_ICMP_HDR;
+                tx_is_idle_state    <= CLR;
+                set_tx_state        <= '1';
 
             when SEND_ICMP_HDR =>
-                icmp_tx_data_out_ready <= '0';       -- in this state, we are unable to accept user data for tx
+                icmp_tx_data_out_ready  <= '0';       -- in this state, we are unable to accept user data for tx
+                tx_is_idle_state        <= HOLD;
                 if ip_tx_result = IPTX_RESULT_ERR then          -- 10
                     set_ip_tx_start <= CLR;
                     next_tx_state   <= IDLE;
@@ -236,9 +239,10 @@ begin
         if rising_edge(clk) then
             if reset = '1' then
                 -- reset state variables
-                icmp_tx_state   <= IDLE;
-                tx_count        <= x"0000";
-                ip_tx_start_reg <= '0';
+                icmp_tx_state       <= IDLE;
+                tx_count            <= x"0000";
+                icmp_tx_is_idle_reg <= '0';
+                ip_tx_start_reg     <= '0';
             else
                 -- Next icmp_tx_state processing
                 if set_tx_state = '1' then
@@ -252,6 +256,13 @@ begin
                     when SET  => ip_tx_start_reg <= '1';
                     when CLR  => ip_tx_start_reg <= '0';
                     when HOLD => ip_tx_start_reg <= ip_tx_start_reg;
+                end case;
+                
+                -- state signal to be used by reply processor
+                case tx_is_idle_state is
+                    when SET  => icmp_tx_is_idle_reg <= '1';
+                    when CLR  => icmp_tx_is_idle_reg <= '0';
+                    when HOLD => icmp_tx_is_idle_reg <= icmp_tx_is_idle_reg;
                 end case;
 
                 -- tx_count processing

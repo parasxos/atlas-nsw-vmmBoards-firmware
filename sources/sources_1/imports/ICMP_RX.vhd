@@ -12,9 +12,7 @@
 --              
 -- Dependencies:
 --
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
+-- Changelog:
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -139,7 +137,7 @@ begin
     next_rx_state       <= IDLE;
     set_rx_state        <= '0';
     rx_event            <= NO_EVENT;
-    rx_count_mode       <= HOLD;
+    rx_count_mode       <= RST;
     set_type            <= '0';
     set_code            <= '0';
     set_chksum_h        <= '0';
@@ -148,7 +146,7 @@ begin
     set_ident_l         <= '0';
     set_seq_h           <= '0';
     set_seq_l           <= '0';
-    set_icmp_rx_start   <= HOLD;
+    set_icmp_rx_start   <= CLR;
     dataval             <= (others => '0');
     set_src_ip          <= '0';
     rx_count_val        <= (others => '0');
@@ -228,9 +226,8 @@ begin
                 set_rx_state        <= '1';
                 set_data_last       <= '1';
               else
-                next_rx_state       <= ICMP_PAYLOAD;
                 rx_count_mode       <= INCR;
-                set_rx_state        <= '1';
+                set_rx_state        <= '0';
               end if;
 
         end case;

@@ -745,7 +745,7 @@ architecture Behavioral of mmfe8_top is
     -- 4.  vmm_global_reset
     -- 5.  event_timing_reset
     -- 6.  select_vmm
-    -- 7.  configuration_block
+    -- 7.  udp_data_in_handler
     -- 8.  vmm_readout
     -- 9.  FIFO2UDP
     -- 10. trigger
@@ -848,7 +848,7 @@ architecture Behavioral of mmfe8_top is
       );
     end component;
     -- 7
-    component configuration_block
+    component udp_data_in_handler
     port(
     ------------------------------------
     ------- General Interface ----------
@@ -866,9 +866,6 @@ architecture Behavioral of mmfe8_top is
     ext_trigger         : out std_logic;
     ------------------------------------
     -------- UDP Interface -------------
-    user_data           : in  std_logic_vector(7 downto 0);
-    user_valid          : in  std_logic;
-    user_last           : in  std_logic;
     udp_rx              : in  udp_rx_type;
     ------------------------------------
     ---------- AXI4SPI Interface -------
@@ -1579,7 +1576,7 @@ i2c_module: i2c_top
 	   port map(  clk_in       			=> clk_200,
 		          phy_rstn_out 			=> phy_rstn_out);
 
-config_block: configuration_block
+config_block: udp_data_in_handler
     port map(
     ------------------------------------
     ------- General Interface ----------
@@ -1597,9 +1594,6 @@ config_block: configuration_block
     ext_trigger         => trig_mode_int,
     ------------------------------------
     -------- UDP Interface -------------
-    user_data           => udp_rx_int.data.data_in,
-    user_valid          => udp_rx_int.data.data_in_valid,
-    user_last           => udp_rx_int.data.data_in_last,
     udp_rx              => udp_rx_int,
     ------------------------------------
     ---------- AXI4SPI Interface -------

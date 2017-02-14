@@ -50,11 +50,19 @@
 # Set part type
 set thepart "xc7a200tfbg484-2"
 
-# Set project name
-set projectname "MMFE8"
-
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir [file dirname [info script]]
+
+    #Set project name from argument
+        if {$argv == "mdt_mu2e"} {    
+            set projectname "MDT_MU2E"
+            puts "Correct. Building Project for MDT MU2E..."
+        } elseif {$argv == "mdt_446"} {
+            set projectname "MDT_446"
+            puts "Correct. Building Project for MDT 446..."
+        } else {
+            puts "ERROR! Please, give argument mdt_mu2e or mdt_446."
+        }
 
 # Create project
 create_project $projectname $origin_dir/$projectname 
@@ -186,6 +194,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
@@ -539,6 +548,13 @@ add_files -norecurse -fileset $obj $files
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
@@ -564,13 +580,23 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 # Set 'constrs_1' fileset object
 set obj [get_filesets constrs_1]
 
-# Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/constrs_1/mmfe8.xdc"]"
-set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/constrs_1/mmfe8.xdc"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
-set_property "file_type" "XDC" $file_obj
+if {$argv == "mdt_mu2e"} {    
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/mdt_mu2e.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/mdt_mu2e.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+    } elseif {$argv == "mdt_446"} {
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/mdt_446.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/mdt_446.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+    } else { puts "ERROR!"} 
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]

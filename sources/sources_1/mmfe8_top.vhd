@@ -32,13 +32,13 @@ entity mmfe8_top is
     port(
         -- Trigger pins
         -- CTF 1.0 External Trigger
-        EXT_TRIGGER_P       : in std_logic;
-        EXT_TRIGGER_N       : in std_logic;
+--        EXT_TRIGGER_P       : in std_logic;
+--        EXT_TRIGGER_N       : in std_logic;
         -- Arizona Board for External Trigger
 --        EXT_TRIG_IN         : in std_logic;
 
-        TRIGGER_LOOP_P      : out std_logic;
-        TRIGGER_LOOP_N      : out std_logic;
+--        TRIGGER_LOOP_P      : out std_logic;
+--        TRIGGER_LOOP_N      : out std_logic;
 
         -- 200.0359MHz from bank 14
         X_2V5_DIFF_CLK_P    : in std_logic;
@@ -56,127 +56,128 @@ entity mmfe8_top is
         phy_rstn_out 		  : out std_logic;
         
         DATA0_1_P, DATA0_1_N  : IN STD_LOGIC;
-        DATA0_2_P, DATA0_2_N  : IN STD_LOGIC;
-        DATA0_3_P, DATA0_3_N  : IN STD_LOGIC;
-        DATA0_4_P, DATA0_4_N  : IN STD_LOGIC;
-        DATA0_5_P, DATA0_5_N  : IN STD_LOGIC;
-        DATA0_6_P, DATA0_6_N  : IN STD_LOGIC;
-        DATA0_7_P, DATA0_7_N  : IN STD_LOGIC;
-        DATA0_8_P, DATA0_8_N  : IN STD_LOGIC;
+--        DATA0_2_P, DATA0_2_N  : IN STD_LOGIC;
+--        DATA0_3_P, DATA0_3_N  : IN STD_LOGIC;
+--        DATA0_4_P, DATA0_4_N  : IN STD_LOGIC;
+--        DATA0_5_P, DATA0_5_N  : IN STD_LOGIC;
+--        DATA0_6_P, DATA0_6_N  : IN STD_LOGIC;
+--        DATA0_7_P, DATA0_7_N  : IN STD_LOGIC;
+--        DATA0_8_P, DATA0_8_N  : IN STD_LOGIC;
 
         DATA1_1_P, DATA1_1_N  : IN STD_LOGIC;
-        DATA1_2_P, DATA1_2_N  : IN STD_LOGIC;
-        DATA1_3_P, DATA1_3_N  : IN STD_LOGIC;
-        DATA1_4_P, DATA1_4_N  : IN STD_LOGIC;
-        DATA1_5_P, DATA1_5_N  : IN STD_LOGIC;
-        DATA1_6_P, DATA1_6_N  : IN STD_LOGIC;
-        DATA1_7_P, DATA1_7_N  : IN STD_LOGIC;
-        DATA1_8_P, DATA1_8_N  : IN STD_LOGIC;
+--        DATA1_2_P, DATA1_2_N  : IN STD_LOGIC;
+--        DATA1_3_P, DATA1_3_N  : IN STD_LOGIC;
+--        DATA1_4_P, DATA1_4_N  : IN STD_LOGIC;
+--        DATA1_5_P, DATA1_5_N  : IN STD_LOGIC;
+--        DATA1_6_P, DATA1_6_N  : IN STD_LOGIC;
+--        DATA1_7_P, DATA1_7_N  : IN STD_LOGIC;
+--        DATA1_8_P, DATA1_8_N  : IN STD_LOGIC;
 
         SDO_1         : IN STD_LOGIC;
-        SDO_2         : IN STD_LOGIC;
-        SDO_3         : IN STD_LOGIC;
-        SDO_4         : IN STD_LOGIC;
-        SDO_5         : IN STD_LOGIC;
-        SDO_6         : IN STD_LOGIC;
-        SDO_7        : IN STD_LOGIC;
-        SDO_8         : IN STD_LOGIC;
+--        SDO_2         : IN STD_LOGIC;
+--        SDO_3         : IN STD_LOGIC;
+--        SDO_4         : IN STD_LOGIC;
+--        SDO_5         : IN STD_LOGIC;
+--        SDO_6         : IN STD_LOGIC;
+--        SDO_7         : IN STD_LOGIC;
+--        SDO_8         : IN STD_LOGIC;
 
         SDI_1        : OUT STD_LOGIC;
-        SDI_2        : OUT STD_LOGIC;
-        SDI_3        : OUT STD_LOGIC;
-        SDI_4        : OUT STD_LOGIC;
-        SDI_5        : OUT STD_LOGIC;
-        SDI_6        : OUT STD_LOGIC;
-        SDI_7        : OUT STD_LOGIC;
-        SDI_8        : OUT STD_LOGIC;
+--        SDI_2        : OUT STD_LOGIC;
+--        SDI_3        : OUT STD_LOGIC;
+--        SDI_4        : OUT STD_LOGIC;
+--        SDI_5        : OUT STD_LOGIC;
+--        SDI_6        : OUT STD_LOGIC;
+--        SDI_7        : OUT STD_LOGIC;
+--        SDI_8        : OUT STD_LOGIC;
 
         ENA_1_P, ENA_1_N      : OUT STD_LOGIC;
-        ENA_2_P, ENA_2_N      : OUT STD_LOGIC;
-        ENA_3_P, ENA_3_N      : OUT STD_LOGIC;
-        ENA_4_P, ENA_4_N      : OUT STD_LOGIC;
-        ENA_5_P, ENA_5_N      : OUT STD_LOGIC;
-        ENA_6_P, ENA_6_N      : OUT STD_LOGIC;
-        ENA_7_P, ENA_7_N      : OUT STD_LOGIC;
-        ENA_8_P, ENA_8_N      : OUT STD_LOGIC;
+--        ENA_2_P, ENA_2_N      : OUT STD_LOGIC;
+--        ENA_3_P, ENA_3_N      : OUT STD_LOGIC;
+--        ENA_4_P, ENA_4_N      : OUT STD_LOGIC;
+--        ENA_5_P, ENA_5_N      : OUT STD_LOGIC;
+--        ENA_6_P, ENA_6_N      : OUT STD_LOGIC;
+--        ENA_7_P, ENA_7_N      : OUT STD_LOGIC;
+--        ENA_8_P, ENA_8_N      : OUT STD_LOGIC;
 
         CKTK_1_P, CKTK_1_N    : OUT STD_LOGIC;
-        CKTK_2_P, CKTK_2_N    : OUT STD_LOGIC;
-        CKTK_3_P, CKTK_3_N    : OUT STD_LOGIC;
-        CKTK_4_P, CKTK_4_N    : OUT STD_LOGIC;
-        CKTK_5_P, CKTK_5_N    : OUT STD_LOGIC;
-        CKTK_6_P, CKTK_6_N    : OUT STD_LOGIC;
-        CKTK_7_P, CKTK_7_N    : OUT STD_LOGIC;
-        CKTK_8_P, CKTK_8_N    : OUT STD_LOGIC;
+--        CKTK_2_P, CKTK_2_N    : OUT STD_LOGIC;
+--        CKTK_3_P, CKTK_3_N    : OUT STD_LOGIC;
+--        CKTK_4_P, CKTK_4_N    : OUT STD_LOGIC;
+--        CKTK_5_P, CKTK_5_N    : OUT STD_LOGIC;
+--        CKTK_6_P, CKTK_6_N    : OUT STD_LOGIC;
+--        CKTK_7_P, CKTK_7_N    : OUT STD_LOGIC;
+--        CKTK_8_P, CKTK_8_N    : OUT STD_LOGIC;
 
         CKTP_1_P, CKTP_1_N	  :	OUT	STD_LOGIC;
-        CKTP_2_P, CKTP_2_N	  :	OUT	STD_LOGIC;
-        CKTP_3_P, CKTP_3_N	  :	OUT	STD_LOGIC;
-        CKTP_4_P, CKTP_4_N	  :	OUT	STD_LOGIC;
-        CKTP_5_P, CKTP_5_N	  :	OUT	STD_LOGIC;
-        CKTP_6_P, CKTP_6_N	  :	OUT	STD_LOGIC;
-        CKTP_7_P, CKTP_7_N	  :	OUT	STD_LOGIC;
-        CKTP_8_P, CKTP_8_N	  :	OUT	STD_LOGIC;
+--        CKTP_2_P, CKTP_2_N	  :	OUT	STD_LOGIC;
+--        CKTP_3_P, CKTP_3_N	  :	OUT	STD_LOGIC;
+--        CKTP_4_P, CKTP_4_N	  :	OUT	STD_LOGIC;
+--        CKTP_5_P, CKTP_5_N	  :	OUT	STD_LOGIC;
+--        CKTP_6_P, CKTP_6_N	  :	OUT	STD_LOGIC;
+--        CKTP_7_P, CKTP_7_N	  :	OUT	STD_LOGIC;
+--        CKTP_8_P, CKTP_8_N	  :	OUT	STD_LOGIC;
     
         CKBC_1_P, CKBC_1_N    : OUT STD_LOGIC;
-        CKBC_2_P, CKBC_2_N    : OUT STD_LOGIC;
-        CKBC_3_P, CKBC_3_N    : OUT STD_LOGIC;
-        CKBC_4_P, CKBC_4_N    : OUT STD_LOGIC;
-        CKBC_5_P, CKBC_5_N    : OUT STD_LOGIC;
-        CKBC_6_P, CKBC_6_N    : OUT STD_LOGIC;
-        CKBC_7_P, CKBC_7_N    : OUT STD_LOGIC;
-        CKBC_8_P, CKBC_8_N    : OUT STD_LOGIC;
+--        CKBC_2_P, CKBC_2_N    : OUT STD_LOGIC;
+--        CKBC_3_P, CKBC_3_N    : OUT STD_LOGIC;
+--        CKBC_4_P, CKBC_4_N    : OUT STD_LOGIC;
+--        CKBC_5_P, CKBC_5_N    : OUT STD_LOGIC;
+--        CKBC_6_P, CKBC_6_N    : OUT STD_LOGIC;
+--        CKBC_7_P, CKBC_7_N    : OUT STD_LOGIC;
+--        CKBC_8_P, CKBC_8_N    : OUT STD_LOGIC;
     
         CKDT_1_P, CKDT_1_N    : OUT STD_LOGIC;
-        CKDT_2_P, CKDT_2_N    : OUT STD_LOGIC;
-        CKDT_3_P, CKDT_3_N    : OUT STD_LOGIC;
-        CKDT_4_P, CKDT_4_N    : OUT STD_LOGIC;
-        CKDT_5_P, CKDT_5_N    : OUT STD_LOGIC;
-        CKDT_6_P, CKDT_6_N    : OUT STD_LOGIC;
-        CKDT_7_P, CKDT_7_N    : OUT STD_LOGIC;
-        CKDT_8_P, CKDT_8_N    : OUT STD_LOGIC;
+--        CKDT_2_P, CKDT_2_N    : OUT STD_LOGIC;
+--        CKDT_3_P, CKDT_3_N    : OUT STD_LOGIC;
+--        CKDT_4_P, CKDT_4_N    : OUT STD_LOGIC;
+--        CKDT_5_P, CKDT_5_N    : OUT STD_LOGIC;
+--        CKDT_6_P, CKDT_6_N    : OUT STD_LOGIC;
+--        CKDT_7_P, CKDT_7_N    : OUT STD_LOGIC;
+--        CKDT_8_P, CKDT_8_N    : OUT STD_LOGIC;
 
 --TODO: Review signals with updated configuration (Christos)
-        VMM_SCK			: out std_logic;
-        VMM_CS 		      : out std_logic;
+        VMM_SCK			      : OUT STD_LOGIC;
+        VMM_CS 		          : OUT STD_LOGIC;
         CS                    : OUT STD_LOGIC;
         MO_P,      MO_N       : OUT STD_LOGIC;
         art_clk_P, art_clk_N  : OUT STD_LOGIC;
-        art_clkout_P          : out std_logic;
-        art_clkout_N          : out std_logic;
+        art_clkout_P          : OUT STD_LOGIC;
+        art_clkout_N          : OUT STD_LOGIC;
         art_P, art_N          : IN  STD_LOGIC;
         TKI_P,      TKI_N     : OUT STD_LOGIC;
         TKO_P,      TKO_N     : IN  STD_LOGIC;
         ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
 
-        VP_0                  : IN STD_LOGIC;
-        VN_0                  : IN STD_LOGIC;
-        Vaux0_v_n             : IN STD_LOGIC;
-        Vaux0_v_p             : IN STD_LOGIC;
-        Vaux1_v_n             : IN STD_LOGIC;
-        Vaux1_v_p             : IN STD_LOGIC;
-        Vaux2_v_n             : IN STD_LOGIC;
-        Vaux2_v_p             : IN STD_LOGIC;
-        Vaux3_v_n             : IN STD_LOGIC;
-        Vaux3_v_p             : IN STD_LOGIC;
-        Vaux8_v_n             : IN STD_LOGIC;
-        Vaux8_v_p             : IN STD_LOGIC;
-        Vaux9_v_n             : IN STD_LOGIC;
-        Vaux9_v_p             : IN STD_LOGIC;
-        Vaux10_v_n            : IN STD_LOGIC;
-        Vaux10_v_p            : IN STD_LOGIC;
-        Vaux11_v_n            : IN STD_LOGIC;
-        Vaux11_v_p            : IN STD_LOGIC;
+--TODO: xADC-related in/outs, to be reviewed (Christos)
+--        VP_0                  : IN STD_LOGIC;
+--        VN_0                  : IN STD_LOGIC;
+--        Vaux0_v_n             : IN STD_LOGIC;
+--        Vaux0_v_p             : IN STD_LOGIC;
+--        Vaux1_v_n             : IN STD_LOGIC;
+--        Vaux1_v_p             : IN STD_LOGIC;
+--        Vaux2_v_n             : IN STD_LOGIC;
+--        Vaux2_v_p             : IN STD_LOGIC;
+--        Vaux3_v_n             : IN STD_LOGIC;
+--        Vaux3_v_p             : IN STD_LOGIC;
+--        Vaux8_v_n             : IN STD_LOGIC;
+--        Vaux8_v_p             : IN STD_LOGIC;
+--        Vaux9_v_n             : IN STD_LOGIC;
+--        Vaux9_v_p             : IN STD_LOGIC;
+--        Vaux10_v_n            : IN STD_LOGIC;
+--        Vaux10_v_p            : IN STD_LOGIC;
+--        Vaux11_v_n            : IN STD_LOGIC;
+--        Vaux11_v_p            : IN STD_LOGIC;
 
-        MuxAddr0              : OUT STD_LOGIC;
-        MuxAddr1              : OUT STD_LOGIC;
-        MuxAddr2              : OUT STD_LOGIC;
-        MuxAddr3_p            : OUT STD_LOGIC;
-        MuxAddr3_n            : OUT STD_LOGIC;
+--        MuxAddr0              : OUT STD_LOGIC;
+--        MuxAddr1              : OUT STD_LOGIC;
+--        MuxAddr2              : OUT STD_LOGIC;
+--        MuxAddr3_p            : OUT STD_LOGIC;
+--        MuxAddr3_n            : OUT STD_LOGIC;
 
-        IO0_IO                : inout std_logic;
-        IO1_IO                : inout std_logic;
-        SS_IO                 : inout std_logic
+        IO0_IO                : INOUT STD_LOGIC;
+        IO1_IO                : INOUT STD_LOGIC;
+        SS_IO                 : INOUT STD_LOGIC
 	  );
 end mmfe8_top;
 

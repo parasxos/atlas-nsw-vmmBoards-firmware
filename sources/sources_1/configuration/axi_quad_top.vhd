@@ -784,43 +784,43 @@ end process;
 spi_cnt <=     std_logic_vector(to_unsigned(spi_counter, 32));
 
 
-ila_top: ila_spi_flash
-    port map (
-        clk     => clk_50,
-        probe0  => read_out
-    );
+--ila_top: ila_spi_flash
+--    port map (
+--        clk     => clk_50,
+--        probe0  => read_out
+--    );
 
-    read_out(31 downto 0)       <= spi_rdata;
-    read_out(38 downto 32)      <= (others => '0');
-    read_out(40 downto 39)      <= spi_rresp;
-    read_out(41)                <= spi_awready;
-    read_out(43 downto 42)      <= spi_bresp;
-    read_out(44)                <= spi_bvalid;    
-    read_out(45)                <= spi_awvalid; 
-    read_out(46)                <= spi_wvalid; 
-    read_out(47)                <= spi_aresetn;
-    read_out(51 downto 48)      <= spi_wstrb;
-    read_out(83 downto 52)      <= spi_wdata;
-    read_out(90 downto 84)      <= spi_awaddr;   
-    read_out(91)                <= spi_bready;
-    read_out(92)                <= spi_wready;
-    read_out(93)                <= spi_arvalid;
-    read_out(94)                <= spi_rready;
-    read_out(98 downto 95)      <= spi_state_is;   
-    read_out(99)                <= spi_rvalid;
-    read_out(100)               <= spi_arready;
-    read_out(107 downto 101)    <= spi_araddr;
-    read_out(108)               <= '0';
-    read_out(109)               <= '0';
-    read_out(110)               <= '0';
-    read_out(114 downto 111)    <= spi_state_control_is;
-    read_out(115)               <= transaction_finished;
-    read_out(119 downto 116)    <= spi_ip_config_state_is;
-    read_out(127 downto 120)    <= ip_set_flag;
-    read_out(128)               <= newip_start;
-    read_out(208 downto 129)    <= cmdaddrdata_set;
-    read_out(212 downto 209)    <= write_spi_state_is;
-    read_out(244 downto 213)     <= spi_cnt;
+--    read_out(31 downto 0)       <= spi_rdata;
+--    read_out(38 downto 32)      <= (others => '0');
+--    read_out(40 downto 39)      <= spi_rresp;
+--    read_out(41)                <= spi_awready;
+--    read_out(43 downto 42)      <= spi_bresp;
+--    read_out(44)                <= spi_bvalid;    
+--    read_out(45)                <= spi_awvalid; 
+--    read_out(46)                <= spi_wvalid; 
+--    read_out(47)                <= spi_aresetn;
+--    read_out(51 downto 48)      <= spi_wstrb;
+--    read_out(83 downto 52)      <= spi_wdata;
+--    read_out(90 downto 84)      <= spi_awaddr;   
+--    read_out(91)                <= spi_bready;
+--    read_out(92)                <= spi_wready;
+--    read_out(93)                <= spi_arvalid;
+--    read_out(94)                <= spi_rready;
+--    read_out(98 downto 95)      <= spi_state_is;   
+--    read_out(99)                <= spi_rvalid;
+--    read_out(100)               <= spi_arready;
+--    read_out(107 downto 101)    <= spi_araddr;
+--    read_out(108)               <= '0';
+--    read_out(109)               <= '0';
+--    read_out(110)               <= '0';
+--    read_out(114 downto 111)    <= spi_state_control_is;
+--    read_out(115)               <= transaction_finished;
+--    read_out(119 downto 116)    <= spi_ip_config_state_is;
+--    read_out(127 downto 120)    <= ip_set_flag;
+--    read_out(128)               <= newip_start;
+--    read_out(208 downto 129)    <= cmdaddrdata_set;
+--    read_out(212 downto 209)    <= write_spi_state_is;
+--    read_out(244 downto 213)     <= spi_cnt;
      
 --vio_top: vio_0
 --    port map (

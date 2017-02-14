@@ -53,11 +53,12 @@ entity config_logic is
         user_last           : in  std_logic;
         configuring         : in  std_logic;
         
-        we_conf             : out std_logic;
+--        we_conf             : out std_logic;
         
         vmm_id              : out std_logic_vector(15 downto 0);
-        cfg_bit_out         : out std_logic ;
-        vmm_cktk            : out std_logic ;
+        cfg_bit_out         : out std_logic;
+        VMM_SCK             : out std_logic;
+        VMM_SDO             : in  std_logic;
         status              : out std_logic_vector(3 downto 0);
         
         start_vmm_conf      : in  std_logic;
@@ -68,6 +69,8 @@ entity config_logic is
         
         udp_header          : in std_logic;
         packet_length       : in std_logic_vector (15 downto 0);
+        VMM_CS              : out std_logic;
+        ena_conf            : out std_logic;
 
         xadc_busy           : in std_logic;
         xadc_start          : out std_logic;
@@ -81,6 +84,7 @@ entity config_logic is
         newip_start         : out std_logic                             --Lev        
     );
 end config_logic;
+
 
 architecture rtl of config_logic is
 
@@ -100,15 +104,18 @@ architecture rtl of config_logic is
     signal status_int           : std_logic_vector(3 downto 0);
     signal user_wr_en_int       : std_logic := '0';
     signal cfg_bit_out_i        : std_logic := '0';
-    signal vmm_cktk_i           : std_logic := '0';
+    signal VMM_SCK_i           : std_logic := '0';
     signal start_conf_process   : std_logic := '0';
     signal conf_done_i          : std_logic := '0';
-    signal cnt_array            : integer := 0;    
+    signal cnt_array, cnt_pause : integer := 0;    
     signal MainFSMstate         : std_logic_vector(3 downto 0); 
     signal ConfFSMstate         : std_logic_vector(3 downto 0); 
     signal test_data_int        : std_logic_vector(31 downto 0);    
     signal delay_data           : std_logic_vector(7 downto 0);    
     signal udp_header_int       : std_logic := '0';
+    signal cs_int               : std_logic := '1';
+    signal VMM_SDO_i            : std_logic := '0';
+    
     
     type data_buffer is array(0 to 60) of std_logic_vector(31 downto 0);
     signal conf_data            : data_buffer;
@@ -124,7 +131,10 @@ architecture rtl of config_logic is
     signal dest_port           : std_logic_vector(15 downto 0);
     signal data_length         : integer := 0;
     signal cnt_reply           : integer := 0;
+    signal cnt_conf_18         : integer := 0;
+    signal cnt_conf_96         : integer := 0;
     signal delay_user_last     : std_logic := '0';
+    signal ena_conf_i          : std_logic := '1';
     signal ERROR               : std_logic_vector(15 downto 0);
 
     signal vmm_id_xadc_i        : std_logic_vector(15 downto 0);
@@ -139,7 +149,7 @@ architecture rtl of config_logic is
     type tx_state is (IDLE, SerialNo, VMMID, COMMAND, DATA, CHECK, VMM_CONF, DELAY, FPGA_CONF, XADC_Init, XADC, SEND_REPLY, TEST, REPLY);
     signal state     : tx_state;  
     
-    type state_t is (START, SEND1,SEND0, FINISHED, ONLY_CONF_ONCE);
+    type state_t is (START, SEND1,SEND0, PAUSE_ONE, FINISHED, ONLY_CONF_ONCE);
     signal conf_state  : state_t; 
 
     attribute keep : string;
@@ -171,16 +181,19 @@ architecture rtl of config_logic is
     attribute keep of test_data_int               : signal is "true";   
     attribute keep of delay_data                  : signal is "true"; 
     attribute keep of i                           : signal is "true";
-    attribute keep of vmm_cktk_i                  : signal is "true";
+    attribute keep of VMM_SCK_i                  : signal is "true";
     attribute keep of udp_header_int              : signal is "true"; 
     attribute keep of j                           : signal is "true";     
     attribute keep of start_vmm_conf_int          : signal is "true";   
     attribute keep of start_vmm_conf_synced       : signal is "true";
     attribute keep of dest_port                   : signal is "true";
+    attribute keep of cnt_conf_18                 : signal is "true";
+    attribute keep of cnt_conf_96                 : signal is "true";
     
-    attribute keep of vmm_id_xadc_i               : signal is "true";
-    attribute keep of xadc_sample_size_i          : signal is "true";
-    attribute keep of xadc_delay_i                : signal is "true";
+    
+--    attribute keep of vmm_id_xadc_i               : signal is "true";
+--    attribute keep of xadc_sample_size_i          : signal is "true";
+--    attribute keep of xadc_delay_i                : signal is "true";
     
 --    attribute keep of vmm_we_int                      : signal is "true";
 --    attribute dont_touch of vmm_we_int                : signal is "true";  
@@ -188,23 +201,32 @@ architecture rtl of config_logic is
     attribute keep of cnt_cktk                      : signal is "true";
     attribute dont_touch of cnt_cktk                : signal is "true";      
 
-    attribute keep of k                      : signal is "true";
-    attribute dont_touch of k                : signal is "true"; 
+    attribute keep of k                         : signal is "true";
+    attribute dont_touch of k                   : signal is "true"; 
+    
+    attribute keep of cs_int                      : signal is "true";
+    attribute dont_touch of cs_int                : signal is "true";     
     
     attribute keep of counter                      : signal is "true";
     attribute dont_touch of counter                : signal is "true";       
     
     attribute keep of del_cnt                      : signal is "true";
-    attribute dont_touch of del_cnt                : signal is "true";        
-      
+    attribute dont_touch of del_cnt                : signal is "true"; 
     
+    attribute keep of VMM_SDO_i                      : signal is "true";
+    attribute dont_touch of VMM_SDO_i                : signal is "true";
+    
+    attribute keep of ena_conf_i                      : signal is "true";
+    attribute dont_touch of ena_conf_i                : signal is "true";
+    
+   
   
---    component ila_user_FIFO IS
---        PORT (
---            clk         : IN std_logic;
---            probe0      : IN std_logic_vector(292 DOWNTO 0)
---        );
---    end component;    
+    component ila_user_FIFO IS
+        PORT (
+            clk         : IN std_logic;
+            probe0      : IN std_logic_vector(292 DOWNTO 0)
+        );
+    end component;    
 
      -----------------------------------------------------------
     --                  NEW IP Signals LEV
@@ -265,6 +287,7 @@ begin
                     sn              <= (others=> '0');
                     vmm_id_int      <= x"0000";
                     cmd             <= x"0000";
+--                    cs_int              <= '1';
                     
                     if user_wr_en = '1' then
                         state   <= DATA;
@@ -313,11 +336,11 @@ begin
                     
                     if dest_port = x"1778"  then              -- 6008 VMM CONFIGURATION
                          state <= VMM_CONF;
-                         if vmm_id_int /= x"ffff" then
+--                         if vmm_id_int /= x"ffff" then
                             status_int  <= "0001";
-                         else
-                            status_int  <= "0010";
-                         end if;
+--                         else
+--                            status_int  <= "0010";
+--                         end if;
                     elsif dest_port = x"19C8" or dest_port = x"1777" then           -- 6600 FPGA CONFIGURATION
                         cmd         <= conf_data(1)(31 downto 16);
                         vmm_id_int  <= conf_data(1)(15 downto 0); 
@@ -519,62 +542,115 @@ sync_start_vmm_conf: process(clk200)
         else
                case conf_state is
                    when START =>
-                      ConfFSMstate        <= "0001";
---                       counter            <= (packet_length_int - 16) * 8;
-                       counter            <= 1616;
-                       
-                       i                  <= 31; 
-                       k                  <= 2;
-                       cfg_bit_out_i      <= '0'; 
-                       test_data_int       <= conf_data(k);
-                       conf_done_i        <= '0';
+                   
+                        ConfFSMstate    <= "0001";
+                        cnt_conf_96     <= 0;
+                        cnt_conf_18     <= 0;
+                        cs_int          <= '1';
+                        counter         <= 1728;
+                        i               <= 31; 
+                        k               <= 2;
+                        cfg_bit_out_i   <= '0'; 
+                        VMM_SCK_i       <= '0';
+                        test_data_int   <= conf_data(k);
+                        conf_done_i     <= '0';
+                        
                         if start_vmm_conf = '1' then
-                            conf_state         <= SEND0; 
+                            conf_state  <= SEND0; 
+                            cs_int      <= '0';
+                            ena_conf_i    <= '0';
                         end if;
+                        
                    when SEND0 =>
+                   
                       ConfFSMstate        <= "0010";
-                       vmm_cktk_i         <= '1';
-                       conf_state          <= SEND1;   
+                       VMM_SCK_i         <= '1';
                        cnt_cktk           <= cnt_cktk + 1;
 
-                       if k <= packet_length_int - 1 then 
-                          test_data_int       <= conf_data(k);
-                          if i /= 0 then
-                              cfg_bit_out_i          <= conf_data(k)(i);--(0);
-                              i  <= i - 1;
-                          else
-                              cfg_bit_out_i          <= conf_data(k)(0);
-                              k   <= k + 1;
-                              i   <= 31;
-                          end if;                                           
-                   end if;                                  
-                                          
-                   when SEND1 =>     
-         
-                      ConfFSMstate        <= "0011";
-                       vmm_cktk_i <= '0';
-                       if (counter - 2) >= 0  then
-                           counter              <= counter - 1;
-                           conf_state           <= SEND0;
+                       if cnt_conf_96 < 96 then
+                            cnt_conf_96  <= cnt_conf_96 + 1;
+                            conf_state          <= SEND1;  
                        else
-                           conf_state           <= FINISHED;
-                       end if;                                             
-                    when FINISHED =>           
-                        ConfFSMstate        <= "0100";            
-                        cfg_bit_out_i      <= '0';
-                        if del_cnt = 5 then
-                            conf_done_i        <= '1';
-                            del_cnt   <= del_cnt + 1;
-                        elsif  del_cnt = 100 then
-                            conf_state         <= ONLY_CONF_ONCE;
-                            del_cnt   <= 0;
-                       else
-                            del_cnt   <= del_cnt + 1;
+                          cnt_conf_96  <= 0;
+                          conf_state   <= PAUSE_ONE;
+                          VMM_SCK_i    <= '0';
+                          cnt_conf_18  <= cnt_conf_18 + 1;
+                          cs_int       <= '1';
+                       end if;     
+                 
+                       if cnt_conf_18  = 18 then
+                            conf_state           <= FINISHED;
                        end if;
+                  
 
-                       vmm_cktk_i         <= '0';
-                       counter            <= 0;
-                       cnt_cktk           <= 0;
+                       if k <= packet_length_int - 1 then 
+                            test_data_int       <= conf_data(k);
+                            
+                            if i /= 0 then
+                                cfg_bit_out_i          <= conf_data(k)(i);--(0);
+                                i  <= i - 1;
+                            else
+                                cfg_bit_out_i          <= conf_data(k)(0);
+                                k   <= k + 1;
+                                i   <= 31;
+                            end if;                                           
+                        end if;                                  
+                                          
+                    when SEND1 =>     
+                    
+                        if cnt_conf_96 = 0 then
+                            cs_int        <= '0';
+                        end if;
+         
+                        ConfFSMstate        <= "0011";
+                        VMM_SCK_i <= '0';
+                        
+                        if (counter - 2) >= 0 then
+                            if cnt_conf_96 /= 96 then
+                                counter              <= counter - 1;
+                            end if;
+                            
+                           conf_state           <= SEND0;
+                        else
+                           conf_state           <= FINISHED;
+                        end if;     
+                                  
+                    when PAUSE_ONE =>
+                        ConfFSMstate    <= "1111";
+                        VMM_SCK_i       <= '0';
+                        cfg_bit_out_i   <= '0';
+                        i               <= 31;
+                        
+                        if cnt_pause = 10 then
+                            conf_state  <= SEND1; 
+                            cnt_pause   <= 0; 
+                        else
+                            cnt_pause   <= cnt_pause + 1;
+                        end if; 
+                                                 
+                    when FINISHED =>           
+                        cnt_conf_96     <= 0;
+                        cnt_conf_18     <= 0;
+                        cs_int          <= '0';
+                        ena_conf_i      <= '1';
+                        ConfFSMstate    <= "0100";            
+                        cfg_bit_out_i   <= '0';
+                        
+                        if del_cnt = 5 then
+                            conf_done_i <= '1';
+                            del_cnt     <= del_cnt + 1;
+                        elsif  del_cnt = 100 then
+                            conf_state  <= ONLY_CONF_ONCE;
+                            del_cnt     <= 0;
+                        else
+                            del_cnt     <= del_cnt + 1;
+                        end if;
+
+                       VMM_SCK_i        <= '0';
+                       counter          <= 0;
+                       cs_int           <= '1';
+                       cnt_cktk         <= 0;
+                       
                    when ONLY_CONF_ONCE =>
                         ConfFSMstate        <= "0101";
                         if (start_vmm_conf = '0') then
@@ -600,7 +676,7 @@ sync_start_vmm_conf: process(clk200)
     status          <= status_int;   
     conf_done       <= conf_done_i; 
     cfg_bit_out     <= cfg_bit_out_i;
-    vmm_cktk        <=vmm_cktk_i;     
+    VMM_SCK         <= VMM_SCK_i;     
     
 --    ila_conf_logic :  ila_user_FIFO
 --        port map(
@@ -612,6 +688,9 @@ sync_start_vmm_conf: process(clk200)
 --we_conf     <= we_conf_int;
 
 --vmm_we_int  <= vmm_we;
+    VMM_CS      <= cs_int;
+    VMM_SDO_i   <= VMM_SDO;
+    ena_conf    <= ena_conf_i;
                          
 sig_out(7 downto 0)         <= delay_data;     
 sig_out(8)                  <= start_vmm_conf_int;--user_fifo_empty;
@@ -628,7 +707,7 @@ sig_out(93)                <= last_synced200;
 --sig_out(110)                <= reading_packet;
 sig_out(101 downto 94)     <= user_data_in_int;
 sig_out(102)                <= user_wr_en_int;
-sig_out(103)                <= vmm_cktk_i;--user_conf_int;
+sig_out(103)                <= VMM_SCK_i;--user_conf_int;
 sig_out(104)                <= cfg_bit_out_i;--reset_fifo_int;
 sig_out(112 downto 105)     <= std_logic_vector(to_unsigned(packet_length_int, sig_out(112 downto 105)'length));
 sig_out(113)                <= conf_done_i;--configuring_int;
@@ -646,14 +725,18 @@ sig_out(198 downto 191)     <= std_logic_vector(to_unsigned(k, sig_out(198 downt
 sig_out(214 downto 199)     <= dest_port;
 
 sig_out(246 downto 215)     <= DAQ_START_STOP;
-sig_out(262 downto 247)     <= vmm_id_xadc_i;
-sig_out(273 downto 263)     <= xadc_sample_size_i;
-sig_out(291 downto 274)     <= xadc_delay_i;
-sig_out(292)                <= '0';
+sig_out(247)                <= cs_int;
+sig_out(255 downto 248)     <= std_logic_vector(to_unsigned(cnt_conf_18, sig_out(255 downto 248)'length));
+sig_out(263 downto 256)     <= std_logic_vector(to_unsigned(cnt_conf_96, sig_out(255 downto 248)'length));
+sig_out(264)                <= VMM_SDO_i;
+sig_out(265)                <= ena_conf_i;
+
+--sig_out(262 downto 247)     <= vmm_id_xadc_i;
+--sig_out(273 downto 263)     <= xadc_sample_size_i;
+--sig_out(291 downto 274)     <= xadc_delay_i;
 
 
 
-
---sig_out(255 downto 247)     <= (others => '0');                 
+sig_out(292 downto 266)     <= (others => '0');                 
 
 end rtl;

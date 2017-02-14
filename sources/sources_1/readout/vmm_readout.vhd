@@ -44,6 +44,7 @@ entity vmm_readout is
 
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
+            enable_ckbc             : out std_logic;
             vmmEventDone            : out std_logic
            );
 end vmm_readout;
@@ -59,9 +60,9 @@ architecture Behavioral of vmm_readout is
     signal vmm_ena_i            : std_logic := '0';
     signal vmm_cktk_i           : std_logic := '0';
 	signal trig_latency_counter	: std_logic_vector( 31 DOWNTO 0 )	:= ( others => '0' );   -- Latency per VMM ()
-    signal trig_latency         : std_logic_vector( 31 DOWNTO 0 )   := x"00000000";         -- x"0000008C";  700ns @200MHz (User defined)
+    signal trig_latency         : std_logic_vector( 31 DOWNTO 0 )   := x"0000008C";         -- x"0000008C";  700ns @200MHz (User defined)
     signal NoFlg_counter		: integer	:= 0;                                           -- Counter of CKTKs
-    signal NoFlg                : integer   := 2;                                           -- How many (#+1) CKTKs before soft reset (User defined)
+    signal NoFlg                : integer   := 7;                                           -- How many (#+1) CKTKs before soft reset (User defined)
     signal vmmEventDone_i       : std_logic := '0';
     signal trigger_pulse_i      : std_logic := '0';
     signal hitsLen_cnt          : integer := 0;
@@ -94,27 +95,29 @@ architecture Behavioral of vmm_readout is
 
     -------------------------------------------------------------------
     -- Keep signals for ILA
-    -------------------------------------------------------------------
-    attribute keep : string;
+    -----------------------------------------------------------------
+    attribute mark_debug : string;
 
-    attribute keep of NoFlg                 :	signal	is	"true";
-    attribute keep of dt_state              :	signal	is	"true";
-    attribute keep of NoFlg_counter         :	signal	is	"true";
-    attribute keep of reading_out_word      :	signal	is	"true";
-    attribute keep of dt_done               :	signal	is	"true";
-    attribute keep of vmm_ckdt_i            :	signal	is	"true";
-    attribute keep of vmm_cktk_i            :	signal	is	"true";
-    attribute keep of vmm_data0_i           :   signal	is	"true";
-    attribute keep of vmm_data1_i           :   signal	is	"true";
-    attribute keep of dataBitRead           :   signal	is	"true";
-    attribute keep of dt_cntr_st            :   signal	is	"true";
-    attribute keep of vmmEventDone_i        :   signal  is  "true";
-    attribute keep of hitsLen_cnt           :   signal  is  "true";
-    attribute keep of daq_enable_i          :   signal  is  "true";
-    attribute keep of vmmWordReady_i        :   signal	is	"true";
-    attribute keep of vmmWord_i             :   signal	is	"true";
-    attribute keep of trigger_pulse         :   signal  is  "true";
-    attribute keep of trigger_pulse_i       :   signal  is  "true";
+    attribute mark_debug of NoFlg                 :	signal	is	"true";
+    attribute mark_debug of dt_state              :	signal	is	"true";
+    attribute mark_debug of NoFlg_counter         :	signal	is	"true";
+    attribute mark_debug of reading_out_word      :	signal	is	"true";
+    attribute mark_debug of dt_done               :	signal	is	"true";
+    attribute mark_debug of vmm_ckdt_i            :	signal	is	"true";
+    attribute mark_debug of vmm_cktk_i            :	signal	is	"true";
+    attribute mark_debug of vmm_data0_i           : signal	is	"true";
+    attribute mark_debug of vmm_data1_i           : signal	is	"true";
+    attribute mark_debug of dataBitRead           : signal	is	"true";
+    attribute mark_debug of dt_cntr_st            : signal	is	"true";
+    attribute mark_debug of vmmEventDone_i        : signal  is  "true";
+    attribute mark_debug of hitsLen_cnt           : signal  is  "true";
+    attribute mark_debug of daq_enable_i          : signal  is  "true";
+    attribute mark_debug of vmmWordReady_i        : signal	is	"true";
+    attribute mark_debug of vmmWord_i             : signal	is	"true";
+    attribute mark_debug of trigger_pulse         : signal  is  "true";
+    attribute mark_debug of trigger_pulse_i       : signal  is  "true";
+    attribute mark_debug of trig_latency_counter  : signal  is  "true";
+
 
 component vmmSignalsDemux
 port(
@@ -147,7 +150,7 @@ begin
     if (dt_done = '1') then
         reading_out_word    <= '0';     -- readoutProc done, stop it
     end if;
-    if (vmm_data0_i = '1') then
+    if (vmm_data0_i = '1' and daq_enable_i = '1') then
         reading_out_word    <= '1';     -- new data, trigger readoutProc
     end if;
 end process;
@@ -157,42 +160,36 @@ tokenProc: process(clk_10_phase45, daq_enable_i, dt_done, vmm_data0_i, trigger_p
 begin
     if (rising_edge(clk_10_phase45)) then
         if (daq_enable_i = '1') then
-
                 case dt_state is
 
 				    when x"0" =>
 				        vmmEventDone_i          <= '0';
-
                         if (trigger_pulse_i = '1') then
                             vmm_cktk_i              <= '0';
                             dt_state                <= x"1";
                         end if;
-
 				    when x"1" =>
                         if (trig_latency_counter = trig_latency) then
                             dt_state                <= x"2";
                         else
                             trig_latency_counter    <= trig_latency_counter + 1;
                         end if;
-
                     when x"2" =>
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"3";
-
 				    when x"3" =>
 				        if (reading_out_word = '0') then
 				            vmm_cktk_i      <= '1';
+				            enable_ckbc     <= '0';
 				            hitsLen_cnt     <= hitsLen_cnt + 1;
 				            dt_state        <= x"4";
 				        else
 				            NoFlg_counter   <= 0;
 				            dt_state        <= x"6";
 				        end if;
-
                     when x"4" =>
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"5";
-
     				when x"5" =>
                         if (reading_out_word = '1') then        -- Data presence: wait for read out to finish
                             NoFlg_counter   <= 0;
@@ -203,9 +200,8 @@ begin
 						    else
                                 dt_state    <= x"3";			-- Send new CKTK strobe
 						    end if;
-						    --NoFlg_counter <= NoFlg_counter  + 1;
+						    NoFlg_counter <= NoFlg_counter  + 1;
 					    end if;
-
                 	when x"6" =>                                -- Wait until word readout is done
                 		if (dt_done = '1') then
                             if hitsLen_cnt >= hitsLenMax then       -- Maximum UDP packet length reached 
@@ -216,7 +212,6 @@ begin
                         else
                             dt_state                <= x"6";
                 		end if;
-
                     when x"7" =>                                -- Start the soft reset sequence, there is still a chance
                         if (reading_out_word = '0') then        -- of getting data at this point so check that before soft reset
                             dt_state                <= x"8";
@@ -224,16 +219,13 @@ begin
 				            NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         end if;
-
 				    when x"8" =>
 					    hitsLen_cnt             <= 0;
 					    dt_state                <= x"9";
-
                     when x"9" =>
                         vmmEventDone_i          <= '1';
                         NoFlg_counter           <= 0;
                         dt_state                <= x"0";
-
 				    when others =>
 				        vmmEventDone_i          <= '1';
                         NoFlg_counter           <= 0;
@@ -242,6 +234,7 @@ begin
         else
             vmm_ena_i     <= '0';
 		    vmm_wen_i     <= '0';
+		    enable_ckbc   <= '1';
         end if;
     end if;
 end process;
@@ -351,7 +344,7 @@ port map
     probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK
     probe0_out(7 downto 5)      <=  std_logic_vector(to_unsigned(NoFlg, probe0_out(7 downto 5)'length));            -- OK
     probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
-    probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                   -- OK
+    probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                     -- OK
     probe0_out(15)              <=  daq_enable_i;                                                                   -- OK
     probe0_out(16)              <=  reading_out_word;                                                               -- OK
     probe0_out(17)              <=  dt_done;                                                                        -- OK
@@ -362,7 +355,8 @@ port map
     probe0_out(26)              <=  vmmWordReady_i;                                                                 -- OK
     probe0_out(90 downto 27)    <=  vmmWord_i;                                                                      -- OK
     probe0_out(91)              <=  trigger_pulse_i;                                                                -- OK
-    probe0_out(99 downto 92)    <=  std_logic_vector(to_unsigned(hitsLen_cnt, probe0_out(101 downto 94)'length));   -- OK
-    probe0_out(127 downto 100)  <=  (others => '0');
+    probe0_out(123 downto 92)   <=  trig_latency_counter;   
+
+    probe0_out(127 downto 124)  <=  (others => '0');
 
 end behavioral;

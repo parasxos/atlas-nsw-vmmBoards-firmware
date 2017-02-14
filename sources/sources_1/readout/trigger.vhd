@@ -10,7 +10,7 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 18.08.2016 Added tr_hold signal to hold triggerwhen reading out (Reid Pinkham)
+-- 18.08.2016 Added tr_hold signal to hold trigger when reading out (Reid Pinkham)
 -- 
 ----------------------------------------------------------------------------------
 
@@ -81,12 +81,12 @@ architecture Behavioral of trigger is
     
 -- Components if any
 
---    component ila_trigger
---    port(
---        clk     : IN STD_LOGIC;
---        probe0  : IN STD_LOGIC_VECTOR(39 DOWNTO 0)
---    );
---    end component;
+    component ila_trigger
+    port(
+        clk     : IN STD_LOGIC;
+        probe0  : IN STD_LOGIC_VECTOR(39 DOWNTO 0)
+    );
+    end component;
 
 begin
 

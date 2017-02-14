@@ -180,7 +180,7 @@ begin
 trigger_proc: process (clk_200, vmmID_i, data_out_last)
 begin
     if rising_edge(clk_200) then
-        if (vmmID_i = "111" and data_out_last = '1') then
+        if (vmmID_i = "000" and data_out_last = '1') then
             trigger <= '1';
         else
             trigger <= '0';

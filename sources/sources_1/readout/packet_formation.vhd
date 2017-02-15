@@ -10,7 +10,6 @@
 -- Tool Versions: Vivado 2016.2
 --
 -- Changelog:
--- 25.07.2016 Added DAQ FIFO reset every vmm packet sent XXXXXX (NOW REMOVED) XXXXX
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 -- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
 --
@@ -36,7 +35,7 @@ entity packet_formation is
         vmmEventDone: in std_logic;
 
         UDPDone     : in std_logic;
-        pfBusy      : out std_logic;				-- Control signal to ETR
+        pfBusy      : out std_logic;				        -- Control signal to ETR
         glBCID      : in std_logic_vector(11 downto 0);		-- glBCID counter from ETR
 
         packLen     : out std_logic_vector(11 downto 0);
@@ -83,7 +82,7 @@ architecture Behavioral of packet_formation is
     signal packLen_cnt      : unsigned(11 downto 0) := x"000";
     signal end_packet_int   : std_logic                     := '0';
 
-    type stateType is (waitingForNewCycle, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, triggerVmmReadout, waitForData, 
+    type stateType is (waitingForNewCycle, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, triggerVmmReadout, waitForData, 
                        sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, isUDPDone, isTriggerOff);
     signal state            : stateType;
 
@@ -180,14 +179,14 @@ begin
 --                    tr_hold         <= '0';
                 end if;
                 
---            when waitForLatency =>
---                debug_state <= "00001";
+            when waitForLatency =>
+                debug_state <= "00001";
 --                tr_hold         <= '1';                 -- Prevent new triggers
---                if trigLatencyCnt > trigLatency then 
---                    state           <= S2;
---                else
---                    trigLatencyCnt  <= trigLatencyCnt + 1;
---                end if;
+                if trigLatencyCnt > trigLatency then 
+                    state           <= captureEventID;
+                else
+                    trigLatencyCnt  <= trigLatencyCnt + 1;
+                end if;
 
 --            when S2 =>          -- wait for the header elements to be formed
 --                debug_state <= "00010";

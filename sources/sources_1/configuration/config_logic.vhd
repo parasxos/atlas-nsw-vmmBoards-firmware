@@ -464,7 +464,7 @@ begin
                     elsif conf_data(4) = x"ffffffff" and conf_data(5) = x"ffff8000" then        -- RESET FPGA
                         status_int  <= "0011";
                         state   <= IDLE;
-                    elsif conf_data(4) = x"00000005" then
+                    elsif conf_data(4) = x"00000005" then                                       -- Latency
                         ACQ_sync    <= conf_data(5)(15 downto 0);
                         state       <= IDLE;
                 else

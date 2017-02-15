@@ -149,6 +149,10 @@ entity mmfe8_top is
         TKO_P,      TKO_N     : IN  STD_LOGIC;
         ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
 
+        TRIGGER_OUT_P         : OUT STD_LOGIC;
+        TRIGGER_OUT_N         : OUT STD_LOGIC;
+        CH_TRIGGER            : IN  STD_LOGIC;
+
 --TODO: xADC-related in/outs, to be reviewed (Christos)
 --        VP_0                  : IN STD_LOGIC;
 --        VN_0                  : IN STD_LOGIC;
@@ -268,6 +272,8 @@ architecture Behavioral of mmfe8_top is
   signal tx_axis_mac_tuser_int       : std_logic := '1';
   signal test_data                   : std_logic_vector(7 downto 0); 
   signal test_valid, test_last       : std_logic;
+  signal CH_TRIGGER_i                : std_logic := '0';   
+  
   
   signal test_data_out                   : std_logic_vector(7 downto 0); 
   signal test_valid_out, test_last_out       : std_logic;  
@@ -404,11 +410,18 @@ architecture Behavioral of mmfe8_top is
   
   signal end_packet_conf_int     : std_logic := '0';
   signal end_packet_daq_int     : std_logic := '0';
-  signal is_state         : std_logic_vector(3 downto 0) := "1010";
+  signal is_state           : std_logic_vector(3 downto 0) := "1010";
   signal ACQ_sync_int       : std_logic_vector := x"0000";
   signal udp_busy           : std_logic := '0';
   signal test               : std_logic := '0';
-  signal count_test               : integer := 0;
+  signal count_test         : integer := 0;
+  signal art_out            : std_logic := '0';
+  signal art_cnt            : integer := 0;
+  signal art_cnt2            : integer := 0;
+  signal art2               : std_logic := '0';
+  signal artall             : std_logic := '0';
+  
+  signal reset_FF           : std_logic := '0';
 
     -------------------------------------------------
     -- VMM Signals                   
@@ -474,6 +487,7 @@ architecture Behavioral of mmfe8_top is
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
+    signal art_out_ff               : std_logic := '0';
    
     -------------------------------------------------
     -- Trigger Signals
@@ -739,9 +753,30 @@ architecture Behavioral of mmfe8_top is
     attribute keep of tko_i                     : signal is "TRUE";
     attribute dont_touch of tko_i               : signal is "TRUE";    
           
-    attribute keep of cktp_vio              : signal is "TRUE";
-    attribute dont_touch of cktp_vio        : signal is "TRUE";    
+    attribute keep of cktp_vio                  : signal is "TRUE";
+    attribute dont_touch of cktp_vio            : signal is "TRUE";    
 
+    attribute keep of art_out                   : signal is "TRUE";
+    attribute dont_touch of art_out             : signal is "TRUE";    
+
+    attribute keep of art2                      : signal is "TRUE";
+    attribute dont_touch of art2                : signal is "TRUE"; 
+    
+    attribute keep of artall                    : signal is "TRUE";
+    attribute dont_touch of artall              : signal is "TRUE";     
+    
+    attribute keep of reset_FF                  : signal is "TRUE";
+    attribute dont_touch of reset_FF            : signal is "TRUE";         
+
+    attribute keep of art_out_ff                : signal is "TRUE";
+    attribute dont_touch of art_out_ff          : signal is "TRUE";  
+
+    attribute keep of CH_TRIGGER_i              : signal is "TRUE";
+    attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
+
+    attribute keep of MO_P_i              : signal is "TRUE";
+    attribute dont_touch of MO_P_i        : signal is "TRUE";      
+    
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
     -------------------------------------------------------------------
@@ -1668,7 +1703,7 @@ trigger_instance: trigger
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
-        trext           => ext_trigger_in,      -- External trigger is to be driven to this port
+        trext           => CH_TRIGGER,      -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
         reset           => tr_reset,
@@ -1977,13 +2012,14 @@ QSPI_SS_0: IOBUF
     ena_diff_1      : OBUFDS port map ( O =>  ENA_1_P, OB => ENA_1_N, I => vmm_ena_all);
     cktk_diff_1     : OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I => cktk_out_vec(1));
     ckdt_diff_1     : OBUFDS port map ( O =>  ckdt_1_P, OB => ckdt_1_N, I => ckdt_out_vec(1));
-    art_out_diff_1  : OBUFDS port map ( O =>  ART_OUT_P, OB => ART_OUT_N, I => vmm_cktp_all);
+    art_out_diff_1  : OBUFDS port map ( O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
+--    art_out_lemo_1  : OBUFDS port map ( O =>  TRIGGER_OUT_P, OB => TRIGGER_OUT_N, I => art2);
     art_clk_diff_1  : OBUFDS port map ( O =>  art_clk_P, OB => art_clk_N, I => clk_160);
     TKI_diff_1      : OBUFDS port map ( O =>  TKI_P, OB => TKI_N, I => vmm_tki);
     data0_diff_1    : IBUFDS port map ( O =>  data0_in_vec(1), I => DATA0_1_P, IB => DATA0_1_N);
     data1_diff_1    : IBUFDS port map ( O =>  data1_in_vec(1), I => DATA1_1_P, IB => DATA1_1_N);
     TKO_diff_1      : IBUFDS port map ( O =>  tko_i, I => TKO_P, IB => TKO_N);
-    art_in_diff_1   : IBUFDS port map ( O =>  art_in_i, I => art_P, IB => art_N);
+--    art_in_diff_1   : IBUFDS port map ( O =>  art_in_i, I => art_P, IB => art_N);
     dout_art_clk    : OBUFDS port map ( O =>  art_clkout_P, OB => art_clkout_N, I => clk_160);
     
 --    cktp_diff_1     : OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N,  I => vmm_cktp);
@@ -1996,6 +2032,16 @@ QSPI_SS_0: IOBUF
     OBUFTDS_inst : OBUFTDS
     generic map (IOSTANDARD => "UNTUNED_SPLIT_60")
     port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => vmm_cktp_all, T  => '0' );
+    
+    IBUFGDS_inst : IBUFGDS
+    generic map (DIFF_TERM => TRUE, -- Differential Termination
+            IBUF_LOW_PWR => TRUE, -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+            IOSTANDARD => "DEFAULT")
+    port map (
+        O => art_in_i, -- Clock buffer output
+        I => art_P, -- Diff_p clock buffer input (connect directly to top-level port)
+        IB => art_N -- Diff_n clock buffer input (connect directly to top-level port)
+    );   
      
 --    ext_trigger     : IBUFDS port map ( O => ext_trigger_in, I => EXT_TRIGGER_P, IB => EXT_TRIGGER_N);
 
@@ -2008,6 +2054,41 @@ QSPI_SS_0: IOBUF
     -- 4. FPGA_global_reset
     -- 5. flow_fsm
 -------------------------------------------------------------------
+
+CH_TRIGGER_i  <= CH_TRIGGER;
+
+art_process: process(clk_200, art2)
+begin
+    if rising_edge(clk_200) then  
+        if art_cnt2 < 200 and art2 = '1' then 
+            art_out_ff     <= '1';
+            art_cnt2     <= art_cnt2 + 1;
+        elsif art_cnt2 = 200 then
+            reset_FF    <= '1';
+            art_cnt2     <= art_cnt2 + 1;
+        else
+            art_cnt2     <= 0;
+            reset_FF    <= '0';
+        end if;
+    end if;
+end process;    
+
+
+
+FDCE_inst : FDCE
+generic map (INIT => '0') -- Initial value of register ('0' or '1')
+port map (
+    Q   => art2, -- Data output
+    C   => art_in_i, -- Clock input
+    CE  => '1', -- Clock enable input
+    CLR => reset_ff, -- Asynchronous clear input
+    D   => '1' -- Data input
+);
+
+TRIGGER_OUT_P   <= art2;
+TRIGGER_OUT_N   <= not art2; 
+
+--artall  <= art2 and art_out;
 
 internalTrigger_proc: process(clk_10_phase45) -- 10MHz/#states.
     begin
@@ -2317,11 +2398,11 @@ ila_top: ila_top_level
     read_out(222 downto 191)    <= myIP;
     read_out(270 downto 223)    <= myMAC;
     read_out(271)               <= enable_CKBC;
-    read_out(272)               <= tki_vio(0);
+    read_out(272)               <= MO_P_i;
     read_out(273)               <= ckdt_out_vec(1);
     read_out(274)               <= data0_in_vec(1);
     read_out(275)               <= data1_in_vec(1);
-    read_out(276)               <= vmm_ckbc;
+    read_out(276)               <= reset_FF;--vmm_ckbc;
     read_out(277)               <= first_cktp_ok;
     read_out(278)               <= vmm_cs_all;
     read_out(286 downto 279)    <= std_logic_vector(to_unsigned(first_cktp, read_out(286 downto 279)'length));
@@ -2330,8 +2411,10 @@ ila_top: ila_top_level
     read_out(296)               <= vmm_ena_all;
     read_out(297)               <= vmm_ena;
     read_out(298)               <= tko_i;
-    read_out(299)               <= cktp_vio(0);
+    read_out(299)               <= vmm_ena_all;
+    read_out(300)               <= art_out;
+    read_out(301)               <= art2;
 
-    read_out(302 downto 300)    <= (others => '0');      
+    read_out(302)               <= CH_TRIGGER_i;--(others => '0');      
 
 end Behavioral;

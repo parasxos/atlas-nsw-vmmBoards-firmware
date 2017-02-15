@@ -58,9 +58,10 @@ set_property IOSTANDARD LVCMOS25 [get_ports glbl_rst]
 set_property PACKAGE_PIN V18 [get_ports CH_TRIGGER]
 set_property IOSTANDARD LVCMOS33 [get_ports CH_TRIGGER]
 
-set_property IOSTANDARD LVDS_25 [get_ports TRIGGER_OUT_P]
+set_property PACKAGE_PIN W21 [get_ports TRIGGER_OUT_P]
 set_property PACKAGE_PIN W22 [get_ports TRIGGER_OUT_N]
-set_property IOSTANDARD LVDS_25 [get_ports TRIGGER_OUT_N]
+set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_P]
+set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_N]
 
 #########################DIP SWITCES VMM3#############################
 
@@ -450,6 +451,8 @@ set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 set_multicycle_path -setup -start -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 2
 set_multicycle_path -hold -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 1
 #======================= SPI Flash Constraints =======================
+
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets IBUFGDS_inst_n_0_BUFG_inst_n_0]
 
 
 set_max_delay 10.000 -from [get_cells *user_side_FIFO/tx_fifo_i/*rd_addr_txfer*] -to [get_cells *user_side_FIFO/tx_fifo_i/wr_rd_addr*]

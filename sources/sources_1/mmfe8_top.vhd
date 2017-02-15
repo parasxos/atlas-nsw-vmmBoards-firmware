@@ -2103,6 +2103,7 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
                     vmm_ena_all             <= '0';
                     vmm_cs_all              <= '1';
                     vmm_tki                 <= '0';
+                    ckbc_enable             <= '0';
 
                     if status_int_synced = "0001" then      -- VMM conf x1: 0001
                         cnt_vmm       <= 1;

@@ -2019,7 +2019,7 @@ QSPI_SS_0: IOBUF
     data0_diff_1    : IBUFDS port map ( O =>  data0_in_vec(1), I => DATA0_1_P, IB => DATA0_1_N);
     data1_diff_1    : IBUFDS port map ( O =>  data1_in_vec(1), I => DATA1_1_P, IB => DATA1_1_N);
     TKO_diff_1      : IBUFDS port map ( O =>  tko_i, I => TKO_P, IB => TKO_N);
---    art_in_diff_1   : IBUFDS port map ( O =>  art_in_i, I => art_P, IB => art_N);
+    art_in_diff_1   : IBUFDS port map ( O =>  art_in_i, I => art_P, IB => art_N);
     dout_art_clk    : OBUFDS port map ( O =>  art_clkout_P, OB => art_clkout_N, I => clk_160);
     
 --    cktp_diff_1     : OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N,  I => vmm_cktp);
@@ -2033,15 +2033,15 @@ QSPI_SS_0: IOBUF
     generic map (IOSTANDARD => "UNTUNED_SPLIT_60")
     port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => vmm_cktp_all, T  => '0' );
     
-    IBUFGDS_inst : IBUFGDS
-    generic map (DIFF_TERM => TRUE, -- Differential Termination
-            IBUF_LOW_PWR => TRUE, -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
-            IOSTANDARD => "DEFAULT")
-    port map (
-        O => art_in_i, -- Clock buffer output
-        I => art_P, -- Diff_p clock buffer input (connect directly to top-level port)
-        IB => art_N -- Diff_n clock buffer input (connect directly to top-level port)
-    );   
+    --IBUFGDS_inst : IBUFGDS
+    --generic map (DIFF_TERM => TRUE, -- Differential Termination
+    --        IBUF_LOW_PWR => TRUE, -- Low power (TRUE) vs. performance (FALSE) setting for referenced I/O standards
+    --        IOSTANDARD => "DEFAULT")
+    --port map (
+    --    O => art_in_i, -- Clock buffer output
+    --    I => art_P, -- Diff_p clock buffer input (connect directly to top-level port)
+    --    IB => art_N -- Diff_n clock buffer input (connect directly to top-level port)
+    --);   
      
 --    ext_trigger     : IBUFDS port map ( O => ext_trigger_in, I => EXT_TRIGGER_P, IB => EXT_TRIGGER_N);
 

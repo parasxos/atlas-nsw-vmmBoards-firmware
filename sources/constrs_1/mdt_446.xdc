@@ -452,7 +452,9 @@ set_multicycle_path -setup -start -from [get_clocks -of_objects [get_pins -hiera
 set_multicycle_path -hold -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 1
 #======================= SPI Flash Constraints =======================
 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets IBUFGDS_inst_n_0_BUFG_inst_n_0]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
 
 
 set_max_delay 10.000 -from [get_cells *user_side_FIFO/tx_fifo_i/*rd_addr_txfer*] -to [get_cells *user_side_FIFO/tx_fifo_i/wr_rd_addr*]

@@ -53,6 +53,7 @@ entity AXI4_SPI is
             destIP_set              : in std_logic_vector(31 downto 0);     -- Signal coming from config_logic. Used to set destIP
             
             newip_start             : in std_logic;                         -- Flag that initiates the process for setting newIP
+            flash_busy              : out std_logic;                        -- Flag that indicates the module is busy setting IP
             
             -- refer to Micron documentation for the signals below: https://www.micron.com/~/media/documents/products/data-sheet/nor-flash/serial-nor/n25q/n25q_256mb_1_8v.pdf
             io0_i                   : IN STD_LOGIC;                         -- Signals for DQ0 (MOSI)
@@ -412,6 +413,7 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
         case ip_config_state is     -- State machine that handles Dynamic IP Configuration. Can be though of as wrapper that allows proper function of Dynamic IP Configuration
             when IDLE =>
                 spi_ip_config_state_is <= "0000";
+                flash_busy             <= '0';
                 if (system_start = '0') then                     -- Checked when system is started to set IP
                     ip_config_state <= CHECK_IP_SET; 
                 elsif (newip_start = '1') then                   -- This is set when UDP dest port 6604 receives data
@@ -421,6 +423,7 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
                 end if;
             when CHECK_IP_SET =>
                 spi_ip_config_state_is <= "0001";
+                flash_busy             <= '1';
                 cmdaddrdata_set     <= x"03F0_0000_0000_0000_0000";         -- Command to read ipset_flag in address x"F0_0000"
                 byte_count_set      <= x"0000_0004";                        -- Byte count required for proper read: 4 bytes (starts at 0)
                 set_ip_counter      <= 0;
@@ -466,6 +469,7 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
                 end if;
             when NEW_IP =>      -- Writes new IP, MAC, and destIP into SPI Flash and sets the new IP as the current active IP, MAC, and destIP
                 spi_ip_config_state_is <= "0011";
+                flash_busy             <= '1';
                     case write_spi_state is         -- State machine nested within ip_config_state = NEW_IP. Handles the necessary logic in order to execute a write to the SPI Flash. (Uses logic flow described in Micron Documentation)
                         when WRITE_ENABLE =>
                             write_spi_state_is  <= "0000";

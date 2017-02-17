@@ -131,12 +131,11 @@ begin
             -- wait for flow_fsm and master_conf_FSM
             when ST_IDLE =>
                 vmmConf_done <= '0';
+                vmm_cs_i     <= '1';
 
-                if(top_rdy = '1' and init_ser = '1')then
-                    vmm_cs_i    <= '1';
+                if(top_rdy = '1' and init_ser = '1')then                   
                     st_conf     <= ST_RD_HIGH;
                 else
-                    vmm_cs_i    <= '0';
                     st_conf     <= ST_IDLE;
                 end if;
 

@@ -65,14 +65,14 @@ set_property IOSTANDARD LVCMOS25 [get_ports phy_rstn_out]
 
 #########################   LEDs MDT  #############################
 
-#set_property PACKAGE_PIN Y17 [get_ports LED_D12]            #OK
-#set_property IOSTANDARD LVCMOS25 [get_ports LED_D12]
+set_property PACKAGE_PIN Y17 [get_ports CH_TRIGGER]
+set_property IOSTANDARD LVCMOS25 [get_ports CH_TRIGGER]
 
-#set_property PACKAGE_PIN U7 [get_ports LED_D13]             #OK
-#set_property IOSTANDARD LVCMOS25 [get_ports LED_D13]
+set_property PACKAGE_PIN U7 [get_ports TRIGGER_OUT_P]
+set_property IOSTANDARD LVCMOS25 [get_ports TRIGGER_OUT_P]
 
-#set_property PACKAGE_PIN F4 [get_ports LED_D14]             #OK
-#set_property IOSTANDARD LVCMOS25 [get_ports LED_D14]
+set_property PACKAGE_PIN F4 [get_ports TRIGGER_OUT_N]
+set_property IOSTANDARD LVCMOS25 [get_ports TRIGGER_OUT_N]
 
 #set_property PACKAGE_PIN P20 [get_ports LED_D15]            #OK
 #set_property IOSTANDARD LVCMOS25 [get_ports LED_D15]
@@ -380,7 +380,9 @@ set_multicycle_path -setup -start -from [get_clocks -of_objects [get_pins -hiera
 set_multicycle_path -hold -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 1
 #======================= SPI Flash Constraints =======================
 
-
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
 
 set_property PACKAGE_PIN J20 [get_ports art_clk_P]
 set_property PACKAGE_PIN N18 [get_ports DATA0_1_P]

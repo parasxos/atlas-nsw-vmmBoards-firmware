@@ -2398,7 +2398,7 @@ ila_top: ila_top_level
     read_out(222 downto 191)    <= myIP;
     read_out(270 downto 223)    <= myMAC;
     read_out(271)               <= enable_CKBC;
-    read_out(272)               <= MO_P_i;
+    read_out(272)               <= '0';
     read_out(273)               <= ckdt_out_vec(1);
     read_out(274)               <= data0_in_vec(1);
     read_out(275)               <= data1_in_vec(1);

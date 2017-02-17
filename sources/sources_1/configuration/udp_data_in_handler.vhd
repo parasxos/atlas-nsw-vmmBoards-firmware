@@ -152,6 +152,7 @@ architecture RTL of udp_data_in_handler is
     signal user_valid_prv   : std_logic := '0';
     signal user_last_prv    : std_logic := '0';
     signal cnt_bytes        : unsigned(4 downto 0) := (others => '0');
+    signal conf_state       : unsigned(2 downto 0) := (others => '0');
     signal vmm_conf         : std_logic := '0';
     signal vmm_ser_done     : std_logic := '0';
     signal vmmSer_done_s125 : std_logic := '0';
@@ -269,7 +270,8 @@ begin
             case st_master is
 
             -- wait for valid signal to initialize counter
-            when ST_IDLE => 
+            when ST_IDLE =>
+                conf_state  <= "000"; 
                 vmm_conf    <= '0';
                 fpga_conf   <= '0';
                 flash_conf  <= '0';
@@ -286,6 +288,7 @@ begin
 
             -- check the port  (TO DOs: ADD XADC AND FLASH) 
             when ST_CHK_PORT =>
+                conf_state  <= "001";
                 cnt_bytes   <= cnt_bytes + 1;
                 
                 case udp_rx.hdr.dst_port is
@@ -300,7 +303,7 @@ begin
                     st_master   <= ST_COUNT;
                 when x"19CC" => -- FLASH CONF
                     flash_conf  <= '1';
-                    st_master   <= ST_ERROR; -- ST_COUNT
+                    st_master   <= ST_COUNT; -- ST_ERROR
                 when x"19D0" => -- XADC CONF
                     xadc_conf   <= '1';
                     st_master   <= ST_ERROR; -- ST_COUNT
@@ -309,7 +312,8 @@ begin
                 end case;
 
             -- keep counting and wait for configuration packets to be formed
-            when ST_COUNT => 
+            when ST_COUNT =>
+                conf_state  <= "010"; 
                 cnt_bytes <= cnt_bytes + 1;
 
                 if(xadcPacket_rdy = '1' or flashPacket_rdy = '1' or fpgaPacket_rdy = '1' or vmm_conf_rdy = '1')then
@@ -321,6 +325,7 @@ begin
             -- stop counting and wait for corresponding sub-module to get the init signal
             -- or wait for sub-process to finish
             when ST_WAIT_FOR_BUSY =>
+                conf_state  <= "011";
                 if(xadcPacket_rdy = '1' and xadc_busy_s125 = '1')then
                     xadc_conf   <= '0';
                     st_master   <= ST_WAIT_FOR_IDLE;
@@ -340,6 +345,7 @@ begin
         
             -- wait for corresponding sub-module to finish processing    
             when ST_WAIT_FOR_IDLE =>
+                conf_state  <= "100";
                 if(xadc_busy_s125 = '0' and flash_busy_s125 = '0' and udp_rx.data.data_in_valid = '0')then
                     st_master <= ST_IDLE;
                 else
@@ -349,6 +355,7 @@ begin
             -- create a reset signal of adequate length. release the reset
             -- only when flow_fsm and cktk_fsm are in the appropriate states
             when ST_RESET_FIFO =>
+                conf_state  <= "101";
                 if(vmmSer_done_s125 = '1' and top_rdy_s125 = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
                     rst_fifo    <= '1';
                     init_ser    <= '0';
@@ -361,6 +368,7 @@ begin
 
             -- wait for SCK FSM to latch the reset signal
             when ST_WAIT_FOR_SCK_FSM =>
+                conf_state  <= "110";
                 if(vmmSer_done_s125 = '0' and udp_rx.data.data_in_valid = '0')then
                     rst_fifo    <= '0';
                     st_master   <= ST_IDLE;
@@ -371,6 +379,7 @@ begin
             
             -- stay here until the UDP packet passes    
             when ST_ERROR =>
+                conf_state  <= "111";
                 if(udp_rx.data.data_in_valid = '0')then
                     st_master   <= ST_IDLE;
                 else

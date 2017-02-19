@@ -1,4 +1,4 @@
-# NSW Electronics - Readout Firware
+# NSW Electronics - Readout Firmware
 
 # Contents
 

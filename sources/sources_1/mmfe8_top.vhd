@@ -17,7 +17,9 @@
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added Dynamic IP configuration. (Lev Kurilenko)
 -- 16.02.2017 Added new configuration component (udp_data_in_handler). Changes
--- at flow_fsm and axi4-spi flash module.
+-- at flow_fsm and axi4-spi flash module. (Christos Bakalis)
+-- 21.02.2017 Added configurable CKTP/CKBC module. For the moment controlled with
+-- a VIO. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -573,7 +575,22 @@ architecture Behavioral of mmfe8_top is
     signal io1_t                : std_logic:= '0';
     signal ss_i                 : std_logic_vector(0 DOWNTO 0):=(others => '0');  
     signal ss_o                 : std_logic_vector(0 DOWNTO 0):=(others => '0');  
-    signal ss_t                 : std_logic:= '0'; 
+    signal ss_t                 : std_logic:= '0';
+
+    ------------------------------------------------------------------
+    -- CKBC/CKTP Generator signals
+    ------------------------------------------------------------------ 
+    signal clk_160_gen      : std_logic := '0';
+    signal clk_800_gen      : std_logic := '0';
+    signal clk_gen_locked   : std_logic := '0';
+    signal rst_gen          : std_logic := '0';  
+    signal ckbc_ready       : std_logic := '0';
+    signal cktp_enable      : std_logic := '0';
+    signal CKBC_glbl        : std_logic := '0';
+    signal cktp_pulse_width : std_logic_vector(31 downto 0)    := "00000000000000000000000101000000"; -- 2 us
+    signal cktp_period      : std_logic_vector(31 downto 0)    := "00000000000000100111000100000000"; -- 1 ms
+    signal cktp_skew        : std_logic_vector(15 downto 0)    := x"0000"; 
+    signal ckbc_freq        : std_logic_vector(7 downto 0)     := "00101000"; --40 Mhz
 
     -------------------------------------------------
     -- Flow FSM signals
@@ -726,8 +743,8 @@ architecture Behavioral of mmfe8_top is
     attribute keep of VMM_SDI_i                 : signal is "TRUE";
     attribute dont_touch of VMM_SDI_i           : signal is "TRUE";
     
-    attribute keep of vmm_cktp                  : signal is "TRUE";
-    attribute dont_touch of vmm_cktp            : signal is "TRUE";
+    --attribute keep of vmm_cktp                  : signal is "TRUE";
+    --attribute dont_touch of vmm_cktp            : signal is "TRUE";
     
     attribute keep of test                      : signal is "TRUE";
     attribute dont_touch of test                : signal is "TRUE";
@@ -787,7 +804,16 @@ architecture Behavioral of mmfe8_top is
     attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
 
     attribute keep of MO_P_i              : signal is "TRUE";
-    attribute dont_touch of MO_P_i        : signal is "TRUE";      
+    attribute dont_touch of MO_P_i        : signal is "TRUE";
+
+    attribute keep of rst_gen                   : signal is "TRUE";
+    attribute keep of ckbc_ready                : signal is "TRUE";
+    attribute keep of cktp_enable               : signal is "TRUE";
+    attribute keep of cktp_pulse_width          : signal is "TRUE";
+    attribute keep of cktp_period               : signal is "TRUE";
+    attribute keep of cktp_skew                 : signal is "TRUE";
+    attribute keep of ckbc_freq                 : signal is "TRUE";
+      
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -795,24 +821,26 @@ architecture Behavioral of mmfe8_top is
     -- 1.  clk_wiz_200_to_400
     -- 2.  clk_wiz_low_jitter
     -- 3.  clk_wiz_0
-    -- 4.  vmm_global_reset
-    -- 5.  event_timing_reset
-    -- 6.  select_vmm
-    -- 7.  vmm_readout
-    -- 8.  FIFO2UDP
-    -- 9.  trigger
-    -- 10. packet_formation
-    -- 11. gig_ethernet_pcs_pma_0
-    -- 12. UDP_Complete_nomac
-    -- 13. temac_10_100_1000_fifo_block
-    -- 14. temac_10_100_1000_reset_sync
-    -- 15. temac_10_100_1000_config_vector_sm
-    -- 16. i2c_top
-    -- 17. udp_data_in_handler
-    -- 18. select_data
-    -- 19. ila_top_level
-    -- 20. xadc
-    -- 21. AXI4_SPI
+    -- 4.  clk_wiz_gen
+    -- 5.  vmm_global_reset
+    -- 6.  event_timing_reset
+    -- 7.  select_vmm
+    -- 8.  vmm_readout
+    -- 9.  FIFO2UDP
+    -- 10.  trigger
+    -- 11. packet_formation
+    -- 12. gig_ethernet_pcs_pma_0
+    -- 13. UDP_Complete_nomac
+    -- 14. temac_10_100_1000_fifo_block
+    -- 15. temac_10_100_1000_reset_sync
+    -- 16. temac_10_100_1000_config_vector_sm
+    -- 17. i2c_top
+    -- 18. udp_data_in_handler
+    -- 19. select_data
+    -- 20. ila_top_level
+    -- 21. xadc
+    -- 22. AXI4_SPI
+    -- 23. clk_gen_wrapper
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -844,6 +872,16 @@ architecture Behavioral of mmfe8_top is
       );
     end component;
     -- 4
+    component clk_wiz_gen
+    port(
+        clk_in_400  : in     std_logic;
+        clk_out_160 : out    std_logic;
+        clk_out_800 : out    std_logic;
+        reset       : in     std_logic;
+        gen_locked  : out    std_logic
+    );
+    end component;
+    --5
     component vmm_global_reset
       port(
           clk             : in std_logic;
@@ -853,7 +891,7 @@ architecture Behavioral of mmfe8_top is
           vmm_wen         : out std_logic     -- these will be ored with same from other sm
       );
     end component;
-    -- 5
+    -- 6
     component event_timing_reset
       port(
           hp_clk          : in std_logic;
@@ -877,7 +915,7 @@ architecture Behavioral of mmfe8_top is
           reset_latched   : out std_logic
       );
     end component;    
-    -- 6
+    -- 7
     component select_vmm 
       port (
           clk_in              : in  std_logic;
@@ -899,7 +937,7 @@ architecture Behavioral of mmfe8_top is
           conf_ena_vec        : out std_logic_vector(8 downto 1)
       );
     end component;
-    -- 7
+    -- 8
     component vmm_readout is
         port ( 
             clk_10_phase45          : in std_logic;     -- Used to clock checking for data process
@@ -923,7 +961,7 @@ architecture Behavioral of mmfe8_top is
             vmmEventDone            : out std_logic
         );
     end component;
-    -- 8
+    -- 9
     component FIFO2UDP
         port ( 
             clk_200                     : in std_logic;
@@ -949,7 +987,7 @@ architecture Behavioral of mmfe8_top is
             trigger_out                 : out std_logic
         );
     end component;
-    -- 9
+    -- 10
     component trigger is
       port (
           clk_200         : in std_logic;
@@ -965,7 +1003,7 @@ architecture Behavioral of mmfe8_top is
           tr_out          : out std_logic
       );
     end component;
-    -- 10
+    -- 11
     component packet_formation is
     port (
             clk_200     : in std_logic;
@@ -999,7 +1037,7 @@ architecture Behavioral of mmfe8_top is
             --trigger     : in std_logic
     );
     end component;
-    -- 11
+    -- 12
     component gig_ethernet_pcs_pma_0
         port(
             -- Transceiver Interface
@@ -1063,7 +1101,7 @@ architecture Behavioral of mmfe8_top is
             gt0_pll0refclklost_out  : out std_logic;
             gt0_pll0lock_out        : out std_logic);
     end component;
-	-- 12
+	-- 13
 	component UDP_Complete_nomac
 	   Port (
 			-- UDP TX signals
@@ -1098,7 +1136,7 @@ architecture Behavioral of mmfe8_top is
 			mac_rx_tready           : out  std_logic;							-- tells mac that we are ready to take data
 			mac_rx_tlast            : in std_logic);							-- indicates last byte of the trame
 	end component;
-    -- 13
+    -- 14
     component temac_10_100_1000_fifo_block
     port(
             gtx_clk                    : in  std_logic;
@@ -1153,7 +1191,7 @@ architecture Behavioral of mmfe8_top is
             rx_configuration_vector   : in  std_logic_vector(79 downto 0);
             tx_configuration_vector   : in  std_logic_vector(79 downto 0));
     end component;
-    -- 14
+    -- 15
     component temac_10_100_1000_reset_sync
         port ( 
             reset_in           : in  std_logic;    -- Active high asynchronous reset
@@ -1161,7 +1199,7 @@ architecture Behavioral of mmfe8_top is
             clk                : in  std_logic;    -- clock to be sync'ed to
             reset_out          : out std_logic);     -- "Synchronised" reset signal
     end component;
-    -- 15
+    -- 16
     component temac_10_100_1000_config_vector_sm is
     port(
       gtx_clk                 : in  std_logic;
@@ -1171,14 +1209,14 @@ architecture Behavioral of mmfe8_top is
       rx_configuration_vector : out std_logic_vector(79 downto 0);
       tx_configuration_vector : out std_logic_vector(79 downto 0));
     end component;
-    -- 16
+    -- 17
 	component i2c_top is
 	port(  
 	    clk_in       		  : in    std_logic;		
         phy_rstn_out 		  : out   std_logic
 	);	
 	end component;
-    -- 17
+    -- 18
     component udp_data_in_handler
     port(
     ------------------------------------
@@ -1223,7 +1261,7 @@ architecture Behavioral of mmfe8_top is
     xadc_delay          : out std_logic_vector(17 downto 0)
     );
     end component;
-    -- 18
+    -- 19
     component select_data
     port(
         configuring                 : in  std_logic;
@@ -1251,13 +1289,13 @@ architecture Behavioral of mmfe8_top is
         fifo_rst                    : out std_logic
     );
     end component;
-    -- 19
+    -- 20
     component ila_top_level
         PORT (  clk     : IN std_logic;
                 probe0  : IN std_logic_vector(302 DOWNTO 0)  
                 );
     end component;
-    -- 20
+    -- 21
     component xadc
     port(
         clk200              : in std_logic;
@@ -1299,7 +1337,7 @@ architecture Behavioral of mmfe8_top is
         xadc_busy           : out std_logic
     );
     end component;
-    -- 21
+    -- 22
     component AXI4_SPI
     port(
         clk_200                 : in  std_logic;
@@ -1329,6 +1367,29 @@ architecture Behavioral of mmfe8_top is
         --SPI_CLK                 : in    std_logic
     );
     end component;
+    -- 23
+    component clk_gen_wrapper
+    Port(
+        ------------------------------------
+        ------- General Interface ----------
+        clk_800             : in  std_logic;
+        clk_160             : in  std_logic;
+        rst                 : in  std_logic;
+        mmcm_locked         : in  std_logic;
+        ------------------------------------
+        ----- Configuration Interface ------
+        ckbc_ready          : in  std_logic;
+        cktp_enable         : in  std_logic;
+        cktp_pulse_width    : in  std_logic_vector(31 downto 0);
+        cktp_period         : in  std_logic_vector(31 downto 0);
+        cktp_skew           : in  std_logic_vector(15 downto 0);        
+        ckbc_freq           : in  std_logic_vector(7 downto 0);
+        ------------------------------------
+        ---------- VMM Interface -----------
+        CKTP                : out std_logic;
+        CKBC                : out std_logic
+    );
+    end component;
     
     component vio_1
     port (
@@ -1340,7 +1401,20 @@ architecture Behavioral of mmfe8_top is
         probe_out4  : out std_logic_vector(0 downto 0);
         probe_out5  : out std_logic_vector(0 downto 0)
         );
-    end component;    
+    end component; 
+
+    COMPONENT vio_clk_gen
+    PORT (
+        clk        : IN STD_LOGIC;
+        probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe_out1 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe_out2 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe_out3 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+        probe_out4 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+        probe_out5 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe_out6 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+    );
+    END COMPONENT;   
 
 begin
 
@@ -1665,6 +1739,16 @@ clk_user_inst: clk_wiz_0
         clk_160_o           => clk_160
    );
 
+-- TO DO: consider removing this and using the original MMCM (at Balanced mode)
+mmcm_ckbc_cktp: clk_wiz_gen
+    port map ( 
+        clk_in_400  => clk_400_clean,
+        clk_out_160 => clk_160_gen,
+        clk_out_800 => clk_800_gen,              
+        reset       => '0',
+        gen_locked  => clk_gen_locked            
+    );
+
 vmm_global_reset_inst: vmm_global_reset
     port map(
         clk            => clk_200,           -- main clock
@@ -1915,6 +1999,40 @@ axi4_spi_instance: AXI4_SPI
         --SPI_CLK                => 
     );
 
+ckbc_cktp_generator: clk_gen_wrapper
+    port map(
+        ------------------------------------
+        ------- General Interface ----------
+        clk_800             => clk_800_gen,
+        clk_160             => clk_160_gen,
+        rst                 => rst_gen,
+        mmcm_locked         => clk_gen_locked,
+        ------------------------------------
+        ----- Configuration Interface ------
+        ckbc_ready          => ckbc_ready,
+        cktp_enable         => cktp_enable,
+        cktp_pulse_width    => cktp_pulse_width,
+        cktp_period         => cktp_period,
+        cktp_skew           => cktp_skew,
+        ckbc_freq           => ckbc_freq,
+        ------------------------------------
+        ---------- VMM Interface -----------
+        CKTP                => vmm_cktp,
+        CKBC                => CKBC_glbl
+    );
+
+VIO_CKBC_CKTP: vio_clk_gen
+        PORT MAP (
+          clk           => clk_160_gen,
+          probe_out0(0) => rst_gen,
+          probe_out1(0) => ckbc_ready,
+          probe_out2(0) => cktp_enable,
+          probe_out3    => cktp_pulse_width,
+          probe_out4    => cktp_period,
+          probe_out5    => cktp_skew,
+          probe_out6    => ckbc_freq
+        );
+
 QSPI_IO0_0: IOBUF    
    port map (
       O  => io0_i,
@@ -2115,45 +2233,55 @@ TRIGGER_OUT_N   <= not art2;
 
 --artall  <= art2 and art_out;
 
-internalTrigger_proc: process(clk_10_phase45) -- 10MHz/#states.
-    begin
-        if rising_edge(clk_10_phase45) then            
-            if state = DAQ and trig_mode_int = '0' then
-                case internalTrigger_state is
-                    when 0 to 9979 =>
-                        internalTrigger_state <= internalTrigger_state + 1;
-                        trint           <= '0';
-                    when 9980 to 10000 =>
-                        internalTrigger_state <= internalTrigger_state + 1;
-                        trint           <= '1';        
-                    when others =>
-                        internalTrigger_state <= 0;
-                end case;
-            else
-                trint           <= '0';
-            end if;
-        end if;
+--internalTrigger_proc: process(clk_10_phase45) -- 10MHz/#states.
+--    begin
+--        if rising_edge(clk_10_phase45) then            
+--            if state = DAQ and trig_mode_int = '0' then
+--                case internalTrigger_state is
+--                    when 0 to 9979 =>
+--                        internalTrigger_state <= internalTrigger_state + 1;
+--                        trint           <= '0';
+--                    when 9980 to 10000 =>
+--                        internalTrigger_state <= internalTrigger_state + 1;
+--                        trint           <= '1';        
+--                    when others =>
+--                        internalTrigger_state <= 0;
+--                end case;
+--            else
+--                trint           <= '0';
+--            end if;
+--        end if;
+--end process;
+
+-- TO DO: Fix this as it introduces a lot of negative slack (CDC)
+internalTrigger_proc: process(vmm_cktp, trig_mode_int, state)
+begin
+    if(state = DAQ and trig_mode_int = '0')then
+        trint <= vmm_cktp;
+    else
+        trint <= '0';
+    end if;
 end process;
 
-testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
-    begin
-        if rising_edge(clk_10_phase45) then            
-            if state = DAQ and trig_mode_int = '0' then
-                case cktp_state is
-                    when 0 to 4999 =>
-                        cktp_state <= cktp_state + 1;
-                        vmm_cktp      <= '0';
-                    when 5000 to 10000 =>
-                        cktp_state <= cktp_state + 1;
-                        vmm_cktp   <= '1';
-                    when others =>
-                        cktp_state <= 0;
-                end case;
-            else
-                vmm_cktp      <= '0';
-            end if;
-        end if;
-end process;
+--testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
+--    begin
+--        if rising_edge(clk_10_phase45) then            
+--            if state = DAQ and trig_mode_int = '0' then
+--                case cktp_state is
+--                    when 0 to 4999 =>
+--                        cktp_state <= cktp_state + 1;
+--                        vmm_cktp      <= '0';
+--                    when 5000 to 10000 =>
+--                        cktp_state <= cktp_state + 1;
+--                        vmm_cktp   <= '1';
+--                    when others =>
+--                        cktp_state <= 0;
+--                end case;
+--            else
+--                vmm_cktp      <= '0';
+--            end if;
+--        end if;
+--end process;
 
 synced_to_200: process(clk_200)
     begin
@@ -2393,7 +2521,8 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
     end if;
 end process;
 
-    vmm_ckbc                <= clk_40 and ckbc_enable; -- ckbc_en_vio(0);
+    -- TO DO: add "and ckbc_enable;" at the vmm_ckbc
+    vmm_ckbc                <= CKBC_glbl; -- and ckbc_enable; -- ckbc_en_vio(0);
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
     vmm_cktp_all            <= vmm_cktp or cktp_vio(0) or vmm_cktp_primary;
     cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
@@ -2479,7 +2608,7 @@ ila_top: ila_top_level
     read_out(222 downto 191)    <= myIP;
     read_out(270 downto 223)    <= myMAC;
     read_out(271)               <= enable_CKBC;
-    read_out(272)               <= MO_P_i;
+    read_out(272)               <= '0';
     read_out(273)               <= ckdt_out_vec(1);
     read_out(274)               <= data0_in_vec(1);
     read_out(275)               <= data1_in_vec(1);

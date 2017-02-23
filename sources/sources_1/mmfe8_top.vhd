@@ -581,7 +581,7 @@ architecture Behavioral of mmfe8_top is
     -- CKBC/CKTP Generator signals
     ------------------------------------------------------------------ 
     signal clk_160_gen      : std_logic := '0';
-    signal clk_800_gen      : std_logic := '0';
+    signal clk_500_gen      : std_logic := '0';
     signal clk_gen_locked   : std_logic := '0';
     signal rst_gen          : std_logic := '0';  
     signal ckbc_ready       : std_logic := '0';
@@ -876,7 +876,7 @@ architecture Behavioral of mmfe8_top is
     port(
         clk_in_400  : in     std_logic;
         clk_out_160 : out    std_logic;
-        clk_out_800 : out    std_logic;
+        clk_out_500 : out    std_logic;
         reset       : in     std_logic;
         gen_locked  : out    std_logic
     );
@@ -1372,7 +1372,7 @@ architecture Behavioral of mmfe8_top is
     Port(
         ------------------------------------
         ------- General Interface ----------
-        clk_800             : in  std_logic;
+        clk_500             : in  std_logic;
         clk_160             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
@@ -1739,12 +1739,11 @@ clk_user_inst: clk_wiz_0
         clk_160_o           => clk_160
    );
 
--- TO DO: consider removing this and using the original MMCM (at Balanced mode)
 mmcm_ckbc_cktp: clk_wiz_gen
     port map ( 
         clk_in_400  => clk_400_clean,
         clk_out_160 => clk_160_gen,
-        clk_out_800 => clk_800_gen,              
+        clk_out_500 => clk_500_gen,              
         reset       => '0',
         gen_locked  => clk_gen_locked            
     );
@@ -2003,7 +2002,7 @@ ckbc_cktp_generator: clk_gen_wrapper
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_800             => clk_800_gen,
+        clk_500             => clk_500_gen,
         clk_160             => clk_160_gen,
         rst                 => rst_gen,
         mmcm_locked         => clk_gen_locked,
@@ -2254,14 +2253,14 @@ TRIGGER_OUT_N   <= not art2;
 --end process;
 
 -- TO DO: Fix this as it introduces a lot of negative slack (CDC)
-internalTrigger_proc: process(vmm_cktp, trig_mode_int, state)
-begin
-    if(state = DAQ and trig_mode_int = '0')then
-        trint <= vmm_cktp;
-    else
-        trint <= '0';
-    end if;
-end process;
+--internalTrigger_proc: process(vmm_cktp, trig_mode_int, state)
+--begin
+--    if(state = DAQ and trig_mode_int = '0')then
+--        trint <= vmm_cktp;
+--    else
+--        trint <= '0';
+--    end if;
+--end process;
 
 --testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
 --    begin

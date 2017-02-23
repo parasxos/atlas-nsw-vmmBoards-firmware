@@ -9,14 +9,15 @@
 -- Target Devices: 
 -- Tool Versions: 
 -- Description: Wrapper that contains the CKTP and CKBC generators. It also 
--- instantiates a skewing module with 1.25 ns resolution. See skew_gen for more
+-- instantiates a skewing module with 2 ns resolution. See skew_gen for more
 -- information.
 -- 
 -- Dependencies: "Configurable CKBC/CKTP Constraints" .xdc snippet must be added to 
 -- the main .xdc file of the design. Can be found at the project repository.
 -- 
 -- Changelog: 
--- 
+-- 23.02.2017 Slowed down the skewing process to 500 Mhz. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 library IEEE;
 library UNISIM;
@@ -28,7 +29,7 @@ entity clk_gen_wrapper is
     Port(
         ------------------------------------
         ------- General Interface ----------
-        clk_800             : in  std_logic;
+        clk_500             : in  std_logic;
         clk_160             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
@@ -74,7 +75,7 @@ architecture RTL of clk_gen_wrapper is
     
     component skew_gen
     port(
-        clk_800         : in std_logic;
+        clk_500         : in std_logic;
         CKTP_preSkew    : in std_logic;
         skew            : in std_logic_vector(4 downto 0);
         CKTP_skew       : out std_logic
@@ -87,13 +88,13 @@ architecture RTL of clk_gen_wrapper is
     signal CKBC_preBuf      : std_logic := '0';
     signal CKBC_glbl        : std_logic := '0';
     
-    signal CKTP_preAlign    : std_logic := '0';
-    signal CKTP_aligned     : std_logic := '0';
-    signal CKTP_skewed      : std_logic := '0';
+    signal CKTP_from_gen    : std_logic := '0';
+    signal CKTP_from_skew   : std_logic := '0';
     signal CKTP_glbl        : std_logic := '0';
     
-    signal sel_cktp         : std_logic := '0';
-
+    signal sel_skew_gen     : std_logic := '0';
+    signal skew_cktp_gen    : std_logic_vector(15 downto 0) := (others => '0');
+    
 begin
 
 ckbc_generator: ckbc_gen
@@ -114,45 +115,45 @@ cktp_generator: cktp_gen
         cktp_start  => cktp_start,
         vmm_ckbc    => CKBC_glbl,
         ckbc_freq   => ckbc_freq,
-        skew        => (others => '0'), -- unused, skewing in another module
+        skew        => skew_cktp_gen,
         pulse_width => cktp_pulse_width,
         period      => cktp_period,
-        CKTP        => CKTP_preAlign
+        CKTP        => CKTP_from_gen
     );
 
--- align CKTP with CKBC (use skew_gen for skewing)    
-alignCKTP_CKBC: process(CKBC_glbl)
-begin
-    if(rising_edge(CKBC_glbl))then
-        CKTP_aligned <= CKTP_preAlign;  
-    end if;
-end process; 
     
 skewing_module: skew_gen
     port map(
-        clk_800         => clk_800,
-        CKTP_preSkew    => CKTP_aligned,
+        clk_500         => clk_500,
+        CKTP_preSkew    => CKTP_from_gen,
         skew            => cktp_skew(4 downto 0),
-        CKTP_skew       => CKTP_skewed
+        CKTP_skew       => CKTP_from_skew
     );
 
 CKTP_BUFGMUX: BUFGMUX
-    port map(O => CKTP_glbl, I0 => CKTP_aligned, I1 => CKTP_skewed, S => sel_cktp);
-
-skew_sel_proc: process(cktp_enable, cktp_skew)
+    port map(O => CKTP_glbl, I0 => CKTP_from_gen, I1 => CKTP_from_skew, S => sel_skew_gen);
+    
+skew_sel_proc: process(ckbc_freq, cktp_skew)
 begin
-    if(cktp_enable = '1')then
-        case cktp_skew is
-        when x"0000" => sel_cktp <= '0'; -- select CKTP_aligned
-        when others  => sel_cktp <= '1'; -- select CKTP_skewed
-        end case;
-    end if;
+    case ckbc_freq is
+    when "00101000" => -- 40
+        skew_cktp_gen   <= (others => '0'); -- skewing controlled by skew_gen
+        if(cktp_skew = x"0000")then
+            sel_skew_gen <= '0'; -- no skew
+        else
+            sel_skew_gen <= '1'; -- select high granularity skewing module (2 ns step size)
+        end if;
+             
+    when others =>
+        sel_skew_gen    <= '0'; -- select low granularity skewing from cktp_gen (6.125 ns step size)
+        skew_cktp_gen   <= cktp_skew;
+    end case;
 end process;
 
     cktp_start      <= not rst and ckbc_ready and cktp_enable and mmcm_locked;
     ckbc_start      <= not rst and ckbc_ready and mmcm_locked;
 
-    CKBC            <= ckbc_glbl;
+    CKBC            <= CKBC_glbl;
     CKTP            <= CKTP_glbl;
     
 end RTL;

@@ -383,55 +383,55 @@ set_multicycle_path -hold -from [get_clocks -of_objects [get_pins -hierarchical 
 #======================= Configurable CKBC/CKTP Constraints ==========
 set_false_path -from [get_cells {VIO_CKBC_CKTP/inst/PROBE_OUT_ALL_INST/G_PROBE_OUT[*].PROBE_OUT0_INST/Probe_out_reg[*]}]
 
-# 160 MHz global clock buffer placement constraints
+# 160 MHz global clock buffer placement constraint
 set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_ckbc_cktp/inst/clkout1_buf]
-# 800 Mhz global clock buffer placement constraint
+# 500 Mhz global clock buffer placement constraint
 set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_ckbc_cktp/inst/clkout2_buf]
 
-# CKBC global buffer placement constraints
+# CKBC global buffer placement constraint
 set_property LOC BUFGCTRL_X0Y0 [get_cells ckbc_cktp_generator/CKBC_BUFGCE]
 # register-to-CKBC buffer placement constraint
-set_property LOC SLICE_X84Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
+set_property LOC SLICE_X83Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
 
-# CKTP global buffer placement constraints
+# CKTP global buffer placement constraint
 set_property LOC BUFGCTRL_X0Y3 [get_cells ckbc_cktp_generator/CKTP_BUFGMUX]
-# registers-to-CKTP buffer placement constraint
-set_property LOC SLICE_X84Y146 [get_cells ckbc_cktp_generator/CKTP_aligned_reg]
-#set_property LOC SLICE_X84Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skew_reg]
+# register-to-CKTP buffer placement constraint
+set_property LOC SLICE_X83Y146 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
 
-#ASYNC_REG to skewing delay line
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_01p25_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_02p50_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_03p75_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_05p00_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06p25_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_07p50_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_08p75_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_10p00_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_11p25_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_12p50_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_13p75_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_15p00_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_16p25_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_17p50_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_18p75_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_20p00_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_21p25_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skew_reg]
+# Set maximum delay
+set_max_delay -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] 1.000
+set_max_delay -from [get_cells ckbc_cktp_generator/skewing_module/CKTP_skew_reg] 1.000
 
-# Skewing delay line floorplanning
 create_pblock pblock_skewing_module
 add_cells_to_pblock [get_pblocks pblock_skewing_module] [get_cells -quiet [list ckbc_cktp_generator/skewing_module]]
-resize_pblock [get_pblocks pblock_skewing_module] -add {SLICE_X84Y145:SLICE_X85Y147}
+resize_pblock [get_pblocks pblock_skewing_module] -add {SLICE_X82Y146:SLICE_X83Y148}
+create_pblock pblock_ckbc_generator_block
+add_cells_to_pblock [get_pblocks pblock_ckbc_generator_block] [get_cells -quiet [list ckbc_cktp_generator/ckbc_generator]]
+resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {SLICE_X74Y147:SLICE_X83Y160}
+resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {RAMB18_X4Y60:RAMB18_X4Y63}
+resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {RAMB36_X4Y30:RAMB36_X4Y31}
+create_pblock pblock_cktp_generator_block
+add_cells_to_pblock [get_pblocks pblock_cktp_generator_block] [get_cells -quiet [list ckbc_cktp_generator/cktp_generator]]
+resize_pblock [get_pblocks pblock_cktp_generator_block] -add {SLICE_X76Y138:SLICE_X83Y146}
+resize_pblock [get_pblocks pblock_cktp_generator_block] -add {RAMB18_X4Y56:RAMB18_X4Y57}
+resize_pblock [get_pblocks pblock_cktp_generator_block] -add {RAMB36_X4Y28:RAMB36_X4Y28}
 
-# General generator floorplanning
-create_pblock pblock_ckbc_cktp_generator
-add_cells_to_pblock [get_pblocks pblock_ckbc_cktp_generator] [get_cells -quiet [list ckbc_cktp_generator]]
-resize_pblock [get_pblocks pblock_ckbc_cktp_generator] -add {SLICE_X82Y145:SLICE_X93Y155}
-resize_pblock [get_pblocks pblock_ckbc_cktp_generator] -add {DSP48_X5Y58:DSP48_X5Y61}
-resize_pblock [get_pblocks pblock_ckbc_cktp_generator] -add {RAMB18_X5Y58:RAMB18_X5Y61}
-resize_pblock [get_pblocks pblock_ckbc_cktp_generator] -add {RAMB36_X5Y29:RAMB36_X5Y30}
-#=====================================================================
+#ASYNC_REG to skewing delay line
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_04_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_08_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_10_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_12_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_14_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_16_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_18_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_20_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_22_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_24_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skew_reg]
+#============================================================================================
 
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]

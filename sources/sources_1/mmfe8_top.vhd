@@ -1701,7 +1701,7 @@ readout_vmm: vmm_readout
     port map(
         clk_10_phase45          => clk_10_phase45,
         clk_50                  => clk_50,
-        clk_200                 => clk_200,
+        clk_200                 => userclk2,
         
         vmm_data0_vec           => data0_in_vec,
         vmm_data1_vec           => data1_in_vec,
@@ -1722,7 +1722,7 @@ readout_vmm: vmm_readout
 
 trigger_instance: trigger
     port map(
-        clk_200         => clk_200,
+        clk_200         => userclk2,
 
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
@@ -1762,7 +1762,7 @@ select_vmm_block: select_vmm
 
 FIFO2UDP_instance: FIFO2UDP
     Port map( 
-        clk_200                     => clk_200,
+        clk_200                     => userclk2,
         clk_125                     => userclk2,
         destinationIP               => destIP,
         daq_data_in                 => daqFIFO_din_i,
@@ -1787,7 +1787,7 @@ FIFO2UDP_instance: FIFO2UDP
 
 packet_formation_instance: packet_formation
     port map(
-        clk_200         => clk_200,
+        clk_200         => userclk2,
         
         newCycle        => pf_newCycle,
         

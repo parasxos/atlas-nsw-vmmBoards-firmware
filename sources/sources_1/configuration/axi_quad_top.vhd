@@ -584,8 +584,8 @@ spi_read_write_core_registers: process(clk_50)  -- State machine that handles th
     begin
     if rising_edge(clk_50) then
                 if (set_default_ip = '1') then
-                    myIP   <= x"c0a80002";
-                    myMAC  <= x"002320212223";
+                    myIP   <= x"c0a80003";
+                    myMAC  <= x"002320212227";
                     destIP <= x"c0a80010";
                 end if;
             

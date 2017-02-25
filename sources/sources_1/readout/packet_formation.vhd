@@ -64,7 +64,8 @@ architecture Behavioral of packet_formation is
     signal precCnt          : std_logic_vector(7 downto 0)  := x"00"; --( others => '0' );
     signal globBcid_i       : std_logic_vector(15 downto 0);
     signal globBCID_etr		: std_logic_vector(11 downto 0) := (others => '0'); --globBCID counter as it is coming from ETR
-    signal eventCounter_i   : std_logic_vector(31 downto 0) := ( others => '0' );
+    --signal eventCounter_i   : std_logic_vector(31 downto 0) := ( others => '0' );
+    signal eventCounter_i   : unsigned(31 downto 0) := to_unsigned(0, 32);
     signal wait_Cnt         : integer := 0;
     signal vmmId_cnt        : integer := 0;
     signal trigLatencyCnt   : integer := 0;
@@ -160,7 +161,8 @@ begin
 -- Upon a signal from trigger capture the current global BCID
     if rising_edge(clk_200) then
         if reset = '1' then
-            eventCounter_i	<= x"00000000";
+            --eventCounter_i	<= x"00000000";
+            eventCounter_i	<= to_unsigned(0, 32);
             pfBusy_i		<= '0';
         else
         case state is
@@ -172,21 +174,22 @@ begin
                 rst_FIFO                <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
-                	eventCounter_i  <= eventCounter_i + 1;
                 	daqFIFO_wr_en   <= '0';
-                	state           <= captureEventID;
+                	state           <= waitForLatency;
 --                else
 --                    tr_hold         <= '0';
                 end if;
                 
             when waitForLatency =>
                 debug_state <= "00001";
+                eventCounter_i  <= eventCounter_i + 1;
+                state           <= captureEventID;
 --                tr_hold         <= '1';                 -- Prevent new triggers
-                if trigLatencyCnt > trigLatency then 
-                    state           <= captureEventID;
-                else
-                    trigLatencyCnt  <= trigLatencyCnt + 1;
-                end if;
+--                if trigLatencyCnt > trigLatency then 
+--                    state           <= captureEventID;
+--                else
+--                    trigLatencyCnt  <= trigLatencyCnt + 1;
+--                end if;
 
 --            when S2 =>          -- wait for the header elements to be formed
 --                debug_state <= "00010";
@@ -199,8 +202,9 @@ begin
                 debug_state             <= "00011";
                 packLen_cnt             <= x"000";
                 rst_FIFO                <= '0';
-                header(63 downto 0)     <=    eventCounter_i & precCnt & globBcid & b"00000" & b"000";
-                                        --          32       &    8    &    16    &     5    &   3
+                header(63 downto 32)    <= std_logic_vector(eventCounter_i);
+                header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";
+                                        --    8    &    16    &     5    &   3
                 state                   <= setEventID;
                 
             when setEventID =>
@@ -223,7 +227,7 @@ begin
 
             when triggerVmmReadout =>   -- Creates an 100ns pulse to trigger the readout
                 debug_state                 <= "00111";
-                if wait_Cnt < 20 then
+                if wait_Cnt < 13 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
                 else
@@ -369,7 +373,7 @@ port map(
     probe1_out(93)                      <= triggerVmmReadout_i;    --Not tested
     probe1_out(109 downto 94)           <= latency;
     probe1_out(110)                     <= udp_busy;
-    probe1_out(142 downto 111)          <= eventCounter_i;
+    probe1_out(142 downto 111)          <= std_logic_vector(eventCounter_i);
     probe1_out(147 downto 143)          <= debug_state;
     
     probe1_out(200 downto 148)          <= (others => '0');

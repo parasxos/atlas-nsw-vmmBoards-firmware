@@ -64,6 +64,8 @@ architecture Behavioral of vmm_readout is
     signal NoFlg_counter		: integer	:= 0;                                           -- Counter of CKTKs
     signal NoFlg                : integer   := 7;                                           -- How many (#+1) CKTKs before soft reset (User defined)
     signal vmmEventDone_i       : std_logic := '0';
+    signal vmmEventDone_stage1  : std_logic := '0';
+    signal vmmEventDone_ff_sync : std_logic := '0';
     signal trigger_pulse_i      : std_logic := '0';
     signal hitsLen_cnt          : integer := 0;
     signal hitsLenMax           : integer := 150;--1100;  --Real maximum is 1119 for a jumbo UDP frame and 184 for a normal UDP frame
@@ -78,6 +80,8 @@ architecture Behavioral of vmm_readout is
     signal dataBitRead          : integer := 0;
 
     signal vmmWordReady_i       : std_logic := '0';
+    signal vmmWordReady_stage1  : std_logic := '0';
+    signal vmmWordReady_ff_sync : std_logic := '0';
     signal vmmWord_i            : std_logic_vector(63 DOWNTO 0);
     
     signal vmm_data0            : std_logic := '0';     -- Single-ended data0 from VMM
@@ -308,14 +312,24 @@ begin
     end if;
 end process;
 
+process(clk_200)
+begin
+    if rising_edge(clk_200) then 
+        vmmEventDone_stage1     <= vmmEventDone_i;
+        vmmEventDone_ff_sync    <= vmmEventDone_stage1;
+        vmmWordReady_stage1     <= vmmWordReady_i;
+        vmmWordReady_ff_sync    <= vmmWordReady_stage1;
+    end if;
+end process;
+
+    vmmEventDone        <= vmmEventDone_ff_sync;
+    vmmWordReady        <= vmmWordReady_ff_sync;
     vmm_cktk            <= vmm_cktk_i;              -- Used
     vmm_ckdt            <= vmm_ckdt_i;              -- Used
     daq_enable_i        <= daq_enable;              -- Used
     vmm_data0_i         <= vmm_data0;               -- Used
     vmm_data1_i         <= vmm_data1;               -- Used
-    vmmWordReady        <= vmmWordReady_i;          -- Used
     vmmWord             <= vmmWord_i;               -- Used
-    vmmEventDone        <= vmmEventDone_i;          -- Used
     trigger_pulse_i     <= trigger_pulse;           -- Used
 
 VMMdemux: vmmSignalsDemux

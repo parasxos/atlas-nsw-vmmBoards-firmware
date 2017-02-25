@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------------
 -- Company: NTU ATHENS - BNL
--- Engineer: Paris Moschovakos & Panagiotis Gkountoumis
+-- Engineer: Paris Moschovakos, Panagiotis Gkountoumis & Christos Bakalis
 -- 
 -- Create Date: 16.3.2016
 -- Design Name: MMFE8
@@ -16,6 +16,8 @@
 -- at the OR gate. (Christos Bakalis)
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added Dynamic IP configuration. (Lev Kurilenko)
+-- 16.02.2017 Added new configuration component (udp_data_in_handler). Changes
+-- at flow_fsm and axi4-spi flash module.
 --
 ----------------------------------------------------------------------------------
 
@@ -410,8 +412,8 @@ architecture Behavioral of mmfe8_top is
   
   signal end_packet_conf_int     : std_logic := '0';
   signal end_packet_daq_int     : std_logic := '0';
-  signal is_state           : std_logic_vector(3 downto 0) := "1010";
-  signal ACQ_sync_int       : std_logic_vector := x"0000";
+  signal is_state           : std_logic_vector(3 downto 0)  := "1010";
+  signal latency_conf       : std_logic_vector(15 downto 0) := x"0000";
   signal udp_busy           : std_logic := '0';
   signal test               : std_logic := '0';
   signal count_test         : integer := 0;
@@ -422,6 +424,16 @@ architecture Behavioral of mmfe8_top is
   signal artall             : std_logic := '0';
   
   signal reset_FF           : std_logic := '0';
+  
+  signal wait_cnt           : unsigned(2 downto 0) := (others => '0');
+  signal vmm_id_rdy         : std_logic := '0';
+  signal newIP_rdy          : std_logic := '0';
+  signal xadc_conf_rdy      : std_logic := '0';
+  signal daq_on             : std_logic := '0';
+  signal daq_off            : std_logic := '0';
+  signal vmmConf_done       : std_logic := '0';
+  signal fpga_reset_conf    : std_logic := '0';
+  signal flash_busy         : std_logic := '0';
 
     -------------------------------------------------
     -- VMM Signals                   
@@ -566,7 +578,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
-    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, FIRST_RESET, TRIG, DAQ, XADC_run);
+    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, FIRST_RESET, TRIG, DAQ, XADC_init, XADC_wait, FLASH_init, FLASH_wait);
     signal state        : state_t;
     signal rstFIFO_top  : std_logic := '0';
 
@@ -796,7 +808,7 @@ architecture Behavioral of mmfe8_top is
     -- 14. temac_10_100_1000_reset_sync
     -- 15. temac_10_100_1000_config_vector_sm
     -- 16. i2c_top
-    -- 17. config_logic
+    -- 17. udp_data_in_handler
     -- 18. select_data
     -- 19. ila_top_level
     -- 20. xadc
@@ -1167,56 +1179,49 @@ architecture Behavioral of mmfe8_top is
 	);	
 	end component;
     -- 17
-    component config_logic is
-        Port ( 
-        clk125              : in  std_logic;
-        clk200              : in  std_logic;
-        clk_in              : in  std_logic;
-        
-        reset               : in  std_logic;
-
-        user_data_in        : in  std_logic_vector (7 downto 0);
-        user_data_out       : out std_logic_vector (63 downto 0);
-
-        udp_rx              : in udp_rx_type;
-        resp_data           : out udp_response;
-
-        send_error          : out std_logic;
-        user_conf           : out std_logic;
-        user_wr_en          : in  std_logic;
-        user_last           : in  std_logic;
-        configuring         : in  std_logic;
-        
---        we_conf             : out std_logic;
-        
-        vmm_id              : out std_logic_vector(15 downto 0);
-        cfg_bit_out         : out std_logic;
-        VMM_SCK             : out std_logic;
-        VMM_SDO             : in  std_logic;
-        status              : out std_logic_vector(3 downto 0);
-        
-        start_vmm_conf      : in  std_logic;
-        conf_done           : out std_logic;
-        ext_trigger         : out std_logic;
-        
-        ACQ_sync            : out std_logic_vector(15 downto 0);
-        
-        udp_header          : in std_logic;
-        packet_length       : in std_logic_vector (15 downto 0);
-        VMM_CS              : out std_logic;
-        ena_conf            : out std_logic;
-
-        xadc_busy           : in std_logic;
-        xadc_start          : out std_logic;
-        vmm_id_xadc         : out std_logic_vector(15 downto 0);
-        xadc_sample_size    : out std_logic_vector(10 downto 0);
-        xadc_delay          : out std_logic_vector(17 downto 0);
-        
-        myIP_set            : out std_logic_vector(31 downto 0);     
-        myMAC_set           : out std_logic_vector(47 downto 0);     
-        destIP_set          : out std_logic_vector(31 downto 0);     
-        newip_start         : out std_logic                          
-        );
+    component udp_data_in_handler
+    port(
+    ------------------------------------
+    ------- General Interface ----------
+    clk_200             : in  std_logic;
+    clk_125             : in  std_logic;
+    clk_50              : in  std_logic;
+    clk_40              : in  std_logic;
+    rst                 : in  std_logic;
+    ------------------------------------
+    -------- FPGA Config Interface -----
+    latency             : out std_logic_vector(15 downto 0);
+    fpga_rst_conf       : out std_logic;
+    daq_off             : out std_logic;
+    daq_on              : out std_logic;
+    ext_trigger         : out std_logic;
+    ------------------------------------
+    -------- UDP Interface -------------
+    udp_rx              : in  udp_rx_type;
+    ------------------------------------
+    ---------- AXI4SPI Interface -------
+    flash_busy          : in  std_logic;
+    newIP_rdy           : out std_logic;
+    myIP_set            : out std_logic_vector(31 downto 0);
+    myMAC_set           : out std_logic_vector(47 downto 0);
+    destIP_set          : out std_logic_vector(31 downto 0);
+    ------------------------------------
+    ------ VMM Config Interface --------
+    vmm_id              : out std_logic_vector(15 downto 0);
+    vmmConf_rdy         : out std_logic;
+    vmmConf_done        : out std_logic;
+    vmm_sck             : out std_logic;
+    vmm_cs              : out std_logic;
+    vmm_cfg_bit         : out std_logic;
+    top_rdy             : in  std_logic;
+    ------------------------------------
+    ---------- XADC Interface ----------
+    xadc_busy           : in  std_logic;
+    xadc_rdy            : out std_logic;
+    vmm_id_xadc         : out std_logic_vector(15 downto 0);
+    xadc_sample_size    : out std_logic_vector(10 downto 0);
+    xadc_delay          : out std_logic_vector(17 downto 0)
+    );
     end component;
     -- 18
     component select_data
@@ -1310,6 +1315,7 @@ architecture Behavioral of mmfe8_top is
         destIP_set              : in std_logic_vector(31 downto 0);
         
         newip_start            : in std_logic;
+        flash_busy             : out std_logic;
         
         io0_i : IN STD_LOGIC;
         io0_o : OUT STD_LOGIC;
@@ -1575,45 +1581,63 @@ i2c_module: i2c_top
 	   port map(  clk_in       			=> clk_200,
 		          phy_rstn_out 			=> phy_rstn_out);
 
-configuration_logic: config_logic
-        Port map( 
-            clk125              => userclk2,
-            clk200              => clk_200,
-            clk_in              => clk_40,
-            reset               => reset,
-            user_data_in        => udp_rx_int.data.data_in,
-            user_data_out       => conf_data_out_i, 
-            udp_rx              => udp_rx_int,
-            resp_data           => udp_response_int,
-            send_error          => send_error_int,
-            user_conf           => user_conf_i,
-            user_wr_en          => udp_rx_int.data.data_in_valid,
-            user_last           => udp_rx_int.data.data_in_last,
-            configuring         => '0', --configuring_i,
---            we_conf             => open, --we_conf_int,
-            vmm_id              => vmm_id,
-            cfg_bit_out         => SDI_1,
-            status              => status_int,
-            start_vmm_conf      => conf_wen_i, --start_conf_proc_int, --configuring_i,
-            conf_done           => conf_done_int,
-            ext_trigger         => trig_mode_int,
-            ACQ_sync            => ACQ_sync_int,
-            udp_header          => udp_header_int,
-            VMM_SCK             => VMM_SCK,
-            VMM_SDO             => SDO_1,
-            packet_length       => udp_rx_int.hdr.data_length,
-            VMM_CS              => VMM_CS_i,
-            ena_conf            => vmm_ena,
-            xadc_busy           => xadc_busy,
-            xadc_start          => xadc_start,
-            vmm_id_xadc         => vmm_id_xadc,
-            xadc_sample_size    => xadc_sample_size,
-            xadc_delay          => xadc_delay,
-            myIP_set            => myIP_set, 
-            myMAC_set           => myMAC_set,
-            destIP_set          => destIP_set,
-            newip_start         => newip_start
-            );
+--configuration_logic: config_logic
+--        Port map( 
+----            we_conf             => open, --we_conf_int,
+--            vmm_id              => vmm_id,
+--            cfg_bit_out         => SDI_1,
+--            status              => status_int,
+--        --    conf_done           => conf_done_int, OBSOLETE UNUSED
+--            ext_trigger         => trig_mode_int,
+--        --    ACQ_sync            => ACQ_sync_int, -- LATENCY
+--        --    ena_conf            => vmm_ena, OBSOLETE UNUSED
+--        --    xadc_start          => xadc_start, -- SEE xadc_conf_rdy
+--        --    newip_start         => newip_start -- SEE newIP_ready
+--            );
+
+udp_din_conf_block: udp_data_in_handler
+    port map(
+        ------------------------------------
+        ------- General Interface ----------
+        clk_200             => clk_200,
+        clk_125             => userclk2,
+        clk_50              => clk_50,
+        clk_40              => clk_40,
+        rst                 => glbl_rst_i,
+        ------------------------------------
+        -------- FPGA Config Interface -----
+        latency             => latency_conf,
+        fpga_rst_conf       => fpga_reset_conf,
+        daq_off             => daq_off,
+        daq_on              => daq_on,
+        ext_trigger         => trig_mode_int,
+        ------------------------------------
+        -------- UDP Interface -------------
+        udp_rx              => udp_rx_int,
+        ------------------------------------
+        ---------- AXI4SPI Interface -------
+        flash_busy          => flash_busy,
+        newIP_rdy           => newIP_rdy,
+        myIP_set            => myIP_set,
+        myMAC_set           => myMAC_set,
+        destIP_set          => destIP_set,
+        ------------------------------------
+        ------ VMM Config Interface --------
+        vmm_id              => vmm_id,
+        vmmConf_rdy         => vmm_id_rdy,
+        vmmConf_done        => vmmConf_done,
+        vmm_sck             => VMM_SCK,
+        vmm_cs              => VMM_CS_i,
+        vmm_cfg_bit         => SDI_1,
+        top_rdy             => conf_wen_i,
+        ------------------------------------
+        ---------- XADC Interface ----------
+        xadc_busy           => xadc_busy,
+        xadc_rdy            => xadc_conf_rdy,
+        vmm_id_xadc         => vmm_id_xadc,
+        xadc_sample_size    => xadc_sample_size,
+        xadc_delay          => xadc_delay
+    );
 
 clk_200_to_400_inst: clk_wiz_200_to_400
     port map(
@@ -1789,7 +1813,7 @@ packet_formation_instance: packet_formation
         --resetting       => etr_reset_latched,
         rst_FIFO        => pf_rst_FIFO,
 
-        latency         => ACQ_sync_int
+        latency         => latency_conf
         
         --trigger         => trigger_i
     );   
@@ -1877,6 +1901,7 @@ axi4_spi_instance: AXI4_SPI
         destIP_set             => destIP_set,
 
         newip_start            => newip_start,
+        flash_busy             => flash_busy,
 
         io0_i                  => io0_i,
         io0_o                  => io0_o,
@@ -2146,10 +2171,10 @@ synced_to_200: process(clk_200)
     end if;
 end process;
 
-FPGA_global_reset: process(clk_200, status_int_synced)
+FPGA_global_reset: process(clk_200)
     begin
     if rising_edge(clk_200) then
-        if status_int_synced = "0011" then
+        if fpga_reset_conf = '1' then
             glbl_rst_i <= '1';
         else
             glbl_rst_i <= '0';
@@ -2186,25 +2211,54 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
 
-                    if status_int_synced = "0001" then      -- VMM conf x1: 0001
-                        cnt_vmm       <= 1;
-                        vmm_id_int    <= x"0001";
-                        state         <= CONFIGURE;
-                        vmm_ena_all   <= '0';
-                    elsif status_int_synced = "1111" then   -- DAQ ON
-                        state         <= DAQ_INIT;
-                    elsif status_int_synced = "0100" then   -- xADC is started
-                        state         <= XADC_run;
+                    if(vmm_id_rdy = '1')then
+                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
+                            wait_cnt    <= (others => '0');
+                            state       <= CONFIGURE;
+                        else
+                            wait_cnt    <= wait_cnt + 1;
+                            state       <= IDLE;
+                        end if;
+
+                    elsif(newIP_rdy = '1')then -- start new IP setup
+                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
+                            wait_cnt    <= (others => '0');
+                            newIP_start <= '1';
+                            state       <= FLASH_init;
+                        else
+                            wait_cnt    <= wait_cnt + 1;
+                            newIP_start <= '0';
+                            state       <= IDLE;
+                        end if;
+
+                    elsif(xadc_conf_rdy = '1')then -- start XADC
+                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
+                            wait_cnt    <= (others => '0');
+                            xadc_start  <= '1';
+                            state       <= XADC_init;
+                        else
+                            wait_cnt    <= wait_cnt + 1;
+                            xadc_start  <= '0';
+                            state       <= IDLE;
+                        end if;
+
+                    elsif(daq_on = '1')then
+                        state   <= DAQ_INIT;
+
+                    else
+                        state       <= IDLE;
+                        wait_cnt    <= (others => '0');
                     end if;
-            
+
                when    CONFIGURE    =>        
                     vmm_cs_all      <= vmm_cs_i;
                     is_state        <= "0001";    
-                    if status_int_synced = "1011" then 
+                    if(vmmConf_done = '1')then 
                         state   <= CONF_DONE;
+                    else
+                        state   <= CONFIGURE;
                     end if;
 
-                    configuring_i       <= '1';
                     conf_wen_i          <= '1'; 
                     start_conf_proc_int <= '1';
 
@@ -2271,7 +2325,7 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
                     
-                    if status_int_synced = "1000" then    -- Reset came or idle
+                    if(daq_off = '1')then    -- Reset came
                         daq_vmm_ena_wen_enable  <= x"00";
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
@@ -2293,15 +2347,42 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
                 when DAQ =>
                     is_state            <= "0101";
                     ckbc_enable         <= '1';
-                    if status_int_synced = "1000" then  -- Reset came
+                    if(daq_off = '1')then  -- Reset came
                         daq_enable_i    <= '0';
                         state           <= DAQ_INIT;
                     end if;
                     
-                when XADC_run =>
+                when XADC_init =>
                     is_state            <= "0110";
-                    if status_int_synced = "0000" then -- done with xADC, back to idle
-                        state           <= IDLE;
+                    if(xadc_busy = '1')then -- XADC got the message, wait for busy to go low
+                        xadc_start  <= '0';
+                        state       <= XADC_wait;
+                    else                    -- XADC didn't get the message, wait and keep high
+                        xadc_start  <= '1';
+                        state       <= XADC_init; 
+                    end if;
+
+                when XADC_wait =>   -- wait for XADC to finish and go to IDLE
+                    if(xadc_busy = '0')then
+                        state <= IDLE;
+                    else
+                        state <= XADC_wait;
+                    end if;
+
+                when FLASH_init =>
+                    if(flash_busy = '1')then -- AXI4SPI got the message, wait for busy to go low
+                        newIP_start <= '0';
+                        state       <= FLASH_wait;
+                    else                     -- AXI4SPI didn't get the message, wait and keep high
+                        newIP_start <= '1';
+                        state       <= FLASH_init;
+                    end if;
+
+                when FLASH_wait =>  -- wait for AXI4SPI to finish and go to IDLE
+                    if(flash_busy = '0')then
+                        state   <= IDLE;
+                    else
+                        state   <= FLASH_wait;
                     end if;
 
                 when others =>

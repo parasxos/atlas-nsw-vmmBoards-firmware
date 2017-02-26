@@ -11,7 +11,8 @@
 --
 -- Changelog:
 -- 18.08.2016 Added tr_hold signal to hold trigger when reading out (Reid Pinkham)
--- 
+-- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -23,7 +24,7 @@ use UNISIM.VComponents.all;
 
 entity trigger is
     Port (
-            clk_200         : in STD_LOGIC;
+            clk             : in STD_LOGIC;
             
             tren            : in STD_LOGIC;
             tr_hold         : in STD_LOGIC;
@@ -92,12 +93,12 @@ begin
 
 -- Processes
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
---holdDelay: process (clk_200, reset, start, tr_out_i, trext, trint) -- state machine to manage delay
+--holdDelay: process (clk, reset, start, tr_out_i, trext, trint) -- state machine to manage delay
 --begin
 --    if (reset = '1') then
 --        hold <= '0';
 --        state <= ( others => '0' );
---    elsif rising_edge(clk_200) then
+--    elsif rising_edge(clk) then
 --        case state is 
 --            when "000" => -- Idle
 --                if (start = '1') then -- wait for start signal
@@ -166,9 +167,9 @@ begin
     end if;
 end process;
 
-changeModeCommandProc: process (clk_200, reset, tren_buff, trmode)
+changeModeCommandProc: process (clk, reset, tren_buff, trmode)
     begin
-        if rising_edge(clk_200) and reset = '0' then
+        if rising_edge(clk) and reset = '0' then
             if tren_buff = '1' then
                 if trmode = '0' then                                -- Internal trigger
                     mode <= '0';
@@ -205,12 +206,12 @@ triggerDistrSignalProc: process (reset, mode, trext, trint)
     end process;
 
 
-eventCounterProc: process (clk_200, reset, mode, trext, trint)
+eventCounterProc: process (clk, reset, mode, trext, trint)
     begin
         if reset = '1' then
             event_counter_i     <= x"00000000";
         else
-            if rising_edge(clk_200) then
+            if rising_edge(clk) then
                 if mode = '0' then
                     if (tren_buff = '1' and trmode = '0' and trint = '1' and trint_pre = '0') then
                         event_counter_i     <= event_counter_i + 1;
@@ -236,7 +237,7 @@ eventCounterProc: process (clk_200, reset, mode, trext, trint)
         end if;
     end process;
     
--- Signal assignment
+-- Signal assignments
 event_counter       <= event_counter_i;
 tr_out              <= tr_out_i;
 
@@ -244,7 +245,7 @@ tr_out              <= tr_out_i;
 
 --ilaTRIG: ila_trigger
 --port map(
---    clk                     =>  clk_200,
+--    clk                     =>  clk,
 --    probe0                  =>  probe0_out
 --    );
     

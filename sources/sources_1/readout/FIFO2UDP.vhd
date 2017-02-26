@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------
 -- Company: NTU ATHNENS - BNL - Michigan
--- Engineer: Panagiotis Gkountoumis
+-- Engineer: Panagiotis Gkountoumis & Reid Pinkham & Paris Moschovakos
 -- 
 -- Create Date: 18.04.2016 13:00:21
 -- Design Name: 
@@ -18,11 +18,13 @@
 -- 
 -- Changelog:
 -- 23.07.2016 Output signal "sending" to hold packet_formation from issuing new 
--- packets (P.M.)
+-- packets (Paris)
 -- 26.07.2016 Increased the size of the FIFO to 2048 in order to be able to handle
--- jumbo UDP frames. (P.M.)
+-- jumbo UDP frames. (Paris)
 -- 22.08.2016 Re-wrote the main logic into a single state machine to fix the freezing
 -- bug. (Reid Pinkham)
+-- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
+--
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -37,7 +39,7 @@ use work.arp_types.all;
 
 entity FIFO2UDP is
     Port ( 
-        clk_200                     : in std_logic;
+        clk                         : in std_logic;
         clk_125                     : in std_logic;
         destinationIP               : in std_logic_vector(31 downto 0);
         daq_data_in                 : in  std_logic_vector(63 downto 0);
@@ -177,9 +179,9 @@ begin
 
 
 -- process ot trigger ILAs
-trigger_proc: process (clk_200, vmmID_i, data_out_last)
+trigger_proc: process (clk, vmmID_i, data_out_last)
 begin
-    if rising_edge(clk_200) then
+    if rising_edge(clk) then
         if (vmmID_i = "000" and data_out_last = '1') then
             trigger <= '1';
         else
@@ -193,7 +195,7 @@ end process;
 daq_FIFO_instance: readout_fifo
     port map(
         rst         => reset_DAQ_FIFO,
-        wr_clk      => clk_200,
+        wr_clk      => clk,
         rd_clk      => clk_125,
         din         => daq_data_in,
         wr_en       => wr_en,

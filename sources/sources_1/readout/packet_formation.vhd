@@ -12,6 +12,7 @@
 -- Changelog:
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 -- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
+-- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
 --
 ----------------------------------------------------------------------------------
 
@@ -24,7 +25,7 @@ use UNISIM.VComponents.all;
 
 entity packet_formation is
     Port(
-        clk_200     : in std_logic;
+        clk         : in std_logic;
 
         newCycle    : in std_logic;
         
@@ -51,7 +52,7 @@ entity packet_formation is
         rst_FIFO    : out std_logic;
         
         latency     : in std_logic_vector(15 downto 0)
-        
+
         --trigger     : in std_logic -- is not used
     );
 end packet_formation;
@@ -64,7 +65,6 @@ architecture Behavioral of packet_formation is
     signal precCnt          : std_logic_vector(7 downto 0)  := x"00"; --( others => '0' );
     signal globBcid_i       : std_logic_vector(15 downto 0);
     signal globBCID_etr		: std_logic_vector(11 downto 0) := (others => '0'); --globBCID counter as it is coming from ETR
-    --signal eventCounter_i   : std_logic_vector(31 downto 0) := ( others => '0' );
     signal eventCounter_i   : unsigned(31 downto 0) := to_unsigned(0, 32);
     signal wait_Cnt         : integer := 0;
     signal vmmId_cnt        : integer := 0;
@@ -83,8 +83,9 @@ architecture Behavioral of packet_formation is
     signal packLen_cnt      : unsigned(11 downto 0) := x"000";
     signal end_packet_int   : std_logic                     := '0';
 
-    type stateType is (waitingForNewCycle, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, triggerVmmReadout, waitForData, 
-                       sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, isUDPDone, isTriggerOff);
+    type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
+                       triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, isUDPDone,
+                       isTriggerOff);
     signal state            : stateType;
 
 --------------------  Debugging ------------------------------
@@ -156,14 +157,22 @@ architecture Behavioral of packet_formation is
 
 begin
 
-packetCaptureProc: process(clk_200, newCycle, vmmEventDone, vmmWordReady, wait_Cnt, UDPDone)
+packetCaptureProc: process(clk, newCycle, vmmEventDone, vmmWordReady, wait_Cnt, UDPDone)
 begin
--- Upon a signal from trigger capture the current global BCID
-    if rising_edge(clk_200) then
+
+    if rising_edge(clk) then
         if reset = '1' then
-            --eventCounter_i	<= x"00000000";
-            eventCounter_i	<= to_unsigned(0, 32);
-            pfBusy_i		<= '0';
+            debug_state             <= "11111";
+            eventCounter_i          <= to_unsigned(0, 32);
+            pfBusy_i		        <= '0';
+            triggerVmmReadout_i     <= '0';
+            rst_FIFO                <= '1';
+            daqFIFO_wr_en           <= '0';
+            packLen_cnt             <= x"000";
+            wait_Cnt                <= 0;
+            triggerVmmReadout_i     <= '0';
+            end_packet_int          <= '0';
+            state                   <= waitingForNewCycle;
         else
         case state is
             when waitingForNewCycle =>
@@ -175,15 +184,17 @@ begin
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
                 	daqFIFO_wr_en   <= '0';
-                	state           <= waitForLatency;
---                else
---                    tr_hold         <= '0';
+                	state           <= increaseCounter;
+                else
+                    tr_hold         <= '0';
                 end if;
                 
-            when waitForLatency =>
+            when increaseCounter =>
                 debug_state <= "00001";
                 eventCounter_i  <= eventCounter_i + 1;
                 state           <= captureEventID;
+--            when waitForLatency =>
+--                    debug_state <= "00001";
 --                tr_hold         <= '1';                 -- Prevent new triggers
 --                if trigLatencyCnt > trigLatency then 
 --                    state           <= captureEventID;
@@ -201,7 +212,6 @@ begin
             when captureEventID =>      -- Form Header
                 debug_state             <= "00011";
                 packLen_cnt             <= x"000";
-                rst_FIFO                <= '0';
                 header(63 downto 32)    <= std_logic_vector(eventCounter_i);
                 header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";
                                         --    8    &    16    &     5    &   3
@@ -225,9 +235,9 @@ begin
                 daqFIFO_wr_en   <= '0';
                 state           <= triggerVmmReadout;
 
-            when triggerVmmReadout =>   -- Creates an 100ns pulse to trigger the readout
+            when triggerVmmReadout =>   -- Creates an 136ns pulse to trigger the readout
                 debug_state                 <= "00111";
-                if wait_Cnt < 13 then
+                if wait_Cnt < 17 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
                 else
@@ -322,7 +332,7 @@ begin
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
                 debug_state <= "01111";
                 end_packet_int  <= '0';
-                --tr_hold         <= '0';     -- Allow new triggers
+                tr_hold         <= '0';     -- Allow new triggers
                 if newCycle /= '1' then
                     tr_hold         <= '0';
                     state           <= waitingForNewCycle;
@@ -351,7 +361,7 @@ end process;
 
 ilaPacketFormation: ila_pf
 port map(
-    clk                     =>  clk_200,
+    clk                     =>  clk,
     probe0                  =>  probe0_out,
     probe1                  =>  probe1_out
 );

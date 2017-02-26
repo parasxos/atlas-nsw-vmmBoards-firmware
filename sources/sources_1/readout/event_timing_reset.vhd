@@ -27,7 +27,7 @@ use UNISIM.vcomponents.all;
 entity event_timing_reset is
 	port(
 		hp_clk          : in std_logic;     -- High precision clock 1 GHz
-		clk_200         : in std_logic;
+		clk             : in std_logic;     -- Main clock
 		clk_10_phase45  : in std_logic;     -- Drives the reset
 		bc_clk          : in std_logic;     -- 40MHz
 
@@ -109,9 +109,9 @@ begin
     end if;
 end process;
 
-latchResetProc: process (clk_200, rst_done, rst_done_pre, reset, rst_i)
+latchResetProc: process (clk, rst_done, rst_done_pre, reset, rst_i)
 begin
-    if rising_edge(clk_200) then
+    if rising_edge(clk) then
         if rst_done = '0' and rst_done_pre = '1' then
             reset_latched_i <= '0';
         elsif reset = '1' then
@@ -122,9 +122,9 @@ begin
     end if;
 end process;
 
-latchResetProcAuxiliary: process (clk_200, rst_done)
+latchResetProcAuxiliary: process (clk, rst_done)
 begin
-    if rising_edge(clk_200) then
+    if rising_edge(clk) then
         rst_done_pre    <= rst_done;
     end if;
 end process;

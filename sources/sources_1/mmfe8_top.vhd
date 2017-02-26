@@ -17,8 +17,7 @@
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added Dynamic IP configuration. (Lev Kurilenko)
 -- 16.02.2017 Added new configuration component (udp_data_in_handler). Changes
--- at flow_fsm and axi4-spi flash module.
---
+-- at flow_fsm and axi4-spi flash module.  --
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -188,12 +187,12 @@ entity mmfe8_top is
 end mmfe8_top;
 
 architecture Behavioral of mmfe8_top is
-
-    -- IP and MAC address of the MMFE8
-    signal myIP   : std_logic_vector(31 downto 0) := x"c0a80002";    
-    signal myMAC  : std_logic_vector(47 downto 0) := x"002320212223";
-    signal destIP : std_logic_vector(31 downto 0) := x"c0a80010";    
-
+    
+  -- Default IP, MAC, and destIP Specification
+  signal default_IP   : std_logic_vector(31 downto 0) := x"c0a80002";
+  signal default_MAC  : std_logic_vector(47 downto 0) := x"002320212223";
+  signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
+    
   -- clock generation signals for tranceiver
   signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.
   signal txoutclk              : std_logic;                    -- txoutclk from GT transceiver
@@ -574,7 +573,10 @@ architecture Behavioral of mmfe8_top is
     signal ss_i                 : std_logic_vector(0 DOWNTO 0):=(others => '0');  
     signal ss_o                 : std_logic_vector(0 DOWNTO 0):=(others => '0');  
     signal ss_t                 : std_logic:= '0'; 
-
+    signal myIP                 : std_logic_vector(31 downto 0);
+    signal myMAC                : std_logic_vector(47 downto 0);
+    signal destIP               : std_logic_vector(31 downto 0);
+    
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -1310,6 +1312,10 @@ architecture Behavioral of mmfe8_top is
         myMAC                   : out std_logic_vector(47 downto 0);
         destIP                  : out std_logic_vector(31 downto 0);
         
+        default_IP              : in std_logic_vector(31 downto 0);
+        default_MAC             : in std_logic_vector(47 downto 0);
+        default_destIP          : in std_logic_vector(31 downto 0);
+        
         myIP_set                : in std_logic_vector(31 downto 0);
         myMAC_set               : in std_logic_vector(47 downto 0);
         destIP_set              : in std_logic_vector(31 downto 0);
@@ -1895,6 +1901,10 @@ axi4_spi_instance: AXI4_SPI
         myIP                   => myIP,
         myMAC                  => myMAC,
         destIP                 => destIP,
+        
+        default_IP             => default_IP,
+        default_MAC            => default_MAC,
+        default_destIP         => default_destIP,
         
         myIP_set               => myIP_set,
         myMAC_set              => myMAC_set,

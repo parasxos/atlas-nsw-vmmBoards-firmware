@@ -45,7 +45,6 @@ entity vmm_readout is
 
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
-            enable_ckbc             : out std_logic;
             vmmEventDone            : out std_logic
            );
 end vmm_readout;
@@ -191,7 +190,6 @@ begin
 				    when x"3" =>
 				        if (reading_out_word_ff_tk = '0') then
 				            vmm_cktk_i      <= '1';
-				            enable_ckbc     <= '0';
 				            hitsLen_cnt     <= hitsLen_cnt + 1;
 				            dt_state        <= x"4";
 				        else
@@ -245,7 +243,6 @@ begin
         else
             vmm_ena_i     <= '0';
 		    vmm_wen_i     <= '0';
-		    enable_ckbc   <= '1';
         end if;
     end if;
 end process;

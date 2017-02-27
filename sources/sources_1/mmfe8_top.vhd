@@ -376,7 +376,6 @@ architecture Behavioral of mmfe8_top is
   signal cnt_reset          : integer := 0;
   signal set_reset          : std_logic := '0';
   signal art_in_i           : std_logic := '0';
-  signal enable_CKBC        : std_logic := '1';
   signal clk_160            : std_logic;
   signal TKI_i              : std_logic := '0';
   signal first_cktp         : integer := 0;
@@ -728,9 +727,6 @@ architecture Behavioral of mmfe8_top is
     attribute keep of art_in_i                  : signal is "TRUE";
     attribute dont_touch of art_in_i            : signal is "TRUE";
     
-    attribute keep of enable_CKBC               : signal is "TRUE";
-    attribute dont_touch of enable_CKBC         : signal is "TRUE";  
-    
     attribute keep of vmm_ckbc                  : signal is "TRUE";
     attribute dont_touch of vmm_ckbc            : signal is "TRUE";  
     
@@ -899,7 +895,6 @@ architecture Behavioral of mmfe8_top is
             
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
-            enable_ckbc             : out std_logic;
             vmmEventDone            : out std_logic
         );
     end component;
@@ -1675,7 +1670,6 @@ readout_vmm: vmm_readout
         
         vmmWordReady            => vmmWordReady_i,
         vmmWord                 => vmmWord_i,
-        enable_ckbc             => enable_ckbc,
         vmmEventDone            => vmmEventDone_i
     );
 
@@ -2435,7 +2429,7 @@ ila_top: ila_top_level
     flowProbe(21 downto 14)     <= daq_vmm_ena_wen_enable;
     flowProbe(22)               <= daqFIFO_reset;
     flowProbe(23)               <= rstFIFO_top;
-    flowProbe(24)               <= enable_CKBC;
+    flowProbe(24)               <= ckbc_enable;
     flowProbe(63 downto 25)     <= (others => '0');     
 
 end Behavioral;

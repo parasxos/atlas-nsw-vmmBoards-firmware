@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
 -- Company: NTU Athens - BNL
 -- Engineer: Christos Bakalis (christos.bakalis@cern.ch) 
 -- 
@@ -18,8 +18,9 @@
 -- 31.01.2017 The serialization now starts with a signal coming from the master FSM 
 -- and the MUX select signal is being reset between packets. (Christos Bakalis)
 -- 08.02.2017 Broke down the processes into two sub-components. (Christos Bakalis)
+-- 27.02.2017 Changes to integrate with new flow_fsm clock (125 Mhz). (Christos Bakalis)
 --
-----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
@@ -167,10 +168,7 @@ architecture RTL of udp_data_in_handler is
     signal fpgaPacket_rdy   : std_logic := '0';
     signal init_ser         : std_logic := '0';
     signal init_ser_s40     : std_logic := '0';
-    signal top_rdy_s125     : std_logic := '0';
     signal top_rdy_s40      : std_logic := '0';
-    signal flash_busy_s125  : std_logic := '0';
-    signal xadc_busy_s125   : std_logic := '0';
     
     type masterFSM is (ST_IDLE, ST_CHK_PORT, ST_COUNT, ST_WAIT_FOR_BUSY, ST_WAIT_FOR_IDLE, ST_RESET_FIFO, ST_WAIT_FOR_SCK_FSM, ST_ERROR);
     signal st_master : masterFSM := ST_IDLE;
@@ -178,6 +176,7 @@ architecture RTL of udp_data_in_handler is
     ---- Uncomment the following to add signals to ILA debugging core
     -----------------------------------------------------------------
     --attribute mark_debug : string;
+    --attribute keep       : string;
 
     --attribute mark_debug of latency                   : signal is "true";
     --attribute mark_debug of fpga_rst_conf             : signal is "true";
@@ -204,6 +203,8 @@ architecture RTL of udp_data_in_handler is
     --attribute mark_debug of vmm_id_xadc               : signal is "true";
     --attribute mark_debug of xadc_sample_size          : signal is "true";
     --attribute mark_debug of xadc_delay                : signal is "true";
+    --attribute mark_debug of conf_state                : signal is "true";
+    --attribute keep of conf_state                      : signal is "true";
 
     --attribute mark_debug of user_data_prv     : signal is "true";
     --attribute mark_debug of user_valid_prv    : signal is "true";
@@ -326,10 +327,10 @@ begin
             -- or wait for sub-process to finish
             when ST_WAIT_FOR_BUSY =>
                 conf_state  <= "011";
-                if(xadcPacket_rdy = '1' and xadc_busy_s125 = '1')then
+                if(xadcPacket_rdy = '1' and xadc_busy = '1')then
                     xadc_conf   <= '0';
                     st_master   <= ST_WAIT_FOR_IDLE;
-                elsif(flashPacket_rdy = '1' and flash_busy_s125 = '1')then
+                elsif(flashPacket_rdy = '1' and flash_busy = '1')then
                     flash_conf  <= '0';
                     st_master   <= ST_WAIT_FOR_IDLE;
                 elsif(fpgaPacket_rdy = '1' and udp_rx.data.data_in_valid = '0')then -- no need to wait, jump to idle state
@@ -346,7 +347,7 @@ begin
             -- wait for corresponding sub-module to finish processing    
             when ST_WAIT_FOR_IDLE =>
                 conf_state  <= "100";
-                if(xadc_busy_s125 = '0' and flash_busy_s125 = '0' and udp_rx.data.data_in_valid = '0')then
+                if(xadc_busy = '0' and flash_busy = '0' and udp_rx.data.data_in_valid = '0')then
                     st_master <= ST_IDLE;
                 else
                     st_master <= ST_WAIT_FOR_IDLE;
@@ -356,7 +357,7 @@ begin
             -- only when flow_fsm and cktk_fsm are in the appropriate states
             when ST_RESET_FIFO =>
                 conf_state  <= "101";
-                if(vmmSer_done_s125 = '1' and top_rdy_s125 = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
+                if(vmmSer_done_s125 = '1' and top_rdy = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
                     rst_fifo    <= '1';
                     init_ser    <= '0';
                     st_master   <= ST_WAIT_FOR_SCK_FSM;
@@ -456,54 +457,24 @@ vmm_config_logic: vmm_config_block
     xadc_rdy        <= xadcPacket_rdy;
     newIP_rdy       <= flashPacket_rdy;
     vmmConf_rdy     <= init_ser;
-    vmmConf_done    <= vmm_ser_done;
+    vmmConf_done    <= vmmSer_done_s125;
 
 ---------------------------------------------------------
 --------- Clock Domain Crossing Sync Block --------------
 ---------------------------------------------------------
-CDCC_200to125: CDCC
-    generic map(NUMBER_OF_BITS => 2)
-    port map(
-        clk_src         => clk_200,
-        clk_dst         => clk_125,
-
-        data_in(0)      => top_rdy,
-        data_in(1)      => xadc_busy,
-
-        data_out_s(0)   => top_rdy_s125,
-        data_out_s(1)   => xadc_busy_s125
-    );
-
-CDCC_50to125: CDCC
-    generic map(NUMBER_OF_BITS => 1)
-    port map(
-        clk_src         => clk_50,
-        clk_dst         => clk_125,
-
-        data_in(0)      => flash_busy,
-        data_out_s(0)   => flash_busy_s125
-    );
-
-CDCC_200to40: CDCC
-    generic map(NUMBER_OF_BITS => 1)
-    port map(
-        clk_src         => clk_200,
-        clk_dst         => clk_40,
-
-        data_in(0)      => top_rdy,
-        data_out_s(0)   => top_rdy_s40
-    );
 
 CDCC_125to40: CDCC
-    generic map(NUMBER_OF_BITS => 2)
+    generic map(NUMBER_OF_BITS => 3)
     port map(
         clk_src         => clk_125,
         clk_dst         => clk_40,
   
         data_in(0)      => init_ser,
         data_in(1)      => rst_fifo,
+        data_in(2)      => top_rdy,
         data_out_s(0)   => init_ser_s40,
-        data_out_s(1)   => rst_fifo_s40
+        data_out_s(1)   => rst_fifo_s40,
+        data_out_s(2)   => top_rdy_s40
     );
 
 CDCC_40to125: CDCC

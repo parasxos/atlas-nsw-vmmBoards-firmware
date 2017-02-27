@@ -407,6 +407,23 @@ set_property OFFCHIP_TERM NONE [get_ports IO0_IO]
 set_property OFFCHIP_TERM NONE [get_ports IO1_IO]
 set_property OFFCHIP_TERM NONE [get_ports SS_IO]
 
+#=================== ASYNC REG =======================================
+set_property ASYNC_REG true [get_cells CDCC_200to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_200to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_50to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_50to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_125to50/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to50/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells CDCC_125to40/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells CDCC_125to40/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+#=====================================================================
+
 #======================= SPI Flash Constraints =======================
 # You must provide all the delay numbers
 # CCLK delay is 0.5, 6.7 ns min/max for K7-2; refer Data sheet

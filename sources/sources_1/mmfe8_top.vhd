@@ -397,7 +397,6 @@ architecture Behavioral of mmfe8_top is
   signal end_packet_daq_int     : std_logic := '0';
   signal is_state           : std_logic_vector(3 downto 0)  := "1010";
   signal latency_conf       : std_logic_vector(15 downto 0) := x"0000";
-  signal udp_busy           : std_logic := '0';
   signal test               : std_logic := '0';
   signal count_test         : integer := 0;
   signal art_out            : std_logic := '0';
@@ -901,7 +900,6 @@ architecture Behavioral of mmfe8_top is
     -- 7
     component FIFO2UDP
         port ( 
-            clk                         : in std_logic;
             clk_125                     : in std_logic;
             destinationIP               : in std_logic_vector(31 downto 0);
             daq_data_in                 : in  std_logic_vector(63 downto 0);
@@ -917,7 +915,6 @@ architecture Behavioral of mmfe8_top is
             global_reset                : in  std_logic;
             packet_length_in            : in  std_logic_vector(11 downto 0);
             reset_DAQ_FIFO              : in  std_logic;
-            sending_o                   : out std_logic;
     
             vmmID                       : in  std_logic_vector(2 downto 0);
             
@@ -961,7 +958,6 @@ architecture Behavioral of mmfe8_top is
             dataout     : out std_logic_vector(63 downto 0);
             wrenable    : out std_logic;
             end_packet  : out std_logic;
-            udp_busy    : in std_logic;
             
             tr_hold     : out std_logic;
             reset       : in std_logic;
@@ -1715,7 +1711,6 @@ select_vmm_block: select_vmm
 
 FIFO2UDP_instance: FIFO2UDP
     Port map( 
-        clk                         => userclk2,
         clk_125                     => userclk2,
         destinationIP               => destIP,
         daq_data_in                 => daqFIFO_din_i,
@@ -1731,7 +1726,6 @@ FIFO2UDP_instance: FIFO2UDP
         global_reset                => glbl_rst_i,
         packet_length_in            => packet_length_int,
         reset_DAQ_FIFO              => daqFIFO_reset,
-        sending_o                   => udp_busy,
 
         vmmID                       => pf_vmmIdRo,
         
@@ -1758,7 +1752,6 @@ packet_formation_instance: packet_formation
         dataout         => daq_data_out_i,
         wrenable        => daq_wr_en_i,
         end_packet      => end_packet_daq_int,
-        udp_busy        => udp_busy,
         
         tr_hold         => tr_hold,
         reset           => pf_reset,
@@ -2022,13 +2015,13 @@ QSPI_SS_0: IOBUF
     -- 5. flow_fsm
 -------------------------------------------------------------------
 
-art_process: process(clk_200, art2)
+art_process: process(userclk2, art2)
 begin
-    if rising_edge(clk_200) then  
-        if art_cnt2 < 200 and art2 = '1' then 
+    if rising_edge(userclk2) then  
+        if art_cnt2 < 125 and art2 = '1' then 
             art_out_ff     <= '1';
             art_cnt2     <= art_cnt2 + 1;
-        elsif art_cnt2 = 200 then
+        elsif art_cnt2 = 125 then
             reset_FF    <= '1';
             art_cnt2     <= art_cnt2 + 1;
         else

@@ -13,8 +13,7 @@
 -- 22.08.2016 Changed vmm_data0_i to reading_out_word in dt_state x"5" to prevent soft reset
 -- during VMM readout (Reid Pinkham)
 -- 22.08.2016 Changed dt_cntr_intg (integer) to dt_cntr_st (4 bit vector) (Reid Pinkham)
--- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
--- 
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -28,7 +27,7 @@ entity vmm_readout is
     Port (
             clk_10_phase45          : in std_logic;     -- Used to clock checking for data process
             clk_50                  : in std_logic;     -- Used to clock word readout process
-            clk                     : in std_logic;     -- Main clock
+            clk_200                 : in std_logic;     -- Used for fast switching between processes
 
             vmm_data0_vec           : in std_logic_vector(8 downto 1);     -- Single-ended data0 from VMM
             vmm_data1_vec           : in std_logic_vector(8 downto 1);     -- Single-ended data1 from VMM
@@ -45,6 +44,7 @@ entity vmm_readout is
 
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
+            enable_ckbc             : out std_logic;
             vmmEventDone            : out std_logic
            );
 end vmm_readout;
@@ -52,17 +52,10 @@ end vmm_readout;
 architecture Behavioral of vmm_readout is
 
     -- readoutControlProc
-	signal reading_out_word        : std_logic := '0';
-	signal reading_out_word_tk     : std_logic := '0';
-	signal reading_out_word_ff_tk  : std_logic := '0';
-	signal reading_out_word_dt     : std_logic := '0';
-	signal reading_out_word_ff_dt  : std_logic := '0';
+	signal reading_out_word		: std_logic := '0';
 
     -- tokenProc
 	signal dt_state				: std_logic_vector( 3 DOWNTO 0 )	:= ( others => '0' );
-	signal daq_enable_i         : std_logic := '0';
-	signal daq_enable_stage1    : std_logic := '0';
-	signal daq_enable_ff_sync   : std_logic := '0';
     signal vmm_wen_i            : std_logic := '0';
     signal vmm_ena_i            : std_logic := '0';
     signal vmm_cktk_i           : std_logic := '0';
@@ -99,6 +92,7 @@ architecture Behavioral of vmm_readout is
     -- Internal signal direct assign from ports
 	signal vmm_data0_i          : std_logic := '0';
     signal vmm_data1_i          : std_logic := '0';
+    signal daq_enable_i         : std_logic := '0';
 
     -- Debugging
     signal probe0_out           : std_logic_vector(127 DOWNTO 0);
@@ -155,21 +149,21 @@ end component;
 
 begin
 
-readoutControlProc: process(clk, dt_done, vmm_data0_i)
+readoutControlProc: process(clk_200, dt_done, vmm_data0_i)
 begin
     if (dt_done = '1') then
         reading_out_word    <= '0';     -- readoutProc done, stop it
     end if;
-    if (vmm_data0_i = '1' and daq_enable_ff_sync = '1') then
+    if (vmm_data0_i = '1' and daq_enable_i = '1') then
         reading_out_word    <= '1';     -- new data, trigger readoutProc
     end if;
 end process;
 
 -- by using this clock the CKTK strobe has f=5MHz (T=200ns, D=50%, phase=45deg)
-tokenProc: process(clk_10_phase45, daq_enable_ff_sync, dt_done, vmm_data0_i, trigger_pulse)
+tokenProc: process(clk_10_phase45, daq_enable_i, dt_done, vmm_data0_i, trigger_pulse)
 begin
     if (rising_edge(clk_10_phase45)) then
-        if (daq_enable_ff_sync = '1') then
+        if (daq_enable_i = '1') then
                 case dt_state is
 
 				    when x"0" =>
@@ -188,8 +182,9 @@ begin
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"3";
 				    when x"3" =>
-				        if (reading_out_word_ff_tk = '0') then
+				        if (reading_out_word = '0') then
 				            vmm_cktk_i      <= '1';
+				            enable_ckbc     <= '0';
 				            hitsLen_cnt     <= hitsLen_cnt + 1;
 				            dt_state        <= x"4";
 				        else
@@ -200,7 +195,7 @@ begin
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"5";
     				when x"5" =>
-                        if (reading_out_word_ff_tk = '1') then        -- Data presence: wait for read out to finish
+                        if (reading_out_word = '1') then        -- Data presence: wait for read out to finish
                             NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         else
@@ -243,15 +238,16 @@ begin
         else
             vmm_ena_i     <= '0';
 		    vmm_wen_i     <= '0';
+		    enable_ckbc   <= '1';
         end if;
     end if;
 end process;
 
 -- by using this clock the CKDT strobe has f=25MHz (T=40ns, D=50%, phase=0deg) to clock in data0 and data1
-readoutProc: process(clk_50, reading_out_word_ff_dt)
+readoutProc: process(clk_50, reading_out_word)
 begin
     if rising_edge(clk_50) then
-        if (reading_out_word_ff_dt = '1') then
+        if (reading_out_word = '1') then
 
             case dt_cntr_st is
                 when x"0" =>                               -- Initiate values
@@ -316,39 +312,21 @@ begin
     end if;
 end process;
 
-packetFormationSynchronizer: process(clk)
+process(clk_200)
 begin
-    if rising_edge(clk) then 
+    if rising_edge(clk_200) then 
         vmmEventDone_stage1     <= vmmEventDone_i;
         vmmEventDone_ff_sync    <= vmmEventDone_stage1;
         vmmWordReady_stage1     <= vmmWordReady_i;
         vmmWordReady_ff_sync    <= vmmWordReady_stage1;
-        daq_enable_stage1       <= daq_enable_i;
-        daq_enable_ff_sync      <= daq_enable_stage1;
     end if;
 end process;
 
-tokenProcSynchronizer: process(clk_10_phase45)
-begin
-    if rising_edge(clk_10_phase45) then 
-        reading_out_word_tk         <= reading_out_word;
-        reading_out_word_ff_tk      <= reading_out_word_tk;
-    end if;
-end process;
-
-readoutProcSynchronizer: process(clk_50)
-begin
-    if rising_edge(clk_50) then 
-        reading_out_word_dt         <= reading_out_word;
-        reading_out_word_ff_dt      <= reading_out_word_dt;
-    end if;
-end process;
-
-    daq_enable_i        <= daq_enable;
     vmmEventDone        <= vmmEventDone_ff_sync;
     vmmWordReady        <= vmmWordReady_ff_sync;
     vmm_cktk            <= vmm_cktk_i;              -- Used
     vmm_ckdt            <= vmm_ckdt_i;              -- Used
+    daq_enable_i        <= daq_enable;              -- Used
     vmm_data0_i         <= vmm_data0;               -- Used
     vmm_data1_i         <= vmm_data1;               -- Used
     vmmWord             <= vmmWord_i;               -- Used
@@ -372,7 +350,7 @@ port map(
 ilaDAQ: ila_readout
 port map
     (
-        clk                     =>  clk,
+        clk                     =>  clk_200,
         probe0                  =>  probe0_out
     );
 
@@ -381,7 +359,7 @@ port map
     probe0_out(7 downto 5)      <=  std_logic_vector(to_unsigned(NoFlg, probe0_out(7 downto 5)'length));            -- OK
     probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
     probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                     -- OK
-    probe0_out(15)              <=  daq_enable_ff_sync;                                                             -- OK
+    probe0_out(15)              <=  daq_enable_i;                                                                   -- OK
     probe0_out(16)              <=  reading_out_word;                                                               -- OK
     probe0_out(17)              <=  dt_done;                                                                        -- OK
     probe0_out(18)              <=  vmm_ckdt_i;                                                                     -- OK

@@ -43,7 +43,6 @@ entity packet_formation is
         dataout     : out std_logic_vector(63 downto 0);
         wrenable    : out std_logic;
         end_packet  : out std_logic;
-        udp_busy    : in std_logic;
         
         tr_hold     : out std_logic;
         reset       : in std_logic;
@@ -75,8 +74,8 @@ architecture Behavioral of packet_formation is
     signal daqFIFO_wr_en        : std_logic                     := '0';
     signal daqFIFO_wr_en_i      : std_logic                     := '0';
     signal daqFIFO_din          : std_logic_vector(63 downto 0) := ( others => '0' );
-    signal daqFIFO_din_i        : std_logic_vector(63 downto 0) := ( others => '0' );
     signal triggerVmmReadout_i  : std_logic := '0';
+    signal selectDataInput      : std_logic := '0';
 
     signal vmmWord_i        : std_logic_vector(63 downto 0) := ( others => '0' );
     signal packLen_i        : std_logic_vector(11 downto 0) := x"000";
@@ -96,8 +95,6 @@ architecture Behavioral of packet_formation is
 
 ----------------------  Debugging ------------------------------
     attribute mark_debug : string;
-    attribute dont_touch : string;
-    attribute keep : string;
 
     attribute mark_debug of header                :    signal    is    "true";
     attribute mark_debug of globBcid              :    signal    is    "true";
@@ -111,32 +108,6 @@ architecture Behavioral of packet_formation is
     attribute mark_debug of end_packet_int        :    signal    is    "true";
     attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
     attribute mark_debug of debug_state           :    signal    is    "true";
-
-    attribute dont_touch of header                :    signal    is    "true";
-    attribute dont_touch of globBcid              :    signal    is    "true";
-    attribute dont_touch of globBcid_i            :    signal    is    "true";
-    attribute dont_touch of precCnt               :    signal    is    "true";
-    attribute dont_touch of vmmId_i               :    signal    is    "true";
-    attribute dont_touch of daqFIFO_din           :    signal    is    "true";
-    attribute dont_touch of vmmWord_i             :    signal    is    "true";
-    attribute dont_touch of packLen_i             :    signal    is    "true";
-    attribute dont_touch of packLen_cnt           :    signal    is    "true";
-    attribute dont_touch of end_packet_int        :    signal    is    "true";
-    attribute dont_touch of triggerVmmReadout_i   :    signal    is    "true";
-    attribute dont_touch of debug_state           :    signal    is    "true";
-    attribute dont_touch of eventCounter_i        :    signal    is    "true";
-
-    attribute keep of header                :	signal	is	"true";
-    attribute keep of globBcid              :	signal	is	"true";
-    attribute keep of globBcid_i            :	signal	is	"true";
-    attribute keep of precCnt               :	signal	is	"true";
-    attribute keep of vmmId_i               :	signal	is	"true";
-    attribute keep of daqFIFO_din           :   signal  is  "true";
-    attribute keep of vmmWord_i             :   signal  is  "true";
-    attribute keep of packLen_i             :   signal  is  "true";
-    attribute keep of packLen_cnt           :   signal  is  "true";
-    attribute keep of end_packet_int        :   signal  is  "true";
-    attribute keep of triggerVmmReadout_i   :   signal  is  "true";   
 
     component ila_pf
     port (
@@ -172,6 +143,7 @@ begin
             wait_Cnt                <= 0;
             triggerVmmReadout_i     <= '0';
             end_packet_int          <= '0';
+            selectDataInput         <= '0';
             state                   <= waitingForNewCycle;
         else
         case state is
@@ -181,6 +153,7 @@ begin
                 triggerVmmReadout_i     <= '0';
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
+                selectDataInput         <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
                 	daqFIFO_wr_en   <= '0';
@@ -212,16 +185,12 @@ begin
             when captureEventID =>      -- Form Header
                 debug_state             <= "00011";
                 packLen_cnt             <= x"000";
-                header(63 downto 32)    <= std_logic_vector(eventCounter_i);
-                header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";
-                                        --    8    &    16    &     5    &   3
                 state                   <= setEventID;
                 
             when setEventID =>
                 debug_state             <= "00100";
                 rst_FIFO                <= '0';
                 daqFIFO_wr_en           <= '0';
-                daqFIFO_din             <= header;
                 state                   <= sendHeaderStep1;
 
             when sendHeaderStep1 =>
@@ -237,7 +206,8 @@ begin
 
             when triggerVmmReadout =>   -- Creates an 136ns pulse to trigger the readout
                 debug_state                 <= "00111";
-                if wait_Cnt < 17 then
+                selectDataInput <= '1';
+                if wait_Cnt < 30 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
                 else
@@ -249,7 +219,6 @@ begin
             when waitForData =>
                 debug_state <= "01000";
                 if (vmmWordReady = '1') then
-                    daqFIFO_din     <= vmmWord_i;
                     daqFIFO_wr_en   <= '0';
                     state           <= sendVmmDataStep1;
                 elsif (vmmEventDone = '1') then
@@ -282,21 +251,12 @@ begin
             when sendTrailer =>
                 debug_state     <= "01100";
                 packLen_i       <= std_logic_vector(packLen_cnt);
-                daqFIFO_wr_en   <= '0';
-                wait_Cnt        <= 0;
                 state           <= packetDone;
 
-            when packetDone =>                  -- Wait for FIFO2UDP to get synced
-                debug_state <= "01101";
-                if wait_Cnt < 2 then
-                    wait_Cnt        <= wait_Cnt + 1;
-                    end_packet_int  <= '1';
-                    daqFIFO_wr_en   <= '0';
-                else
-                    wait_Cnt        <= 0;
-                    end_packet_int  <= '0';
-                    state           <= isUDPDone;
-                end if;
+            when packetDone =>
+                debug_state     <= "01101";
+                end_packet_int  <= '1';
+                state           <= isUDPDone;
 
 --            when eventDone =>
 --                debug_state <= "01110";
@@ -323,16 +283,15 @@ begin
 
             when isUDPDone =>
                 debug_state 	<= "01110";
+                end_packet_int  <= '0';
                 pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for the UDP packet to be sent
                     state       <= isTriggerOff;
-
                 end if;
                 
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
                 debug_state <= "01111";
-                end_packet_int  <= '0';
-                tr_hold         <= '0';     -- Allow new triggers
+                --tr_hold         <= '0';     -- Allow new triggers
                 if newCycle /= '1' then
                     tr_hold         <= '0';
                     state           <= waitingForNewCycle;
@@ -344,6 +303,18 @@ begin
         end case;
     end if;
 end if;
+end process;
+
+muxFIFOData: process(selectDataInput, header, vmmWord_i)
+begin
+case selectDataInput is
+    when '0' =>
+        daqFIFO_din     <= header;
+    when '1' =>
+        daqFIFO_din     <= vmmWord_i;
+    when others =>
+        daqFIFO_din     <= header;
+    end case;
 end process;
 
     globBcid_i      <= globBcid;
@@ -358,6 +329,9 @@ end process;
     trigLatency     <= to_integer(unsigned(latency));
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
+    header(63 downto 32)    <= std_logic_vector(eventCounter_i);
+    header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";  
+                            --    8    &    16    &     5    &   3
 
 ilaPacketFormation: ila_pf
 port map(
@@ -367,12 +341,12 @@ port map(
 );
 
     probe0_out(63 downto 0)             <= header;             -- OK
-    probe0_out(127 downto 64)           <= vmmWord_i;          -- OK
+    probe0_out(127 downto 64)           <= (others => '0');          -- OK
     probe0_out(128)                     <= '0';
     probe0_out(129)                     <= '0';
     probe0_out(132 downto 130)          <= vmmId_i;
 
-    probe1_out(63 downto 0)             <= daqFIFO_din;        -- OK
+    probe1_out(63 downto 0)             <= (others => '0');--daqFIFO_din;        -- OK
     probe1_out(64)                      <= vmmWordReady;       -- OK
     probe1_out(65)                      <= vmmEventDone;       -- OK
     probe1_out(66)                      <= daqFIFO_wr_en_i;    -- OK
@@ -382,7 +356,7 @@ port map(
     probe1_out(92)                      <= end_packet_int;        -- Not tested
     probe1_out(93)                      <= triggerVmmReadout_i;    --Not tested
     probe1_out(109 downto 94)           <= latency;
-    probe1_out(110)                     <= udp_busy;
+    probe1_out(110)                     <= '0';
     probe1_out(142 downto 111)          <= std_logic_vector(eventCounter_i);
     probe1_out(147 downto 143)          <= debug_state;
     

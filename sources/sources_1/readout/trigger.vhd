@@ -11,7 +11,8 @@
 --
 -- Changelog:
 -- 18.08.2016 Added tr_hold signal to hold trigger when reading out (Reid Pinkham)
--- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
+-- 26.02.2017 Moved to a global clock domain @125MHz (Paris)
+-- 27.02.2017 Synced trout
 --
 ----------------------------------------------------------------------------------
 
@@ -48,8 +49,10 @@ architecture Behavioral of trigger is
     signal mode              : std_logic;
     signal trint_pre         : std_logic                        := '0';
     signal trext_pre         : std_logic                        := '0';
+    signal trext_stage1      : std_logic := '0';
+    signal trext_ff_synced   : std_logic := '0';    
+    signal tren_buff         : std_logic                         := '0'; -- buffered enable signal
     
-    signal tren_buff        : std_logic                         := '0'; -- buffered enable signal
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
 --    signal hold_state       : std_logic_vector(3 downto 0);
 --    signal hold_cnt         : std_logic_vector(31 downto 0);
@@ -180,7 +183,7 @@ changeModeCommandProc: process (clk, reset, tren_buff, trmode)
         end if;
     end process;
 
-triggerDistrSignalProc: process (reset, mode, trext, trint)
+triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint)
     begin
         if reset = '1' then
             tr_out_i            <= '0';
@@ -194,9 +197,9 @@ triggerDistrSignalProc: process (reset, mode, trext, trint)
                     tr_out_i            <= '0';
                 end if;
             else
-                if (tren_buff = '1' and trmode = '1' and trext = '1') then
+                if (tren_buff = '1' and trmode = '1' and trext_ff_synced = '1') then
                     tr_out_i            <= '1';
-                elsif (trmode = '1' and trext = '0') then
+                elsif (trmode = '1' and trext_ff_synced = '0') then
                     tr_out_i            <= '0';
                 else
                     tr_out_i            <= '0';
@@ -205,6 +208,13 @@ triggerDistrSignalProc: process (reset, mode, trext, trint)
         end if;
     end process;
 
+externalTriggerSynchronizer: process(clk, trext, trext_stage1)
+begin
+    if rising_edge(clk) then 
+        trext_stage1    <= trext;
+        trext_ff_synced <= trext_stage1;
+    end if;
+end process;
 
 eventCounterProc: process (clk, reset, mode, trext, trint)
     begin

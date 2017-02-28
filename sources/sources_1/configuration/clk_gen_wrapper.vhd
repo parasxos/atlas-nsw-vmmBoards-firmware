@@ -37,6 +37,7 @@ entity clk_gen_wrapper is
         ----- Configuration Interface ------
         ckbc_ready          : in  std_logic;
         cktp_enable         : in  std_logic;
+        cktp_primary        : in  std_logic;
         cktp_pulse_width    : in  std_logic_vector(31 downto 0);
         cktp_period         : in  std_logic_vector(31 downto 0);
         cktp_skew           : in  std_logic_vector(15 downto 0);        
@@ -52,14 +53,15 @@ architecture RTL of clk_gen_wrapper is
 
     component cktp_gen
     port(
-        clk_160     : in  std_logic;
-        cktp_start  : in  std_logic;
-        vmm_ckbc    : in  std_logic; -- CKBC clock currently dynamic
-        ckbc_freq   : in  std_logic_vector(7 downto 0);
-        skew        : in  std_logic_vector(15 downto 0);
-        pulse_width : in  std_logic_vector(31 downto 0);
-        period      : in  std_logic_vector(31 downto 0);
-        CKTP        : out std_logic
+        clk_160         : in  std_logic;
+        cktp_start      : in  std_logic;
+        vmm_ckbc        : in  std_logic; -- CKBC clock currently dynamic
+        cktp_primary    : in  std_logic;
+        ckbc_freq       : in  std_logic_vector(7 downto 0);
+        skew            : in  std_logic_vector(15 downto 0);
+        pulse_width     : in  std_logic_vector(31 downto 0);
+        period          : in  std_logic_vector(31 downto 0);
+        CKTP            : out std_logic
     );
     end component;
 
@@ -111,14 +113,15 @@ CKBC_BUFGCE: BUFGCE
 
 cktp_generator: cktp_gen
     port map(
-        clk_160     => clk_160,
-        cktp_start  => cktp_start,
-        vmm_ckbc    => CKBC_glbl,
-        ckbc_freq   => ckbc_freq,
-        skew        => skew_cktp_gen,
-        pulse_width => cktp_pulse_width,
-        period      => cktp_period,
-        CKTP        => CKTP_from_gen
+        clk_160         => clk_160,
+        cktp_start      => cktp_start,
+        cktp_primary    => cktp_primary,
+        vmm_ckbc        => CKBC_preBuf, -- CKBC_glbl
+        ckbc_freq       => ckbc_freq,
+        skew            => skew_cktp_gen,
+        pulse_width     => cktp_pulse_width,
+        period          => cktp_period,
+        CKTP            => CKTP_from_gen
     );
 
     

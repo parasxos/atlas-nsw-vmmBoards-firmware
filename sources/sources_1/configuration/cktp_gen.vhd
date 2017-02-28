@@ -15,6 +15,7 @@
 -- Changelog: 
 -- 20.02.2017 Added dynamic CKBC input frequency and reset circuitry. Changed the input
 -- clock frequency to 160 Mhz. (Christos Bakalis)
+-- 27.02.2017 Added cktp_primary signal from flow_fsm. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------------
 
@@ -28,14 +29,15 @@ use ieee.numeric_std.all;
 
 entity cktp_gen is
     port(
-        clk_160     : in  std_logic;
-        cktp_start  : in  std_logic;
-        vmm_ckbc    : in  std_logic; -- CKBC clock currently dynamic
-        ckbc_freq   : in  std_logic_vector(7 downto 0);
-        skew        : in  std_logic_vector(15 downto 0);
-        pulse_width : in  std_logic_vector(31 downto 0);
-        period      : in  std_logic_vector(31 downto 0);
-        CKTP        : out std_logic
+        clk_160         : in  std_logic;
+        cktp_start      : in  std_logic;
+        cktp_primary    : in  std_logic;
+        vmm_ckbc        : in  std_logic; -- CKBC clock currently dynamic
+        ckbc_freq       : in  std_logic_vector(7 downto 0);
+        skew            : in  std_logic_vector(15 downto 0);
+        pulse_width     : in  std_logic_vector(31 downto 0);
+        period          : in  std_logic_vector(31 downto 0);
+        CKTP            : out std_logic
     );
 end cktp_gen;
 
@@ -48,6 +50,8 @@ architecture Behavioral of cktp_gen is
     signal vmm_cktp                     : std_logic := '0';
     signal cktp_start_i                 : std_logic := '0';            -- Internal connection to 2-Flip-Flop Synchronizer
     signal cktp_start_sync              : std_logic := '0';            -- Synchronized output from Synchronizer
+    signal cktp_primary_i               : std_logic := '0';
+    signal cktp_primary_sync            : std_logic := '0';
     signal cktp_start_aligned           : std_logic := '0';            -- CKTP_start signal aligned to CKBC clock
     signal align_cnt                    : unsigned(7 downto 0) := (others => '0');         -- Used for aligning with the CKBC
     signal align_cnt_thresh             : unsigned(7 downto 0) := (others => '0');
@@ -113,6 +117,9 @@ testPulse_proc: process(clk_160) -- 160 MHz
                 cktp_start_i <= cktp_start;
                 cktp_start_sync <= cktp_start_i;
                 
+                cktp_primary_i      <= cktp_primary;
+                cktp_primary_sync   <= cktp_primary_i;
+                
                 if start_align_cnt = '1' then       -- Start alignment counter on rising edge of CKBC    
                     if align_cnt < align_cnt_thresh then
                         align_cnt <= align_cnt + 1;
@@ -124,14 +131,14 @@ testPulse_proc: process(clk_160) -- 160 MHz
                         cktp_start_aligned <= '0';
                     elsif ((align_cnt = align_cnt_thresh) and (cktp_start_sync = '1')) then
                         cktp_start_aligned <= '1';
-                        if (to_integer(unsigned(skew)) = 0) then    -- Set CKTP signal as soon as rising edge of CKBC arrives if skew = 0
+                        if (to_integer(unsigned(skew)) = 0 and cktp_primary_sync = '0') then    -- Set CKTP signal as soon as rising edge of CKBC arrives if skew = 0
                             vmm_cktp <= '1';
                         end if;
                     end if;
                     
                 end if;
                 
-                if cktp_start_aligned = '1' then
+                if cktp_start_aligned = '1' and cktp_primary_sync = '0' then
                     if (cktp_cnt < (to_integer(unsigned(skew)) - 1 ) and (cktp_cnt /= to_integer(unsigned(skew)))) then
                             cktp_state  <= "0000";
                             vmm_cktp    <= '0';
@@ -150,6 +157,8 @@ testPulse_proc: process(clk_160) -- 160 MHz
                             cktp_state  <= "0011";
                             cktp_cnt    <= 0;
                     end if;
+                elsif cktp_primary_sync = '1' then -- from flow_fsm. keep cktp high for readout initialization
+                    vmm_cktp <= '1';
                 else
                     cktp_state    <= "1111";
                     cktp_cnt <= 0;

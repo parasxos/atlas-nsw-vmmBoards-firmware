@@ -45,14 +45,13 @@ architecture RTL of skew_gen is
     signal cktp_18 : std_logic := '0';
     signal cktp_20 : std_logic := '0';
     signal cktp_22 : std_logic := '0';
-    signal cktp_24 : std_logic := '0';
-    signal cktp_26 : std_logic := '0';
-    signal cktp_28 : std_logic := '0';
-    signal cktp_30 : std_logic := '0';
-    signal cktp_32 : std_logic := '0';
-    signal cktp_34 : std_logic := '0';
-    signal cktp_36 : std_logic := '0';
-    signal cktp_38 : std_logic := '0';
+    --signal cktp_24 : std_logic := '0';
+    --signal cktp_26 : std_logic := '0';
+    --signal cktp_28 : std_logic := '0';
+    --signal cktp_30 : std_logic := '0';
+    --signal cktp_32 : std_logic := '0';
+    --signal cktp_34 : std_logic := '0';
+    --signal cktp_36 : std_logic := '0';
     
     signal CKTP_internal : std_logic := '0';
 
@@ -61,7 +60,7 @@ begin
 -- select CKTP skewing
 sel_skew_proc: process(skew, CKTP_preSkew, cktp_02, cktp_04, cktp_06, cktp_08, 
                cktp_10, cktp_12, cktp_14, cktp_16, cktp_18, cktp_20, cktp_22,
-               cktp_24, cktp_26, cktp_28, cktp_30, cktp_32, cktp_34, cktp_36, cktp_38)
+               cktp_24, cktp_26, cktp_28, cktp_30, cktp_32, cktp_34, cktp_36)
 begin
     case skew is
     when "00001" => CKTP_internal <= CKTP_preSkew;  -- 02  ns (1)   (one extra reg at the end)
@@ -76,14 +75,14 @@ begin
     when "01010" => CKTP_internal <= cktp_18;       -- 20 ns (10)
     when "01011" => CKTP_internal <= cktp_20;       -- 22 ns (11)
     when "01100" => CKTP_internal <= cktp_22;       -- 24 ns (12)
-    when "01101" => CKTP_internal <= cktp_24;       -- 26 ns (13)
-    when "01110" => CKTP_internal <= cktp_26;       -- 28 ns (14)
-    when "01111" => CKTP_internal <= cktp_28;       -- 30 ns (15)
-    when "10000" => CKTP_internal <= cktp_30;       -- 32 ns (16)
-    when "10001" => CKTP_internal <= cktp_32;       -- 34 ns (17)
-    when "10010" => CKTP_internal <= cktp_34;       -- 36 ns (18)
-    when "10011" => CKTP_internal <= cktp_36;       -- 38 ns (19)
-    when others  => CKTP_internal <= CKTP_preSkew;  -- 2 ns
+    --when "01101" => CKTP_internal <= cktp_24;       -- 26 ns (13)
+    --when "01110" => CKTP_internal <= cktp_26;       -- 28 ns (14)
+    --when "01111" => CKTP_internal <= cktp_28;       -- 30 ns (15)
+    --when "10000" => CKTP_internal <= cktp_30;       -- 32 ns (16)
+    --when "10001" => CKTP_internal <= cktp_32;       -- 34 ns (17)
+    --when "10010" => CKTP_internal <= cktp_34;       -- 36 ns (18)
+    --when "10011" => CKTP_internal <= cktp_36;       -- 38 ns (19)
+    when others  => CKTP_internal <= CKTP_preSkew;  -- 02 ns
     end case;
 end process;
 
@@ -102,13 +101,13 @@ begin
         cktp_18 <= cktp_16;
         cktp_20 <= cktp_18;
         cktp_22 <= cktp_20;
-        cktp_24 <= cktp_22;
-        cktp_26 <= cktp_24;
-        cktp_28 <= cktp_26;
-        cktp_30 <= cktp_28;
-        cktp_32 <= cktp_30;
-        cktp_34 <= cktp_32;
-        cktp_36 <= cktp_34;
+        --cktp_24 <= cktp_22;
+        --cktp_26 <= cktp_24;
+        --cktp_28 <= cktp_26;
+        --cktp_30 <= cktp_28;
+        --cktp_32 <= cktp_30;
+        --cktp_34 <= cktp_32;
+        --cktp_36 <= cktp_34;
     end if;
 end process;
 

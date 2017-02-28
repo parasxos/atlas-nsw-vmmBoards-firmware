@@ -460,6 +460,7 @@ architecture Behavioral of mmfe8_top is
     signal vmm_tki          : std_logic := '0';
     signal vmm_cktp         : std_logic := '0';
     signal vmm_cktp_primary : std_logic := '0';
+    signal CKTP_glbl        : std_logic := '0';
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
     signal vmm_ckbc         : std_logic;
@@ -501,6 +502,7 @@ architecture Behavioral of mmfe8_top is
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
+    signal ckbc_inhibit_buf         : std_logic := '0';
     signal art_out_ff               : std_logic := '0';
    
     -------------------------------------------------
@@ -1380,6 +1382,7 @@ architecture Behavioral of mmfe8_top is
         ----- Configuration Interface ------
         ckbc_ready          : in  std_logic;
         cktp_enable         : in  std_logic;
+        cktp_primary        : in  std_logic;
         cktp_pulse_width    : in  std_logic_vector(31 downto 0);
         cktp_period         : in  std_logic_vector(31 downto 0);
         cktp_skew           : in  std_logic_vector(15 downto 0);        
@@ -2010,13 +2013,14 @@ ckbc_cktp_generator: clk_gen_wrapper
         ----- Configuration Interface ------
         ckbc_ready          => ckbc_ready,
         cktp_enable         => cktp_enable,
+        cktp_primary        => vmm_cktp_primary, -- from flow_fsm
         cktp_pulse_width    => cktp_pulse_width,
         cktp_period         => cktp_period,
         cktp_skew           => cktp_skew,
         ckbc_freq           => ckbc_freq,
         ------------------------------------
         ---------- VMM Interface -----------
-        CKTP                => vmm_cktp,
+        CKTP                => CKTP_glbl,
         CKBC                => CKBC_glbl
     );
 
@@ -2169,11 +2173,13 @@ QSPI_SS_0: IOBUF
 
     OBUFTDS_inst_CKBC : OBUFTDS
     generic map (IOSTANDARD => "UNTUNED_SPLIT_60") 
-    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => vmm_ckbc, T  => '0' );
+    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl, T  => '0' );
+    -- TO DO: uncomment for final version
+    --port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl, T  => ckbc_inhibit_buf );
 
     OBUFTDS_inst : OBUFTDS
     generic map (IOSTANDARD => "UNTUNED_SPLIT_60")
-    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => vmm_cktp_all, T  => '0' );
+    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => CKTP_glbl, T  => trig_mode_int );
     
     --IBUFGDS_inst : IBUFGDS
     --generic map (DIFF_TERM => TRUE, -- Differential Termination
@@ -2520,12 +2526,9 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
     end if;
 end process;
 
-    -- TO DO: add "and ckbc_enable;" at the vmm_ckbc
-    vmm_ckbc                <= CKBC_glbl; -- and ckbc_enable; -- ckbc_en_vio(0);
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
-    vmm_cktp_all            <= vmm_cktp or cktp_vio(0) or vmm_cktp_primary;
     cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
-    
+    ckbc_inhibit_buf        <= not ckbc_enable;
     pf_newCycle             <= tr_out_i;
 
     test_data               <= udp_rx_int.data.data_in;

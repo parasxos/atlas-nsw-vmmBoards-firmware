@@ -59,8 +59,7 @@ begin
 
 -- select CKTP skewing
 sel_skew_proc: process(skew, CKTP_preSkew, cktp_02, cktp_04, cktp_06, cktp_08, 
-               cktp_10, cktp_12, cktp_14, cktp_16, cktp_18, cktp_20, cktp_22,
-               cktp_24, cktp_26, cktp_28, cktp_30, cktp_32, cktp_34, cktp_36)
+               cktp_10, cktp_12, cktp_14, cktp_16, cktp_18, cktp_20, cktp_22)
 begin
     case skew is
     when "00001" => CKTP_internal <= CKTP_preSkew;  -- 02  ns (1)   (one extra reg at the end)

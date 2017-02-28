@@ -192,13 +192,13 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
     -- IP and MAC address of the MMFE8
-    signal myIP   : std_logic_vector(31 downto 0) := x"c0a80002";    
+    signal myIP   : std_logic_vector(31 downto 0) := x"c0a80002";
     signal myMAC  : std_logic_vector(47 downto 0) := x"002320212223";
     signal destIP : std_logic_vector(31 downto 0) := x"c0a80010";
     
     signal myIP_s125   : std_logic_vector(31 downto 0) := x"c0a80002";    
     signal myMAC_s125  : std_logic_vector(47 downto 0) := x"002320212223";
-    signal destIP_s125 : std_logic_vector(31 downto 0) := x"c0a80010";    
+    signal destIP_s125 : std_logic_vector(31 downto 0) := x"c0a80010";
 
   -- clock generation signals for tranceiver
   signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.

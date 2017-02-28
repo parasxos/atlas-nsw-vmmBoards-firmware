@@ -53,10 +53,6 @@ architecture Behavioral of vmm_readout is
 
     -- readoutControlProc
 	signal reading_out_word        : std_logic := '0';
-	signal reading_out_word_tk     : std_logic := '0';
-	signal reading_out_word_ff_tk  : std_logic := '0';
-	signal reading_out_word_dt     : std_logic := '0';
-	signal reading_out_word_ff_dt  : std_logic := '0';
 
     -- tokenProc
 	signal dt_state				: std_logic_vector( 3 DOWNTO 0 )	:= ( others => '0' );
@@ -188,7 +184,7 @@ begin
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"3";
 				    when x"3" =>
-				        if (reading_out_word_ff_tk = '0') then
+				        if (reading_out_word = '0') then
 				            vmm_cktk_i      <= '1';
 				            hitsLen_cnt     <= hitsLen_cnt + 1;
 				            dt_state        <= x"4";
@@ -200,7 +196,7 @@ begin
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"5";
     				when x"5" =>
-                        if (reading_out_word_ff_tk = '1') then        -- Data presence: wait for read out to finish
+                        if (reading_out_word = '1') then        -- Data presence: wait for read out to finish
                             NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         else
@@ -248,10 +244,10 @@ begin
 end process;
 
 -- by using this clock the CKDT strobe has f=25MHz (T=40ns, D=50%, phase=0deg) to clock in data0 and data1
-readoutProc: process(clk_50, reading_out_word_ff_dt)
+readoutProc: process(clk_10_phase45, reading_out_word)
 begin
-    if rising_edge(clk_50) then
-        if (reading_out_word_ff_dt = '1') then
+    if rising_edge(clk_10_phase45) then
+        if (reading_out_word = '1') then
 
             case dt_cntr_st is
                 when x"0" =>                               -- Initiate values
@@ -325,22 +321,6 @@ begin
         vmmWordReady_ff_sync    <= vmmWordReady_stage1;
         daq_enable_stage1       <= daq_enable_i;
         daq_enable_ff_sync      <= daq_enable_stage1;
-    end if;
-end process;
-
-tokenProcSynchronizer: process(clk_10_phase45)
-begin
-    if rising_edge(clk_10_phase45) then 
-        reading_out_word_tk         <= reading_out_word;
-        reading_out_word_ff_tk      <= reading_out_word_tk;
-    end if;
-end process;
-
-readoutProcSynchronizer: process(clk_50)
-begin
-    if rising_edge(clk_50) then 
-        reading_out_word_dt         <= reading_out_word;
-        reading_out_word_ff_dt      <= reading_out_word_dt;
     end if;
 end process;
 

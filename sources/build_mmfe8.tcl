@@ -198,6 +198,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
@@ -589,6 +590,13 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

@@ -344,6 +344,36 @@ set_property PACKAGE_PIN T19 [get_ports SS_IO]
 set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 1 [current_design]
 #set_property OFFCHIP_TERM NONE [get_ports SPI_CLK]
 
+#=================== ASYNC REG =======================================
+#set_property ASYNC_REG true [get_cells xadc_instance/CDCC_200to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+#set_property ASYNC_REG true [get_cells xadc_instance/CDCC_200to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_50to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_50to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_125to50/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_125to50/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_125to40/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_125to40/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/sync_block_CDCC_0[*].FDRE_sync_CDCC_0]
+set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/sync_block_CDCC_1[*].FDRE_sync_CDCC_1]
+
+set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWordReady_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWordReady_ff_sync_reg]
+
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_stage1_reg[*]]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_ff_sync_reg[*]]                                                                            
+
+set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
+#=====================================================================
+
 #======================= SPI Flash Constraints =======================
 # You must provide all the delay numbers
 # CCLK delay is 0.5, 6.7 ns min/max for K7-2; refer Data sheet

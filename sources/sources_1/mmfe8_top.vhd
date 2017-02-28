@@ -191,14 +191,12 @@ end mmfe8_top;
 
 architecture Behavioral of mmfe8_top is
 
-    -- IP and MAC address of the MMFE8
-    signal myIP   : std_logic_vector(31 downto 0) := x"c0a80002";
-    signal myMAC  : std_logic_vector(47 downto 0) := x"002320212223";
-    signal destIP : std_logic_vector(31 downto 0) := x"c0a80010";
-    
-    signal myIP_s125   : std_logic_vector(31 downto 0) := x"c0a80002";    
-    signal myMAC_s125  : std_logic_vector(47 downto 0) := x"002320212223";
-    signal destIP_s125 : std_logic_vector(31 downto 0) := x"c0a80010";
+    -- Default IP and MAC address of the MMFE8
+    -- Same values as VIO default values. VIO can change IP on-the-fly.
+    -- If want to hardcode source IP/MAC, comment out VIO and set from here.
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212223";
+  signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
 
   -- clock generation signals for tranceiver
   signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.
@@ -422,7 +420,6 @@ architecture Behavioral of mmfe8_top is
   signal vmmConf_done       : std_logic := '0';
   signal fpga_reset_conf    : std_logic := '0';
   signal flash_busy         : std_logic := '0';
-  signal flash_busy_s125    : std_logic := '0';
 
     -------------------------------------------------
     -- VMM Signals                   
@@ -547,7 +544,6 @@ architecture Behavioral of mmfe8_top is
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
     signal xadc_busy            : std_logic;
-    signal xadc_busy_s125       : std_logic;
 
     ------------------------------------------------------------------
     -- Dynamic IP signals
@@ -555,11 +551,10 @@ architecture Behavioral of mmfe8_top is
     signal myIP_set             : std_logic_vector (31 downto 0);    
     signal myMAC_set            : std_logic_vector (47 downto 0);    
     signal destIP_set           : std_logic_vector (31 downto 0);
-    signal myIP_set_s50         : std_logic_vector (31 downto 0);    
-    signal myMAC_set_s50        : std_logic_vector (47 downto 0);    
-    signal destIP_set_s50       : std_logic_vector (31 downto 0); 
-    signal newIP_start          : std_logic;
-    signal newIP_start_s50      : std_logic;                         
+    signal myIP                 : std_logic_vector (31 downto 0);    
+    signal myMAC                : std_logic_vector (47 downto 0);    
+    signal destIP               : std_logic_vector (31 downto 0);
+    signal newIP_start          : std_logic;                        
     signal io0_i                : std_logic:= '0';
     signal io0_o                : std_logic:= '0';
     signal io0_t                : std_logic:= '0';
@@ -783,7 +778,13 @@ architecture Behavioral of mmfe8_top is
     attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
 
     attribute keep of MO_P_i              : signal is "TRUE";
-    attribute dont_touch of MO_P_i        : signal is "TRUE";      
+    attribute dont_touch of MO_P_i        : signal is "TRUE";
+    
+    attribute keep of default_IP            : signal is "TRUE";
+    attribute dont_touch of default_IP      : signal is "TRUE";
+          
+    attribute keep of default_MAC            : signal is "TRUE";
+    attribute dont_touch of default_MAC      : signal is "TRUE";  
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -810,6 +811,7 @@ architecture Behavioral of mmfe8_top is
     -- 20. AXI4_SPI
     -- 21. vio
     -- 22. CDCC
+    -- 23. VIO_IP
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -1249,6 +1251,7 @@ architecture Behavioral of mmfe8_top is
     component xadc
     port(
         clk200              : in std_logic;
+        clk125              : in std_logic;
         rst                 : in std_logic;
         
         VP_0                : in std_logic;
@@ -1291,11 +1294,16 @@ architecture Behavioral of mmfe8_top is
     component AXI4_SPI
     port(
         clk_200                 : in  std_logic;
+        clk_125                 : in  std_logic;
         clk_50                  : in  std_logic;
         
         myIP                    : out std_logic_vector(31 downto 0);
         myMAC                   : out std_logic_vector(47 downto 0);
         destIP                  : out std_logic_vector(31 downto 0);
+
+        default_IP              : in std_logic_vector(31 downto 0);
+        default_MAC             : in std_logic_vector(47 downto 0);
+        default_destIP          : in std_logic_vector(31 downto 0);
         
         myIP_set                : in std_logic_vector(31 downto 0);
         myMAC_set               : in std_logic_vector(47 downto 0);
@@ -1337,7 +1345,15 @@ architecture Behavioral of mmfe8_top is
         data_in     : in  std_logic_vector(NUMBER_OF_BITS - 1 downto 0);    -- data to be synced
         data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
     );
-    end component;    
+    end component;
+    -- 23
+    COMPONENT vio_ip
+      PORT (
+        clk        : IN STD_LOGIC;
+        probe_out0 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
+        probe_out1 : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+      );
+    END COMPONENT;    
 
 begin
 
@@ -1558,8 +1574,8 @@ UDP_block: UDP_Complete_nomac
 			rx_clk						=> userclk2,
 			tx_clk						=> userclk2,
 			reset 						=> glbl_rst_i,
-			our_ip_address 			    => myIP_s125,
-			our_mac_address 			=> myMAC_s125,
+			our_ip_address 			    => myIP,
+			our_mac_address 			=> myMAC,
 			control						=> control,
 			arp_pkt_count				=> open,
 			ip_pkt_count				=> open,
@@ -1598,7 +1614,7 @@ udp_din_conf_block: udp_data_in_handler
         udp_rx              => udp_rx_int,
         ------------------------------------
         ---------- AXI4SPI Interface -------
-        flash_busy          => flash_busy_s125,
+        flash_busy          => flash_busy,
         newIP_rdy           => newIP_rdy,
         myIP_set            => myIP_set,
         myMAC_set           => myMAC_set,
@@ -1614,7 +1630,7 @@ udp_din_conf_block: udp_data_in_handler
         top_rdy             => conf_wen_i,
         ------------------------------------
         ---------- XADC Interface ----------
-        xadc_busy           => xadc_busy_s125,
+        xadc_busy           => xadc_busy,
         xadc_rdy            => xadc_conf_rdy,
         vmm_id_xadc         => vmm_id_xadc,
         xadc_sample_size    => xadc_sample_size,
@@ -1735,7 +1751,7 @@ select_vmm_block: select_vmm
 FIFO2UDP_instance: FIFO2UDP
     Port map( 
         clk_125                     => userclk2,
-        destinationIP               => destIP_s125,
+        destinationIP               => destIP,
         daq_data_in                 => daqFIFO_din_i,
         fifo_data_out               => fifo_data_out_int,
         udp_txi                     => udp_txi_int,    
@@ -1817,6 +1833,7 @@ data_selection:  select_data
 --xadc_instance: xadc
 --    port map(
 --        clk200                      => clk_200,
+--        clk125                      => userclk2,
 --        rst                         => '0', -- change this plz
         
 --        VP_0                        => VP_0,
@@ -1852,25 +1869,29 @@ data_selection:  select_data
 --        fifo_bus                    => xadc_fifo_bus,
 --        data_fifo_enable            => xadc_fifo_enable,
 --        packet_len                  => xadc_packet_len,
---        xadc_busy                   => xadc_busy
+--        xadc_busy                   => xadc_busy          -- synced to 125 Mhz
 --    );
 
 axi4_spi_instance: AXI4_SPI  
     port map(
         clk_200                => clk_200,
-        --clk_100                => clk_100,
+        clk_125                => userclk2,
         clk_50                 => clk_50,
         
-        myIP                   => myIP,
-        myMAC                  => myMAC,
-        destIP                 => destIP,
-        
-        myIP_set               => myIP_set_s50,
-        myMAC_set              => myMAC_set_s50,
-        destIP_set             => destIP_set_s50,
+        myIP                   => myIP,             -- synced to 125 Mhz
+        myMAC                  => myMAC,            -- synced to 125 Mhz
+        destIP                 => destIP,           -- synced to 125 Mhz
 
-        newip_start            => newIP_start_s50,
-        flash_busy             => flash_busy,
+        default_IP             => default_IP,
+        default_MAC            => default_MAC,
+        default_destIP         => default_destIP,
+        
+        myIP_set               => myIP_set,         -- synced internally to 50 Mhz
+        myMAC_set              => myMAC_set,        -- synced internally to 50 Mhz
+        destIP_set             => destIP_set,       -- synced internally to 50 Mhz
+
+        newip_start            => newIP_start,      -- synced internally to 50 Mhz
+        flash_busy             => flash_busy,       -- synced to 125 Mhz
 
         io0_i                  => io0_i,
         io0_o                  => io0_o,
@@ -2156,7 +2177,6 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
                     vmm_ena_all             <= '0';
-                    sel_cs                  <= "11"; -- drive CS high
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
                     daq_vmm_ena_wen_enable  <= x"00";
@@ -2165,6 +2185,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     if(vmm_id_rdy = '1')then
                         if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
+                            sel_cs      <= "01";
                             state       <= CONFIGURE;
                         else
                             wait_cnt    <= wait_cnt + 1;
@@ -2194,15 +2215,17 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         end if;
 
                     elsif(daq_on = '1')then
+                        sel_cs  <= "11"; -- drive CS high
                         state   <= DAQ_INIT;
 
                     else
                         state       <= IDLE;
+                        sel_cs      <= "11"; -- drive CS high
                         wait_cnt    <= (others => '0');
                     end if;
 
                when    CONFIGURE    =>        
-                    sel_cs          <= "10"; -- select CS from config
+                  --  sel_cs          <= "10"; -- select CS from config
                     is_state        <= "0001";    
                     if(vmmConf_done = '1')then 
                         state   <= CONF_DONE;
@@ -2214,7 +2237,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     start_conf_proc_int <= '1';
 
                 when    CONF_DONE    =>
-                    sel_cs          <= "10"; -- select CS from config
+                 --   sel_cs          <= "10"; -- select CS from config
                     vmm_ena_all     <= '1';
                     is_state        <= "0010";
                     if w = 40 then
@@ -2305,7 +2328,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     
                 when XADC_init =>
                     is_state            <= "0110";
-                    if(xadc_busy_s125 = '1')then -- XADC got the message, wait for busy to go low
+                    if(xadc_busy = '1')then -- XADC got the message, wait for busy to go low
                         xadc_start  <= '0';
                         state       <= XADC_wait;
                     else                    -- XADC didn't get the message, wait and keep high
@@ -2314,14 +2337,14 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     end if;
 
                 when XADC_wait =>   -- wait for XADC to finish and go to IDLE
-                    if(xadc_busy_s125 = '0')then
+                    if(xadc_busy = '0')then
                         state <= IDLE;
                     else
                         state <= XADC_wait;
                     end if;
 
                 when FLASH_init =>
-                    if(flash_busy_s125 = '1')then -- AXI4SPI got the message, wait for busy to go low
+                    if(flash_busy = '1')then -- AXI4SPI got the message, wait for busy to go low
                         newIP_start <= '0';
                         state       <= FLASH_wait;
                     else                     -- AXI4SPI didn't get the message, wait and keep high
@@ -2330,7 +2353,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     end if;
 
                 when FLASH_wait =>  -- wait for AXI4SPI to finish and go to IDLE
-                    if(flash_busy_s125 = '0')then
+                    if(flash_busy = '0')then
                         state   <= IDLE;
                     else
                         state   <= FLASH_wait;
@@ -2343,57 +2366,6 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
         end if;
     end if;
 end process;
-
----------------------------------------------------------
---------- Clock Domain Crossing Sync Block --------------
----------------------------------------------------------
-CDCC_200to125: CDCC
-    generic map(NUMBER_OF_BITS => 1)
-    port map(
-        clk_src         => clk_200,
-        clk_dst         => userclk2,
-
-        data_in(0)      => xadc_busy,
-
-        data_out_s(0)   => xadc_busy_s125
-    );
-
-CDCC_50to125: CDCC
-    generic map(NUMBER_OF_BITS => 113)
-    port map(
-        clk_src                 => clk_50,
-        clk_dst                 => userclk2,
-
-        data_in(112)            => flash_busy,
-        data_in(111 downto 80)  => myIP,
-        data_in(79 downto 32)   => myMAC,
-        data_in(31 downto 0)    => destIP,
-
-        data_out_s(112)            => flash_busy_s125,
-        data_out_s(111 downto 80)  => myIP_s125,
-        data_out_s(79 downto 32)   => myMAC_s125,
-        data_out_s(31 downto 0)    => destIP_s125
-    );
-    
-CDCC_125to50: CDCC
-    generic map(NUMBER_OF_BITS => 113)
-    port map(
-        clk_src                 => userclk2,
-        clk_dst                 => clk_50,
-
-        data_in(112)            => newIP_start,
-        data_in(111 downto 80)  => myIP_set,
-        data_in(79 downto 32)   => myMAC_set,
-        data_in(31 downto 0)    => destIP_set,
-
-        data_out_s(112)            => newIP_start_s50,
-        data_out_s(111 downto 80)  => myIP_set_s50,
-        data_out_s(79 downto 32)   => myMAC_set_s50,
-        data_out_s(31 downto 0)    => destIP_set_s50
-    );
----------------------------------------------------------
----------------------------------------------------------
----------------------------------------------------------
 
     vmm_ckbc                <= clk_40 and ckbc_enable; -- ckbc_en_vio(0);
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
@@ -2445,6 +2417,13 @@ ila_top: ila_top_level
         probe4  => dataOutProbe,
         probe5  => flowProbe
     );
+    
+VIO_DEFAULT_IP: vio_ip
+      PORT MAP (
+        clk         => clk_50,
+        probe_out0  => default_IP,
+        probe_out1  => default_MAC
+      );
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;
@@ -2503,7 +2482,7 @@ ila_top: ila_top_level
     flowProbe(7 downto 4)       <= status_int;
     flowProbe(11 downto 8)      <= status_int_synced;
     flowProbe(12)               <= daq_enable_i;
-    flowProbe(13)               <= xadc_busy_s125;
+    flowProbe(13)               <= xadc_busy;
     flowProbe(21 downto 14)     <= daq_vmm_ena_wen_enable;
     flowProbe(22)               <= daqFIFO_reset;
     flowProbe(23)               <= rstFIFO_top;

@@ -52,31 +52,33 @@ end vmm_readout;
 architecture Behavioral of vmm_readout is
 
     -- readoutControlProc
-	signal reading_out_word        : std_logic := '0';
+    signal reading_out_word        : std_logic := '0';
 
     -- tokenProc
-	signal dt_state				: std_logic_vector( 3 DOWNTO 0 )	:= ( others => '0' );
-	signal daq_enable_i         : std_logic := '0';
-	signal daq_enable_stage1    : std_logic := '0';
-	signal daq_enable_ff_sync   : std_logic := '0';
+    signal dt_state             : std_logic_vector( 3 DOWNTO 0 )    := ( others => '0' );
+    signal daq_enable_i         : std_logic := '0';
+    signal daq_enable_stage1    : std_logic := '0';
+    signal daq_enable_ff_sync   : std_logic := '0';
     signal vmm_wen_i            : std_logic := '0';
     signal vmm_ena_i            : std_logic := '0';
     signal vmm_cktk_i           : std_logic := '0';
-	signal trig_latency_counter	: std_logic_vector( 31 DOWNTO 0 )	:= ( others => '0' );   -- Latency per VMM ()
+    signal trig_latency_counter : std_logic_vector( 31 DOWNTO 0 )   := ( others => '0' );   -- Latency per VMM ()
     signal trig_latency         : std_logic_vector( 31 DOWNTO 0 )   := x"0000008C";         -- x"0000008C";  700ns @200MHz (User defined)
-    signal NoFlg_counter		: integer	:= 0;                                           -- Counter of CKTKs
+    signal NoFlg_counter        : integer   := 0;                                           -- Counter of CKTKs
     signal NoFlg                : integer   := 7;                                           -- How many (#+1) CKTKs before soft reset (User defined)
     signal vmmEventDone_i       : std_logic := '0';
     signal vmmEventDone_stage1  : std_logic := '0';
     signal vmmEventDone_ff_sync : std_logic := '0';
     signal trigger_pulse_i      : std_logic := '0';
+    signal trigger_pulse_stage1 : std_logic := '0';
+    signal trigger_pulse_ff_sync : std_logic := '0';
     signal hitsLen_cnt          : integer := 0;
     signal hitsLenMax           : integer := 150;--1100;  --Real maximum is 1119 for a jumbo UDP frame and 184 for a normal UDP frame
 
     -- readoutProc
     signal dt_done              : std_logic := '1';
-	signal vmm_data_buf_i 		: std_logic_vector( 37 DOWNTO 0 ) 	:= ( others => '0' );
-	signal dt_cntr_st   		: std_logic_vector(3 downto 0) := "0000";
+    signal vmm_data_buf_i       : std_logic_vector( 37 DOWNTO 0 )   := ( others => '0' );
+    signal dt_cntr_st           : std_logic_vector(3 downto 0) := "0000";
     signal dt_cntr_intg0        : integer := 0;
     signal dt_cntr_intg1        : integer := 0;
     signal vmm_ckdt_i           : std_logic;
@@ -85,7 +87,9 @@ architecture Behavioral of vmm_readout is
     signal vmmWordReady_i       : std_logic := '0';
     signal vmmWordReady_stage1  : std_logic := '0';
     signal vmmWordReady_ff_sync : std_logic := '0';
-    signal vmmWord_i            : std_logic_vector(63 DOWNTO 0);
+    signal vmmWord_i            : std_logic_vector(63 downto 0);
+    signal vmmWord_ff_sync      : std_logic_vector(63 downto 0);
+    signal vmmWord_stage1       : std_logic_vector(63 downto 0);
     
     signal vmm_data0            : std_logic := '0';     -- Single-ended data0 from VMM
     signal vmm_data1            : std_logic := '0';     -- Single-ended data1 from VMM
@@ -93,7 +97,7 @@ architecture Behavioral of vmm_readout is
     signal vmm_cktk             : std_logic := '0';     -- Strobe to VMM CKTK
 
     -- Internal signal direct assign from ports
-	signal vmm_data0_i          : std_logic := '0';
+    signal vmm_data0_i          : std_logic := '0';
     signal vmm_data1_i          : std_logic := '0';
 
     -- Debugging
@@ -104,22 +108,22 @@ architecture Behavioral of vmm_readout is
     -----------------------------------------------------------------
     attribute mark_debug : string;
 
-    attribute mark_debug of NoFlg                 :	signal	is	"true";
-    attribute mark_debug of dt_state              :	signal	is	"true";
-    attribute mark_debug of NoFlg_counter         :	signal	is	"true";
-    attribute mark_debug of reading_out_word      :	signal	is	"true";
-    attribute mark_debug of dt_done               :	signal	is	"true";
-    attribute mark_debug of vmm_ckdt_i            :	signal	is	"true";
-    attribute mark_debug of vmm_cktk_i            :	signal	is	"true";
-    attribute mark_debug of vmm_data0_i           : signal	is	"true";
-    attribute mark_debug of vmm_data1_i           : signal	is	"true";
-    attribute mark_debug of dataBitRead           : signal	is	"true";
-    attribute mark_debug of dt_cntr_st            : signal	is	"true";
+    attribute mark_debug of NoFlg                 : signal  is  "true";
+    attribute mark_debug of dt_state              : signal  is  "true";
+    attribute mark_debug of NoFlg_counter         : signal  is  "true";
+    attribute mark_debug of reading_out_word      : signal  is  "true";
+    attribute mark_debug of dt_done               : signal  is  "true";
+    attribute mark_debug of vmm_ckdt_i            : signal  is  "true";
+    attribute mark_debug of vmm_cktk_i            : signal  is  "true";
+    attribute mark_debug of vmm_data0_i           : signal  is  "true";
+    attribute mark_debug of vmm_data1_i           : signal  is  "true";
+    attribute mark_debug of dataBitRead           : signal  is  "true";
+    attribute mark_debug of dt_cntr_st            : signal  is  "true";
     attribute mark_debug of vmmEventDone_i        : signal  is  "true";
     attribute mark_debug of hitsLen_cnt           : signal  is  "true";
     attribute mark_debug of daq_enable_i          : signal  is  "true";
-    attribute mark_debug of vmmWordReady_i        : signal	is	"true";
-    attribute mark_debug of vmmWord_i             : signal	is	"true";
+    attribute mark_debug of vmmWordReady_i        : signal  is  "true";
+    attribute mark_debug of vmmWord_i             : signal  is  "true";
     attribute mark_debug of trigger_pulse         : signal  is  "true";
     attribute mark_debug of trigger_pulse_i       : signal  is  "true";
     attribute mark_debug of trig_latency_counter  : signal  is  "true";
@@ -168,13 +172,13 @@ begin
         if (daq_enable_ff_sync = '1') then
                 case dt_state is
 
-				    when x"0" =>
-				        vmmEventDone_i          <= '0';
-                        if (trigger_pulse_i = '1') then
+                    when x"0" =>
+                        vmmEventDone_i          <= '0';
+                        if (trigger_pulse_ff_sync = '1') then
                             vmm_cktk_i              <= '0';
                             dt_state                <= x"1";
                         end if;
-				    when x"1" =>
+                    when x"1" =>
                         if (trig_latency_counter = trig_latency) then
                             dt_state                <= x"2";
                         else
@@ -183,32 +187,32 @@ begin
                     when x"2" =>
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"3";
-				    when x"3" =>
-				        if (reading_out_word = '0') then
-				            vmm_cktk_i      <= '1';
-				            hitsLen_cnt     <= hitsLen_cnt + 1;
-				            dt_state        <= x"4";
-				        else
-				            NoFlg_counter   <= 0;
-				            dt_state        <= x"6";
-				        end if;
+                    when x"3" =>
+                        if (reading_out_word = '0') then
+                            vmm_cktk_i      <= '1';
+                            hitsLen_cnt     <= hitsLen_cnt + 1;
+                            dt_state        <= x"4";
+                        else
+                            NoFlg_counter   <= 0;
+                            dt_state        <= x"6";
+                        end if;
                     when x"4" =>
                         vmm_cktk_i      <= '0';
                         dt_state        <= x"5";
-    				when x"5" =>
+                    when x"5" =>
                         if (reading_out_word = '1') then        -- Data presence: wait for read out to finish
                             NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         else
-						    if (NoFlg_counter = NoFlg) then
-							    dt_state    <= x"7";	        -- If NoFlg = 4 : time to soft reset and transmit data
-						    else
-                                dt_state    <= x"3";			-- Send new CKTK strobe
-						    end if;
-						    NoFlg_counter <= NoFlg_counter  + 1;
-					    end if;
-                	when x"6" =>                                -- Wait until word readout is done
-                		if (dt_done = '1') then
+                            if (NoFlg_counter = NoFlg) then
+                                dt_state    <= x"7";            -- If NoFlg = 4 : time to soft reset and transmit data
+                            else
+                                dt_state    <= x"3";            -- Send new CKTK strobe
+                            end if;
+                            NoFlg_counter <= NoFlg_counter  + 1;
+                        end if;
+                    when x"6" =>                                -- Wait until word readout is done
+                        if (dt_done = '1') then
                             if hitsLen_cnt >= hitsLenMax then       -- Maximum UDP packet length reached 
                                 dt_state            <= x"7";
                             else
@@ -216,29 +220,29 @@ begin
                             end if;
                         else
                             dt_state                <= x"6";
-                		end if;
+                        end if;
                     when x"7" =>                                -- Start the soft reset sequence, there is still a chance
                         if (reading_out_word = '0') then        -- of getting data at this point so check that before soft reset
                             dt_state                <= x"8";
                         else
-				            NoFlg_counter   <= 0;
+                            NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         end if;
-				    when x"8" =>
-					    hitsLen_cnt             <= 0;
-					    dt_state                <= x"9";
+                    when x"8" =>
+                        hitsLen_cnt             <= 0;
+                        dt_state                <= x"9";
                     when x"9" =>
                         vmmEventDone_i          <= '1';
                         NoFlg_counter           <= 0;
                         dt_state                <= x"0";
-				    when others =>
-				        vmmEventDone_i          <= '1';
+                    when others =>
+                        vmmEventDone_i          <= '1';
                         NoFlg_counter           <= 0;
-				        dt_state                <= x"0";
+                        dt_state                <= x"0";
                 end case;
         else
             vmm_ena_i     <= '0';
-		    vmm_wen_i     <= '0';
+            vmm_wen_i     <= '0';
         end if;
     end if;
 end process;
@@ -252,11 +256,11 @@ begin
             case dt_cntr_st is
                 when x"0" =>                               -- Initiate values
                     dt_done       <= '0';
-                	vmm_data_buf  <= (others => '0');
+                    vmm_data_buf  <= (others => '0');
                     dt_cntr_st    <= x"1";
                     dt_cntr_intg0 <= 0;
                     dt_cntr_intg1 <= 1;
-                	vmm_ckdt_i    <= '0';               -- Go for the first ckdt
+                    vmm_ckdt_i    <= '0';               -- Go for the first ckdt
 
                 when x"1" =>
                     vmm_ckdt_i     <= '1';
@@ -319,8 +323,26 @@ begin
         vmmEventDone_ff_sync    <= vmmEventDone_stage1;
         vmmWordReady_stage1     <= vmmWordReady_i;
         vmmWordReady_ff_sync    <= vmmWordReady_stage1;
+--        daq_enable_stage1       <= daq_enable_i;
+--        daq_enable_ff_sync      <= daq_enable_stage1;
+    end if;
+end process;
+
+tokenProcSynchronizer: process(clk_10_phase45)
+begin
+    if rising_edge (clk_10_phase45) then
         daq_enable_stage1       <= daq_enable_i;
         daq_enable_ff_sync      <= daq_enable_stage1;
+        trigger_pulse_stage1    <= trigger_pulse_i;
+        trigger_pulse_ff_sync   <= trigger_pulse_stage1;
+    end if;
+end process;
+
+vmmWordSynchronizer: process(clk)
+begin
+    if rising_edge(clk) then
+        vmmWord_stage1  <= vmmWord_i;
+        vmmWord_ff_sync <= vmmWord_stage1;
     end if;
 end process;
 
@@ -331,7 +353,7 @@ end process;
     vmm_ckdt            <= vmm_ckdt_i;              -- Used
     vmm_data0_i         <= vmm_data0;               -- Used
     vmm_data1_i         <= vmm_data1;               -- Used
-    vmmWord             <= vmmWord_i;               -- Used
+    vmmWord             <= vmmWord_ff_sync;         -- Used
     trigger_pulse_i     <= trigger_pulse;           -- Used
 
 VMMdemux: vmmSignalsDemux

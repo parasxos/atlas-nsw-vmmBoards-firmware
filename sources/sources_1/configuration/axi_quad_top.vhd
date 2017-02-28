@@ -48,6 +48,10 @@ entity AXI4_SPI is
             myMAC                   : out std_logic_vector(47 downto 0);    -- Signal going out to mmfe8_top and used as main MAC
             destIP                  : out std_logic_vector(31 downto 0);    -- Signal going out to mmfe8_top and used as main destIP
             
+            default_IP              : in std_logic_vector(31 downto 0);
+            default_MAC             : in std_logic_vector(47 downto 0);
+            default_destIP          : in std_logic_vector(31 downto 0);
+            
             myIP_set                : in std_logic_vector(31 downto 0);     -- Signal coming from config_logic. Used to set myIP
             myMAC_set               : in std_logic_vector(47 downto 0);     -- Signal coming from config_logic. Used to set myMAC
             destIP_set              : in std_logic_vector(31 downto 0);     -- Signal coming from config_logic. Used to set destIP
@@ -584,9 +588,10 @@ spi_read_write_core_registers: process(clk_50)  -- State machine that handles th
     begin
     if rising_edge(clk_50) then
                 if (set_default_ip = '1') then
-                    myIP   <= x"c0a80003";
-                    myMAC  <= x"002320212227";
-                    destIP <= x"c0a80010";
+                    myIP    <= default_IP;
+                    myMAC   <= default_MAC;
+                    destIP  <= default_destIP;
+
                 end if;
             
                 case spi_state is           -- State machine that handles the signals necessary to perform a single write to or read to and from a core register in the axi_quad_spi

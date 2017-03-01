@@ -96,42 +96,42 @@ architecture Behavioral of FIFO2UDP is
 
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
   
-    attribute keep : string;
-    attribute dont_touch : string;
-    attribute keep of prog_fifo_empty         : signal is "true";
-    attribute keep of fifo_empty_UDP          : signal is "true";     
-    attribute keep of daq_fifo_re             : signal is "true";     
-    attribute keep of data_out_last           : signal is "true";           
-    attribute keep of data_out                : signal is "true";
-    attribute keep of data_out_valid          : signal is "true";
-    attribute keep of udp_tx_data_out_ready   : signal is "true";
-    attribute dont_touch of udp_tx_data_out_ready   : signal is "true";
-    attribute keep of daq_data_out            : signal is "true";
-    attribute keep of udp_tx_start            : signal is "true";
-    attribute keep of end_packet_synced       : signal is "true";     
-    attribute keep of i                       : signal is "true";     
-    attribute keep of packet_length           : signal is "true";
-    attribute dont_touch of packet_length           : signal is "true";             
-    attribute keep of count                   : signal is "true";
-    attribute keep of count_length            : signal is "true";
-    attribute keep of daq_data_in_int         : signal is "true";
-    attribute keep of wr_en_int               : signal is "true";
-    attribute keep of fifo_full_UDP           : signal is "true";
-    attribute dont_touch of wr_en_int         : signal is "true";
-    attribute dont_touch of fifo_empty_len    : signal is "true";
-    attribute keep of wr_en                   : signal is "true";
-    attribute dont_touch of wr_en             : signal is "true";
+--    attribute keep : string;
+--    attribute dont_touch : string;
+--    attribute keep of prog_fifo_empty         : signal is "true";
+--    attribute keep of fifo_empty_UDP          : signal is "true";     
+--    attribute keep of daq_fifo_re             : signal is "true";     
+--    attribute keep of data_out_last           : signal is "true";           
+--    attribute keep of data_out                : signal is "true";
+--    attribute keep of data_out_valid          : signal is "true";
+--    attribute keep of udp_tx_data_out_ready   : signal is "true";
+--    attribute dont_touch of udp_tx_data_out_ready   : signal is "true";
+--    attribute keep of daq_data_out            : signal is "true";
+--    attribute keep of udp_tx_start            : signal is "true";
+--    attribute keep of end_packet_synced       : signal is "true";     
+--    attribute keep of i                       : signal is "true";     
+--    attribute keep of packet_length           : signal is "true";
+--    attribute dont_touch of packet_length           : signal is "true";             
+--    attribute keep of count                   : signal is "true";
+--    attribute keep of count_length            : signal is "true";
+--    attribute keep of daq_data_in_int         : signal is "true";
+--    attribute keep of wr_en_int               : signal is "true";
+--    attribute keep of fifo_full_UDP           : signal is "true";
+--    attribute dont_touch of wr_en_int         : signal is "true";
+--    attribute dont_touch of fifo_empty_len    : signal is "true";
+--    attribute keep of wr_en                   : signal is "true";
+--    attribute dont_touch of wr_en             : signal is "true";
     
-    attribute keep of packet_length_in               : signal is "true";
-    attribute dont_touch of packet_length_in         : signal is "true";
-    attribute dont_touch of vmmID_i           : signal is "true";
-    attribute dont_touch of trigger           : signal is "true";
-    attribute keep of trigger                 : signal is "true";
+--    attribute keep of packet_length_in               : signal is "true";
+--    attribute dont_touch of packet_length_in         : signal is "true";
+--    attribute dont_touch of vmmID_i           : signal is "true";
+--    attribute dont_touch of trigger           : signal is "true";
+--    attribute keep of trigger                 : signal is "true";
 
-    attribute keep of len_cnt                 : signal is "true";
-    attribute keep of fifo_len_wr_en          : signal is "true";
-    attribute keep of fifo_len_rd_en          : signal is "true";
-    attribute keep of packet_len_r            : signal is "true";
+--    attribute keep of len_cnt                 : signal is "true";
+--    attribute keep of fifo_len_wr_en          : signal is "true";
+--    attribute keep of fifo_len_rd_en          : signal is "true";
+--    attribute keep of packet_len_r            : signal is "true";
   
 component readout_fifo is
 
@@ -398,13 +398,13 @@ end_packet_synced           <= end_packet;
 
 trigger_out                 <= trigger;
    
-ila_daq_send : ila_0
-    port map
-    (
-        clk           => clk_125, 
-        probe0        => daq_out,
-        probe1        => udp_tx_data_out_ready
-    );   
+--ila_daq_send : ila_0
+--    port map
+--    (
+--        clk           => clk_125, 
+--        probe0        => daq_out,
+--        probe1        => udp_tx_data_out_ready
+--    );   
 
 daq_out(0)              <= end_packet_synced;
 daq_out(1)              <= fifo_empty_UDP;

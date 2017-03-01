@@ -174,148 +174,148 @@ architecture Behavioral of AXI4_SPI is
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -------------------------------------------------------------------
-    attribute keep          : string;
-    attribute dont_touch    : string;
+--    attribute keep          : string;
+--    attribute dont_touch    : string;
         
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------     
     
-    attribute keep of ip_set_flag                   : signal is "TRUE";
-    attribute dont_touch of ip_set_flag             : signal is "TRUE";
+--    attribute keep of ip_set_flag                   : signal is "TRUE";
+--    attribute dont_touch of ip_set_flag             : signal is "TRUE";
     
-    attribute keep of spi_arready                   : signal is "TRUE";
-    attribute dont_touch of spi_arready             : signal is "TRUE";    
+--    attribute keep of spi_arready                   : signal is "TRUE";
+--    attribute dont_touch of spi_arready             : signal is "TRUE";    
     
-    attribute keep of spi_rresp                     : signal is "TRUE";
-    attribute dont_touch of spi_rresp               : signal is "TRUE";         
+--    attribute keep of spi_rresp                     : signal is "TRUE";
+--    attribute dont_touch of spi_rresp               : signal is "TRUE";         
     
-    attribute keep of spi_rvalid                    : signal is "TRUE";
-    attribute dont_touch of spi_rvalid              : signal is "TRUE";   
+--    attribute keep of spi_rvalid                    : signal is "TRUE";
+--    attribute dont_touch of spi_rvalid              : signal is "TRUE";   
 
-    attribute keep of spi_cnt                       : signal is "TRUE";
-    attribute dont_touch of spi_cnt                 : signal is "TRUE";   
+--    attribute keep of spi_cnt                       : signal is "TRUE";
+--    attribute dont_touch of spi_cnt                 : signal is "TRUE";   
     
-    attribute keep of spi_awready                   : signal is "TRUE";
-    attribute dont_touch of spi_awready             : signal is "TRUE";       
+--    attribute keep of spi_awready                   : signal is "TRUE";
+--    attribute dont_touch of spi_awready             : signal is "TRUE";       
     
-    attribute keep of spi_bresp                     : signal is "TRUE";
-    attribute dont_touch of spi_bresp               : signal is "TRUE";   
+--    attribute keep of spi_bresp                     : signal is "TRUE";
+--    attribute dont_touch of spi_bresp               : signal is "TRUE";   
     
-    attribute keep of spi_bvalid                    : signal is "TRUE";
-    attribute dont_touch of spi_bvalid              : signal is "TRUE";         
+--    attribute keep of spi_bvalid                    : signal is "TRUE";
+--    attribute dont_touch of spi_bvalid              : signal is "TRUE";         
     
-    attribute keep of spi_awaddr                    : signal is "TRUE";
-    attribute dont_touch of spi_awaddr              : signal is "TRUE";         
+--    attribute keep of spi_awaddr                    : signal is "TRUE";
+--    attribute dont_touch of spi_awaddr              : signal is "TRUE";         
     
-    attribute keep of spi_wdata                     : signal is "TRUE";
-    attribute dont_touch of spi_wdata               : signal is "TRUE";   
+--    attribute keep of spi_wdata                     : signal is "TRUE";
+--    attribute dont_touch of spi_wdata               : signal is "TRUE";   
     
-    attribute keep of spi_wstrb                     : signal is "TRUE";
-    attribute dont_touch of spi_wstrb               : signal is "TRUE";   
+--    attribute keep of spi_wstrb                     : signal is "TRUE";
+--    attribute dont_touch of spi_wstrb               : signal is "TRUE";   
     
-    attribute keep of spi_aresetn                   : signal is "TRUE";
-    attribute dont_touch of spi_aresetn             : signal is "TRUE";       
+--    attribute keep of spi_aresetn                   : signal is "TRUE";
+--    attribute dont_touch of spi_aresetn             : signal is "TRUE";       
        
-    attribute keep of spi_awvalid                   : signal is "TRUE";
-    attribute dont_touch of spi_awvalid             : signal is "TRUE";   
+--    attribute keep of spi_awvalid                   : signal is "TRUE";
+--    attribute dont_touch of spi_awvalid             : signal is "TRUE";   
     
-    attribute keep of spi_wvalid                    : signal is "TRUE";
-    attribute dont_touch of spi_wvalid              : signal is "TRUE";    
+--    attribute keep of spi_wvalid                    : signal is "TRUE";
+--    attribute dont_touch of spi_wvalid              : signal is "TRUE";    
 
-    attribute keep of spi_bready                    : signal is "TRUE";
-    attribute dont_touch of spi_bready              : signal is "TRUE";      
+--    attribute keep of spi_bready                    : signal is "TRUE";
+--    attribute dont_touch of spi_bready              : signal is "TRUE";      
     
-    attribute keep of spi_wready                    : signal is "TRUE";
-    attribute dont_touch of spi_wready              : signal is "TRUE";     
+--    attribute keep of spi_wready                    : signal is "TRUE";
+--    attribute dont_touch of spi_wready              : signal is "TRUE";     
     
-    attribute keep of spi_arvalid                   : signal is "TRUE";
-    attribute dont_touch of spi_arvalid             : signal is "TRUE";  
+--    attribute keep of spi_arvalid                   : signal is "TRUE";
+--    attribute dont_touch of spi_arvalid             : signal is "TRUE";  
     
-    attribute keep of spi_rready                    : signal is "TRUE";
-    attribute dont_touch of spi_rready              : signal is "TRUE";  
+--    attribute keep of spi_rready                    : signal is "TRUE";
+--    attribute dont_touch of spi_rready              : signal is "TRUE";  
 
-    attribute keep of spi_araddr                    : signal is "TRUE";
-    attribute dont_touch of spi_araddr              : signal is "TRUE";
+--    attribute keep of spi_araddr                    : signal is "TRUE";
+--    attribute dont_touch of spi_araddr              : signal is "TRUE";
     
-    attribute keep of spi_rdata                     : signal is "TRUE";
-    attribute dont_touch of spi_rdata               : signal is "TRUE";
+--    attribute keep of spi_rdata                     : signal is "TRUE";
+--    attribute dont_touch of spi_rdata               : signal is "TRUE";
     
-    attribute keep of araddr_set                    : signal is "TRUE";
-    attribute dont_touch of araddr_set              : signal is "TRUE";
+--    attribute keep of araddr_set                    : signal is "TRUE";
+--    attribute dont_touch of araddr_set              : signal is "TRUE";
     
-    attribute keep of awaddr_set                    : signal is "TRUE";
-    attribute dont_touch of awaddr_set              : signal is "TRUE";
+--    attribute keep of awaddr_set                    : signal is "TRUE";
+--    attribute dont_touch of awaddr_set              : signal is "TRUE";
     
-    attribute keep of wdata_set                     : signal is "TRUE";
-    attribute dont_touch of wdata_set               : signal is "TRUE";
+--    attribute keep of wdata_set                     : signal is "TRUE";
+--    attribute dont_touch of wdata_set               : signal is "TRUE";
     
-    attribute keep of spi_state_control_is          : signal is "TRUE";
-    attribute dont_touch of spi_state_control_is    : signal is "TRUE";
+--    attribute keep of spi_state_control_is          : signal is "TRUE";
+--    attribute dont_touch of spi_state_control_is    : signal is "TRUE";
          
-    attribute keep of io0_i                         : signal is "TRUE";
-    attribute dont_touch of io0_i                   : signal is "TRUE";
+--    attribute keep of io0_i                         : signal is "TRUE";
+--    attribute dont_touch of io0_i                   : signal is "TRUE";
     
-    attribute keep of io0_o                         : signal is "TRUE";
-    attribute dont_touch of io0_o                   : signal is "TRUE";
+--    attribute keep of io0_o                         : signal is "TRUE";
+--    attribute dont_touch of io0_o                   : signal is "TRUE";
     
-    attribute keep of io0_t                         : signal is "TRUE";
-    attribute dont_touch of io0_t                   : signal is "TRUE";   
+--    attribute keep of io0_t                         : signal is "TRUE";
+--    attribute dont_touch of io0_t                   : signal is "TRUE";   
  
-    attribute keep of io1_i                         : signal is "TRUE";
-    attribute dont_touch of io1_i                   : signal is "TRUE";
+--    attribute keep of io1_i                         : signal is "TRUE";
+--    attribute dont_touch of io1_i                   : signal is "TRUE";
     
-    attribute keep of io1_o                         : signal is "TRUE";
-    attribute dont_touch of io1_o                   : signal is "TRUE";
+--    attribute keep of io1_o                         : signal is "TRUE";
+--    attribute dont_touch of io1_o                   : signal is "TRUE";
     
-    attribute keep of io1_t                         : signal is "TRUE";
-    attribute dont_touch of io1_t                   : signal is "TRUE";   
+--    attribute keep of io1_t                         : signal is "TRUE";
+--    attribute dont_touch of io1_t                   : signal is "TRUE";   
     
-    attribute keep of ss_i                          : signal is "TRUE";
-    attribute dont_touch of ss_i                    : signal is "TRUE";
+--    attribute keep of ss_i                          : signal is "TRUE";
+--    attribute dont_touch of ss_i                    : signal is "TRUE";
     
-    attribute keep of ss_o                          : signal is "TRUE";
-    attribute dont_touch of ss_o                    : signal is "TRUE";
+--    attribute keep of ss_o                          : signal is "TRUE";
+--    attribute dont_touch of ss_o                    : signal is "TRUE";
     
-    attribute keep of ss_t                          : signal is "TRUE";
-    attribute dont_touch of ss_t                    : signal is "TRUE";
+--    attribute keep of ss_t                          : signal is "TRUE";
+--    attribute dont_touch of ss_t                    : signal is "TRUE";
     
-    attribute keep of cmdaddrdata_set               : signal is "TRUE";
-    attribute dont_touch of cmdaddrdata_set         : signal is "TRUE";
+--    attribute keep of cmdaddrdata_set               : signal is "TRUE";
+--    attribute dont_touch of cmdaddrdata_set         : signal is "TRUE";
         
-    attribute keep of cmdaddrdata                   : variable is "TRUE";
-    attribute dont_touch of cmdaddrdata             : variable is "TRUE";
+--    attribute keep of cmdaddrdata                   : variable is "TRUE";
+--    attribute dont_touch of cmdaddrdata             : variable is "TRUE";
 
-    attribute keep of start_transaction             : signal is "TRUE";
-    attribute dont_touch of start_transaction       : signal is "TRUE";
+--    attribute keep of start_transaction             : signal is "TRUE";
+--    attribute dont_touch of start_transaction       : signal is "TRUE";
 
-    attribute keep of transaction_finished          : signal is "TRUE";
-    attribute dont_touch of transaction_finished    : signal is "TRUE";
+--    attribute keep of transaction_finished          : signal is "TRUE";
+--    attribute dont_touch of transaction_finished    : signal is "TRUE";
     
-    attribute keep of spi_ip_config_state_is        : signal is "TRUE";
-    attribute dont_touch of spi_ip_config_state_is  : signal is "TRUE";
+--    attribute keep of spi_ip_config_state_is        : signal is "TRUE";
+--    attribute dont_touch of spi_ip_config_state_is  : signal is "TRUE";
     
-    attribute keep of newip_start                   : signal is "TRUE";
-    attribute dont_touch of newip_start             : signal is "TRUE";
+--    attribute keep of newip_start                   : signal is "TRUE";
+--    attribute dont_touch of newip_start             : signal is "TRUE";
     
-    attribute keep of write_spi_state_is            : signal is "TRUE";
-    attribute dont_touch of write_spi_state_is      : signal is "TRUE";
+--    attribute keep of write_spi_state_is            : signal is "TRUE";
+--    attribute dont_touch of write_spi_state_is      : signal is "TRUE";
       
-    attribute keep of byte_transfer_counter          : signal is "true";
-    attribute keep of set_ip_counter                 : signal is "true";
-    attribute keep of page_prog_counter              : signal is "true";
-    attribute keep of second_transaction             : signal is "true";
-    attribute keep of page_prog                      : signal is "true";
-    attribute keep of system_start                   : signal is "true";
-    attribute keep of check_ip_counter               : signal is "true";
-    attribute keep of set_default_ip                 : signal is "true";
+--    attribute keep of byte_transfer_counter          : signal is "true";
+--    attribute keep of set_ip_counter                 : signal is "true";
+--    attribute keep of page_prog_counter              : signal is "true";
+--    attribute keep of second_transaction             : signal is "true";
+--    attribute keep of page_prog                      : signal is "true";
+--    attribute keep of system_start                   : signal is "true";
+--    attribute keep of check_ip_counter               : signal is "true";
+--    attribute keep of set_default_ip                 : signal is "true";
     
-    attribute keep of myIP_set                       : signal is "true";
-    attribute keep of myMAC_set                      : signal is "true";
-    attribute keep of destIP_set                     : signal is "true";
-    attribute dont_touch of myIP_set                 : signal is "true";
-    attribute dont_touch of myMAC_set                : signal is "true";
-    attribute dont_touch of destIP_set               : signal is "true";
+--    attribute keep of myIP_set                       : signal is "true";
+--    attribute keep of myMAC_set                      : signal is "true";
+--    attribute keep of destIP_set                     : signal is "true";
+--    attribute dont_touch of myIP_set                 : signal is "true";
+--    attribute dont_touch of myMAC_set                : signal is "true";
+--    attribute dont_touch of destIP_set               : signal is "true";
     
     
     component ila_spi_flash

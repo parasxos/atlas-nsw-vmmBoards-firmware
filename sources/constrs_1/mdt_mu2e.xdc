@@ -6,14 +6,10 @@ create_clock -period 8.000 -name gtrefclk_p -waveform {0.000 4.000} [get_ports g
 #create_clock -period 16.000 -name txoutclk [get_pins core_wrapper/transceiver_inst/gtwizard_inst/gt0_txoutclk_i_bufg/O]
 #create_clock -period 25.000 -name clk_in [get_ports clk_in]
 
-
 set_property PACKAGE_PIN F6 [get_ports gtrefclk_p]
 set_property PACKAGE_PIN E6 [get_ports gtrefclk_n]
 
-
 ########################MDT##################################
-
-
 set_property IOSTANDARD LVDS_25 [get_ports X_2V5_DIFF_CLK_P]
 set_property IOSTANDARD LVDS_25 [get_ports X_2V5_DIFF_CLK_N]
 
@@ -21,23 +17,11 @@ set_property IOSTANDARD LVDS_25 [get_ports X_2V5_DIFF_CLK_N]
 ################### TRANSCEIVERS MDT ########################
 
 
-
-
-
 ######################## ETHERNET-MDT##################################
-
-
-
 set_property IOSTANDARD LVCMOS25 [get_ports phy_int]
-
 set_property IOSTANDARD LVCMOS25 [get_ports phy_rstn_out]
-
 #set_property PACKAGE_PIN W19 [get_ports glbl_rst]
 #set_property IOSTANDARD LVCMOS25 [get_ports glbl_rst]
-
-
-
-
 
 #########################TRIGGER-MDT#############################
 # CTF 1.0 External Trigger
@@ -202,44 +186,28 @@ set_property IOSTANDARD DIFF_HSUL_12 [get_ports TKO_N]
 #set_property IOSTANDARD DIFF_HSUL_12 [get_ports WEN_1_N]
 
 ##########################ENA VMM3##############################
-
-
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_1_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_1_N]
 
 ##########################CKDT VMM3##############################
-
-
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_1_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_1_N]
 
 ##########################ART VMM3##############################
-
-
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_clk_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_clk_N]
-
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_N]
 
-
 ########################## ART OUT ##############################
-
-
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_clkout_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_clkout_N]
-
-
-
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_OUT_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_OUT_N]
 
-
 ##########################SPI VMM3##############################
-
-
 #######CS B19 @VMM3
 set_property IOSTANDARD LVCMOS12 [get_ports VMM_CS]
 
@@ -264,8 +232,6 @@ set_property IOSTANDARD LVCMOS12 [get_ports VMM_SCK]
 #set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr3_p]
 #set_property PACKAGE_PIN T18 [get_ports MuxAddr3_n]
 #set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr3_n]
-
-
 
 #set_property PACKAGE_PIN G16 [get_ports Vaux8_v_n]
 #set_property PACKAGE_PIN G15 [get_ports Vaux8_v_p]
@@ -329,8 +295,6 @@ set_property IOSTANDARD LVCMOS12 [get_ports VMM_SCK]
 #set_property PACKAGE_PIN H13 [get_ports Vaux_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux_v_n]
-
-
 
 set_property CONFIG_MODE SPIx1 [current_design]
 #set_property IOSTANDARD LVCMOS25 [get_ports SPI_CLK]
@@ -410,7 +374,7 @@ set_multicycle_path -setup -start -from [get_clocks -of_objects [get_pins -hiera
 set_multicycle_path -hold -from [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] -to clk_sck 1
 #======================= SPI Flash Constraints =======================
 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_pins FDCE_inst/C] 
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
 
@@ -439,13 +403,10 @@ set_property PACKAGE_PIN W1 [get_ports phy_int]
 set_property PACKAGE_PIN Y1 [get_ports phy_rstn_out]
 set_property IOSTANDARD HSUL_12 [get_ports MO_N]
 set_property IOSTANDARD HSUL_12 [get_ports MO_P]
-#set_property IOSTANDARD LVCMOS12 [get_ports CS]    Removing unplaced port
-
 
 set_property OFFCHIP_TERM NONE [get_ports IO0_IO]
 set_property OFFCHIP_TERM NONE [get_ports IO1_IO]
 set_property OFFCHIP_TERM NONE [get_ports SS_IO]
-set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
-set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
-set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
-connect_debug_port dbg_hub/clk [get_nets clk_200]
+
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
+set_false_path -from [get_ports CH_TRIGGER]

@@ -106,27 +106,27 @@ architecture Behavioral of vmm_readout is
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -----------------------------------------------------------------
-    attribute mark_debug : string;
+--    attribute mark_debug : string;
 
-    attribute mark_debug of NoFlg                 : signal  is  "true";
-    attribute mark_debug of dt_state              : signal  is  "true";
-    attribute mark_debug of NoFlg_counter         : signal  is  "true";
-    attribute mark_debug of reading_out_word      : signal  is  "true";
-    attribute mark_debug of dt_done               : signal  is  "true";
-    attribute mark_debug of vmm_ckdt_i            : signal  is  "true";
-    attribute mark_debug of vmm_cktk_i            : signal  is  "true";
-    attribute mark_debug of vmm_data0_i           : signal  is  "true";
-    attribute mark_debug of vmm_data1_i           : signal  is  "true";
-    attribute mark_debug of dataBitRead           : signal  is  "true";
-    attribute mark_debug of dt_cntr_st            : signal  is  "true";
-    attribute mark_debug of vmmEventDone_i        : signal  is  "true";
-    attribute mark_debug of hitsLen_cnt           : signal  is  "true";
-    attribute mark_debug of daq_enable_i          : signal  is  "true";
-    attribute mark_debug of vmmWordReady_i        : signal  is  "true";
-    attribute mark_debug of vmmWord_i             : signal  is  "true";
-    attribute mark_debug of trigger_pulse         : signal  is  "true";
-    attribute mark_debug of trigger_pulse_i       : signal  is  "true";
-    attribute mark_debug of trig_latency_counter  : signal  is  "true";
+--    attribute mark_debug of NoFlg                 : signal  is  "true";
+--    attribute mark_debug of dt_state              : signal  is  "true";
+--    attribute mark_debug of NoFlg_counter         : signal  is  "true";
+--    attribute mark_debug of reading_out_word      : signal  is  "true";
+--    attribute mark_debug of dt_done               : signal  is  "true";
+--    attribute mark_debug of vmm_ckdt_i            : signal  is  "true";
+--    attribute mark_debug of vmm_cktk_i            : signal  is  "true";
+--    attribute mark_debug of vmm_data0_i           : signal  is  "true";
+--    attribute mark_debug of vmm_data1_i           : signal  is  "true";
+--    attribute mark_debug of dataBitRead           : signal  is  "true";
+--    attribute mark_debug of dt_cntr_st            : signal  is  "true";
+--    attribute mark_debug of vmmEventDone_i        : signal  is  "true";
+--    attribute mark_debug of hitsLen_cnt           : signal  is  "true";
+--    attribute mark_debug of daq_enable_i          : signal  is  "true";
+--    attribute mark_debug of vmmWordReady_i        : signal  is  "true";
+--    attribute mark_debug of vmmWord_i             : signal  is  "true";
+--    attribute mark_debug of trigger_pulse         : signal  is  "true";
+--    attribute mark_debug of trigger_pulse_i       : signal  is  "true";
+--    attribute mark_debug of trig_latency_counter  : signal  is  "true";
 
 
 component vmmSignalsDemux
@@ -371,12 +371,12 @@ port map(
     vmm_cktk_vec    => vmm_cktk_vec
     );
 
-ilaDAQ: ila_readout
-port map
-    (
-        clk                     =>  clk,
-        probe0                  =>  probe0_out
-    );
+--ilaDAQ: ila_readout
+--port map
+--    (
+--        clk                     =>  clk,
+--        probe0                  =>  probe0_out
+--    );
 
     probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
     probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK

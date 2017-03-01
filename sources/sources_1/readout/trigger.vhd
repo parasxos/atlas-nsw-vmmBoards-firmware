@@ -72,16 +72,16 @@ architecture Behavioral of trigger is
 -------------------------------------------------------------------
 -- Keep signals for ILA
 -------------------------------------------------------------------    
-    attribute keep : string;
+--    attribute keep : string;
 
-    attribute keep of event_counter_i       :    signal    is    "true";
-    attribute keep of tr_out_i              :    signal    is    "true";
-    attribute keep of tren                  :    signal    is    "true";
-    attribute keep of trmode                :    signal    is    "true";
-    attribute keep of trint                 :    signal    is    "true";
-    attribute keep of mode                  :    signal    is    "true";
-    attribute keep of trint_pre             :    signal    is    "true";
-    attribute keep of trext_pre             :    signal    is    "true";
+--    attribute keep of event_counter_i       :    signal    is    "true";
+--    attribute keep of tr_out_i              :    signal    is    "true";
+--    attribute keep of tren                  :    signal    is    "true";
+--    attribute keep of trmode                :    signal    is    "true";
+--    attribute keep of trint                 :    signal    is    "true";
+--    attribute keep of mode                  :    signal    is    "true";
+--    attribute keep of trint_pre             :    signal    is    "true";
+--    attribute keep of trext_pre             :    signal    is    "true";
     
 -- Components if any
 

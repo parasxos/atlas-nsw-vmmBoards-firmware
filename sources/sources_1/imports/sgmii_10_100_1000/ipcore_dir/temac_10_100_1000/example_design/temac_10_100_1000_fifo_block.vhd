@@ -306,16 +306,16 @@ architecture wrapper of temac_10_100_1000_fifo_block is
 
    -- Note: KEEP attributes preserve signal names so they can be displayed in
    --            simulator wave windows
-   attribute keep : string;
-   attribute keep of rx_axis_mac_tdata  : signal is "true";
-   attribute keep of rx_axis_mac_tvalid : signal is "true";
-   attribute keep of rx_axis_mac_tlast  : signal is "true";
-   attribute keep of rx_axis_mac_tuser  : signal is "true";
-   attribute keep of tx_axis_mac_tdata  : signal is "true";
-   attribute keep of tx_axis_mac_tvalid : signal is "true";
-   attribute keep of tx_axis_mac_tready : signal is "true";
-   attribute keep of tx_axis_mac_tlast  : signal is "true";
-   attribute keep of tx_axis_mac_tuser  : signal is "true";
+--   attribute keep : string;
+--   attribute keep of rx_axis_mac_tdata  : signal is "true";
+--   attribute keep of rx_axis_mac_tvalid : signal is "true";
+--   attribute keep of rx_axis_mac_tlast  : signal is "true";
+--   attribute keep of rx_axis_mac_tuser  : signal is "true";
+--   attribute keep of tx_axis_mac_tdata  : signal is "true";
+--   attribute keep of tx_axis_mac_tvalid : signal is "true";
+--   attribute keep of tx_axis_mac_tready : signal is "true";
+--   attribute keep of tx_axis_mac_tlast  : signal is "true";
+--   attribute keep of tx_axis_mac_tuser  : signal is "true";
 
 begin
 

@@ -40,7 +40,7 @@ set_false_path -from [get_ports CH_TRIGGER]
 set_max_delay -datapath_only -from [get_pins -hier *SCK_O_reg_reg/C] -to [get_pins -hier *USRCCLKO] 1.500
 set_min_delay -from [get_pins -hier *SCK_O_reg_reg/C] -to [get_pins -hier *USRCCLKO] 0.100
 ## SPI FLASH END ##
-set_max_delay 10.000 -from [get_cells *user_side_FIFO/tx_fifo_i/*rd_addr_txfer*] -to [get_cells *user_side_FIFO/tx_fifo_i/wr_rd_addr*]
+#set_max_delay 10.000 -from [get_cells *user_side_FIFO/tx_fifo_i/*rd_addr_txfer*] -to [get_cells *user_side_FIFO/tx_fifo_i/wr_rd_addr*]
 #============================= Multicycle Paths =======================
 ## SPI FLASH BEGIN ##
 set_multicycle_path -setup -from clk_sck -to     [get_clocks -of_objects [get_pins -hierarchical *ext_spi_clk]] 2
@@ -72,12 +72,12 @@ set tclk_trace_delay_min 0.2
 ### End of user provided delay numbers
 ## SPI FLASH END ##
 #============================= Disable Timing =========================
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets gtx_clk]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets gtx_clk]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_pins FDCE_inst/C] 
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {CLK_40_IBUF}]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {CLK_40_IBUF}]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
 #======================================================================
@@ -119,8 +119,8 @@ set_property PACKAGE_PIN V4      [get_ports X_2V5_DIFF_CLK_P]
 set_property PACKAGE_PIN W4      [get_ports X_2V5_DIFF_CLK_N]
 set_property IOSTANDARD LVDS_25  [get_ports X_2V5_DIFF_CLK_P]
 set_property IOSTANDARD LVDS_25  [get_ports X_2V5_DIFF_CLK_N]
-set_property PACKAGE_PIN V20     [get_ports CLK_40]
-set_property IOSTANDARD LVCMOS33 [get_ports CLK_40]
+#set_property PACKAGE_PIN V20     [get_ports CLK_40]
+#set_property IOSTANDARD LVCMOS33 [get_ports CLK_40]
 ############################# Ethernet #############################
 set_property PACKAGE_PIN F6      [get_ports gtrefclk_p]
 set_property PACKAGE_PIN E6      [get_ports gtrefclk_n]
@@ -144,50 +144,50 @@ set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_N]
 
 ######################## ETHERNET-MDT##################################
 
-set_property PACKAGE_PIN AB7 [get_ports SDA_inout]
-set_property IOSTANDARD LVCMOS25 [get_ports SDA_inout]
+#set_property PACKAGE_PIN AB7 [get_ports SDA_inout]
+#set_property IOSTANDARD LVCMOS25 [get_ports SDA_inout]
 
-set_property PACKAGE_PIN AB6 [get_ports SCL_out]
-set_property IOSTANDARD LVCMOS25 [get_ports SCL_out]
+#set_property PACKAGE_PIN AB6 [get_ports SCL_out]
+#set_property IOSTANDARD LVCMOS25 [get_ports SCL_out]
 
 
 
-set_property PACKAGE_PIN W19 [get_ports glbl_rst]
-set_property IOSTANDARD LVCMOS25 [get_ports glbl_rst]
+#set_property PACKAGE_PIN W19 [get_ports glbl_rst]
+#set_property IOSTANDARD LVCMOS25 [get_ports glbl_rst]
 
 #########################DIP SWITCES VMM3#############################
-set_property PACKAGE_PIN P15     [get_ports DIP_5]
-set_property IOSTANDARD LVCMOS33 [get_ports DIP_5]
+#set_property PACKAGE_PIN P15     [get_ports DIP_5]
+#set_property IOSTANDARD LVCMOS33 [get_ports DIP_5]
 
-set_property PACKAGE_PIN R16     [get_ports DIP_4]
-set_property IOSTANDARD LVCMOS33 [get_ports DIP_4]
+#set_property PACKAGE_PIN R16     [get_ports DIP_4]
+#set_property IOSTANDARD LVCMOS33 [get_ports DIP_4]
 
-set_property PACKAGE_PIN N13     [get_ports DIP_3]
-set_property IOSTANDARD LVCMOS33 [get_ports DIP_3]
+#set_property PACKAGE_PIN N13     [get_ports DIP_3]
+#set_property IOSTANDARD LVCMOS33 [get_ports DIP_3]
 
-set_property PACKAGE_PIN N14     [get_ports DIP_2]
-set_property IOSTANDARD LVCMOS33 [get_ports DIP_2]
+#set_property PACKAGE_PIN N14     [get_ports DIP_2]
+#set_property IOSTANDARD LVCMOS33 [get_ports DIP_2]
 
-set_property PACKAGE_PIN P16     [get_ports DIP_1]
-set_property IOSTANDARD LVCMOS33 [get_ports DIP_1]
+#set_property PACKAGE_PIN P16     [get_ports DIP_1]
+#set_property IOSTANDARD LVCMOS33 [get_ports DIP_1]
 
-set_property PACKAGE_PIN R17     [get_ports DIP_0]
-set_property IOSTANDARD LVCMOS33 [get_ports DIP_0]
+#set_property PACKAGE_PIN R17     [get_ports DIP_0]
+#set_property IOSTANDARD LVCMOS33 [get_ports DIP_0]
 #########################   LEDs MDT  #############################
-set_property PACKAGE_PIN Y17 [get_ports LED_D12]
-set_property IOSTANDARD LVCMOS25 [get_ports LED_D12]
+#set_property PACKAGE_PIN Y17 [get_ports LED_D12]
+#set_property IOSTANDARD LVCMOS25 [get_ports LED_D12]
 
-set_property PACKAGE_PIN U7 [get_ports LED_D13]
-set_property IOSTANDARD LVCMOS25 [get_ports LED_D13]
+#set_property PACKAGE_PIN U7 [get_ports LED_D13]
+#set_property IOSTANDARD LVCMOS25 [get_ports LED_D13]
 
-set_property PACKAGE_PIN F4 [get_ports LED_D14]
-set_property IOSTANDARD LVCMOS25 [get_ports LED_D14]
+#set_property PACKAGE_PIN F4 [get_ports LED_D14]
+#set_property IOSTANDARD LVCMOS25 [get_ports LED_D14]
 
-set_property PACKAGE_PIN P20 [get_ports LED_D15]
-set_property IOSTANDARD LVCMOS25 [get_ports LED_D15]
+#set_property PACKAGE_PIN P20 [get_ports LED_D15]
+#set_property IOSTANDARD LVCMOS25 [get_ports LED_D15]
 
-set_property PACKAGE_PIN T3 [get_ports LED_D16]
-set_property IOSTANDARD LVCMOS25 [get_ports LED_D16]
+#set_property PACKAGE_PIN T3 [get_ports LED_D16]
+#set_property IOSTANDARD LVCMOS25 [get_ports LED_D16]
 #########################DATA0 VMM3#############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_1_P]
@@ -202,15 +202,15 @@ set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_1_N]
 
 ##########################DI-VMM2##############################
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports DI_1_P]
-set_property PACKAGE_PIN L13 [get_ports DI_1_N]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports DI_1_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports DI_1_P]
+#set_property PACKAGE_PIN L13 [get_ports DI_1_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports DI_1_N]
 
 ##########################DO-VMM2##############################
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports DO_1_P]
-set_property PACKAGE_PIN M20 [get_ports DO_1_N]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports DO_1_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports DO_1_P]
+#set_property PACKAGE_PIN M20 [get_ports DO_1_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports DO_1_N]
 
 ################################################################
 ######################### BANK 15 ##############################
@@ -252,29 +252,27 @@ set_property IOSTANDARD LVCMOS12 [get_ports SDI_1]
 set_property PACKAGE_PIN G18 [get_ports SDO_1]
 set_property IOSTANDARD LVCMOS12 [get_ports SDO_1]
 
-#set_property IOSTANDARD LVCMOS25 [get_ports SDO_1]
+############################ MO/TDO/PDO #########################
 
+#set_property PACKAGE_PIN H13 [get_ports MO_p]
+#set_property PACKAGE_PIN G13 [get_ports MO_n]
 
-# MO Inputs
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports MO_p]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports MO_n]
 
-set_property PACKAGE_PIN H13 [get_ports MO_p]
-set_property PACKAGE_PIN G13 [get_ports MO_n]
+#set_property PACKAGE_PIN J14 [get_ports TDO_p]
+#set_property PACKAGE_PIN H14 [get_ports TDO_n]
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports MO_p]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports MO_n]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports TDO_p]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports TDO_n]
 
-set_property PACKAGE_PIN J14 [get_ports TDO_p]
-set_property PACKAGE_PIN H14 [get_ports TDO_n]
+#set_property PACKAGE_PIN G15 [get_ports PDO_p]
+#set_property PACKAGE_PIN G16 [get_ports PDO_n]
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports TDO_p]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports TDO_n]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports PDO_p]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports PDO_n]
 
-set_property PACKAGE_PIN G15 [get_ports PDO_p]
-set_property PACKAGE_PIN G16 [get_ports PDO_n]
-
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports PDO_p]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports PDO_n]
-
+############################# TKI TKO ###########################
 
 set_property PACKAGE_PIN K17 [get_ports TKI_P]
 set_property PACKAGE_PIN J17 [get_ports TKI_N]
@@ -296,11 +294,11 @@ set_property IOSTANDARD DIFF_HSUL_12 [get_ports TKO_N]
 
 ##########################WEN VMM3##############################
 
-set_property PACKAGE_PIN D17 [get_ports WEN_1_P]
-set_property PACKAGE_PIN C17 [get_ports WEN_1_N]
+#set_property PACKAGE_PIN D17 [get_ports WEN_1_P]
+#set_property PACKAGE_PIN C17 [get_ports WEN_1_N]
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports WEN_1_P]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports WEN_1_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports WEN_1_P]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports WEN_1_N]
 
 ##########################ENA VMM3##############################
 

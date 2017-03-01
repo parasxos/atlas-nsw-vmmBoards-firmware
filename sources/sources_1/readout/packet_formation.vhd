@@ -94,20 +94,20 @@ architecture Behavioral of packet_formation is
 -----------------------------------------------------------------
 
 ----------------------  Debugging ------------------------------
---    attribute mark_debug : string;
+    attribute mark_debug : string;
 
 --    attribute mark_debug of header                :    signal    is    "true";
 --    attribute mark_debug of globBcid              :    signal    is    "true";
 --    attribute mark_debug of globBcid_i            :    signal    is    "true";
 --    attribute mark_debug of precCnt               :    signal    is    "true";
---    attribute mark_debug of vmmId_i               :    signal    is    "true";
+    attribute mark_debug of vmmId_i               :    signal    is    "true";
 --    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
 --    attribute mark_debug of vmmWord_i             :    signal    is    "true";
---    attribute mark_debug of packLen_i             :    signal    is    "true";
---    attribute mark_debug of packLen_cnt           :    signal    is    "true";
---    attribute mark_debug of end_packet_int        :    signal    is    "true";
---    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
---    attribute mark_debug of debug_state           :    signal    is    "true";
+    attribute mark_debug of packLen_i             :    signal    is    "true";
+    attribute mark_debug of packLen_cnt           :    signal    is    "true";
+    attribute mark_debug of end_packet_int        :    signal    is    "true";
+    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
+    attribute mark_debug of debug_state           :    signal    is    "true";
 
     component ila_pf
     port (
@@ -165,15 +165,16 @@ begin
             when increaseCounter =>
                 debug_state <= "00001";
                 eventCounter_i  <= eventCounter_i + 1;
-                state           <= captureEventID;
---            when waitForLatency =>
---                    debug_state <= "00001";
---                tr_hold         <= '1';                 -- Prevent new triggers
---                if trigLatencyCnt > trigLatency then 
---                    state           <= captureEventID;
---                else
---                    trigLatencyCnt  <= trigLatencyCnt + 1;
---                end if;
+                state           <= waitForLatency;
+                
+            when waitForLatency =>
+                debug_state <= "00010";
+                --tr_hold         <= '1';                 -- Prevent new triggers
+                if trigLatencyCnt > trigLatency then 
+                    state           <= captureEventID;
+                else
+                    trigLatencyCnt  <= trigLatencyCnt + 1;
+                end if;
 
 --            when S2 =>          -- wait for the header elements to be formed
 --                debug_state <= "00010";
@@ -333,18 +334,18 @@ end process;
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";  
                             --    8    &    16    &     5    &   3
 
---ilaPacketFormation: ila_pf
---port map(
---    clk                     =>  clk,
---    probe0                  =>  probe0_out,
---    probe1                  =>  probe1_out
---);
+ilaPacketFormation: ila_pf
+port map(
+    clk                     =>  clk,
+    probe0                  =>  probe0_out,
+    probe1                  =>  probe1_out
+);
 
-    probe0_out(63 downto 0)             <= header;             -- OK
-    probe0_out(127 downto 64)           <= (others => '0');          -- OK
-    probe0_out(128)                     <= '0';
-    probe0_out(129)                     <= '0';
-    probe0_out(132 downto 130)          <= vmmId_i;
+    probe0_out(9 downto 0)             <= std_logic_vector(to_unsigned(trigLatencyCnt, 10));--header;             -- OK
+    probe0_out(19 downto 10)           <= std_logic_vector(to_unsigned(trigLatency, 10));          -- OK
+    probe0_out(20)                     <= '0';
+    probe0_out(21)                     <= '0';
+    probe0_out(132 downto 22)          <= (others => '0');--vmmId_i;
 
     probe1_out(63 downto 0)             <= (others => '0');--daqFIFO_din;        -- OK
     probe1_out(64)                      <= vmmWordReady;       -- OK

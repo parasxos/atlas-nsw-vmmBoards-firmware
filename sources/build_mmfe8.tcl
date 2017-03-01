@@ -50,11 +50,19 @@
 # Set part type
 set thepart "xc7a200tfbg484-2"
 
-# Set project name
-set projectname "MMFE8"
-
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir [file dirname [info script]]
+
+    #Set project name from argument
+        if {$argv == "mdt_mu2e"} {    
+            set projectname "MDT_MU2E"
+            puts "Correct. Building Project for MDT MU2E..."
+        } elseif {$argv == "mdt_446"} {
+            set projectname "MDT_446"
+            puts "Correct. Building Project for MDT 446..."
+        } else {
+            puts "ERROR! Please, give argument mdt_mu2e or mdt_446."
+        }
 
 # Create project
 create_project $projectname $origin_dir/$projectname 
@@ -138,7 +146,9 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set obj [get_filesets sources_1]   
 set files [list \
  "[file normalize "$origin_dir/sources_1/mmfe8_top.vhd"]"\
- "[file normalize "$origin_dir/sources_1/configuration/config_logic.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/udp_data_in_handler.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/fpga_config_block.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/vmm_config_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/select_vmm.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/axi_quad_top.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_REQ.vhd"]"\
@@ -175,6 +185,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/fifo/temac_10_100_1000_ten_100_1g_eth_fifo.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_reset_sync.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_sync_block.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/CDCC.vhd"]"\
  "[file normalize "$origin_dir/sources_1/ip/clk_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_0_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_user_FIFO.xcix"]"\
@@ -190,9 +201,12 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
@@ -213,7 +227,17 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/configuration/config_logic.vhd"
+set file "$origin_dir/sources_1/configuration/udp_data_in_handler.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/vmm_config_block.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/fpga_config_block.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -398,6 +422,11 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
+set file "$origin_dir/sources_1/imports/CDCC.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
 set file "$origin_dir/sources_1/readout/event_timing_reset.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -564,6 +593,13 @@ add_files -norecurse -fileset $obj $files
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
 set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
@@ -582,6 +618,20 @@ set files [list \
 ]
 add_files -norecurse -fileset $obj $files
 
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
 # Set 'sources_1' fileset file properties for remote files
 # None
 
@@ -596,13 +646,23 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 # Set 'constrs_1' fileset object
 set obj [get_filesets constrs_1]
 
-# Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/constrs_1/mmfe8.xdc"]"
-set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/constrs_1/mmfe8.xdc"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
-set_property "file_type" "XDC" $file_obj
+if {$argv == "mdt_mu2e"} {    
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/mdt_mu2e.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/mdt_mu2e.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+    } elseif {$argv == "mdt_446"} {
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/mdt_446.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/mdt_446.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+    } else { puts "ERROR!"} 
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]

@@ -28,6 +28,7 @@ module xadc #
 )
 (
     input           clk200,
+    input           clk125,
     input           rst,
     
     input           VP_0,
@@ -96,6 +97,7 @@ wire            init_type;
 wire            save;
 wire            fifo_done;
 wire            full_pkt;
+wire            xadc_busy_s200;
 
 reg [3:0]       st;
 reg             rst_pkt_r;
@@ -160,7 +162,7 @@ assign rst_pkt = rst_pkt_r;
 assign rst_pkt2 = rst_pkt2_r;
 assign end_of_data = end_of_data_r;
 assign full_pkt = full_pkt_r;
-assign xadc_busy = xadc_busy_r;
+assign xadc_busy_s200 = xadc_busy_r;
 
 
 always @(posedge clk200)
@@ -617,6 +619,14 @@ xadc_read XADC
     .rst_xadc(rst_xadc),
     .mux_select(mux_select)
 );
+// sync xadc_busy to 125 Mhz clock
+CDCC CDCC_200to125
+(
+    .clk_src(clk200),
+    .clk_dst(clk125),
+    .data_in(xadc_busy_s200),
+    .data_out_s(xadc_busy)
+);    
 
 
 endmodule

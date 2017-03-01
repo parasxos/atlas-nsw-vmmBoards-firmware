@@ -66,7 +66,7 @@ signal sel                      : std_logic_vector(2 downto 0);
 signal fifo_rst_i               : std_logic;
 begin
 
-data_selection : process(configuring, data_acq)
+data_selection : process(configuring, data_acq, we_data, daq_data_in, data_packet_length, end_packet_daq, fifo_rst_daq)
 begin
     sel <= configuring & data_acq & xadc;
         case sel is

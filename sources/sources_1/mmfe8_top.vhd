@@ -20,7 +20,8 @@
 -- at flow_fsm and axi4-spi flash module. (Christos Bakalis)
 -- 27.02.2017 Added CDCC to top level. Added sel_cs mux to avoid clock domain
 -- crossing. (Christos Bakalis)
--- 
+-- 27.02.2017 Changed main logic clock to 125MHz (Paris)
+--
 ----------------------------------------------------------------------------------
 
 library unisim;
@@ -35,10 +36,8 @@ use work.arp_types.all;
 entity mmfe8_top is
     port(
         -- Trigger pins
-        -- CTF 1.0 External Trigger
 --        EXT_TRIGGER_P       : in std_logic;
 --        EXT_TRIGGER_N       : in std_logic;
-        -- Arizona Board for External Trigger
 --        EXT_TRIG_IN         : in std_logic;
 
 --        TRIGGER_LOOP_P      : out std_logic;
@@ -191,11 +190,9 @@ end mmfe8_top;
 
 architecture Behavioral of mmfe8_top is
 
-    -- Default IP and MAC address of the MMFE8
-    -- Same values as VIO default values. VIO can change IP on-the-fly.
-    -- If want to hardcode source IP/MAC, comment out VIO and set from here.
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212227";
+  -- Default IP and MAC address of the board
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212223";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
 
   -- clock generation signals for tranceiver
@@ -278,6 +275,9 @@ architecture Behavioral of mmfe8_top is
   signal tx_axis_mac_tuser_int       : std_logic := '1';
   signal test_data                   : std_logic_vector(7 downto 0); 
   signal test_valid, test_last       : std_logic;
+  signal icmp_rx_start	             : std_logic;
+  signal icmp_rxo  		     		 : icmp_rx_type;
+
   signal test_data_out                   : std_logic_vector(7 downto 0); 
   signal test_valid_out, test_last_out       : std_logic;  
   signal user_data_out_i             : std_logic_vector(63 downto 0);
@@ -1049,7 +1049,7 @@ architecture Behavioral of mmfe8_top is
             gt0_pll0lock_out        : out std_logic);
     end component;
 	-- 11
-	component UDP_Complete_nomac
+	component UDP_ICMP_Complete_nomac
 	   Port (
 			-- UDP TX signals
 			udp_tx_start			: in std_logic;							    -- indicates req to tx UDP
@@ -1059,6 +1059,9 @@ architecture Behavioral of mmfe8_top is
 			-- UDP RX signals
 			udp_rx_start			: out std_logic;							-- indicates receipt of udp header
 			udp_rxo					: out udp_rx_type;
+			-- ICMP RX signals
+			icmp_rx_start		    : out std_logic;
+			icmp_rxo		        : out icmp_rx_type;
 			-- IP RX signals
 			ip_rx_hdr				: out ipv4_rx_header_type;
 			-- system signals
@@ -1562,7 +1565,7 @@ gen_gtx_reset: process (userclk2)
       end if;
    end process;
 
-UDP_block: UDP_Complete_nomac
+UDP_ICMP_block: UDP_ICMP_Complete_nomac
 	Port map(
 			udp_tx_start				=> udp_tx_start_int,
 			udp_txi						=> udp_txi_int, 
@@ -1570,6 +1573,8 @@ UDP_block: UDP_Complete_nomac
 			udp_tx_data_out_ready	    => udp_tx_data_out_ready_int, 
 			udp_rx_start				=> udp_header_int,									-- indicates receipt of udp header
 			udp_rxo						=> udp_rx_int,
+			icmp_rx_start		        => icmp_rx_start,
+			icmp_rxo		            => icmp_rxo,
 			ip_rx_hdr					=> ip_rx_hdr_int,	
 			rx_clk						=> userclk2,
 			tx_clk						=> userclk2,

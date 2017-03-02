@@ -12,7 +12,8 @@
 -- Changelog:
 -- 09.09.2016 Added a glBCID counter for periodic soft reset of VMMs which takes place
 -- every 102us if DAQ is on and if not in the middle of read-out. (Christos Bakalis)
--- 
+-- 15.09.2016 Optimized the periodic soft reset process. (Paris Moschovakos)
+--
 ----------------------------------------------------------------------------------------
 
 library UNISIM;
@@ -66,7 +67,7 @@ architecture Behavioral of event_timing_reset is
     signal vmm_wen_vec_i            : std_logic_vector(8 downto 1)	:= ( others => '0' );
     signal rst_i                    : std_logic := '0';                                     -- Internal reset related to glBCID counter
     constant glBCID_limit           : std_logic_vector(11 downto 0) := b"010000000000";     -- 1024*T(10MHz~100ns) = 102 us
--- Components if any
+    -- Components if any
 
 begin
 
@@ -131,22 +132,18 @@ end process;
 
 globalBCIDproc: process (bc_clk, rst_done, daqEnable, pfBusy, glBCID_i)
 begin
-    if(rst_done = '1')then
-        glBCID_i    <= b"000000000000";
-        rst_i       <= '0';
-    elsif(rising_edge(bc_clk))then 
-    
-        glBCID_i    <= glBCID_i + 1;
+    if rising_edge(bc_clk) then
+        if rst_done = '1' then
+            glBCID_i    <= b"000000000000";
+            rst_i       <= '0';
+        else     
+            glBCID_i    <= glBCID_i + 1;
         
-        if(glBCID_i >= glBCID_limit)then
-        
-            if(daqEnable = '1' and pfBusy /= '1')then
+            if(pfBusy /= '1' and daqEnable = '1' and glBCID_i > glBCID_limit) then
                 rst_i   <= '1';
             else
                 rst_i   <= '0';
             end if;
-        else
-            rst_i   <= '0';
         end if;
     end if;
 end process;

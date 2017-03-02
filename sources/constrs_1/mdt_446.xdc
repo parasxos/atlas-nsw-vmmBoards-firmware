@@ -360,10 +360,10 @@ set_property IOSTANDARD LVCMOS12 [get_ports VMM_SCK]
 
 ###########################XADC MDT#############################
 # Dedicated Analog Inputs
-#set_property IOSTANDARD LVCMOS25 [get_ports VP_0]
-#set_property PACKAGE_PIN L10 [get_ports VP_0]
-#set_property IOSTANDARD LVCMOS25 [get_ports VN_0]
-#set_property PACKAGE_PIN M9 [get_ports VN_0]
+set_property IOSTANDARD LVCMOS25 [get_ports VP_0]
+set_property PACKAGE_PIN L10 [get_ports VP_0]
+set_property IOSTANDARD LVCMOS25 [get_ports VN_0]
+set_property PACKAGE_PIN M9 [get_ports VN_0]
 
 ## Analog Multiplexer Pins
 #set_property PACKAGE_PIN T20 [get_ports MuxAddr0]
@@ -377,11 +377,13 @@ set_property IOSTANDARD LVCMOS12 [get_ports VMM_SCK]
 #set_property PACKAGE_PIN T18 [get_ports MuxAddr3_n]
 #set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr3_n]
 
-#set_property PACKAGE_PIN G16 [get_ports Vaux8_v_n]
-#set_property PACKAGE_PIN G15 [get_ports Vaux8_v_p]
+#PDO
+set_property PACKAGE_PIN G16 [get_ports Vaux8_v_n]
+set_property PACKAGE_PIN G15 [get_ports Vaux8_v_p]
 
-#set_property PACKAGE_PIN H14 [get_ports Vaux1_v_n]
-#set_property PACKAGE_PIN J14 [get_ports Vaux1_v_p]
+#TDO
+set_property PACKAGE_PIN H14 [get_ports Vaux1_v_n]
+set_property PACKAGE_PIN J14 [get_ports Vaux1_v_p]
 
 #set_property PACKAGE_PIN J22 [get_ports Vaux2_v_p]
 #set_property PACKAGE_PIN H22 [get_ports Vaux2_v_n]
@@ -405,14 +407,14 @@ set_property IOSTANDARD LVCMOS12 [get_ports VMM_SCK]
 
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux0_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux0_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux1_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux1_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux1_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux1_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux2_v_n]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux2_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux3_v_n]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux3_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux9_v_n]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux9_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_n]

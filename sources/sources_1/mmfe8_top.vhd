@@ -157,18 +157,18 @@ entity mmfe8_top is
         CH_TRIGGER            : IN  STD_LOGIC;
 
 --TODO: xADC-related in/outs, to be reviewed (Christos)
---        VP_0                  : IN STD_LOGIC;
---        VN_0                  : IN STD_LOGIC;
+        VP_0                  : IN STD_LOGIC;
+        VN_0                  : IN STD_LOGIC;
 --        Vaux0_v_n             : IN STD_LOGIC;
 --        Vaux0_v_p             : IN STD_LOGIC;
---        Vaux1_v_n             : IN STD_LOGIC;
---        Vaux1_v_p             : IN STD_LOGIC;
+        Vaux1_v_n             : IN STD_LOGIC;
+        Vaux1_v_p             : IN STD_LOGIC;
 --        Vaux2_v_n             : IN STD_LOGIC;
 --        Vaux2_v_p             : IN STD_LOGIC;
 --        Vaux3_v_n             : IN STD_LOGIC;
 --        Vaux3_v_p             : IN STD_LOGIC;
---        Vaux8_v_n             : IN STD_LOGIC;
---        Vaux8_v_p             : IN STD_LOGIC;
+        Vaux8_v_n             : IN STD_LOGIC;
+        Vaux8_v_p             : IN STD_LOGIC;
 --        Vaux9_v_n             : IN STD_LOGIC;
 --        Vaux9_v_p             : IN STD_LOGIC;
 --        Vaux10_v_n            : IN STD_LOGIC;
@@ -1254,27 +1254,27 @@ architecture Behavioral of mmfe8_top is
     component xadc
     port(
         clk200              : in std_logic;
-        clk125              : in std_logic;
+		clk125				: in std_logic;
         rst                 : in std_logic;
         
         VP_0                : in std_logic;
         VN_0                : in std_logic;
-        Vaux0_v_n           : in std_logic;
-        Vaux0_v_p           : in std_logic;
+--        Vaux0_v_n           : in std_logic;
+--        Vaux0_v_p           : in std_logic;
         Vaux1_v_n           : in std_logic;
         Vaux1_v_p           : in std_logic;
-        Vaux2_v_n           : in std_logic;
-        Vaux2_v_p           : in std_logic;
-        Vaux3_v_n           : in std_logic;
-        Vaux3_v_p           : in std_logic;
+--        Vaux2_v_n           : in std_logic;
+--        Vaux2_v_p           : in std_logic;
+--        Vaux3_v_n           : in std_logic;
+--        Vaux3_v_p           : in std_logic;
         Vaux8_v_n           : in std_logic;
         Vaux8_v_p           : in std_logic;
-        Vaux9_v_n           : in std_logic;
-        Vaux9_v_p           : in std_logic;
-        Vaux10_v_n          : in std_logic;
-        Vaux10_v_p          : in std_logic;
-        Vaux11_v_n          : in std_logic;
-        Vaux11_v_p          : in std_logic;
+--        Vaux9_v_n           : in std_logic;
+--        Vaux9_v_p           : in std_logic;
+--        Vaux10_v_n          : in std_logic;
+--        Vaux10_v_p          : in std_logic;
+--        Vaux11_v_n          : in std_logic;
+--        Vaux11_v_p          : in std_logic;
         data_in_rdy         : in std_logic;
         vmm_id              : in std_logic_vector(15 downto 0);
         sample_size         : in std_logic_vector(10 downto 0);
@@ -1837,43 +1837,43 @@ data_selection:  select_data
 
 --xadc_instance: xadc
 --    port map(
---        clk200                      => clk_200,
---        clk125                      => userclk2,
---        rst                         => '0', -- change this plz
+        clk200                      => clk_200,
+		clk125                      => userclk2,
+        rst                         => '0', -- change this plz
         
---        VP_0                        => VP_0,
---        VN_0                        => VN_0,
+        VP_0                        => VP_0,
+        VN_0                        => VN_0,
 --        Vaux0_v_n                   => Vaux0_v_n,
 --        Vaux0_v_p                   => Vaux0_v_p,
---        Vaux1_v_n                   => Vaux1_v_n,
---        Vaux1_v_p                   => Vaux1_v_p,
+        Vaux1_v_n                   => Vaux1_v_n,
+        Vaux1_v_p                   => Vaux1_v_p,
 --        Vaux2_v_n                   => Vaux2_v_n,
 --        Vaux2_v_p                   => Vaux2_v_p,
 --        Vaux3_v_n                   => Vaux3_v_n,
 --        Vaux3_v_p                   => Vaux3_v_p,
---        Vaux8_v_n                   => Vaux8_v_n,
---        Vaux8_v_p                   => Vaux8_v_p,
+        Vaux8_v_n                   => Vaux8_v_n,
+        Vaux8_v_p                   => Vaux8_v_p,
 --        Vaux9_v_n                   => Vaux9_v_n,
 --        Vaux9_v_p                   => Vaux9_v_p,
 --        Vaux10_v_n                  => Vaux10_v_n,
 --        Vaux10_v_p                  => Vaux10_v_p,
 --        Vaux11_v_n                  => Vaux11_v_n,
 --        Vaux11_v_p                  => Vaux11_v_p,
---        data_in_rdy                 => xadc_start,
---        vmm_id                      => vmm_id_xadc,
---        sample_size                 => xadc_sample_size,
---        delay_in                    => xadc_delay,
---        UDPDone                     => UDPDone,
+        data_in_rdy                 => xadc_start,
+        vmm_id                      => vmm_id_xadc,
+        sample_size                 => xadc_sample_size,
+        delay_in                    => xadc_delay,
+        UDPDone                     => UDPDone,
     
 --        MuxAddr0                    => MuxAddr0,
 --        MuxAddr1                    => MuxAddr1,
 --        MuxAddr2                    => MuxAddr2,
 --        MuxAddr3_p                  => MuxAddr3_p,
 --        MuxAddr3_n                  => MuxAddr3_n,
---        end_of_data                 => xadc_end_of_data,
---        fifo_bus                    => xadc_fifo_bus,
---        data_fifo_enable            => xadc_fifo_enable,
---        packet_len                  => xadc_packet_len,
+        end_of_data                 => xadc_end_of_data,
+        fifo_bus                    => xadc_fifo_bus,
+        data_fifo_enable            => xadc_fifo_enable,
+        packet_len                  => xadc_packet_len,
 --        xadc_busy                   => xadc_busy          -- synced to 125 Mhz
 --    );
 

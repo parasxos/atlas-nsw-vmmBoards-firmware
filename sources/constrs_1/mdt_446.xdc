@@ -111,6 +111,9 @@ set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
+
+set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
 #=====================================================================
 
 #====================== I/O Placement - IOSTANDARDS ===================

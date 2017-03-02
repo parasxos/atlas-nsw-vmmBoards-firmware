@@ -191,8 +191,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212223";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212227";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
 
   -- clock generation signals for tranceiver
@@ -569,7 +569,7 @@ architecture Behavioral of mmfe8_top is
     -- Flow FSM signals
     -------------------------------------------------
     type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, FIRST_RESET, TRIG, DAQ, XADC_init, XADC_wait, FLASH_init, FLASH_wait);
-    signal state        : state_t;
+    signal state        : state_t := IDLE;
     signal rstFIFO_top  : std_logic := '0';
 
     -------------------------------------------------
@@ -582,13 +582,13 @@ architecture Behavioral of mmfe8_top is
     signal dataOutProbe         : std_logic_vector(63 downto 0);
     signal flowProbe            : std_logic_vector(63 downto 0);
     signal trigger_i            : std_logic;
-    signal ckbc_en_vio          : std_logic_vector(0 downto 0);
-    signal cktp_vio             : std_logic_vector(0 downto 0);
-    signal tki_vio              : std_logic_vector(0 downto 0);
-    signal cktk_vio             : std_logic_vector(0 downto 0);
-    signal ckdt_vio             : std_logic_vector(0 downto 0);
-    signal cs_vio               : std_logic_vector(0 downto 0);
-    signal ena_vio              : std_logic_vector(0 downto 0);                               
+    signal ckbc_en_vio          : std_logic_vector(0 downto 0) := "0";
+    signal cktp_vio             : std_logic_vector(0 downto 0) := "0";
+    signal tki_vio              : std_logic_vector(0 downto 0) := "0";
+    signal cktk_vio             : std_logic_vector(0 downto 0) := "0";
+    signal ckdt_vio             : std_logic_vector(0 downto 0) := "0";
+    signal cs_vio               : std_logic_vector(0 downto 0) := "0";
+    signal ena_vio              : std_logic_vector(0 downto 0) := "0";
 
     -------------------------------------------------------------------
     -- These attribute will stop timing errors being reported in back
@@ -1835,8 +1835,8 @@ data_selection:  select_data
         fifo_rst                    => daqFIFO_reset
     );
 
---xadc_instance: xadc
---    port map(
+xadc_instance: xadc
+    port map(
         clk200                      => clk_200,
 		clk125                      => userclk2,
         rst                         => '0', -- change this plz
@@ -1874,8 +1874,8 @@ data_selection:  select_data
         fifo_bus                    => xadc_fifo_bus,
         data_fifo_enable            => xadc_fifo_enable,
         packet_len                  => xadc_packet_len,
---        xadc_busy                   => xadc_busy          -- synced to 125 Mhz
---    );
+        xadc_busy                   => xadc_busy          -- synced to 125 Mhz
+    );
 
 axi4_spi_instance: AXI4_SPI  
     port map(
@@ -2186,11 +2186,11 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     ckbc_enable             <= '0';
                     daq_vmm_ena_wen_enable  <= x"00";
                     daq_cktk_out_enable     <= x"00";
+                    sel_cs                  <= "11";    -- drive CS high
 
                     if(vmm_id_rdy = '1')then
                         if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
-                            sel_cs      <= "01";
                             state       <= CONFIGURE;
                         else
                             wait_cnt    <= wait_cnt + 1;
@@ -2220,18 +2220,16 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         end if;
 
                     elsif(daq_on = '1')then
-                        sel_cs  <= "11"; -- drive CS high
                         state   <= DAQ_INIT;
 
                     else
                         state       <= IDLE;
-                        sel_cs      <= "11"; -- drive CS high
                         wait_cnt    <= (others => '0');
                     end if;
 
                when    CONFIGURE    =>        
-                  --  sel_cs          <= "10"; -- select CS from config
-                    is_state        <= "0001";    
+                    is_state        <= "0001";
+                    sel_cs          <= "01"; -- select CS from config
                     if(vmmConf_done = '1')then 
                         state   <= CONF_DONE;
                     else
@@ -2295,7 +2293,8 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     is_state                <= "0011";
                     for I in 1 to 100 loop
                         vmm_cktp_primary    <= '1';
-                    end loop; 
+                    end loop;
+                    sel_cs                  <= "11"; -- drive CS high
                     vmm_ena_all             <= '1';
                     tren                    <= '0';
                     daq_vmm_ena_wen_enable  <= x"ff";
@@ -2309,7 +2308,8 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
                         pf_reset                <= '0';
-                        state   <= IDLE;
+                        vmm_cktp_primary        <= '0';
+                        state                   <= IDLE;
                     else
                         state   <= TRIG;
                     end if;
@@ -2380,7 +2380,7 @@ end process;
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= CH_TRIGGER;
     TRIGGER_OUT_P           <= art2;
-    TRIGGER_OUT_N           <= not art2; 
+    TRIGGER_OUT_N           <= not art2;
 
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;

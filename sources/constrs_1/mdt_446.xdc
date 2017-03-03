@@ -257,11 +257,8 @@ set_property IOSTANDARD LVCMOS12 [get_ports SDO_1]
 
 ############################ MO/TDO/PDO #########################
 
-#set_property PACKAGE_PIN H13 [get_ports MO_p]
-#set_property PACKAGE_PIN G13 [get_ports MO_n]
-
-#set_property IOSTANDARD DIFF_HSUL_12 [get_ports MO_p]
-#set_property IOSTANDARD DIFF_HSUL_12 [get_ports MO_n]
+set_property PACKAGE_PIN H13 [get_ports MO]
+set_property IOSTANDARD LVCMOS12 [get_ports MO]
 
 #set_property PACKAGE_PIN J14 [get_ports TDO_p]
 #set_property PACKAGE_PIN H14 [get_ports TDO_n]

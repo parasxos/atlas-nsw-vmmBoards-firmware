@@ -142,8 +142,7 @@ entity mmfe8_top is
 --TODO: Review signals with updated configuration (Christos)
         VMM_SCK			      : OUT STD_LOGIC;
         VMM_CS 		          : OUT STD_LOGIC;
-        CS                    : OUT STD_LOGIC;
-        MO_P,      MO_N       : OUT STD_LOGIC;
+        MO                    : OUT STD_LOGIC;
         art_clk_P, art_clk_N  : OUT STD_LOGIC;
         art_clkout_P          : OUT STD_LOGIC;
         art_clkout_N          : OUT STD_LOGIC;
@@ -191,8 +190,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212227";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80004";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
 
   -- clock generation signals for tranceiver
@@ -388,9 +387,7 @@ architecture Behavioral of mmfe8_top is
   signal tko_i              : std_logic;
   signal probe_out0         : std_logic_vector(0 downto 0);
   
-  signal MO_P_i,  MO_N_i     : std_logic;
-  signal TDO_P_i, TDO_N_i    : std_logic;
-  signal PDO_P_i, PDO_N_i    : std_logic;
+  signal MO_i               : std_logic := 'Z';
   
   signal conf_done_int      : std_logic := '0';
   signal cs_int             : std_logic := '1';
@@ -776,9 +773,6 @@ architecture Behavioral of mmfe8_top is
 
 --    attribute keep of CH_TRIGGER_i              : signal is "TRUE";
 --    attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
-
---    attribute keep of MO_P_i              : signal is "TRUE";
---    attribute dont_touch of MO_P_i        : signal is "TRUE";
     
 --    attribute keep of default_IP            : signal is "TRUE";
 --    attribute dont_touch of default_IP      : signal is "TRUE";
@@ -2381,6 +2375,7 @@ end process;
     CH_TRIGGER_i            <= CH_TRIGGER;
     TRIGGER_OUT_P           <= art2;
     TRIGGER_OUT_N           <= not art2;
+    MO                      <= MO_i;  
 
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;
@@ -2391,15 +2386,6 @@ end process;
     
     fifo_data               <= fifo_data_out_int;
 	re_out                  <= re_out_int;
-    
-    MO_P_i      <= 'Z';
-    MO_N_i      <= 'Z';
-    TDO_P_i     <= 'Z';
-    TDO_N_i     <= 'Z';
-    PDO_P_i     <= 'Z';
-    PDO_N_i     <= 'Z';         
-    MO_P        <= MO_P_i;
-    MO_N        <= MO_N_i;   
 
 --VIO_inst: vio_1
 --    port map(

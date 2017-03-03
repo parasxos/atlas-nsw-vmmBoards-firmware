@@ -53,6 +53,8 @@ architecture Behavioral of vmm_readout is
 
     -- readoutControlProc
     signal reading_out_word        : std_logic := '0';
+    signal reading_out_word_stage1 : std_logic := '0';
+    signal reading_out_word_ff_sync: std_logic := '0';
 
     -- tokenProc
     signal dt_state             : std_logic_vector( 3 DOWNTO 0 )    := ( others => '0' );
@@ -155,7 +157,7 @@ end component;
 
 begin
 
-readoutControlProc: process(clk, dt_done, vmm_data0_i)
+readoutControlProc: process(clk_10_phase45, dt_done, vmm_data0_i)
 begin
     if (dt_done = '1') then
         reading_out_word    <= '0';     -- readoutProc done, stop it
@@ -248,10 +250,10 @@ begin
 end process;
 
 -- by using this clock the CKDT strobe has f=25MHz (T=40ns, D=50%, phase=0deg) to clock in data0 and data1
-readoutProc: process(clk_10_phase45, reading_out_word)
+readoutProc: process(clk_50, reading_out_word_ff_sync)
 begin
-    if rising_edge(clk_10_phase45) then
-        if (reading_out_word = '1') then
+    if rising_edge(clk_50) then
+        if (reading_out_word_ff_sync = '1') then
 
             case dt_cntr_st is
                 when x"0" =>                               -- Initiate values
@@ -343,6 +345,14 @@ begin
     if rising_edge(clk) then
         vmmWord_stage1  <= vmmWord_i;
         vmmWord_ff_sync <= vmmWord_stage1;
+    end if;
+end process;
+
+readingOutWordSynchronizer: process(clk_50)
+begin
+    if rising_edge(clk_50) then
+        reading_out_word_stage1  <= reading_out_word;
+        reading_out_word_ff_sync <= reading_out_word_stage1;
     end if;
 end process;
 

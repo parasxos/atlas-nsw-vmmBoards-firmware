@@ -58,7 +58,7 @@ architecture Behavioral of vmm_readout is
     signal cktkSent_ff_sync         : std_logic := '0';
     signal timeoutCnt               : unsigned(2 downto 0) := b"000";
     signal timeout                  : unsigned(2 downto 0) := b"111";
-    
+
     -- tokenProc
     signal state_tk             : std_logic_vector( 3 downto 0 )    := x"1";
     signal daq_enable_stage1    : std_logic := '0';
@@ -99,7 +99,6 @@ architecture Behavioral of vmm_readout is
     signal vmm_ckdt             : std_logic := '0';     -- Strobe to VMM CKDT
     signal vmm_cktk             : std_logic := '0';     -- Strobe to VMM CKTK
     signal vmm_ckdt_i           : std_logic := '0';
-    signal vmm_ckdt_delayed     : std_logic := '0';
 
     -- Debugging
     signal probe0_out           : std_logic_vector(127 downto 0);
@@ -156,7 +155,7 @@ end component;
 
 begin
 
--- by using this clock the CKTK strobe has f=5MHz (T=200ns, D=50%, phase=45deg)
+-- by using this clock the CKTK strobe has f=20MHz (T=50ns, D=50%)
 tokenProc: process(clkTkProc)
 begin
     if (rising_edge(clkTkProc)) then
@@ -255,7 +254,7 @@ begin
                     if (cktkSent_ff_sync = '1' and vmm_data0_ff_sync = '1') then
                         state_dt        <= x"1";
                     end if;
-                    
+
                 when x"1" =>
                     reading_out_word<= '1';
                     vmm_ckdt_i      <= '1';

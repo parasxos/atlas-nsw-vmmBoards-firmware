@@ -98,12 +98,11 @@ set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_125to40/data_out_
 
 set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/data_sync_stage_0_reg[*]]
 set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/data_out_s_int_reg[*]]
-
+        
 set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWordReady_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWordReady_ff_sync_reg]
-
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_stage1_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_ff_sync_reg[*]]                                                                            
 
@@ -111,7 +110,16 @@ set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/reading_out_word_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/reading_out_word_ff_sync_reg]
 
+set_property ASYNC_REG true [get_cells readout_vmm/vmm_data0_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmm_data0_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmm_data1_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmm_data1_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/cktkSent_stage1_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/cktkSent_ff_sync_reg]
+            
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
 #=====================================================================

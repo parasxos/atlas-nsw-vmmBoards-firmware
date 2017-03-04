@@ -885,8 +885,8 @@ architecture Behavioral of mmfe8_top is
     -- 6
     component vmm_readout is
         port ( 
-            clk_10_phase45          : in std_logic;     -- Used to clock checking for data process
-            clk_50                  : in std_logic;     -- Used to clock word readout process
+            clkTkProc               : in std_logic;     -- Used to clock checking for data process
+            clkDtProc               : in std_logic;     -- Used to clock word readout process
             clk                     : in std_logic;     -- Used for fast switching between processes
 
             vmm_data0_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data0 from VMM
@@ -1687,8 +1687,8 @@ event_timing_reset_instance: event_timing_reset
 
 readout_vmm: vmm_readout
     port map(
-        clk_10_phase45          => clk_10_phase45,
-        clk_50                  => clk_50,
+        clkTkProc               => clk_40,
+        clkDtProc               => clk_50,
         clk                     => userclk2,
         
         vmm_data0_vec           => data0_in_vec,

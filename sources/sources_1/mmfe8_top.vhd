@@ -1247,7 +1247,6 @@ architecture Behavioral of mmfe8_top is
     -- 19
     component xadc
     port(
-        clk200              : in std_logic;
 		clk125				: in std_logic;
         rst                 : in std_logic;
         
@@ -1831,7 +1830,6 @@ data_selection:  select_data
 
 xadc_instance: xadc
     port map(
-        clk200                      => clk_200,
 		clk125                      => userclk2,
         rst                         => '0', -- change this plz
         

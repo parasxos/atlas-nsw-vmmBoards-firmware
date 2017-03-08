@@ -22,7 +22,7 @@
 
 module xadc_read
 (
-    input           clk200,
+    input           clk125,
     input           rst,
     input           start,
     input   [4:0]   ch_sel,
@@ -92,7 +92,7 @@ assign mux_select = mux_select_r;
 
 
 // Statement to latch the config_in_r state
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (start == 1'b1)
         config_in_r <= ch_sel;
@@ -136,7 +136,7 @@ end
 
 
 // Main State Machine
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst)
         begin
@@ -318,7 +318,7 @@ end
 
 
 // State machine to drive DRP transactions
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst)
         begin
@@ -389,7 +389,7 @@ end
 
 //ila_0 ila
 //(
-//    .clk(clk200),
+//    .clk(clk125),
 //    .probe0(drp_data_out_r), // 16
 //    .probe1(busy_xadc), // 1
 //    .probe2(ch_sel), // 5

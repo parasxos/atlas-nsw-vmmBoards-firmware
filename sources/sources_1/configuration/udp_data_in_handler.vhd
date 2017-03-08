@@ -287,7 +287,7 @@ begin
                     st_master   <= ST_IDLE;
                 end if;
 
-            -- check the port  (TO DOs: ADD XADC AND FLASH) 
+            -- check the port while counting 
             when ST_CHK_PORT =>
                 conf_state  <= "001";
                 cnt_bytes   <= cnt_bytes + 1;
@@ -304,11 +304,11 @@ begin
                     st_master   <= ST_COUNT;
                 when x"19CC" => -- FLASH CONF
                     flash_conf  <= '1';
-                    st_master   <= ST_COUNT; -- ST_ERROR
+                    st_master   <= ST_COUNT;
                 when x"19D0" => -- XADC CONF
                     xadc_conf   <= '1';
-                    st_master   <= ST_ERROR; -- ST_COUNT
-                when others => 
+                    st_master   <= ST_COUNT;
+                when others =>  -- Unknown Port
                     st_master   <= ST_ERROR;
                 end case;
 

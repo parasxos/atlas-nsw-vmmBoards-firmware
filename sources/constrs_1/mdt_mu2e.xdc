@@ -79,9 +79,6 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
 
 #====================== PHYSICAL CONSTRAINTS SECTION ==================
 #====================== ASYNC_REG for synchronizers ===================
-#set_property ASYNC_REG true [get_cells xadc_instance/CDCC_200to125/data_sync_stage_0_reg[*]]
-#set_property ASYNC_REG true [get_cells xadc_instance/CDCC_200to125/data_out_s_int_reg[*]]
-
 set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_50to125/data_sync_stage_0_reg[*]]
 set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_50to125/data_out_s_int_reg[*]]
 

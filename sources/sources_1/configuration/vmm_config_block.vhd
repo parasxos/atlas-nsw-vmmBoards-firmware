@@ -30,7 +30,7 @@ entity vmm_config_block is
     clk_40              : in  std_logic;
     rst                 : in  std_logic;
     rst_fifo            : in  std_logic;
-    cnt_bytes           : in  unsigned(4 downto 0);
+    cnt_bytes           : in  unsigned(7 downto 0);
     ------------------------------------
     --------- FIFO/UDP Interface -------
     user_din_udp        : in  std_logic_vector(7 downto 0); --prv
@@ -93,11 +93,11 @@ begin
         else
             if(vmm_conf = '1' and user_last_udp = '0')then
                 case cnt_bytes is 
-                when "00101" => --5
+                when "00000101" => --5
                     vmm_id(15 downto 8) <= user_din_udp;
-                when "00110" => --6
+                when "00000110" => --6
                     vmm_id(7 downto 0)  <= user_din_udp;
-                when "01000" => --8
+                when "00001000" => --8
                     sel_vmm_data        <= '1'; -- select the correct data at the MUX
                 when others => null;
                 end case;

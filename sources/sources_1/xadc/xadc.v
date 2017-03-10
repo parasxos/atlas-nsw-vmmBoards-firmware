@@ -27,27 +27,27 @@ module xadc #
 //    parameter   delay_in = 18'b11111111111111111 // Delay 131072 clock cycles to spread 1023 samples over ~0.7 seconds
 )
 (
-    input           clk200,
+    input           clk125,
     input           rst,
     
     input           VP_0,
     input           VN_0,
-    input           Vaux0_v_n,
-    input           Vaux0_v_p,
+//    input           Vaux0_v_n,
+//    input           Vaux0_v_p,
     input           Vaux1_v_n,
     input           Vaux1_v_p,
-    input           Vaux2_v_n,
-    input           Vaux2_v_p,
-    input           Vaux3_v_n,
-    input           Vaux3_v_p,
+//    input           Vaux2_v_n,
+//    input           Vaux2_v_p,
+//    input           Vaux3_v_n,
+//    input           Vaux3_v_p,
     input           Vaux8_v_n,
     input           Vaux8_v_p,
-    input           Vaux9_v_n,
-    input           Vaux9_v_p,
-    input           Vaux10_v_n,
-    input           Vaux10_v_p,
-    input           Vaux11_v_n,
-    input           Vaux11_v_p,
+//    input           Vaux9_v_n,
+//    input           Vaux9_v_p,
+//    input           Vaux10_v_n,
+//    input           Vaux10_v_p,
+//    input           Vaux11_v_n,
+//    input           Vaux11_v_p,
     input           data_in_rdy,
     input [15:0]    vmm_id,
     input [10:0]    sample_size,
@@ -163,7 +163,7 @@ assign full_pkt = full_pkt_r;
 assign xadc_busy = xadc_busy_r;
 
 
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst == 1'b1)
         begin
@@ -176,7 +176,7 @@ end
 
 
 // Main state machine to drive the xADC measurements
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst == 1'b1)
         begin
@@ -279,15 +279,16 @@ end
 
 
 // Process to latch data when ready
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (data_in_rdy == 1'b1)
-        vmm_id_r <= vmm_id - 1'b1; // VMM_id counts from 1-8, need 0-7
+        //vmm_id_r <= vmm_id - 1'b1; // VMM_id counts from 1-8, need 0-7
+        vmm_id_r <= 15'b0;
 end
 
 
 // State machine to handle the Type distinguisher
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst)
         begin
@@ -333,7 +334,7 @@ end
 
 
 // State machine to handle the channel selection
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst)
         begin
@@ -391,7 +392,7 @@ end
 
 
 // State machine to fill packets with data
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if(rst)
         begin
@@ -464,7 +465,7 @@ end
 
 
 // State machine to write to the data fifo
-always @(posedge clk200)
+always @(posedge clk125)
 begin
     if (rst)
         begin
@@ -528,7 +529,7 @@ end
 
 //ila_1 ila_1
 //(
-//    .clk(clk200),
+//    .clk(clk125),
 //    .probe0(data_fifo_enable), // 1
 //    .probe1(fifo_bus), // 64
 //    .probe2(packet_len), // 12
@@ -560,29 +561,29 @@ xadc_wiz_0 xadc
 (
     .convst_in(convst),
     .daddr_in(daddr),
-    .dclk_in(clk200),
+    .dclk_in(clk125),
     .den_in(den),
     .di_in(di),
     .dwe_in(dwe),
     .reset_in(rst_xadc),
     .vp_in(VP_0),
     .vn_in(VN_0),
-    .vauxp0(Vaux0_v_p),
-    .vauxn0(Vaux0_v_n),
+ //   .vauxp0(Vaux0_v_p),
+//    .vauxn0(Vaux0_v_n),
     .vauxp1(Vaux1_v_p),
     .vauxn1(Vaux1_v_n),
-    .vauxp2(Vaux2_v_p),
-    .vauxn2(Vaux2_v_n),
-    .vauxp3(Vaux3_v_p),
-    .vauxn3(Vaux3_v_n),
+//    .vauxp2(Vaux2_v_p),
+//    .vauxn2(Vaux2_v_n),
+//    .vauxp3(Vaux3_v_p),
+//    .vauxn3(Vaux3_v_n),
     .vauxp8(Vaux8_v_p),
     .vauxn8(Vaux8_v_n),
-    .vauxp9(Vaux9_v_p),
-    .vauxn9(Vaux9_v_n),
-    .vauxp10(Vaux10_v_p),
-    .vauxn10(Vaux10_v_n),
-    .vauxp11(Vaux11_v_p),
-    .vauxn11(Vaux11_v_n),
+//    .vauxp9(Vaux9_v_p),
+//    .vauxn9(Vaux9_v_n),
+//    .vauxp10(Vaux10_v_p),
+//    .vauxn10(Vaux10_v_n),
+//    .vauxp11(Vaux11_v_p),
+//    .vauxn11(Vaux11_v_n),
 
     .busy_out(busy_xadc),
     .channel_out(channel),
@@ -596,7 +597,7 @@ xadc_wiz_0 xadc
 
 xadc_read XADC
 (
-    .clk200(clk200),
+    .clk125(clk125),
     .rst(rst),
     .start(xadc_start),
     .ch_sel(ch_sel),
@@ -617,6 +618,5 @@ xadc_read XADC
     .rst_xadc(rst_xadc),
     .mux_select(mux_select)
 );
-
 
 endmodule

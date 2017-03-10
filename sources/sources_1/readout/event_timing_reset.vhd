@@ -12,7 +12,8 @@
 -- Changelog:
 -- 09.09.2016 Added a glBCID counter for periodic soft reset of VMMs which takes place
 -- every 102us if DAQ is on and if not in the middle of read-out. (Christos Bakalis)
--- 
+-- 15.09.2016 Optimized the periodic soft reset process. (Paris Moschovakos)
+--
 ----------------------------------------------------------------------------------------
 
 library UNISIM;
@@ -27,7 +28,7 @@ use UNISIM.vcomponents.all;
 entity event_timing_reset is
 	port(
 		hp_clk          : in std_logic;     -- High precision clock 1 GHz
-		clk_200         : in std_logic;
+		clk             : in std_logic;     -- Main clock
 		clk_10_phase45  : in std_logic;     -- Drives the reset
 		bc_clk          : in std_logic;     -- 40MHz
 
@@ -66,7 +67,7 @@ architecture Behavioral of event_timing_reset is
     signal vmm_wen_vec_i            : std_logic_vector(8 downto 1)	:= ( others => '0' );
     signal rst_i                    : std_logic := '0';                                     -- Internal reset related to glBCID counter
     constant glBCID_limit           : std_logic_vector(11 downto 0) := b"010000000000";     -- 1024*T(10MHz~100ns) = 102 us
--- Components if any
+    -- Components if any
 
 begin
 
@@ -109,9 +110,9 @@ begin
     end if;
 end process;
 
-latchResetProc: process (clk_200, rst_done, rst_done_pre, reset, rst_i)
+latchResetProc: process (clk, rst_done, rst_done_pre, reset, rst_i)
 begin
-    if rising_edge(clk_200) then
+    if rising_edge(clk) then
         if rst_done = '0' and rst_done_pre = '1' then
             reset_latched_i <= '0';
         elsif reset = '1' then
@@ -122,31 +123,27 @@ begin
     end if;
 end process;
 
-latchResetProcAuxiliary: process (clk_200, rst_done)
+latchResetProcAuxiliary: process (clk, rst_done)
 begin
-    if rising_edge(clk_200) then
+    if rising_edge(clk) then
         rst_done_pre    <= rst_done;
     end if;
 end process;
 
 globalBCIDproc: process (bc_clk, rst_done, daqEnable, pfBusy, glBCID_i)
 begin
-    if(rst_done = '1')then
-        glBCID_i    <= b"000000000000";
-        rst_i       <= '0';
-    elsif(rising_edge(bc_clk))then 
-    
-        glBCID_i    <= glBCID_i + 1;
+    if rising_edge(bc_clk) then
+        if rst_done = '1' then
+            glBCID_i    <= b"000000000000";
+            rst_i       <= '0';
+        else     
+            glBCID_i    <= glBCID_i + 1;
         
-        if(glBCID_i >= glBCID_limit)then
-        
-            if(daqEnable = '1' and pfBusy /= '1')then
+            if(pfBusy /= '1' and daqEnable = '1' and glBCID_i > glBCID_limit) then
                 rst_i   <= '1';
             else
                 rst_i   <= '0';
             end if;
-        else
-            rst_i   <= '0';
         end if;
     end if;
 end process;

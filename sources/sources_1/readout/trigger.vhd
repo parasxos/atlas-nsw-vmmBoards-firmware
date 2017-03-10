@@ -11,7 +11,9 @@
 --
 -- Changelog:
 -- 18.08.2016 Added tr_hold signal to hold trigger when reading out (Reid Pinkham)
--- 
+-- 26.02.2017 Moved to a global clock domain @125MHz (Paris)
+-- 27.02.2017 Synced trout
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -23,7 +25,7 @@ use UNISIM.VComponents.all;
 
 entity trigger is
     Port (
-            clk_200         : in STD_LOGIC;
+            clk             : in STD_LOGIC;
             
             tren            : in STD_LOGIC;
             tr_hold         : in STD_LOGIC;
@@ -47,8 +49,10 @@ architecture Behavioral of trigger is
     signal mode              : std_logic;
     signal trint_pre         : std_logic                        := '0';
     signal trext_pre         : std_logic                        := '0';
+    signal trext_stage1      : std_logic := '0';
+    signal trext_ff_synced   : std_logic := '0';    
+    signal tren_buff         : std_logic                         := '0'; -- buffered enable signal
     
-    signal tren_buff        : std_logic                         := '0'; -- buffered enable signal
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
 --    signal hold_state       : std_logic_vector(3 downto 0);
 --    signal hold_cnt         : std_logic_vector(31 downto 0);
@@ -68,16 +72,16 @@ architecture Behavioral of trigger is
 -------------------------------------------------------------------
 -- Keep signals for ILA
 -------------------------------------------------------------------    
-    attribute keep : string;
+--    attribute keep : string;
 
-    attribute keep of event_counter_i       :    signal    is    "true";
-    attribute keep of tr_out_i              :    signal    is    "true";
-    attribute keep of tren                  :    signal    is    "true";
-    attribute keep of trmode                :    signal    is    "true";
-    attribute keep of trint                 :    signal    is    "true";
-    attribute keep of mode                  :    signal    is    "true";
-    attribute keep of trint_pre             :    signal    is    "true";
-    attribute keep of trext_pre             :    signal    is    "true";
+--    attribute keep of event_counter_i       :    signal    is    "true";
+--    attribute keep of tr_out_i              :    signal    is    "true";
+--    attribute keep of tren                  :    signal    is    "true";
+--    attribute keep of trmode                :    signal    is    "true";
+--    attribute keep of trint                 :    signal    is    "true";
+--    attribute keep of mode                  :    signal    is    "true";
+--    attribute keep of trint_pre             :    signal    is    "true";
+--    attribute keep of trext_pre             :    signal    is    "true";
     
 -- Components if any
 
@@ -92,12 +96,12 @@ begin
 
 -- Processes
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
---holdDelay: process (clk_200, reset, start, tr_out_i, trext, trint) -- state machine to manage delay
+--holdDelay: process (clk, reset, start, tr_out_i, trext, trint) -- state machine to manage delay
 --begin
 --    if (reset = '1') then
 --        hold <= '0';
 --        state <= ( others => '0' );
---    elsif rising_edge(clk_200) then
+--    elsif rising_edge(clk) then
 --        case state is 
 --            when "000" => -- Idle
 --                if (start = '1') then -- wait for start signal
@@ -166,9 +170,9 @@ begin
     end if;
 end process;
 
-changeModeCommandProc: process (clk_200, reset, tren_buff, trmode)
+changeModeCommandProc: process (clk, reset, tren_buff, trmode)
     begin
-        if rising_edge(clk_200) and reset = '0' then
+        if rising_edge(clk) and reset = '0' then
             if tren_buff = '1' then
                 if trmode = '0' then                                -- Internal trigger
                     mode <= '0';
@@ -179,7 +183,7 @@ changeModeCommandProc: process (clk_200, reset, tren_buff, trmode)
         end if;
     end process;
 
-triggerDistrSignalProc: process (reset, mode, trext, trint)
+triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint)
     begin
         if reset = '1' then
             tr_out_i            <= '0';
@@ -193,9 +197,9 @@ triggerDistrSignalProc: process (reset, mode, trext, trint)
                     tr_out_i            <= '0';
                 end if;
             else
-                if (tren_buff = '1' and trmode = '1' and trext = '1') then
+                if (tren_buff = '1' and trmode = '1' and trext_ff_synced = '1') then
                     tr_out_i            <= '1';
-                elsif (trmode = '1' and trext = '0') then
+                elsif (trmode = '1' and trext_ff_synced = '0') then
                     tr_out_i            <= '0';
                 else
                     tr_out_i            <= '0';
@@ -204,13 +208,20 @@ triggerDistrSignalProc: process (reset, mode, trext, trint)
         end if;
     end process;
 
+externalTriggerSynchronizer: process(clk, trext, trext_stage1)
+begin
+    if rising_edge(clk) then 
+        trext_stage1    <= trext;
+        trext_ff_synced <= trext_stage1;
+    end if;
+end process;
 
-eventCounterProc: process (clk_200, reset, mode, trext, trint)
+eventCounterProc: process (clk, reset, mode, trext, trint)
     begin
         if reset = '1' then
             event_counter_i     <= x"00000000";
         else
-            if rising_edge(clk_200) then
+            if rising_edge(clk) then
                 if mode = '0' then
                     if (tren_buff = '1' and trmode = '0' and trint = '1' and trint_pre = '0') then
                         event_counter_i     <= event_counter_i + 1;
@@ -236,7 +247,7 @@ eventCounterProc: process (clk_200, reset, mode, trext, trint)
         end if;
     end process;
     
--- Signal assignment
+-- Signal assignments
 event_counter       <= event_counter_i;
 tr_out              <= tr_out_i;
 
@@ -244,7 +255,7 @@ tr_out              <= tr_out_i;
 
 --ilaTRIG: ila_trigger
 --port map(
---    clk                     =>  clk_200,
+--    clk                     =>  clk,
 --    probe0                  =>  probe0_out
 --    );
     

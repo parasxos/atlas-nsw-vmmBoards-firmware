@@ -42,11 +42,16 @@ use work.arp_types.all;
 entity AXI4_SPI is
     port(            
             clk_200                 : in  std_logic;
+            clk_125                 : in  std_logic;
             clk_50                  : in  std_logic;
             
             myIP                    : out std_logic_vector(31 downto 0);    -- Signal going out to mmfe8_top and used as main IP
             myMAC                   : out std_logic_vector(47 downto 0);    -- Signal going out to mmfe8_top and used as main MAC
             destIP                  : out std_logic_vector(31 downto 0);    -- Signal going out to mmfe8_top and used as main destIP
+            
+            default_IP              : in std_logic_vector(31 downto 0);
+            default_MAC             : in std_logic_vector(47 downto 0);
+            default_destIP          : in std_logic_vector(31 downto 0);
             
             myIP_set                : in std_logic_vector(31 downto 0);     -- Signal coming from config_logic. Used to set myIP
             myMAC_set               : in std_logic_vector(47 downto 0);     -- Signal coming from config_logic. Used to set myMAC
@@ -152,153 +157,165 @@ architecture Behavioral of AXI4_SPI is
     signal   write_spi_state_is   : std_logic_vector(3 downto 0) := "0000";
     
     signal   startupe2_eos : std_logic;
-    
+
+    -------------------------------------------------------------------
+    -- CDCC signals
+    ------------------------------------------------------------------- 
+    signal flash_busy_i     : std_logic := '0';
+    signal myIP_i           : std_logic_vector(31 downto 0) := (others => '0');
+    signal myMAC_i          : std_logic_vector(47 downto 0) := (others => '0');
+    signal destIP_i         : std_logic_vector(31 downto 0) := (others => '0');
+
+    signal newIP_start_s50  : std_logic := '0';
+    signal myIP_set_s50     : std_logic_vector(31 downto 0) := (others => '0');
+    signal myMAC_set_s50    : std_logic_vector(47 downto 0) := (others => '0');
+    signal destIP_set_s50   : std_logic_vector(31 downto 0) := (others => '0');
+
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -------------------------------------------------------------------
-    attribute keep          : string;
-    attribute dont_touch    : string;
+--    attribute keep          : string;
+--    attribute dont_touch    : string;
         
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------     
     
-    attribute keep of ip_set_flag                   : signal is "TRUE";
-    attribute dont_touch of ip_set_flag             : signal is "TRUE";
+--    attribute keep of ip_set_flag                   : signal is "TRUE";
+--    attribute dont_touch of ip_set_flag             : signal is "TRUE";
     
-    attribute keep of spi_arready                   : signal is "TRUE";
-    attribute dont_touch of spi_arready             : signal is "TRUE";    
+--    attribute keep of spi_arready                   : signal is "TRUE";
+--    attribute dont_touch of spi_arready             : signal is "TRUE";    
     
-    attribute keep of spi_rresp                     : signal is "TRUE";
-    attribute dont_touch of spi_rresp               : signal is "TRUE";         
+--    attribute keep of spi_rresp                     : signal is "TRUE";
+--    attribute dont_touch of spi_rresp               : signal is "TRUE";         
     
-    attribute keep of spi_rvalid                    : signal is "TRUE";
-    attribute dont_touch of spi_rvalid              : signal is "TRUE";   
+--    attribute keep of spi_rvalid                    : signal is "TRUE";
+--    attribute dont_touch of spi_rvalid              : signal is "TRUE";   
 
-    attribute keep of spi_cnt                       : signal is "TRUE";
-    attribute dont_touch of spi_cnt                 : signal is "TRUE";   
+--    attribute keep of spi_cnt                       : signal is "TRUE";
+--    attribute dont_touch of spi_cnt                 : signal is "TRUE";   
     
-    attribute keep of spi_awready                   : signal is "TRUE";
-    attribute dont_touch of spi_awready             : signal is "TRUE";       
+--    attribute keep of spi_awready                   : signal is "TRUE";
+--    attribute dont_touch of spi_awready             : signal is "TRUE";       
     
-    attribute keep of spi_bresp                     : signal is "TRUE";
-    attribute dont_touch of spi_bresp               : signal is "TRUE";   
+--    attribute keep of spi_bresp                     : signal is "TRUE";
+--    attribute dont_touch of spi_bresp               : signal is "TRUE";   
     
-    attribute keep of spi_bvalid                    : signal is "TRUE";
-    attribute dont_touch of spi_bvalid              : signal is "TRUE";         
+--    attribute keep of spi_bvalid                    : signal is "TRUE";
+--    attribute dont_touch of spi_bvalid              : signal is "TRUE";         
     
-    attribute keep of spi_awaddr                    : signal is "TRUE";
-    attribute dont_touch of spi_awaddr              : signal is "TRUE";         
+--    attribute keep of spi_awaddr                    : signal is "TRUE";
+--    attribute dont_touch of spi_awaddr              : signal is "TRUE";         
     
-    attribute keep of spi_wdata                     : signal is "TRUE";
-    attribute dont_touch of spi_wdata               : signal is "TRUE";   
+--    attribute keep of spi_wdata                     : signal is "TRUE";
+--    attribute dont_touch of spi_wdata               : signal is "TRUE";   
     
-    attribute keep of spi_wstrb                     : signal is "TRUE";
-    attribute dont_touch of spi_wstrb               : signal is "TRUE";   
+--    attribute keep of spi_wstrb                     : signal is "TRUE";
+--    attribute dont_touch of spi_wstrb               : signal is "TRUE";   
     
-    attribute keep of spi_aresetn                   : signal is "TRUE";
-    attribute dont_touch of spi_aresetn             : signal is "TRUE";       
+--    attribute keep of spi_aresetn                   : signal is "TRUE";
+--    attribute dont_touch of spi_aresetn             : signal is "TRUE";       
        
-    attribute keep of spi_awvalid                   : signal is "TRUE";
-    attribute dont_touch of spi_awvalid             : signal is "TRUE";   
+--    attribute keep of spi_awvalid                   : signal is "TRUE";
+--    attribute dont_touch of spi_awvalid             : signal is "TRUE";   
     
-    attribute keep of spi_wvalid                    : signal is "TRUE";
-    attribute dont_touch of spi_wvalid              : signal is "TRUE";    
+--    attribute keep of spi_wvalid                    : signal is "TRUE";
+--    attribute dont_touch of spi_wvalid              : signal is "TRUE";    
 
-    attribute keep of spi_bready                    : signal is "TRUE";
-    attribute dont_touch of spi_bready              : signal is "TRUE";      
+--    attribute keep of spi_bready                    : signal is "TRUE";
+--    attribute dont_touch of spi_bready              : signal is "TRUE";      
     
-    attribute keep of spi_wready                    : signal is "TRUE";
-    attribute dont_touch of spi_wready              : signal is "TRUE";     
+--    attribute keep of spi_wready                    : signal is "TRUE";
+--    attribute dont_touch of spi_wready              : signal is "TRUE";     
     
-    attribute keep of spi_arvalid                   : signal is "TRUE";
-    attribute dont_touch of spi_arvalid             : signal is "TRUE";  
+--    attribute keep of spi_arvalid                   : signal is "TRUE";
+--    attribute dont_touch of spi_arvalid             : signal is "TRUE";  
     
-    attribute keep of spi_rready                    : signal is "TRUE";
-    attribute dont_touch of spi_rready              : signal is "TRUE";  
+--    attribute keep of spi_rready                    : signal is "TRUE";
+--    attribute dont_touch of spi_rready              : signal is "TRUE";  
 
-    attribute keep of spi_araddr                    : signal is "TRUE";
-    attribute dont_touch of spi_araddr              : signal is "TRUE";
+--    attribute keep of spi_araddr                    : signal is "TRUE";
+--    attribute dont_touch of spi_araddr              : signal is "TRUE";
     
-    attribute keep of spi_rdata                     : signal is "TRUE";
-    attribute dont_touch of spi_rdata               : signal is "TRUE";
+--    attribute keep of spi_rdata                     : signal is "TRUE";
+--    attribute dont_touch of spi_rdata               : signal is "TRUE";
     
-    attribute keep of araddr_set                    : signal is "TRUE";
-    attribute dont_touch of araddr_set              : signal is "TRUE";
+--    attribute keep of araddr_set                    : signal is "TRUE";
+--    attribute dont_touch of araddr_set              : signal is "TRUE";
     
-    attribute keep of awaddr_set                    : signal is "TRUE";
-    attribute dont_touch of awaddr_set              : signal is "TRUE";
+--    attribute keep of awaddr_set                    : signal is "TRUE";
+--    attribute dont_touch of awaddr_set              : signal is "TRUE";
     
-    attribute keep of wdata_set                     : signal is "TRUE";
-    attribute dont_touch of wdata_set               : signal is "TRUE";
+--    attribute keep of wdata_set                     : signal is "TRUE";
+--    attribute dont_touch of wdata_set               : signal is "TRUE";
     
-    attribute keep of spi_state_control_is          : signal is "TRUE";
-    attribute dont_touch of spi_state_control_is    : signal is "TRUE";
+--    attribute keep of spi_state_control_is          : signal is "TRUE";
+--    attribute dont_touch of spi_state_control_is    : signal is "TRUE";
          
-    attribute keep of io0_i                         : signal is "TRUE";
-    attribute dont_touch of io0_i                   : signal is "TRUE";
+--    attribute keep of io0_i                         : signal is "TRUE";
+--    attribute dont_touch of io0_i                   : signal is "TRUE";
     
-    attribute keep of io0_o                         : signal is "TRUE";
-    attribute dont_touch of io0_o                   : signal is "TRUE";
+--    attribute keep of io0_o                         : signal is "TRUE";
+--    attribute dont_touch of io0_o                   : signal is "TRUE";
     
-    attribute keep of io0_t                         : signal is "TRUE";
-    attribute dont_touch of io0_t                   : signal is "TRUE";   
+--    attribute keep of io0_t                         : signal is "TRUE";
+--    attribute dont_touch of io0_t                   : signal is "TRUE";   
  
-    attribute keep of io1_i                         : signal is "TRUE";
-    attribute dont_touch of io1_i                   : signal is "TRUE";
+--    attribute keep of io1_i                         : signal is "TRUE";
+--    attribute dont_touch of io1_i                   : signal is "TRUE";
     
-    attribute keep of io1_o                         : signal is "TRUE";
-    attribute dont_touch of io1_o                   : signal is "TRUE";
+--    attribute keep of io1_o                         : signal is "TRUE";
+--    attribute dont_touch of io1_o                   : signal is "TRUE";
     
-    attribute keep of io1_t                         : signal is "TRUE";
-    attribute dont_touch of io1_t                   : signal is "TRUE";   
+--    attribute keep of io1_t                         : signal is "TRUE";
+--    attribute dont_touch of io1_t                   : signal is "TRUE";   
     
-    attribute keep of ss_i                          : signal is "TRUE";
-    attribute dont_touch of ss_i                    : signal is "TRUE";
+--    attribute keep of ss_i                          : signal is "TRUE";
+--    attribute dont_touch of ss_i                    : signal is "TRUE";
     
-    attribute keep of ss_o                          : signal is "TRUE";
-    attribute dont_touch of ss_o                    : signal is "TRUE";
+--    attribute keep of ss_o                          : signal is "TRUE";
+--    attribute dont_touch of ss_o                    : signal is "TRUE";
     
-    attribute keep of ss_t                          : signal is "TRUE";
-    attribute dont_touch of ss_t                    : signal is "TRUE";
+--    attribute keep of ss_t                          : signal is "TRUE";
+--    attribute dont_touch of ss_t                    : signal is "TRUE";
     
-    attribute keep of cmdaddrdata_set               : signal is "TRUE";
-    attribute dont_touch of cmdaddrdata_set         : signal is "TRUE";
+--    attribute keep of cmdaddrdata_set               : signal is "TRUE";
+--    attribute dont_touch of cmdaddrdata_set         : signal is "TRUE";
         
-    attribute keep of cmdaddrdata                   : variable is "TRUE";
-    attribute dont_touch of cmdaddrdata             : variable is "TRUE";
+--    attribute keep of cmdaddrdata                   : variable is "TRUE";
+--    attribute dont_touch of cmdaddrdata             : variable is "TRUE";
 
-    attribute keep of start_transaction             : signal is "TRUE";
-    attribute dont_touch of start_transaction       : signal is "TRUE";
+--    attribute keep of start_transaction             : signal is "TRUE";
+--    attribute dont_touch of start_transaction       : signal is "TRUE";
 
-    attribute keep of transaction_finished          : signal is "TRUE";
-    attribute dont_touch of transaction_finished    : signal is "TRUE";
+--    attribute keep of transaction_finished          : signal is "TRUE";
+--    attribute dont_touch of transaction_finished    : signal is "TRUE";
     
-    attribute keep of spi_ip_config_state_is        : signal is "TRUE";
-    attribute dont_touch of spi_ip_config_state_is  : signal is "TRUE";
+--    attribute keep of spi_ip_config_state_is        : signal is "TRUE";
+--    attribute dont_touch of spi_ip_config_state_is  : signal is "TRUE";
     
-    attribute keep of newip_start                   : signal is "TRUE";
-    attribute dont_touch of newip_start             : signal is "TRUE";
+--    attribute keep of newip_start                   : signal is "TRUE";
+--    attribute dont_touch of newip_start             : signal is "TRUE";
     
-    attribute keep of write_spi_state_is            : signal is "TRUE";
-    attribute dont_touch of write_spi_state_is      : signal is "TRUE";
+--    attribute keep of write_spi_state_is            : signal is "TRUE";
+--    attribute dont_touch of write_spi_state_is      : signal is "TRUE";
+      
+--    attribute keep of byte_transfer_counter          : signal is "true";
+--    attribute keep of set_ip_counter                 : signal is "true";
+--    attribute keep of page_prog_counter              : signal is "true";
+--    attribute keep of second_transaction             : signal is "true";
+--    attribute keep of page_prog                      : signal is "true";
+--    attribute keep of system_start                   : signal is "true";
+--    attribute keep of check_ip_counter               : signal is "true";
+--    attribute keep of set_default_ip                 : signal is "true";
     
-    
-    attribute keep of byte_transfer_counter          : signal is "true";
-    attribute keep of set_ip_counter                 : signal is "true";
-    attribute keep of page_prog_counter              : signal is "true";
-    attribute keep of second_transaction             : signal is "true";
-    attribute keep of page_prog                      : signal is "true";
-    attribute keep of system_start                   : signal is "true";
-    attribute keep of check_ip_counter               : signal is "true";
-    attribute keep of set_default_ip                 : signal is "true";
-    
-    attribute keep of myIP_set                       : signal is "true";
-    attribute keep of myMAC_set                      : signal is "true";
-    attribute keep of destIP_set                     : signal is "true";
-    attribute dont_touch of myIP_set                 : signal is "true";
-    attribute dont_touch of myMAC_set                : signal is "true";
-    attribute dont_touch of destIP_set               : signal is "true";
+--    attribute keep of myIP_set                       : signal is "true";
+--    attribute keep of myMAC_set                      : signal is "true";
+--    attribute keep of destIP_set                     : signal is "true";
+--    attribute dont_touch of myIP_set                 : signal is "true";
+--    attribute dont_touch of myMAC_set                : signal is "true";
+--    attribute dont_touch of destIP_set               : signal is "true";
     
     
     component ila_spi_flash
@@ -306,6 +323,17 @@ architecture Behavioral of AXI4_SPI is
                 probe0  : IN std_logic_vector(244 DOWNTO 0)
                 );
     end component;
+
+    component CDCC
+    generic(
+        NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
+    port(
+        clk_src     : in  std_logic;                                        -- input clk (source clock)
+        clk_dst     : in  std_logic;                                        -- input clk (dest clock)
+        data_in     : in  std_logic_vector(NUMBER_OF_BITS - 1 downto 0);    -- data to be synced
+        data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
+    );
+    end component;    
     
 --    component vio_0
 --        PORT (  clk     : IN std_logic;
@@ -413,17 +441,17 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
         case ip_config_state is     -- State machine that handles Dynamic IP Configuration. Can be though of as wrapper that allows proper function of Dynamic IP Configuration
             when IDLE =>
                 spi_ip_config_state_is <= "0000";
-                flash_busy             <= '0';
+                flash_busy_i             <= '0';
                 if (system_start = '0') then                     -- Checked when system is started to set IP
                     ip_config_state <= CHECK_IP_SET; 
-                elsif (newip_start = '1') then                   -- This is set when UDP dest port 6604 receives data
+                elsif (newip_start_s50 = '1') then               -- This is set when UDP dest port 6604 receives data
                     ip_config_state <= NEW_IP;
                 else
                     ip_config_state <= IDLE;
                 end if;
             when CHECK_IP_SET =>
                 spi_ip_config_state_is <= "0001";
-                flash_busy             <= '1';
+                flash_busy_i             <= '1';
                 cmdaddrdata_set     <= x"03F0_0000_0000_0000_0000";         -- Command to read ipset_flag in address x"F0_0000"
                 byte_count_set      <= x"0000_0004";                        -- Byte count required for proper read: 4 bytes (starts at 0)
                 set_ip_counter      <= 0;
@@ -469,7 +497,7 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
                 end if;
             when NEW_IP =>      -- Writes new IP, MAC, and destIP into SPI Flash and sets the new IP as the current active IP, MAC, and destIP
                 spi_ip_config_state_is <= "0011";
-                flash_busy             <= '1';
+                flash_busy_i             <= '1';
                     case write_spi_state is         -- State machine nested within ip_config_state = NEW_IP. Handles the necessary logic in order to execute a write to the SPI Flash. (Uses logic flow described in Micron Documentation)
                         when WRITE_ENABLE =>
                             write_spi_state_is  <= "0000";
@@ -518,8 +546,8 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
                                     --destIP_set  -- 32 bits
 
                                     cmdaddrdata_set(79 downto 40)    <= x"02F0_0000_01";         --SPI PAGE PROGRAM 256 BYTES
-                                    cmdaddrdata_set(39 downto 8)     <= myIP_set(31 downto 0);
-                                    cmdaddrdata_set(7 downto 0)      <= myMAC_set(47 downto 40);
+                                    cmdaddrdata_set(39 downto 8)     <= myIP_set_s50(31 downto 0);
+                                    cmdaddrdata_set(7 downto 0)      <= myMAC_set_s50(47 downto 40);
                                     
                                     byte_count_set      <= x"0000_0009";
                                     write_spi_state     <= WRITE_ENABLE;        -- Write enable must be issued before every write operation
@@ -529,8 +557,8 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
                                     page_prog_counter   <= page_prog_counter + 1;
                                 
                                     cmdaddrdata_set(79 downto 48)     <= x"02F0_0006";         --SPI PAGE PROGRAM 256 BYTES
-                                    cmdaddrdata_set(47 downto 8)     <= myMAC_set(39 downto 0);
-                                    cmdaddrdata_set(7 downto 0)      <= destIP_set(31 downto 24);                                
+                                    cmdaddrdata_set(47 downto 8)     <= myMAC_set_s50(39 downto 0);
+                                    cmdaddrdata_set(7 downto 0)      <= destIP_set_s50(31 downto 24);                                
                                 
                                     byte_count_set      <= x"0000_0009";
                                     write_spi_state     <= WRITE_ENABLE;        -- Write enable must be issued before every write operation
@@ -540,7 +568,7 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
                                     page_prog_counter   <= page_prog_counter + 1;
                                     
                                     cmdaddrdata_set(79 downto 48)    <= x"02F0_000C";         --SPI PAGE PROGRAM 256 BYTES
-                                    cmdaddrdata_set(47 downto 24)    <= destIP_set(23 downto 0);
+                                    cmdaddrdata_set(47 downto 24)    <= destIP_set_s50(23 downto 0);
                                     cmdaddrdata_set(23 downto 0)     <= x"0000_00";
                                     
                                     byte_count_set      <= x"0000_0006";
@@ -584,9 +612,10 @@ spi_read_write_core_registers: process(clk_50)  -- State machine that handles th
     begin
     if rising_edge(clk_50) then
                 if (set_default_ip = '1') then
-                    myIP   <= x"c0a80002";
-                    myMAC  <= x"002320212223";
-                    destIP <= x"c0a80010";
+                    myIP_i    <= default_IP;
+                    myMAC_i   <= default_MAC;
+                    destIP_i  <= default_destIP;
+
                 end if;
             
                 case spi_state is           -- State machine that handles the signals necessary to perform a single write to or read to and from a core register in the axi_quad_spi
@@ -689,15 +718,15 @@ spi_read_write_core_registers: process(clk_50)  -- State machine that handles th
                                 if (ip_config_state = SET_IP) then
                                     if (second_transaction = '0') then
                                         if ((byte_transfer_counter >= 8) and (byte_transfer_counter <= 11)) then
-                                            myIP((byte_transfer_counter-8)*8+7 downto (byte_transfer_counter-8)*8)        <=  spi_rdata(7 downto 0);
+                                            myIP_i((byte_transfer_counter-8)*8+7 downto (byte_transfer_counter-8)*8)        <=  spi_rdata(7 downto 0);
                                         elsif ((byte_transfer_counter >= 2) and (byte_transfer_counter <= 7)) then
-                                            myMAC((byte_transfer_counter-2)*8+7 downto (byte_transfer_counter-2)*8)       <=  spi_rdata(7 downto 0);
+                                            myMAC_i((byte_transfer_counter-2)*8+7 downto (byte_transfer_counter-2)*8)       <=  spi_rdata(7 downto 0);
                                         elsif ((byte_transfer_counter >= 0) and (byte_transfer_counter <= 1)) then
-                                            destIP((byte_transfer_counter+2)*8+7 downto (byte_transfer_counter+2)*8)    <=  spi_rdata(7 downto 0);
+                                            destIP_i((byte_transfer_counter+2)*8+7 downto (byte_transfer_counter+2)*8)    <=  spi_rdata(7 downto 0);
                                         end if;
                                     elsif (second_transaction = '1') then
                                         if ((byte_transfer_counter >= 0) and (byte_transfer_counter <= 1)) then
-                                            destIP((byte_transfer_counter)*8+7 downto (byte_transfer_counter)*8)        <=  spi_rdata(7 downto 0);
+                                            destIP_i((byte_transfer_counter)*8+7 downto (byte_transfer_counter)*8)        <=  spi_rdata(7 downto 0);
                                         end if;
                                     end if;
                                 end if;
@@ -786,6 +815,49 @@ end process;
 
 --spi_cnt <=     std_logic_vector(to_unsigned(spi_counter, spi_cnt'length));
 spi_cnt <=     std_logic_vector(to_unsigned(spi_counter, 32));
+
+---------------------------------------------------------
+--------- Clock Domain Crossing Sync Block --------------
+---------------------------------------------------------
+
+-- sync output signals to 125 Mhz clock
+CDCC_50to125: CDCC
+    generic map(NUMBER_OF_BITS => 113)
+    port map(
+        clk_src                 => clk_50,
+        clk_dst                 => clk_125,
+
+        data_in(112)            => flash_busy_i,
+        data_in(111 downto 80)  => myIP_i,
+        data_in(79 downto 32)   => myMAC_i,
+        data_in(31 downto 0)    => destIP_i,
+
+        data_out_s(112)            => flash_busy,
+        data_out_s(111 downto 80)  => myIP,
+        data_out_s(79 downto 32)   => myMAC,
+        data_out_s(31 downto 0)    => destIP
+    );
+    
+-- sync input signals to 50 Mhz clock  
+CDCC_125to50: CDCC
+    generic map(NUMBER_OF_BITS => 113)
+    port map(
+        clk_src                 => clk_125,
+        clk_dst                 => clk_50,
+
+        data_in(112)            => newIP_start,
+        data_in(111 downto 80)  => myIP_set,
+        data_in(79 downto 32)   => myMAC_set,
+        data_in(31 downto 0)    => destIP_set,
+
+        data_out_s(112)            => newIP_start_s50,
+        data_out_s(111 downto 80)  => myIP_set_s50,
+        data_out_s(79 downto 32)   => myMAC_set_s50,
+        data_out_s(31 downto 0)    => destIP_set_s50
+    );
+---------------------------------------------------------
+---------------------------------------------------------
+---------------------------------------------------------
 
 
 --ila_top: ila_spi_flash

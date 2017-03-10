@@ -16,6 +16,7 @@
 -- Changelog:
 -- 13.01.2017 Added ASYNC_REG attribute to the XDC constraints file, and also
 -- added an extra layer of registers for the input signals. (Christos Bakalis)
+-- 02.03.2017 Removed FDREs and added simple clocked processes. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -46,47 +47,24 @@ begin
 -------------------------------------------------------
 -- Register the input signals
 -------------------------------------------------------
-reg_input_CDCC: for I in 0 to (NUMBER_OF_BITS - 1) generate
-FDRE_reg_input_CDCC: FDRE
-    generic map (INIT => '0')
-    port map(
-        Q   => data_in_reg(I),
-        C   => clk_src,
-        CE  => '1',
-        R   => '0',
-        D   => data_in(I)
-        );
-end generate reg_input_CDCC;
+register_input_proc: process(clk_src)
+begin
+    if(rising_edge(clk_src))then
+        data_in_reg <= data_in;
+    end if;
+end process;
+
 
 -------------------------------------------------------
--- Synchronization stage 0
+-- Double synchronization
 -------------------------------------------------------
-sync_block_CDCC_0: for I in 0 to (NUMBER_OF_BITS - 1) generate
-FDRE_sync_CDCC_0: FDRE
-    generic map (INIT => '0')
-    port map(
-        Q   => data_sync_stage_0(I),
-        C   => clk_dst,
-        CE  => '1',
-        R   => '0',
-        D   => data_in_reg(I)
-        );
-end generate sync_block_CDCC_0;
-
--------------------------------------------------------
--- Synchronization stage 1
--------------------------------------------------------
-sync_block_CDCC_1: for I in 0 to (NUMBER_OF_BITS - 1) generate
-FDRE_sync_CDCC_1: FDRE
-    generic map (INIT => '0')
-    port map(
-        Q   => data_out_s_int(I),
-        C   => clk_dst,
-        CE  => '1',
-        R   => '0',
-        D   => data_sync_stage_0(I)
-        );
-end generate sync_block_CDCC_1;
+meta_proc: process(clk_dst)
+begin
+    if(rising_edge(clk_dst))then
+        data_sync_stage_0 <= data_in_reg;
+        data_out_s_int    <= data_sync_stage_0;
+    end if;
+end process;
 
     data_out_s  <= data_out_s_int;
 

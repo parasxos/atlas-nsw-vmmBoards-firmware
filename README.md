@@ -1,37 +1,49 @@
-#################################  README FIRST ###############################
+# NSW Electronics - Readout Firmware
 
-This repo contains the firmware of the MMFE8 boards of ATLAS NSW.
-In the bitstream directory one can find the released versions synthesized
-.bit files. The entire Vivado .xpr project can be built from the build_mmfe8.tcl
-script file.
+# Contents
 
-In order to set up a local repository you must:
+* [How to use my VMM board?](#intro)
+* [Recommended Release](#recommended-release)
+* [Development Requirements](#development-requirements)
+* [Deployment](#deployment)
+* [Useful Links](#useful-links)
+* [Contact Information](#contact)
 
-1) Configure your e-mail address and name for git with the commands:
+## How to use my VMM board?
+If you want to use your VMM board and do not want to dive into the firmware developments, just peak your .bin file from the bitstream directory and flash it into your board. Then follow the instructions on the [VMM Readout Software][1] git repo on how to install the software and operate the board.
 
-$ git config --global user.email "your_email@example.com"
+## Recommended Release
+Every version that has been tested thoroughly enough is tagged and a bin file has been stored into the bitstream directory. Look into the available tags and choose the latest for the board that the firmware is to be used. Currently both VMM2 and VMM3 boards are supported. If you are brave enough you can use one of the versions in the development branches but this is not supported!
 
-$ git config --global user.name "Your Name"
+## Development Requirements
 
-2) Now you are ready to clone the gitlab repository via krb5 on your
-local machine:
+The firmware team tries to use the most up to date tools for our developments. The firmware has been developed in Vivado 2016. If you would like to fork out the code and you use a Vivado version > 2016.2 you will need to upgrade the corresponding IP cores.
 
-$ git clone "KRB5 URL"
+## Deployment
+The deployment of the project can be done in a single step. Add the name of the board that you want to use in the following script and just run:
 
-Where "KRB5 URL" can be found at the main page of the project.
+```
+./deploy.sh
+```
 
-
-In order to build the firmware, run the following command:
-
-$ vivado -mode batch -source <PATH_TO>/build_mmfe8.tcl -nolog -nojournal
-
-The command above runs the .tcl script and creates the .xpr project file.
-An alternative way would simply be to run Vivado and go to:  
-Tools -> Run Tcl Script
-
-############# Christos Bakalis, christos.bakalis@cern.ch #######################
-
-############# Paris Moschovakos, paris.moschovakos@cern.ch #####################
+The script will take care of cleaning up and build the project. After that Vivado will open the freshly deployed project ready for new firmware adventures!
 
 
+## Useful links
 
+   * [NSWVmmDaqSoftware git repo][1]
+   * [NSWelectronics twiki][2]
+
+## Contact
+
+Questions, comments, suggestions, or help?
+
+
+**Paris Moschovakos**: <paris.moschovakos@cern.ch>
+
+**Panagiotis Gkountoumis**: <panagiotis.gkountoumis@cern.ch>
+
+**Christos Bakalis**: <christos.bakalis@cern.ch>
+
+[1]: https://gitlab.cern.ch/NSWelectronics/vmm_readout_software
+[2]: https://twiki.cern.ch/twiki/bin/viewauth/Atlas/NSWelectronics

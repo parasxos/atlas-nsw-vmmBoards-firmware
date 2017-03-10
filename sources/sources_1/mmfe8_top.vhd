@@ -502,7 +502,8 @@ architecture Behavioral of mmfe8_top is
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
-    signal ckbc_inhibit_buf         : std_logic := '0';
+    signal cktp_enable_flow         : std_logic := '0';
+    signal cktp_enable              : std_logic := '0';
     signal art_out_ff               : std_logic := '0';
    
     -------------------------------------------------
@@ -513,6 +514,8 @@ architecture Behavioral of mmfe8_top is
     signal trmode             : std_logic := '0';
     signal ext_trigger_in     : std_logic := '0';
     signal trint              : std_logic := '0';
+    signal trint_i            : std_logic := '0';
+    signal trint_160          : std_logic := '0';
     signal tr_reset           : std_logic := '0';
     signal event_counter_i    : std_logic_vector(31 downto 0);
     signal event_counter_ila  : std_logic_vector(31 downto 0);
@@ -586,14 +589,14 @@ architecture Behavioral of mmfe8_top is
     signal clk_500_gen      : std_logic := '0';
     signal clk_gen_locked   : std_logic := '0';
     signal rst_gen          : std_logic := '0';  
-    signal ckbc_ready       : std_logic := '0';
-    signal cktp_enable      : std_logic := '0';
+    signal ckbc_ready_vio   : std_logic := '0';
+    signal cktp_enable_vio  : std_logic := '0';
     signal CKBC_glbl        : std_logic := '0';
-    signal cktp_pulse_width : std_logic_vector(31 downto 0)    := "00000000000000000000000101000000"; -- 2 us
-    signal cktp_period      : std_logic_vector(31 downto 0)    := "00000000000000100111000100000000"; -- 1 ms
-    signal cktp_skew        : std_logic_vector(15 downto 0)    := x"0000"; 
-    signal ckbc_freq        : std_logic_vector(7 downto 0)     := "00101000"; --40 Mhz
-
+    signal cktp_pulse_width : std_logic_vector(4 downto 0)     := "00100"; -- 2 us
+    signal cktp_period      : std_logic_vector(15 downto 0)    := "0001001110001000"; -- 1 ms
+    signal cktp_skew        : std_logic_vector(4 downto 0)     := "00000"; 
+    signal ckbc_freq        : std_logic_vector(5 downto 0)     := "101000"; --40 Mhz
+    signal trig_cnt         : unsigned(11 downto 0) := (others => '0');
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -620,6 +623,8 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     attribute ASYNC_REG                         : string;
     attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
+    attribute ASYNC_REG of trint_i              : signal is "TRUE";
+    attribute ASYNC_REG of trint                : signal is "TRUE";
   
     -------------------------------------------------------------------
     -- Keep signals for ILA
@@ -809,8 +814,8 @@ architecture Behavioral of mmfe8_top is
     attribute dont_touch of MO_P_i        : signal is "TRUE";
 
     attribute keep of rst_gen                   : signal is "TRUE";
-    attribute keep of ckbc_ready                : signal is "TRUE";
-    attribute keep of cktp_enable               : signal is "TRUE";
+    attribute keep of ckbc_ready_vio            : signal is "TRUE";
+    attribute keep of cktp_enable_vio           : signal is "TRUE";
     attribute keep of cktp_pulse_width          : signal is "TRUE";
     attribute keep of cktp_period               : signal is "TRUE";
     attribute keep of cktp_skew                 : signal is "TRUE";
@@ -1380,13 +1385,13 @@ architecture Behavioral of mmfe8_top is
         mmcm_locked         : in  std_logic;
         ------------------------------------
         ----- Configuration Interface ------
-        ckbc_ready          : in  std_logic;
+        ckbc_enable         : in  std_logic;
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
-        cktp_pulse_width    : in  std_logic_vector(31 downto 0);
-        cktp_period         : in  std_logic_vector(31 downto 0);
-        cktp_skew           : in  std_logic_vector(15 downto 0);        
-        ckbc_freq           : in  std_logic_vector(7 downto 0);
+        cktp_pulse_width    : in  std_logic_vector(4 downto 0);
+        cktp_period         : in  std_logic_vector(15 downto 0);
+        cktp_skew           : in  std_logic_vector(4 downto 0);        
+        ckbc_freq           : in  std_logic_vector(5 downto 0);
         ------------------------------------
         ---------- VMM Interface -----------
         CKTP                : out std_logic;
@@ -1407,17 +1412,17 @@ architecture Behavioral of mmfe8_top is
     end component; 
 
     COMPONENT vio_clk_gen
-    PORT (
-        clk        : IN STD_LOGIC;
+      PORT (
+        clk : IN STD_LOGIC;
         probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
         probe_out1 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
         probe_out2 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out3 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe_out4 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe_out5 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out6 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
-    );
-    END COMPONENT;   
+        probe_out3 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
+        probe_out4 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe_out5 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
+        probe_out6 : OUT STD_LOGIC_VECTOR(5 DOWNTO 0)
+      );
+    END COMPONENT; 
 
 begin
 
@@ -2011,7 +2016,7 @@ ckbc_cktp_generator: clk_gen_wrapper
         mmcm_locked         => clk_gen_locked,
         ------------------------------------
         ----- Configuration Interface ------
-        ckbc_ready          => ckbc_ready,
+        ckbc_enable         => ckbc_enable,
         cktp_enable         => cktp_enable,
         cktp_primary        => vmm_cktp_primary, -- from flow_fsm
         cktp_pulse_width    => cktp_pulse_width,
@@ -2028,8 +2033,8 @@ VIO_CKBC_CKTP: vio_clk_gen
         PORT MAP (
           clk           => clk_160_gen,
           probe_out0(0) => rst_gen,
-          probe_out1(0) => ckbc_ready,
-          probe_out2(0) => cktp_enable,
+          probe_out1(0) => ckbc_ready_vio,
+          probe_out2(0) => cktp_enable_vio,
           probe_out3    => cktp_pulse_width,
           probe_out4    => cktp_period,
           probe_out5    => cktp_skew,
@@ -2173,13 +2178,11 @@ QSPI_SS_0: IOBUF
 
     OBUFTDS_inst_CKBC : OBUFTDS
     generic map (IOSTANDARD => "UNTUNED_SPLIT_60") 
-    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl, T  => '0' );
-    -- TO DO: uncomment for final version
-    --port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl, T  => ckbc_inhibit_buf );
+    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl, T => '0');
 
-    OBUFTDS_inst : OBUFTDS
+    OBUFTDS_inst_CKTP : OBUFTDS
     generic map (IOSTANDARD => "UNTUNED_SPLIT_60")
-    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => CKTP_glbl, T  => trig_mode_int );
+    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => CKTP_glbl, T => '0');
     
     --IBUFGDS_inst : IBUFGDS
     --generic map (DIFF_TERM => TRUE, -- Differential Termination
@@ -2258,15 +2261,33 @@ TRIGGER_OUT_N   <= not art2;
 --        end if;
 --end process;
 
--- TO DO: Fix this as it introduces a lot of negative slack (CDC)
---internalTrigger_proc: process(vmm_cktp, trig_mode_int, state)
---begin
---    if(state = DAQ and trig_mode_int = '0')then
---        trint <= vmm_cktp;
---    else
---        trint <= '0';
---    end if;
---end process;
+internalTrigger_proc: process(clk_160_gen)
+begin
+    if(rising_edge(clk_160_gen))then
+        if(CKTP_glbl = '1')then
+            trig_cnt <= trig_cnt + 1;
+        
+            if(trig_cnt < unsigned(cktp_pulse_width)*"1010000" - 320)then
+                trint_160 <= '0';
+            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"1010000" - 320)then
+                trint_160 <= '1';
+            else
+                trint_160 <= '0';
+            end if;
+        else
+            trint_160 <= '0';
+        end if;
+    end if;
+end process;
+
+-- CHANGE THIS TO USERCLK2 OR SYNCHRONIZE INSIDE TRIGGER MODULE
+trintSync_proc: process(clk_200)
+begin
+    if(rising_edge(clk_200))then
+        trint_i <= trint_160;
+        trint   <= trint_i;
+    end if;
+end process;
 
 --testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
 --    begin
@@ -2343,6 +2364,7 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
                     vmm_cs_all              <= '1';
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
+                    cktp_enable_flow        <= '0';
 
                     if(vmm_id_rdy = '1')then
                         if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
@@ -2480,6 +2502,7 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
                 when DAQ =>
                     is_state            <= "0101";
                     ckbc_enable         <= '1';
+                    cktp_enable_flow    <= '1';     
                     if(daq_off = '1')then  -- Reset came
                         daq_enable_i    <= '0';
                         state           <= DAQ_INIT;
@@ -2527,8 +2550,8 @@ flow_fsm: process(clk_200, status_int, status_int_synced, state, vmm_id, write_d
 end process;
 
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
+    cktp_enable             <= (not trig_mode_int) and cktp_enable_flow;
     cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
-    ckbc_inhibit_buf        <= not ckbc_enable;
     pf_newCycle             <= tr_out_i;
 
     test_data               <= udp_rx_int.data.data_in;

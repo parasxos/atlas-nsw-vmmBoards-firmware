@@ -25,7 +25,7 @@ entity ckbc_gen is
     port(  
         clk_160       : in std_logic;
         duty_cycle    : in std_logic_vector(7 downto 0);
-        freq          : in std_logic_vector(7 downto 0);
+        freq          : in std_logic_vector(5 downto 0);
         ready         : in std_logic;
         ckbc_out      : out std_logic
     );
@@ -42,10 +42,26 @@ architecture Behavioral of ckbc_gen is
     signal p_high        : unsigned(16 downto 0) := to_unsigned(0,17);        --number of clock cycles while high
     signal p_low         : unsigned(16 downto 0) := to_unsigned(0,17);        --number of clock cycles while low
     
+    signal ready_i       : std_logic := '0';
+    signal ready_sync    : std_logic := '0';
+    
     type   state_type is (IDLE, WAIT_ONE, RDY);
     signal state: state_type := IDLE;
+    
+    attribute ASYNC_REG : string;
+    attribute ASYNC_REG of ready_i         : signal is "TRUE";
+    attribute ASYNC_REG of ready_sync      : signal is "TRUE";
 
 begin
+
+-- 2 FF synchronizer
+sync_ready: process(clk_160)
+begin
+    if(rising_edge(clk_160))then
+        ready_i     <= ready;
+        ready_sync  <= ready_i;
+    end if;
+end process;
 
 -- small FSM that waits before starting the clocking process
 ckbc_proc: process(clk_160)
@@ -53,7 +69,7 @@ begin
     if(rising_edge(clk_160)) then
         case state is
         when IDLE =>
-            if(ready = '1') then
+            if(ready_sync = '1') then
                 ckbc_start  <= '0';
                 state       <= WAIT_ONE;
             else
@@ -62,7 +78,7 @@ begin
             end if;
                
         when WAIT_ONE =>
-            if(ready = '1') then
+            if(ready_sync = '1') then
                 ckbc_start  <= '0';
                 state       <= RDY;
             else
@@ -71,7 +87,7 @@ begin
             end if;
             
         when RDY =>
-            if(ready = '1')then
+            if(ready_sync = '1')then
                 ckbc_start  <= '1';
                 state       <= RDY;
             else
@@ -109,13 +125,13 @@ end process;
 t_high_proc: process(freq)
 begin
     case freq is
-    when "00101000" => -- 40
+    when "101000" => -- 40
         t_high <= to_unsigned(6250,17);
         t_low  <= to_unsigned(18750,17);
-    when "00010100" => -- 20
+    when "010100" => -- 20
         t_high <= to_unsigned(12500,17);
         t_low  <= to_unsigned(37500,17);
-    when "00001010" => -- 10
+    when "001010" => -- 10
         t_high <= to_unsigned(18750,17);
         t_low  <= to_unsigned(81250,17);
     when others =>

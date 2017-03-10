@@ -28,7 +28,7 @@ entity skew_gen is
         clk_500         : in std_logic;
         CKTP_preSkew    : in std_logic;
         skew            : in std_logic_vector(4 downto 0);
-        CKTP_skew       : out std_logic
+        CKTP_skewed     : out std_logic
     );
 end skew_gen;
 
@@ -110,11 +110,11 @@ begin
     end if;
 end process;
 
--- CKTP is registered one final time to ease timing closure
+-- CKTP is registered one final time to optimize timing
 regCKTP: process(clk_500)
 begin
     if(rising_edge(clk_500))then
-        CKTP_skew <= CKTP_internal;
+        CKTP_skewed <= CKTP_internal;
     end if;
 end process;
 

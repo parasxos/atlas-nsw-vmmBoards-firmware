@@ -21,8 +21,10 @@
 -- 27.02.2017 Added CDCC to top level. Added sel_cs mux to avoid clock domain
 -- crossing. (Christos Bakalis)
 -- 27.02.2017 Changed main logic clock to 125MHz (Paris)
--- 10.03.2017 Added configurable CKTP/CKBC module. For the moment controlled with
--- a VIO. (Christos Bakalis)
+-- 10.03.2017 Added configurable CKTP/CKBC module. For the moment controlled by
+-- a VIO. Added new internal_trigger process (Christos Bakalis)
+-- 12.03.2017 Changed flow_fsm's primary cktp assertion to comply with cktp_gen
+-- module. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -410,7 +412,7 @@ architecture Behavioral of mmfe8_top is
   
   signal reset_FF           : std_logic := '0';
   
-  signal wait_cnt           : unsigned(2 downto 0) := (others => '0');
+  signal wait_cnt           : unsigned(7 downto 0) := (others => '0');
   signal vmm_id_rdy         : std_logic := '0';
   signal newIP_rdy          : std_logic := '0';
   signal xadc_conf_rdy      : std_logic := '0';
@@ -444,6 +446,8 @@ architecture Behavioral of mmfe8_top is
     signal vmm_cktp         : std_logic := '0';
     signal vmm_cktp_primary : std_logic := '0';
     signal CKTP_glbl        : std_logic := '0';
+    signal CKTP_i           : std_logic := '0';
+    signal CKTP_glbl_s125   : std_logic := '0';        
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
     signal vmm_ckbc         : std_logic;
@@ -497,8 +501,6 @@ architecture Behavioral of mmfe8_top is
     signal trmode             : std_logic := '0';
     signal ext_trigger_in     : std_logic := '0';
     signal trint              : std_logic := '0';
-    signal trint_i            : std_logic := '0';
-    signal trint_160          : std_logic := '0';
     signal tr_reset           : std_logic := '0';
     signal event_counter_i    : std_logic_vector(31 downto 0);
     signal event_counter_ila  : std_logic_vector(31 downto 0);
@@ -583,7 +585,7 @@ architecture Behavioral of mmfe8_top is
     signal cktp_period      : std_logic_vector(15 downto 0)    := "0001001110001000"; -- 1 ms
     signal cktp_skew        : std_logic_vector(4 downto 0)     := "00000"; 
     signal ckbc_freq        : std_logic_vector(5 downto 0)     := "101000"; --40 Mhz
-    signal trig_cnt         : unsigned(11 downto 0) := (others => '0');
+    signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -615,8 +617,8 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     attribute ASYNC_REG                         : string;
     attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
-    attribute ASYNC_REG of trint_i              : signal is "TRUE";
-    attribute ASYNC_REG of trint                : signal is "TRUE";
+    attribute ASYNC_REG of CKTP_i               : signal is "TRUE";
+    attribute ASYNC_REG of CKTP_glbl_s125       : signal is "TRUE";
   
     -------------------------------------------------------------------
     -- Keep signals for ILA
@@ -2154,23 +2156,23 @@ QSPI_SS_0: IOBUF
 --    cktp_diff_1     : OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N,  I => vmm_cktp);
 --    ckbc_diff_1     : OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N,  I => vmm_ckbc); 
 
-    OBUFTDS_inst_CKBC : OBUFTDS
-    generic map (IOSTANDARD => "UNTUNED_SPLIT_60") 
-    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl, T => '0');
+    OBUFDS_inst_CKBC : OBUFDS
+    generic map (IOSTANDARD => "DIFF_HSUL_12", SLEW => "FAST") 
+    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl);
 
-    OBUFTDS_inst_CKTP : OBUFTDS
-    generic map (IOSTANDARD => "UNTUNED_SPLIT_60")
-    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => CKTP_glbl, T  => '0' ); 
+    OBUFDS_inst_CKTP : OBUFDS
+    generic map (IOSTANDARD => "DIFF_HSUL_12", SLEW => "FAST")
+    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => CKTP_glbl); 
      
 --    ext_trigger     : IBUFDS port map ( O => ext_trigger_in, I => EXT_TRIGGER_P, IB => EXT_TRIGGER_N);
 
 -------------------------------------------------------------------
 --                        Processes                              --
 -------------------------------------------------------------------
-    -- 1. internalTrigger_proc
-    -- 2. trintSync_proc
-    -- 3. synced_to_200
-    -- 4. FPGA_global_reset
+    -- 1. art_process
+    -- 2. cktpSync_proc
+    -- 3. internalTrigger_proc
+    -- 4. synced_to_flowFSM
     -- 5. sel_cs
     -- 6. flow_fsm
 -------------------------------------------------------------------
@@ -2201,29 +2203,33 @@ port map (
     D   => '1' -- Data input
 );
 
-trintSync_proc: process(userclk2)
+-- sync CKTP to userclk2
+cktpSync_proc: process(userclk2)
 begin
     if(rising_edge(userclk2))then
-        trint_i <= trint_160;
-        trint   <= trint_i;
+        CKTP_i          <= CKTP_glbl;
+        CKTP_glbl_s125  <= CKTP_i;
     end if;
 end process;
 
-internalTrigger_proc: process(clk_160_gen)
+-- internal trigger process, uses a multiplication factor of 62 and creates an internal
+-- trigger pulse of 400 ns width (b'110010' = 50)
+internalTrigger_proc: process(userclk2)
 begin
-    if(rising_edge(clk_160_gen))then
-        if(CKTP_glbl = '1')then
+    if(rising_edge(userclk2))then
+        if(CKTP_glbl_s125 = '1')then
             trig_cnt <= trig_cnt + 1;
         
-            if(trig_cnt < unsigned(cktp_pulse_width)*"1010000" - 320)then
-                trint_160 <= '0';
-            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"1010000" - 320)then
-                trint_160 <= '1';
+            if(trig_cnt < unsigned(cktp_pulse_width)*"111110" - "110010")then
+                trint <= '0';
+            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"111110" - "110010")then
+                trint <= '1';
             else
-                trint_160 <= '0';
+                trint <= '0';
             end if;
         else
-            trint_160 <= '0';
+            trint       <= '0';
+            trig_cnt    <= (others => '0');
         end if;
     end if;
 end process;
@@ -2287,7 +2293,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     sel_cs                  <= "11";    -- drive CS high
 
                     if(vmm_id_rdy = '1')then
-                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             state       <= CONFIGURE;
                         else
@@ -2296,7 +2302,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         end if;
 
                     elsif(newIP_rdy = '1')then -- start new IP setup
-                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             newIP_start <= '1';
                             state       <= FLASH_init;
@@ -2307,7 +2313,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         end if;
 
                     elsif(xadc_conf_rdy = '1')then -- start XADC
-                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             xadc_start  <= '1';
                             state       <= XADC_init;
@@ -2389,9 +2395,6 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
 
                 when DAQ_INIT =>
                     is_state                <= "0011";
-                    for I in 1 to 100 loop
-                        vmm_cktp_primary    <= '1';
-                    end loop;
                     sel_cs                  <= "11"; -- drive CS high
                     vmm_ena_all             <= '1';
                     tren                    <= '0';
@@ -2400,34 +2403,43 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     daq_enable_i            <= '1';
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
-                    
-                    if(daq_off = '1')then    -- Reset came
-                        daq_vmm_ena_wen_enable  <= x"00";
-                        daq_cktk_out_enable     <= x"00";
-                        daq_enable_i            <= '0';
-                        pf_reset                <= '0';
-                        vmm_cktp_primary        <= '0';
-                        state                   <= IDLE;
+
+                    if(wait_cnt < "00111111")then -- 63 = 504 ns
+                        vmm_cktp_primary    <= '1';
+                        wait_cnt            <= wait_cnt + 1;
                     else
-                        state   <= TRIG;
+                      state                 <= TRIG;
+                      wait_cnt              <= (others => '0');
                     end if;
                     
                 when TRIG =>
                     is_state            <= "0100";
                     vmm_tki             <= '1';
-                    vmm_cktp_primary    <= '0';
                     rstFIFO_top         <= '0';
+                    ckbc_enable         <= '1';
                     pf_reset            <= '0';
                     tren                <= '1';
-                    state               <= DAQ;
+
+                    if(wait_cnt < "00001010")then -- < 10 = 80 ns
+                        vmm_cktp_primary    <= '0';
+                        wait_cnt            <= wait_cnt + 1;
+                    else
+                      state                 <= DAQ;
+                      wait_cnt              <= (others => '0');
+                    end if;
       
                 when DAQ =>
                     is_state            <= "0101";
-                    ckbc_enable         <= '1';
                     cktp_enable_flow    <= '1';     
-                    if(daq_off = '1')then  -- Reset came
-                        daq_enable_i    <= '0';
-                        state           <= DAQ_INIT;
+                    
+                    if(daq_on = '0')then  -- Reset came
+                        daq_vmm_ena_wen_enable  <= x"00";
+                        daq_cktk_out_enable     <= x"00";
+                        daq_enable_i            <= '0';
+                        pf_reset                <= '0';
+                        state                   <= IDLE;
+                    else
+                        state                   <= DAQ;
                     end if;
                     
                 when XADC_init =>

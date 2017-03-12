@@ -15,7 +15,8 @@
 -- Changelog:
 -- 20.02.2017 Changed the FSM to create a multicycle path. Changed the input clock
 -- frequency to 160 Mhz. (Christos Bakalis)
--- 
+-- 12.03.2017 Removed FSM. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -36,7 +37,6 @@ architecture Behavioral of ckbc_gen is
     
     signal t_high        : unsigned(16 downto 0) := to_unsigned(0,17);
     signal t_low         : unsigned(16 downto 0) := to_unsigned(0,17);
-    signal ckbc_start    : std_logic := '0';
     
     signal count         : unsigned(7 downto 0) := to_unsigned(0,8);
     signal p_high        : unsigned(16 downto 0) := to_unsigned(0,17);        --number of clock cycles while high
@@ -44,9 +44,6 @@ architecture Behavioral of ckbc_gen is
     
     signal ready_i       : std_logic := '0';
     signal ready_sync    : std_logic := '0';
-    
-    type   state_type is (IDLE, WAIT_ONE, RDY);
-    signal state: state_type := IDLE;
     
     attribute ASYNC_REG : string;
     attribute ASYNC_REG of ready_i         : signal is "TRUE";
@@ -63,47 +60,10 @@ begin
     end if;
 end process;
 
--- small FSM that waits before starting the clocking process
-ckbc_proc: process(clk_160)
-begin
-    if(rising_edge(clk_160)) then
-        case state is
-        when IDLE =>
-            if(ready_sync = '1') then
-                ckbc_start  <= '0';
-                state       <= WAIT_ONE;
-            else
-                ckbc_start  <= '0';
-                state       <= IDLE;
-            end if;
-               
-        when WAIT_ONE =>
-            if(ready_sync = '1') then
-                ckbc_start  <= '0';
-                state       <= RDY;
-            else
-                ckbc_start  <= '0';
-                state       <= IDLE;
-            end if;
-            
-        when RDY =>
-            if(ready_sync = '1')then
-                ckbc_start  <= '1';
-                state       <= RDY;
-            else
-                ckbc_start  <= '0';
-                state       <= IDLE;
-            end if;
-        when others =>
-            state <= IDLE;
-        end case;
-    end if;
-end process;
-
 clocking_proc: process(clk_160)
   begin
     if (rising_edge(clk_160)) then
-        if(ckbc_start = '0') then
+        if(ready_sync = '0') then
             ckbc_out <= '0';
             count    <= to_unsigned(0,8);
         else

@@ -158,7 +158,7 @@ begin
     end case;
 end process;
 
-    cktp_start      <= not rst and ckbc_enable and cktp_enable and mmcm_locked;
+    cktp_start      <= not rst and cktp_enable and mmcm_locked;
     ckbc_start      <= not rst and ckbc_enable and mmcm_locked;
 
     CKBC            <= CKBC_glbl;

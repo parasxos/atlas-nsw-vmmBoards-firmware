@@ -92,9 +92,9 @@ begin
 --        end if;
 --end process;
 
-synchronizer_proc: process(vmm_ckbc, cktp_start)
+synchronizer_proc: process(vmm_ckbc, cktp_start_sync)
     begin
-        if(cktp_start = '0')then
+        if(cktp_start_sync = '0')then
             start_align_cnt <= '0';        
         elsif rising_edge(vmm_ckbc) then
             start_align_cnt <= '1';

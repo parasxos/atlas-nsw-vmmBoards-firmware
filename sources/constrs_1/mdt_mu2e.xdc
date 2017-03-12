@@ -25,13 +25,20 @@ set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 ## SPI FLASH END ##
 
 set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
-set_false_path -from [get_ports CH_TRIGGER]
 #============================= Primary Clocks =========================
 #======================================================================
 
 
 #======================= TIMING EXCEPTIONS SECTION ====================
 #=============================== False Paths ==========================
+set_false_path -from [get_ports CH_TRIGGER]
+
+# CKTP registering false paths
+set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg] -to [get_cells CKTP_i_reg]
+set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]    -to [get_cells CKTP_i_reg]
+
+# CKBC/CKTP control signals ignore
+set_false_path -from [get_cells vmm_cktp_primary_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input
@@ -125,14 +132,14 @@ set_property LOC SLICE_X83Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckb
 set_property LOC BUFGCTRL_X0Y3 [get_cells ckbc_cktp_generator/CKTP_BUFGMUX]
 # register-to-CKTP buffer placement constraint
 set_property LOC SLICE_X83Y146 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
-set_property LOC SLICE_X83Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skew_reg]
+set_property LOC SLICE_X83Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 
 # critical register of cktp generator placement constraint
-set_property LOC SLICE_X81Y146 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
+set_property LOC SLICE_X82Y146 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
 
 #ASYNC_REG to skewing pipeline
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skew_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_04_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06_reg]

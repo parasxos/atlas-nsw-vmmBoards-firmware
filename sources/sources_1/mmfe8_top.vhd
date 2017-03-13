@@ -21,10 +21,6 @@
 -- 27.02.2017 Added CDCC to top level. Added sel_cs mux to avoid clock domain
 -- crossing. (Christos Bakalis)
 -- 27.02.2017 Changed main logic clock to 125MHz (Paris)
--- 10.03.2017 Added configurable CKTP/CKBC module. For the moment controlled by
--- a VIO. Added new internal_trigger process (Christos Bakalis)
--- 12.03.2017 Changed flow_fsm's primary cktp assertion to comply with cktp_gen
--- module. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -412,7 +408,7 @@ architecture Behavioral of mmfe8_top is
   
   signal reset_FF           : std_logic := '0';
   
-  signal wait_cnt           : unsigned(7 downto 0) := (others => '0');
+  signal wait_cnt           : unsigned(2 downto 0) := (others => '0');
   signal vmm_id_rdy         : std_logic := '0';
   signal newIP_rdy          : std_logic := '0';
   signal xadc_conf_rdy      : std_logic := '0';
@@ -445,9 +441,6 @@ architecture Behavioral of mmfe8_top is
     signal vmm_tki          : std_logic := '0';
     signal vmm_cktp         : std_logic := '0';
     signal vmm_cktp_primary : std_logic := '0';
-    signal CKTP_glbl        : std_logic := '0';
-    signal CKTP_i           : std_logic := '0';
-    signal CKTP_glbl_s125   : std_logic := '0';        
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
     signal vmm_ckbc         : std_logic;
@@ -489,8 +482,6 @@ architecture Behavioral of mmfe8_top is
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
-    signal cktp_enable_flow         : std_logic := '0';
-    signal cktp_enable              : std_logic := '0';
     signal art_out_ff               : std_logic := '0';
    
     -------------------------------------------------
@@ -571,21 +562,6 @@ architecture Behavioral of mmfe8_top is
     signal ss_o                 : std_logic_vector(0 DOWNTO 0):=(others => '0');  
     signal ss_t                 : std_logic:= '0'; 
 
-    ------------------------------------------------------------------
-    -- CKBC/CKTP Generator signals
-    ------------------------------------------------------------------ 
-    signal clk_160_gen      : std_logic := '0';
-    signal clk_500_gen      : std_logic := '0';
-    signal clk_gen_locked   : std_logic := '0';
-    signal rst_gen          : std_logic := '0';  
-    signal ckbc_ready_vio   : std_logic := '0';
-    signal cktp_enable_vio  : std_logic := '0';
-    signal CKBC_glbl        : std_logic := '0';
-    signal cktp_pulse_width : std_logic_vector(4 downto 0)     := "00100"; -- 2 us
-    signal cktp_period      : std_logic_vector(15 downto 0)    := "0001001110001000"; -- 1 ms
-    signal cktp_skew        : std_logic_vector(4 downto 0)     := "00000"; 
-    signal ckbc_freq        : std_logic_vector(5 downto 0)     := "101000"; --40 Mhz
-    signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -617,8 +593,6 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     attribute ASYNC_REG                         : string;
     attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
-    attribute ASYNC_REG of CKTP_i               : signal is "TRUE";
-    attribute ASYNC_REG of CKTP_glbl_s125       : signal is "TRUE";
   
     -------------------------------------------------------------------
     -- Keep signals for ILA
@@ -812,29 +786,26 @@ architecture Behavioral of mmfe8_top is
     -- 1.  clk_wiz_200_to_400
     -- 2.  clk_wiz_low_jitter
     -- 3.  clk_wiz_0
-    -- 4.  clk_wiz_gen
-    -- 5.  event_timing_reset
-    -- 6.  select_vmm
-    -- 7.  vmm_readout
-    -- 8.  FIFO2UDP
-    -- 9.  trigger
-    -- 10.  packet_formation
-    -- 11. gig_ethernet_pcs_pma_0
-    -- 12. UDP_Complete_nomac
-    -- 13. temac_10_100_1000_fifo_block
-    -- 14. temac_10_100_1000_reset_sync
-    -- 15. temac_10_100_1000_config_vector_sm
-    -- 16. i2c_top
-    -- 17. udp_data_in_handler
-    -- 18. select_data
-    -- 19. ila_top_level
-    -- 20. xadc
-    -- 21. AXI4_SPI
-    -- 22. vio
-    -- 23. CDCC
-    -- 24. VIO_IP
-    -- 25. clk_gen_wrapper
-    -- 26. vio_clk_gen
+    -- 4.  event_timing_reset
+    -- 5.  select_vmm
+    -- 6.  vmm_readout
+    -- 7.  FIFO2UDP
+    -- 8.  trigger
+    -- 9.  packet_formation
+    -- 10. gig_ethernet_pcs_pma_0
+    -- 11. UDP_Complete_nomac
+    -- 12. temac_10_100_1000_fifo_block
+    -- 13. temac_10_100_1000_reset_sync
+    -- 14. temac_10_100_1000_config_vector_sm
+    -- 15. i2c_top
+    -- 16. udp_data_in_handler
+    -- 17. select_data
+    -- 18. ila_top_level
+    -- 19. xadc
+    -- 20. AXI4_SPI
+    -- 21. vio
+    -- 22. CDCC
+    -- 23. VIO_IP
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -866,16 +837,6 @@ architecture Behavioral of mmfe8_top is
       );
     end component;
     -- 4
-    component clk_wiz_gen
-    port(
-        clk_in_400  : in     std_logic;
-        clk_out_160 : out    std_logic;
-        clk_out_500 : out    std_logic;
-        reset       : in     std_logic;
-        gen_locked  : out    std_logic
-    );
-    end component;
-    --5
     component event_timing_reset
       port(
           hp_clk          : in std_logic;
@@ -899,7 +860,7 @@ architecture Behavioral of mmfe8_top is
           reset_latched   : out std_logic
       );
     end component;    
-    -- 6
+    -- 5
     component select_vmm 
       port (
           clk_in              : in  std_logic;
@@ -921,7 +882,7 @@ architecture Behavioral of mmfe8_top is
           conf_ena_vec        : out std_logic_vector(8 downto 1)
       );
     end component;
-    -- 7
+    -- 6
     component vmm_readout is
         port ( 
             clk_10_phase45          : in std_logic;     -- Used to clock checking for data process
@@ -944,7 +905,7 @@ architecture Behavioral of mmfe8_top is
             vmmEventDone            : out std_logic
         );
     end component;
-    -- 8
+    -- 7
     component FIFO2UDP
         port ( 
             clk_125                     : in std_logic;
@@ -968,7 +929,7 @@ architecture Behavioral of mmfe8_top is
             trigger_out                 : out std_logic
         );
     end component;
-    -- 9
+    -- 8
     component trigger is
       port (
           clk             : in std_logic;
@@ -984,7 +945,7 @@ architecture Behavioral of mmfe8_top is
           tr_out          : out std_logic
       );
     end component;
-    -- 10
+    -- 9
     component packet_formation is
     port (
             clk         : in std_logic;
@@ -1017,7 +978,7 @@ architecture Behavioral of mmfe8_top is
             --trigger     : in std_logic
     );
     end component;
-    -- 11
+    -- 10
     component gig_ethernet_pcs_pma_0
         port(
             -- Transceiver Interface
@@ -1081,7 +1042,7 @@ architecture Behavioral of mmfe8_top is
             gt0_pll0refclklost_out  : out std_logic;
             gt0_pll0lock_out        : out std_logic);
     end component;
-	-- 12
+	-- 11
 	component UDP_ICMP_Complete_nomac
 	   Port (
 			-- UDP TX signals
@@ -1119,7 +1080,7 @@ architecture Behavioral of mmfe8_top is
 			mac_rx_tready           : out  std_logic;							-- tells mac that we are ready to take data
 			mac_rx_tlast            : in std_logic);							-- indicates last byte of the trame
 	end component;
-    -- 13
+    -- 12
     component temac_10_100_1000_fifo_block
     port(
             gtx_clk                    : in  std_logic;
@@ -1174,7 +1135,7 @@ architecture Behavioral of mmfe8_top is
             rx_configuration_vector   : in  std_logic_vector(79 downto 0);
             tx_configuration_vector   : in  std_logic_vector(79 downto 0));
     end component;
-    -- 14
+    -- 13
     component temac_10_100_1000_reset_sync
         port ( 
             reset_in           : in  std_logic;    -- Active high asynchronous reset
@@ -1182,7 +1143,7 @@ architecture Behavioral of mmfe8_top is
             clk                : in  std_logic;    -- clock to be sync'ed to
             reset_out          : out std_logic);     -- "Synchronised" reset signal
     end component;
-    -- 15
+    -- 14
     component temac_10_100_1000_config_vector_sm is
     port(
       gtx_clk                 : in  std_logic;
@@ -1192,27 +1153,24 @@ architecture Behavioral of mmfe8_top is
       rx_configuration_vector : out std_logic_vector(79 downto 0);
       tx_configuration_vector : out std_logic_vector(79 downto 0));
     end component;
-    -- 16
+    -- 15
 	component i2c_top is
 	port(  
 	    clk_in       		  : in    std_logic;		
         phy_rstn_out 		  : out   std_logic
 	);	
 	end component;
-    -- 17
+    -- 16
     component udp_data_in_handler
     port(
     ------------------------------------
     ------- General Interface ----------
-    clk_200             : in  std_logic;
     clk_125             : in  std_logic;
-    clk_50              : in  std_logic;
     clk_40              : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
-    fpga_rst_conf       : out std_logic;
     daq_off             : out std_logic;
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
@@ -1226,6 +1184,14 @@ architecture Behavioral of mmfe8_top is
     myIP_set            : out std_logic_vector(31 downto 0);
     myMAC_set           : out std_logic_vector(47 downto 0);
     destIP_set          : out std_logic_vector(31 downto 0);
+    ------------------------------------
+    -------- CKTP/CKBC Interface -------
+    ckbc_freq           : out std_logic_vector(7 downto 0);
+    cktk_max_num        : out std_logic_vector(7 downto 0);
+    cktp_max_num        : out std_logic_vector(15 downto 0);
+    cktp_skew           : out std_logic_vector(7 downto 0);
+    cktp_period         : out std_logic_vector(15 downto 0);
+    cktp_width          : out std_logic_vector(7 downto 0);
     ------------------------------------
     ------ VMM Config Interface --------
     vmm_id              : out std_logic_vector(15 downto 0);
@@ -1244,7 +1210,7 @@ architecture Behavioral of mmfe8_top is
     xadc_delay          : out std_logic_vector(17 downto 0)
     );
     end component;
-    -- 18
+    -- 17
     component select_data
     port(
         configuring                 : in  std_logic;
@@ -1272,7 +1238,7 @@ architecture Behavioral of mmfe8_top is
         fifo_rst                    : out std_logic
     );
     end component;
-    -- 19
+    -- 18
     component ila_top_level
         PORT (  clk     : in std_logic;
                 probe0  : in std_logic_vector(63 DOWNTO 0);
@@ -1283,7 +1249,7 @@ architecture Behavioral of mmfe8_top is
                 probe5  : in std_logic_vector(63 DOWNTO 0)
                 );
     end component;
-    -- 20
+    -- 19
     component xadc
     port(
 		clk125				: in std_logic;
@@ -1325,7 +1291,7 @@ architecture Behavioral of mmfe8_top is
         xadc_busy           : out std_logic
     );
     end component;
-    -- 21
+    -- 20
     component AXI4_SPI
     port(
         clk_200                 : in  std_logic;
@@ -1358,7 +1324,7 @@ architecture Behavioral of mmfe8_top is
         ss_t : OUT STD_LOGIC
     );
     end component;
-    -- 22
+    -- 21
     component vio_1
     port (
         clk         : in  std_logic;
@@ -1370,7 +1336,7 @@ architecture Behavioral of mmfe8_top is
         probe_out5  : out std_logic_vector(0 downto 0)
         );
     end component;
-    -- 23
+    -- 22
     component CDCC
     generic(
         NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
@@ -1381,51 +1347,14 @@ architecture Behavioral of mmfe8_top is
         data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
     );
     end component;
-    -- 24
+    -- 23
     COMPONENT vio_ip
       PORT (
         clk        : IN STD_LOGIC;
         probe_out0 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
         probe_out1 : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
       );
-    END COMPONENT;
-    -- 25
-    component clk_gen_wrapper
-    Port(
-        ------------------------------------
-        ------- General Interface ----------
-        clk_500             : in  std_logic;
-        clk_160             : in  std_logic;
-        rst                 : in  std_logic;
-        mmcm_locked         : in  std_logic;
-        ------------------------------------
-        ----- Configuration Interface ------
-        ckbc_enable         : in  std_logic;
-        cktp_enable         : in  std_logic;
-        cktp_primary        : in  std_logic;
-        cktp_pulse_width    : in  std_logic_vector(4 downto 0);
-        cktp_period         : in  std_logic_vector(15 downto 0);
-        cktp_skew           : in  std_logic_vector(4 downto 0);        
-        ckbc_freq           : in  std_logic_vector(5 downto 0);
-        ------------------------------------
-        ---------- VMM Interface -----------
-        CKTP                : out std_logic;
-        CKBC                : out std_logic
-    );
-    end component;
-    -- 26
-    component vio_clk_gen
-      Port (
-        clk : IN STD_LOGIC;
-        probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out1 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out2 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out3 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-        probe_out4 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out5 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-        probe_out6 : OUT STD_LOGIC_VECTOR(5 DOWNTO 0)
-      );
-    end component;    
+    END COMPONENT;    
 
 begin
 
@@ -1671,15 +1600,12 @@ udp_din_conf_block: udp_data_in_handler
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_200             => clk_200,
         clk_125             => userclk2,
-        clk_50              => clk_50,
         clk_40              => clk_40,
         rst                 => glbl_rst_i,
         ------------------------------------
         -------- FPGA Config Interface -----
         latency             => latency_conf,
-        fpga_rst_conf       => fpga_reset_conf,
         daq_off             => daq_off,
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
@@ -1693,6 +1619,14 @@ udp_din_conf_block: udp_data_in_handler
         myIP_set            => myIP_set,
         myMAC_set           => myMAC_set,
         destIP_set          => destIP_set,
+        ------------------------------------
+        -------- CKTP/CKBC Interface -------
+        ckbc_freq           => open,
+        cktk_max_num        => open,
+        cktp_max_num        => open,
+        cktp_skew           => open,
+        cktp_period         => open,
+        cktp_width          => open,
         ------------------------------------
         ------ VMM Config Interface --------
         vmm_id              => vmm_id,
@@ -1736,15 +1670,6 @@ clk_user_inst: clk_wiz_0
         clk_10_o            => clk_10,
         clk_160_o           => clk_160
    );
-
-mmcm_ckbc_cktp: clk_wiz_gen
-    port map ( 
-        clk_in_400  => clk_400_clean,
-        clk_out_160 => clk_160_gen,
-        clk_out_500 => clk_500_gen,              
-        reset       => '0',
-        gen_locked  => clk_gen_locked            
-    );
 
 event_timing_reset_instance: event_timing_reset
     port map(
@@ -1987,41 +1912,6 @@ axi4_spi_instance: AXI4_SPI
         --SPI_CLK                => 
     );
 
-ckbc_cktp_generator: clk_gen_wrapper
-    port map(
-        ------------------------------------
-        ------- General Interface ----------
-        clk_500             => clk_500_gen,
-        clk_160             => clk_160_gen,
-        rst                 => rst_gen,
-        mmcm_locked         => clk_gen_locked,
-        ------------------------------------
-        ----- Configuration Interface ------
-        ckbc_enable         => ckbc_enable,
-        cktp_enable         => cktp_enable,
-        cktp_primary        => vmm_cktp_primary, -- from flow_fsm
-        cktp_pulse_width    => cktp_pulse_width,
-        cktp_period         => cktp_period,
-        cktp_skew           => cktp_skew,
-        ckbc_freq           => ckbc_freq,
-        ------------------------------------
-        ---------- VMM Interface -----------
-        CKTP                => CKTP_glbl,
-        CKBC                => CKBC_glbl
-    );
-
-VIO_CKBC_CKTP: vio_clk_gen
-        PORT MAP (
-          clk           => clk_160_gen,
-          probe_out0(0) => rst_gen,
-          probe_out1(0) => ckbc_ready_vio,
-          probe_out2(0) => cktp_enable_vio,
-          probe_out3    => cktp_pulse_width,
-          probe_out4    => cktp_period,
-          probe_out5    => cktp_skew,
-          probe_out6    => ckbc_freq
-        );
-
 QSPI_IO0_0: IOBUF    
    port map (
       O  => io0_i,
@@ -2156,23 +2046,23 @@ QSPI_SS_0: IOBUF
 --    cktp_diff_1     : OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N,  I => vmm_cktp);
 --    ckbc_diff_1     : OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N,  I => vmm_ckbc); 
 
-    OBUFDS_inst_CKBC : OBUFDS
-    generic map (IOSTANDARD => "DIFF_HSUL_12", SLEW => "FAST") 
-    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => CKBC_glbl);
+    OBUFTDS_inst_CKBC : OBUFTDS
+    generic map (IOSTANDARD => "UNTUNED_SPLIT_60") 
+    port map ( O => CKBC_1_P, OB => CKBC_1_N, I  => vmm_ckbc, T  => '0' );
 
-    OBUFDS_inst_CKTP : OBUFDS
-    generic map (IOSTANDARD => "DIFF_HSUL_12", SLEW => "FAST")
-    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => CKTP_glbl); 
+    OBUFTDS_inst : OBUFTDS
+    generic map (IOSTANDARD => "UNTUNED_SPLIT_60")
+    port map ( O => CKTP_1_P, OB => CKTP_1_N, I  => vmm_cktp_all, T  => '0' ); 
      
 --    ext_trigger     : IBUFDS port map ( O => ext_trigger_in, I => EXT_TRIGGER_P, IB => EXT_TRIGGER_N);
 
 -------------------------------------------------------------------
 --                        Processes                              --
 -------------------------------------------------------------------
-    -- 1. art_process
-    -- 2. cktpSync_proc
-    -- 3. internalTrigger_proc
-    -- 4. synced_to_flowFSM
+    -- 1. internalTrigger_proc
+    -- 2. testPulse_proc
+    -- 3. synced_to_200
+    -- 4. FPGA_global_reset
     -- 5. sel_cs
     -- 6. flow_fsm
 -------------------------------------------------------------------
@@ -2203,35 +2093,44 @@ port map (
     D   => '1' -- Data input
 );
 
--- sync CKTP to userclk2
-cktpSync_proc: process(userclk2)
-begin
-    if(rising_edge(userclk2))then
-        CKTP_i          <= CKTP_glbl;
-        CKTP_glbl_s125  <= CKTP_i;
-    end if;
+internalTrigger_proc: process(userclk2) -- 125MHz/#states.
+    begin
+        if rising_edge(userclk2) then            
+            if state = DAQ and trig_mode_int = '0' then
+                case internalTrigger_state is
+                    when 0 to 124749 =>
+                        internalTrigger_state <= internalTrigger_state + 1;
+                        trint           <= '0';
+                    when 124750 to 125000 =>
+                        internalTrigger_state <= internalTrigger_state + 1;
+                        trint           <= '1';        
+                    when others =>
+                        internalTrigger_state <= 0;
+                end case;
+            else
+                trint           <= '0';
+            end if;
+        end if;
 end process;
 
--- internal trigger process, uses a multiplication factor of 62 and creates an internal
--- trigger pulse of 400 ns width (b'110010' = 50)
-internalTrigger_proc: process(userclk2)
-begin
-    if(rising_edge(userclk2))then
-        if(CKTP_glbl_s125 = '1')then
-            trig_cnt <= trig_cnt + 1;
-        
-            if(trig_cnt < unsigned(cktp_pulse_width)*"111110" - "110010")then
-                trint <= '0';
-            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"111110" - "110010")then
-                trint <= '1';
+testPulse_proc: process(userclk2) -- 125MHz/#states.
+    begin
+        if rising_edge(userclk2) then            
+            if state = DAQ and trig_mode_int = '0' then
+                case cktp_state is
+                    when 0 to 62499 =>
+                        cktp_state <= cktp_state + 1;
+                        vmm_cktp      <= '0';
+                    when 62500 to 125000 =>
+                        cktp_state <= cktp_state + 1;
+                        vmm_cktp   <= '1';
+                    when others =>
+                        cktp_state <= 0;
+                end case;
             else
-                trint <= '0';
+                vmm_cktp      <= '0';
             end if;
-        else
-            trint       <= '0';
-            trig_cnt    <= (others => '0');
         end if;
-    end if;
 end process;
 
 synced_to_flowFSM: process(userclk2)
@@ -2287,13 +2186,12 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     vmm_ena_all             <= '0';
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
-                    cktp_enable_flow        <= '0';
                     daq_vmm_ena_wen_enable  <= x"00";
                     daq_cktk_out_enable     <= x"00";
                     sel_cs                  <= "11";    -- drive CS high
 
                     if(vmm_id_rdy = '1')then
-                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             state       <= CONFIGURE;
                         else
@@ -2302,7 +2200,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         end if;
 
                     elsif(newIP_rdy = '1')then -- start new IP setup
-                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             newIP_start <= '1';
                             state       <= FLASH_init;
@@ -2313,7 +2211,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         end if;
 
                     elsif(xadc_conf_rdy = '1')then -- start XADC
-                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             xadc_start  <= '1';
                             state       <= XADC_init;
@@ -2395,6 +2293,9 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
 
                 when DAQ_INIT =>
                     is_state                <= "0011";
+                    for I in 1 to 100 loop
+                        vmm_cktp_primary    <= '1';
+                    end loop;
                     sel_cs                  <= "11"; -- drive CS high
                     vmm_ena_all             <= '1';
                     tren                    <= '0';
@@ -2403,43 +2304,33 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     daq_enable_i            <= '1';
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
-
-                    if(wait_cnt < "00111111")then -- 63 = 504 ns
-                        vmm_cktp_primary    <= '1';
-                        wait_cnt            <= wait_cnt + 1;
+                    
+                    if(daq_off = '1')then    -- Reset came
+                        daq_vmm_ena_wen_enable  <= x"00";
+                        daq_cktk_out_enable     <= x"00";
+                        daq_enable_i            <= '0';
+                        pf_reset                <= '0';
+                        vmm_cktp_primary        <= '0';
+                        state                   <= IDLE;
                     else
-                      state                 <= TRIG;
-                      wait_cnt              <= (others => '0');
+                        state   <= TRIG;
                     end if;
                     
                 when TRIG =>
                     is_state            <= "0100";
                     vmm_tki             <= '1';
+                    vmm_cktp_primary    <= '0';
                     rstFIFO_top         <= '0';
-                    ckbc_enable         <= '1';
                     pf_reset            <= '0';
                     tren                <= '1';
-
-                    if(wait_cnt < "00001010")then -- < 10 = 80 ns
-                        vmm_cktp_primary    <= '0';
-                        wait_cnt            <= wait_cnt + 1;
-                    else
-                      state                 <= DAQ;
-                      wait_cnt              <= (others => '0');
-                    end if;
+                    state               <= DAQ;
       
                 when DAQ =>
                     is_state            <= "0101";
-                    cktp_enable_flow    <= '1';     
-                    
-                    if(daq_on = '0')then  -- Reset came
-                        daq_vmm_ena_wen_enable  <= x"00";
-                        daq_cktk_out_enable     <= x"00";
-                        daq_enable_i            <= '0';
-                        pf_reset                <= '0';
-                        state                   <= IDLE;
-                    else
-                        state                   <= DAQ;
+                    ckbc_enable         <= '1';
+                    if(daq_off = '1')then  -- Reset came
+                        daq_enable_i    <= '0';
+                        state           <= DAQ_INIT;
                     end if;
                     
                 when XADC_init =>
@@ -2483,8 +2374,9 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
     end if;
 end process;
 
+    vmm_ckbc                <= clk_40 and ckbc_enable; -- ckbc_en_vio(0);
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
-    cktp_enable             <= (not trig_mode_int) and cktp_enable_flow;
+    vmm_cktp_all            <= vmm_cktp or cktp_vio(0) or vmm_cktp_primary;
     cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
     
     pf_newCycle             <= tr_out_i;

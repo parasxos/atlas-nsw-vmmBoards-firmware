@@ -175,13 +175,13 @@ architecture RTL of udp_data_in_handler is
     
     ---- Uncomment the following to add signals to ILA debugging core
     -----------------------------------------------------------------
-    --attribute mark_debug : string;
-    --attribute keep       : string;
+    attribute mark_debug : string;
+    attribute keep       : string;
 
     --attribute mark_debug of latency                   : signal is "true";
     --attribute mark_debug of fpga_rst_conf             : signal is "true";
-    --attribute mark_debug of daq_off                   : signal is "true";
-    --attribute mark_debug of daq_on                    : signal is "true";
+    attribute mark_debug of daq_off                   : signal is "true";
+    attribute mark_debug of daq_on                    : signal is "true";
     --attribute mark_debug of ext_trigger               : signal is "true";
     --attribute mark_debug of udp_rx.data.data_in       : signal is "true";
     --attribute mark_debug of udp_rx.data.data_in_valid : signal is "true";
@@ -203,14 +203,14 @@ architecture RTL of udp_data_in_handler is
     --attribute mark_debug of vmm_id_xadc               : signal is "true";
     --attribute mark_debug of xadc_sample_size          : signal is "true";
     --attribute mark_debug of xadc_delay                : signal is "true";
-    --attribute mark_debug of conf_state                : signal is "true";
-    --attribute keep of conf_state                      : signal is "true";
+    attribute mark_debug of conf_state                : signal is "true";
+    attribute keep of conf_state                      : signal is "true";
 
     --attribute mark_debug of user_data_prv     : signal is "true";
     --attribute mark_debug of user_valid_prv    : signal is "true";
     --attribute mark_debug of user_valid_fifo   : signal is "true";
     --attribute mark_debug of user_last_prv     : signal is "true";
-    --attribute mark_debug of cnt_bytes         : signal is "true";
+    attribute mark_debug of cnt_bytes         : signal is "true";
     --attribute mark_debug of wait_cnt          : signal is "true";
     --attribute mark_debug of vmm_ser_done      : signal is "true";
     --attribute mark_debug of vmm_conf_rdy      : signal is "true";
@@ -221,7 +221,7 @@ architecture RTL of udp_data_in_handler is
     --attribute mark_debug of rst_fifo          : signal is "true";
     --attribute mark_debug of xadcPacket_rdy    : signal is "true";
     --attribute mark_debug of flashPacket_rdy   : signal is "true";
-    --attribute mark_debug of fpgaPacket_rdy    : signal is "true";
+    attribute mark_debug of fpgaPacket_rdy    : signal is "true";
     --attribute mark_debug of fpga_conf_1of2    : signal is "true";
     --attribute mark_debug of fpga_conf_2of2    : signal is "true";
     --attribute mark_debug of rd_ena            : signal is "true";

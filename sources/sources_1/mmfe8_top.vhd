@@ -190,8 +190,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80004";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212224";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
 
   -- clock generation signals for tranceiver
@@ -604,181 +604,181 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Readout Monitoring
     -------------------------------------------------------------------
---    attribute keep of vmm_ena               : signal is "true";
---    attribute dont_touch of vmm_ena         : signal is "true";
---    attribute keep of vmm_wen_vec           : signal is "true";
---    attribute dont_touch of vmm_wen_vec     : signal is "true";
---    attribute keep of cktk_out_vec          : signal is "true";
---    attribute dont_touch of cktk_out_vec    : signal is "true";
---    attribute keep of cktk_out_i            : signal is "true";
---    attribute keep of ckdt_out_vec          : signal is "true";
---    attribute keep of vmm_do_vec_i          : signal is "true";
---    attribute keep of daq_vmm_ena_wen_enable: signal is "true";
---    attribute keep of vmm_id_int            : signal is "true";   
---    attribute keep of data0_in_vec          : signal is "true";
---    attribute dont_touch of data0_in_vec    : signal is "true";
---    attribute keep of ro_cktk_out_vec       : signal is "true";
---    attribute dont_touch of ro_cktk_out_vec : signal is "true";
+    attribute keep of vmm_ena               : signal is "true";
+    attribute dont_touch of vmm_ena         : signal is "true";
+    attribute keep of vmm_wen_vec           : signal is "true";
+    attribute dont_touch of vmm_wen_vec     : signal is "true";
+    attribute keep of cktk_out_vec          : signal is "true";
+    attribute dont_touch of cktk_out_vec    : signal is "true";
+    attribute keep of cktk_out_i            : signal is "true";
+    attribute keep of ckdt_out_vec          : signal is "true";
+    attribute keep of vmm_do_vec_i          : signal is "true";
+    attribute keep of daq_vmm_ena_wen_enable: signal is "true";
+    attribute keep of vmm_id_int            : signal is "true";   
+    attribute keep of data0_in_vec          : signal is "true";
+    attribute dont_touch of data0_in_vec    : signal is "true";
+    attribute keep of ro_cktk_out_vec       : signal is "true";
+    attribute dont_touch of ro_cktk_out_vec : signal is "true";
 
     -------------------------------------------------------------------
     -- Trigger
     -------------------------------------------------------------------
---    attribute keep of trint               : signal is "true";
---    attribute keep of tren                : signal is "true";
---    attribute keep of ext_trigger_in      : signal is "true";
---    attribute keep of trig_mode_int       : signal is "true";
---    attribute keep of tr_hold             : signal is "true";
---    attribute dont_touch of tr_hold       : signal is "true";
---    attribute mark_debug of tr_hold       : signal is "true";
+    attribute keep of trint               : signal is "true";
+    attribute keep of tren                : signal is "true";
+    attribute keep of ext_trigger_in      : signal is "true";
+    attribute keep of trig_mode_int       : signal is "true";
+    attribute keep of tr_hold             : signal is "true";
+    attribute dont_touch of tr_hold       : signal is "true";
+    attribute mark_debug of tr_hold       : signal is "true";
 
     -------------------------------------------------------------------
     -- Event Timing & Soft Reset
     -------------------------------------------------------------------
---    attribute keep of etr_reset_latched      : signal is "true";
---    attribute keep of rst_vmm                : signal is "true";
---    attribute keep of etr_vmm_ena_vec        : signal is "true";
---    attribute keep of daq_enable_i           : signal is "true";
---    attribute keep of glBCID_i               : signal is "true";
---    attribute dont_touch of glBCID_i         : signal is "true";
---    attribute keep of state_rst_etr_i        : signal is "true";
---    attribute dont_touch of state_rst_etr_i  : signal is "true";
---    attribute keep of rst_etr_i              : signal is "true";
---    attribute dont_touch of rst_etr_i        : signal is "true";
---    attribute keep of rst_done_etr_i         : signal is "true";
---    attribute dont_touch of rst_done_etr_i   : signal is "true";
+    attribute keep of etr_reset_latched      : signal is "true";
+    attribute keep of rst_vmm                : signal is "true";
+    attribute keep of etr_vmm_ena_vec        : signal is "true";
+    attribute keep of daq_enable_i           : signal is "true";
+    attribute keep of glBCID_i               : signal is "true";
+    attribute dont_touch of glBCID_i         : signal is "true";
+    attribute keep of state_rst_etr_i        : signal is "true";
+    attribute dont_touch of state_rst_etr_i  : signal is "true";
+    attribute keep of rst_etr_i              : signal is "true";
+    attribute dont_touch of rst_etr_i        : signal is "true";
+    attribute keep of rst_done_etr_i         : signal is "true";
+    attribute dont_touch of rst_done_etr_i   : signal is "true";
     
     -------------------------------------------------------------------
     -- Packet Formation
     -------------------------------------------------------------------
---    attribute keep of pf_newCycle           :  signal  is  "true";
---    attribute keep of pfBusy_i              : signal is "true";
---    attribute dont_touch of pfBusy_i        : signal is "true";
+    attribute keep of pf_newCycle           :  signal  is  "true";
+    attribute keep of pfBusy_i              : signal is "true";
+    attribute dont_touch of pfBusy_i        : signal is "true";
     
     -------------------------------------------------------------------
     -- Dynamic IP
     -------------------------------------------------------------------   
---    attribute keep of io0_i                         : signal is "TRUE";  
---    attribute keep of io0_o                         : signal is "TRUE";  
---    attribute keep of io0_t                         : signal is "TRUE";  
---    attribute keep of io1_i                         : signal is "TRUE";  
---    attribute keep of io1_o                         : signal is "TRUE";  
---    attribute keep of io1_t                         : signal is "TRUE";  
---    attribute keep of ss_i                          : signal is "TRUE";  
---    attribute keep of ss_o                          : signal is "TRUE";  
---    attribute keep of ss_t                          : signal is "TRUE";  
+    attribute keep of io0_i                         : signal is "TRUE";  
+    attribute keep of io0_o                         : signal is "TRUE";  
+    attribute keep of io0_t                         : signal is "TRUE";  
+    attribute keep of io1_i                         : signal is "TRUE";  
+    attribute keep of io1_o                         : signal is "TRUE";  
+    attribute keep of io1_t                         : signal is "TRUE";  
+    attribute keep of ss_i                          : signal is "TRUE";  
+    attribute keep of ss_o                          : signal is "TRUE";  
+    attribute keep of ss_t                          : signal is "TRUE";  
     
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------
---    attribute keep of set_reset                 : signal is "TRUE";
---    attribute dont_touch of set_reset           : signal is "TRUE";
---    attribute keep of tx_axis_mac_tready_int    : signal is "TRUE";
---    attribute keep of test_data                 : signal is "TRUE";
---    attribute keep of status_int                : signal is "TRUE";
---    attribute keep of status_int_synced         : signal is "TRUE";
---    attribute keep of user_data_out_i           : signal is "TRUE";
---    attribute dont_touch of user_data_out_i     : signal is "TRUE";
---    attribute keep of we_conf_int               : signal is "TRUE";
---    attribute keep of fifo_data_out_int         : signal is "TRUE";
---    attribute keep of re_out_int                : signal is "TRUE";
---    attribute keep of daqFIFO_wr_en_i           : signal is "TRUE";
---    attribute keep of daqFIFO_din_i             : signal is "TRUE";
---    attribute keep of user_conf_i               : signal is "TRUE";
---    attribute keep of send_error_int            : signal is "TRUE";
---    attribute keep of test_data_out             : signal is "TRUE";
---    attribute keep of test_valid_out            : signal is "TRUE";
---    attribute keep of test_last_out             : signal is "TRUE";
---    attribute keep of udp_tx_start_int          : signal is "TRUE";
---    attribute keep of udp_tx_data_out_ready_int : signal is "TRUE";
---    attribute keep of vmm_id                    : signal is "TRUE";
---    attribute keep of vmm_id_synced             : signal is "TRUE";
---    attribute keep of vmm_id_old                : signal is "TRUE";
---    attribute keep of cnt_vmm                   : signal is "TRUE";
---    attribute keep of conf_done_int             : signal is "TRUE";
---    attribute keep of conf_done_int_synced      : signal is "TRUE";
---    attribute keep of conf_wen_i                : signal is "TRUE";
---    attribute dont_touch of conf_wen_i          : signal is "TRUE";
---    attribute keep of conf_ena_i                : signal is "TRUE";
---    attribute dont_touch of conf_ena_i          : signal is "TRUE";
---    attribute keep of conf_di_i                 : signal is "TRUE";
---    attribute keep of vmm_di_vec_i              : signal is "TRUE";
---    attribute dont_touch of vmm_di_vec_i        : signal is "TRUE";
---    attribute keep of start_conf_proc_int       : signal is "TRUE";
---    attribute keep of cnt_reply                 : signal is "TRUE";
---    attribute keep of end_packet_conf_int       : signal is "TRUE";
---    attribute keep of xadc_busy                 : signal is "TRUE";
---    attribute keep of daqFIFO_reset             : signal is "TRUE";
---    attribute keep of rstFIFO_top               : signal is "TRUE";
---    attribute keep of pf_rst_FIFO               : signal is "TRUE";
+    attribute keep of set_reset                 : signal is "TRUE";
+    attribute dont_touch of set_reset           : signal is "TRUE";
+    attribute keep of tx_axis_mac_tready_int    : signal is "TRUE";
+    attribute keep of test_data                 : signal is "TRUE";
+    attribute keep of status_int                : signal is "TRUE";
+    attribute keep of status_int_synced         : signal is "TRUE";
+    attribute keep of user_data_out_i           : signal is "TRUE";
+    attribute dont_touch of user_data_out_i     : signal is "TRUE";
+    attribute keep of we_conf_int               : signal is "TRUE";
+    attribute keep of fifo_data_out_int         : signal is "TRUE";
+    attribute keep of re_out_int                : signal is "TRUE";
+    attribute keep of daqFIFO_wr_en_i           : signal is "TRUE";
+    attribute keep of daqFIFO_din_i             : signal is "TRUE";
+    attribute keep of user_conf_i               : signal is "TRUE";
+    attribute keep of send_error_int            : signal is "TRUE";
+    attribute keep of test_data_out             : signal is "TRUE";
+    attribute keep of test_valid_out            : signal is "TRUE";
+    attribute keep of test_last_out             : signal is "TRUE";
+    attribute keep of udp_tx_start_int          : signal is "TRUE";
+    attribute keep of udp_tx_data_out_ready_int : signal is "TRUE";
+    attribute keep of vmm_id                    : signal is "TRUE";
+    attribute keep of vmm_id_synced             : signal is "TRUE";
+    attribute keep of vmm_id_old                : signal is "TRUE";
+    attribute keep of cnt_vmm                   : signal is "TRUE";
+    attribute keep of conf_done_int             : signal is "TRUE";
+    attribute keep of conf_done_int_synced      : signal is "TRUE";
+    attribute keep of conf_wen_i                : signal is "TRUE";
+    attribute dont_touch of conf_wen_i          : signal is "TRUE";
+    attribute keep of conf_ena_i                : signal is "TRUE";
+    attribute dont_touch of conf_ena_i          : signal is "TRUE";
+    attribute keep of conf_di_i                 : signal is "TRUE";
+    attribute keep of vmm_di_vec_i              : signal is "TRUE";
+    attribute dont_touch of vmm_di_vec_i        : signal is "TRUE";
+    attribute keep of start_conf_proc_int       : signal is "TRUE";
+    attribute keep of cnt_reply                 : signal is "TRUE";
+    attribute keep of end_packet_conf_int       : signal is "TRUE";
+    attribute keep of xadc_busy                 : signal is "TRUE";
+    attribute keep of daqFIFO_reset             : signal is "TRUE";
+    attribute keep of rstFIFO_top               : signal is "TRUE";
+    attribute keep of pf_rst_FIFO               : signal is "TRUE";
     
---    attribute keep of trigger_i                 : signal is "TRUE";
---    attribute dont_touch of trigger_i           : signal is "TRUE";
+    attribute keep of trigger_i                 : signal is "TRUE";
+    attribute dont_touch of trigger_i           : signal is "TRUE";
     
---    attribute keep of VMM_SDI_i                 : signal is "TRUE";
---    attribute dont_touch of VMM_SDI_i           : signal is "TRUE";
+    attribute keep of VMM_SDI_i                 : signal is "TRUE";
+    attribute dont_touch of VMM_SDI_i           : signal is "TRUE";
     
---    attribute keep of vmm_cktp                  : signal is "TRUE";
---    attribute dont_touch of vmm_cktp            : signal is "TRUE";
+    attribute keep of vmm_cktp                  : signal is "TRUE";
+    attribute dont_touch of vmm_cktp            : signal is "TRUE";
     
---    attribute keep of test                      : signal is "TRUE";
---    attribute dont_touch of test                : signal is "TRUE";
+    attribute keep of test                      : signal is "TRUE";
+    attribute dont_touch of test                : signal is "TRUE";
     
---    attribute keep of count_test                : signal is "TRUE";
---    attribute dont_touch of count_test          : signal is "TRUE";
+    attribute keep of count_test                : signal is "TRUE";
+    attribute dont_touch of count_test          : signal is "TRUE";
     
---    attribute keep of art_in_i                  : signal is "TRUE";
---    attribute dont_touch of art_in_i            : signal is "TRUE";
+    attribute keep of art_in_i                  : signal is "TRUE";
+    attribute dont_touch of art_in_i            : signal is "TRUE";
     
---    attribute keep of vmm_ckbc                  : signal is "TRUE";
---    attribute dont_touch of vmm_ckbc            : signal is "TRUE";  
+    attribute keep of vmm_ckbc                  : signal is "TRUE";
+    attribute dont_touch of vmm_ckbc            : signal is "TRUE";  
     
---    attribute keep of first_cktp                : signal is "TRUE";
---    attribute dont_touch of first_cktp          : signal is "TRUE";      
+    attribute keep of first_cktp                : signal is "TRUE";
+    attribute dont_touch of first_cktp          : signal is "TRUE";      
     
---    attribute keep of first_cktp_ok             : signal is "TRUE";
---    attribute dont_touch of first_cktp_ok       : signal is "TRUE";
+    attribute keep of first_cktp_ok             : signal is "TRUE";
+    attribute dont_touch of first_cktp_ok       : signal is "TRUE";
     
---    attribute keep of vmm_cs_all                : signal is "TRUE";
---    attribute dont_touch of vmm_cs_all          : signal is "TRUE";   
+    attribute keep of vmm_cs_all                : signal is "TRUE";
+    attribute dont_touch of vmm_cs_all          : signal is "TRUE";   
         
---    attribute keep of vmm_ena_vec               : signal is "TRUE";
---    attribute dont_touch of vmm_ena_vec         : signal is "TRUE";   
+    attribute keep of vmm_ena_vec               : signal is "TRUE";
+    attribute dont_touch of vmm_ena_vec         : signal is "TRUE";   
         
---    attribute keep of vmm_cktp_all              : signal is "TRUE";
---    attribute dont_touch of vmm_cktp_all        : signal is "TRUE";   
+    attribute keep of vmm_cktp_all              : signal is "TRUE";
+    attribute dont_touch of vmm_cktp_all        : signal is "TRUE";   
         
---    attribute keep of vmm_ena_all               : signal is "TRUE";
---    attribute dont_touch of vmm_ena_all         : signal is "TRUE";     
+    attribute keep of vmm_ena_all               : signal is "TRUE";
+    attribute dont_touch of vmm_ena_all         : signal is "TRUE";     
 
---    attribute keep of tko_i                     : signal is "TRUE";
---    attribute dont_touch of tko_i               : signal is "TRUE";    
+    attribute keep of tko_i                     : signal is "TRUE";
+    attribute dont_touch of tko_i               : signal is "TRUE";    
           
---    attribute keep of cktp_vio                  : signal is "TRUE";
---    attribute dont_touch of cktp_vio            : signal is "TRUE";    
+    attribute keep of cktp_vio                  : signal is "TRUE";
+    attribute dont_touch of cktp_vio            : signal is "TRUE";    
 
---    attribute keep of art_out                   : signal is "TRUE";
---    attribute dont_touch of art_out             : signal is "TRUE";    
+    attribute keep of art_out                   : signal is "TRUE";
+    attribute dont_touch of art_out             : signal is "TRUE";    
 
---    attribute keep of art2                      : signal is "TRUE";
---    attribute dont_touch of art2                : signal is "TRUE"; 
+    attribute keep of art2                      : signal is "TRUE";
+    attribute dont_touch of art2                : signal is "TRUE"; 
     
---    attribute keep of artall                    : signal is "TRUE";
---    attribute dont_touch of artall              : signal is "TRUE";     
+    attribute keep of artall                    : signal is "TRUE";
+    attribute dont_touch of artall              : signal is "TRUE";     
     
---    attribute keep of reset_FF                  : signal is "TRUE";
---    attribute dont_touch of reset_FF            : signal is "TRUE";         
+    attribute keep of reset_FF                  : signal is "TRUE";
+    attribute dont_touch of reset_FF            : signal is "TRUE";         
 
---    attribute keep of art_out_ff                : signal is "TRUE";
---    attribute dont_touch of art_out_ff          : signal is "TRUE";  
+    attribute keep of art_out_ff                : signal is "TRUE";
+    attribute dont_touch of art_out_ff          : signal is "TRUE";  
 
---    attribute keep of CH_TRIGGER_i              : signal is "TRUE";
---    attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
+    attribute keep of CH_TRIGGER_i              : signal is "TRUE";
+    attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
     
---    attribute keep of default_IP            : signal is "TRUE";
---    attribute dont_touch of default_IP      : signal is "TRUE";
+    attribute keep of default_IP            : signal is "TRUE";
+    attribute dont_touch of default_IP      : signal is "TRUE";
           
---    attribute keep of default_MAC            : signal is "TRUE";
---    attribute dont_touch of default_MAC      : signal is "TRUE";  
+    attribute keep of default_MAC            : signal is "TRUE";
+    attribute dont_touch of default_MAC      : signal is "TRUE";  
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -2062,10 +2062,10 @@ QSPI_SS_0: IOBUF
 art_process: process(userclk2, art2)
 begin
     if rising_edge(userclk2) then  
-        if art_cnt2 < 125 and art2 = '1' then 
+        if art_cnt2 < 50 and art2 = '1' then 
             art_out_ff     <= '1';
             art_cnt2     <= art_cnt2 + 1;
-        elsif art_cnt2 = 125 then
+        elsif art_cnt2 = 50 then
             reset_FF    <= '1';
             art_cnt2     <= art_cnt2 + 1;
         else
@@ -2398,16 +2398,16 @@ end process;
 --        probe_out5  => cs_vio
 --    );
       
---ila_top: ila_top_level
---    port map (
---        clk     => userclk2,
---        probe0  => vmmSignalsProbe,
---        probe1  => triggerETRProbe,
---        probe2  => configurationProbe,
---        probe3  => readoutProbe,
---        probe4  => dataOutProbe,
---        probe5  => flowProbe
---    );
+ila_top: ila_top_level
+    port map (
+        clk     => userclk2,
+        probe0  => vmmSignalsProbe,
+        probe1  => triggerETRProbe,
+        probe2  => configurationProbe,
+        probe3  => readoutProbe,
+        probe4  => dataOutProbe,
+        probe5  => flowProbe
+    );
     
 --VIO_DEFAULT_IP: vio_ip
 --      PORT MAP (

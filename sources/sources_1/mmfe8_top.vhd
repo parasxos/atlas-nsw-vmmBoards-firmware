@@ -1165,15 +1165,12 @@ architecture Behavioral of mmfe8_top is
     port(
     ------------------------------------
     ------- General Interface ----------
-    clk_200             : in  std_logic;
     clk_125             : in  std_logic;
-    clk_50              : in  std_logic;
     clk_40              : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
-    fpga_rst_conf       : out std_logic;
     daq_off             : out std_logic;
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
@@ -1187,6 +1184,14 @@ architecture Behavioral of mmfe8_top is
     myIP_set            : out std_logic_vector(31 downto 0);
     myMAC_set           : out std_logic_vector(47 downto 0);
     destIP_set          : out std_logic_vector(31 downto 0);
+    ------------------------------------
+    -------- CKTP/CKBC Interface -------
+    ckbc_freq           : out std_logic_vector(7 downto 0);
+    cktk_max_num        : out std_logic_vector(7 downto 0);
+    cktp_max_num        : out std_logic_vector(15 downto 0);
+    cktp_skew           : out std_logic_vector(7 downto 0);
+    cktp_period         : out std_logic_vector(15 downto 0);
+    cktp_width          : out std_logic_vector(7 downto 0);
     ------------------------------------
     ------ VMM Config Interface --------
     vmm_id              : out std_logic_vector(15 downto 0);
@@ -1595,15 +1600,12 @@ udp_din_conf_block: udp_data_in_handler
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_200             => clk_200,
         clk_125             => userclk2,
-        clk_50              => clk_50,
         clk_40              => clk_40,
         rst                 => glbl_rst_i,
         ------------------------------------
         -------- FPGA Config Interface -----
         latency             => latency_conf,
-        fpga_rst_conf       => fpga_reset_conf,
         daq_off             => daq_off,
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
@@ -1617,6 +1619,14 @@ udp_din_conf_block: udp_data_in_handler
         myIP_set            => myIP_set,
         myMAC_set           => myMAC_set,
         destIP_set          => destIP_set,
+        ------------------------------------
+        -------- CKTP/CKBC Interface -------
+        ckbc_freq           => open,
+        cktk_max_num        => open,
+        cktp_max_num        => open,
+        cktp_skew           => open,
+        cktp_period         => open,
+        cktp_width          => open,
         ------------------------------------
         ------ VMM Config Interface --------
         vmm_id              => vmm_id,

@@ -19,6 +19,7 @@
 -- and the MUX select signal is being reset between packets. (Christos Bakalis)
 -- 08.02.2017 Broke down the processes into two sub-components. (Christos Bakalis)
 -- 27.02.2017 Changes to integrate with new flow_fsm clock (125 Mhz). (Christos Bakalis)
+-- 07.03.2017 Added CKBC/CKTP configuration functionality. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------------
 library IEEE;
@@ -33,15 +34,12 @@ entity udp_data_in_handler is
     port(
     ------------------------------------
     ------- General Interface ----------
-    clk_200             : in  std_logic;
     clk_125             : in  std_logic;
-    clk_50              : in  std_logic;
     clk_40              : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
-    fpga_rst_conf       : out std_logic;
     daq_off             : out std_logic;
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
@@ -55,6 +53,14 @@ entity udp_data_in_handler is
     myIP_set            : out std_logic_vector(31 downto 0);
     myMAC_set           : out std_logic_vector(47 downto 0);
     destIP_set          : out std_logic_vector(31 downto 0);
+    ------------------------------------
+    -------- CKTP/CKBC Interface -------
+    ckbc_freq           : out std_logic_vector(7 downto 0);
+    cktk_max_num        : out std_logic_vector(7 downto 0);
+    cktp_max_num        : out std_logic_vector(15 downto 0);
+    cktp_skew           : out std_logic_vector(7 downto 0);
+    cktp_period         : out std_logic_vector(15 downto 0);
+    cktp_width          : out std_logic_vector(7 downto 0);
     ------------------------------------
     ------ VMM Config Interface --------
     vmm_id              : out std_logic_vector(15 downto 0);
@@ -82,7 +88,7 @@ architecture RTL of udp_data_in_handler is
         ------- General Interface ----------
         clk_125             : in  std_logic;
         rst                 : in  std_logic;
-        cnt_bytes           : in  unsigned(4 downto 0);
+        cnt_bytes           : in  unsigned(7 downto 0);
         user_din_udp        : in  std_logic_vector(7 downto 0);
         ------------------------------------
         ---------- XADC Interface ----------
@@ -99,11 +105,18 @@ architecture RTL of udp_data_in_handler is
         myMAC_set           : out std_logic_vector(47 downto 0);
         destIP_set          : out std_logic_vector(31 downto 0);
         ------------------------------------
+        -------- CKTP/CKBC Interface -------
+        ckbc_freq           : out std_logic_vector(7 downto 0);
+        cktk_max_num        : out std_logic_vector(7 downto 0);
+        cktp_max_num        : out std_logic_vector(15 downto 0);
+        cktp_skew           : out std_logic_vector(7 downto 0);
+        cktp_period         : out std_logic_vector(15 downto 0);
+        cktp_width          : out std_logic_vector(7 downto 0);
+        ------------------------------------
         -------- FPGA Config Interface -----
         fpga_conf           : in  std_logic;
         fpgaPacket_rdy      : out std_logic;
         latency             : out std_logic_vector(15 downto 0);
-        fpga_rst_conf       : out std_logic;
         daq_off             : out std_logic;
         daq_on              : out std_logic;
         ext_trigger         : out std_logic
@@ -118,7 +131,7 @@ architecture RTL of udp_data_in_handler is
         clk_40              : in  std_logic;
         rst                 : in  std_logic;
         rst_fifo            : in  std_logic;
-        cnt_bytes           : in  unsigned(4 downto 0);
+        cnt_bytes           : in  unsigned(7 downto 0);
         ------------------------------------
         --------- FIFO/UDP Interface -------
         user_din_udp        : in  std_logic_vector(7 downto 0);
@@ -152,7 +165,7 @@ architecture RTL of udp_data_in_handler is
     signal user_data_prv    : std_logic_vector(7 downto 0) := (others => '0');
     signal user_valid_prv   : std_logic := '0';
     signal user_last_prv    : std_logic := '0';
-    signal cnt_bytes        : unsigned(4 downto 0) := (others => '0');
+    signal cnt_bytes        : unsigned(7 downto 0) := (others => '0');
     signal conf_state       : unsigned(2 downto 0) := (others => '0');
     signal vmm_conf         : std_logic := '0';
     signal vmm_ser_done     : std_logic := '0';
@@ -236,7 +249,7 @@ architecture RTL of udp_data_in_handler is
     --- 4. FLASH_conf_proc      (clk_125)
     --- 5. FPGA_conf_proc       (clk_125)
     --- 6. VMM_conf_proc        (clk_125)
-    --- 7. VMM_conf_CKTK_FSM    (clk_40)
+    --- 7. VMM_conf_SCK_FSM     (clk_40)
     --- 8. FIFO_valid_MUX       (async)
     -------------------------------------------------------
     -------------------------------------------------------
@@ -287,7 +300,7 @@ begin
                     st_master   <= ST_IDLE;
                 end if;
 
-            -- check the port while counting 
+            -- check the port and activate the corresponding sub-process
             when ST_CHK_PORT =>
                 conf_state  <= "001";
                 cnt_bytes   <= cnt_bytes + 1;
@@ -354,7 +367,7 @@ begin
                 end if;
 
             -- create a reset signal of adequate length. release the reset
-            -- only when flow_fsm and cktk_fsm are in the appropriate states
+            -- only when flow_fsm and sck_fsm are in the appropriate states
             when ST_RESET_FIFO =>
                 conf_state  <= "101";
                 if(vmmSer_done_s125 = '1' and top_rdy = '0')then -- flow_fsm is back to IDLE + serialization has finished => reset
@@ -417,11 +430,18 @@ fpga_config_logic: fpga_config_block
         myMAC_set           => myMAC_set,
         destIP_set          => destIP_set,
         ------------------------------------
+        -------- CKTP/CKBC Interface -------
+        ckbc_freq           => ckbc_freq,
+        cktk_max_num        => cktk_max_num,
+        cktp_max_num        => cktp_max_num,
+        cktp_skew           => cktp_skew,
+        cktp_period         => cktp_period,
+        cktp_width          => cktp_width,
+        ------------------------------------
         -------- FPGA Config Interface -----
         fpga_conf           => fpga_conf,
         fpgaPacket_rdy      => fpgaPacket_rdy,
         latency             => latency,
-        fpga_rst_conf       => fpga_rst_conf,
         daq_off             => daq_off,
         daq_on              => daq_on,
         ext_trigger         => ext_trigger

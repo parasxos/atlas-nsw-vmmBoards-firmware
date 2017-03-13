@@ -231,9 +231,9 @@ set_property PACKAGE_PIN D17         [get_ports art_clkout_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_clkout_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports art_clkout_N]
 
-set_property PACKAGE_PIN B21         [get_ports ART_OUT_P]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_OUT_P]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_OUT_N]
+set_property PACKAGE_PIN H4          [get_ports ART_OUT_P]
+set_property IOSTANDARD LVDS_25      [get_ports ART_OUT_P]
+set_property IOSTANDARD LVDS_25      [get_ports ART_OUT_N]
 ##########################SPI VMM3##############################
 #######CS B19 @VMM3
 set_property PACKAGE_PIN E19     [get_ports VMM_CS]
@@ -243,10 +243,8 @@ set_property IOSTANDARD LVCMOS12 [get_ports VMM_CS]
 set_property PACKAGE_PIN D19     [get_ports VMM_SCK]
 set_property IOSTANDARD LVCMOS12 [get_ports VMM_SCK]
 ########################## MO ##################################
-set_property PACKAGE_PIN H13    [get_ports MO_P]
-set_property PACKAGE_PIN G13    [get_ports MO_N]
-set_property IOSTANDARD HSUL_12 [get_ports MO_N]
-set_property IOSTANDARD HSUL_12 [get_ports MO_P]
+set_property PACKAGE_PIN H13     [get_ports MO]
+set_property IOSTANDARD LVCMOS12 [get_ports MO]
 ########################### XADC MDT #############################
 # Dedicated Analog Inputs
 set_property IOSTANDARD LVCMOS25 [get_ports VP_0]

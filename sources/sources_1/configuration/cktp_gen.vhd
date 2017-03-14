@@ -18,6 +18,7 @@
 -- 27.02.2017 Added cktp_primary signal from flow_fsm. (Christos Bakalis)
 -- 09.03.2017 Changed input bus widths and introduced integer range for logic and routing
 -- optimization. (Christos Bakalis)
+-- 14.03.2017 Added a cktp_start delay process. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------------
 
@@ -52,12 +53,14 @@ architecture Behavioral of cktp_gen is
     signal vmm_cktp                     : std_logic := '0';
     signal cktp_start_i                 : std_logic := '0';            -- Internal connection to 2-Flip-Flop Synchronizer
     signal cktp_start_sync              : std_logic := '0';            -- Synchronized output from Synchronizer
+    signal cktp_start_final             : std_logic := '0';
     signal cktp_primary_i               : std_logic := '0';
     signal cktp_primary_sync            : std_logic := '0';
     signal cktp_start_aligned           : std_logic := '0';            -- CKTP_start signal aligned to CKBC clock
     signal align_cnt                    : unsigned(7 downto 0) := (others => '0');         -- Used for aligning with the CKBC
     signal align_cnt_thresh             : unsigned(7 downto 0) := (others => '0');
     signal start_align_cnt              : std_logic := '0';     --
+    signal cnt_delay                    : unsigned(3 downto 0) := (others => '0');
     
     attribute ASYNC_REG : string;
     
@@ -92,9 +95,9 @@ begin
 --        end if;
 --end process;
 
-synchronizer_proc: process(vmm_ckbc, cktp_start_sync)
+synchronizer_proc: process(vmm_ckbc, cktp_start_final)
     begin
-        if(cktp_start_sync = '0')then
+        if(cktp_start_final = '0')then
             start_align_cnt <= '0';        
         elsif rising_edge(vmm_ckbc) then
             start_align_cnt <= '1';
@@ -121,10 +124,28 @@ begin
     end if;
 end process;
 
+-- delay assertion of cktp start
+cktpEnableDelayer: process(clk_160)
+begin
+    if(rising_edge(clk_160))then
+        if(cktp_start_sync = '1')then
+            if(cnt_delay < "1110")then
+                cnt_delay           <= cnt_delay + 1;
+                cktp_start_final    <= '0';
+            else
+                cktp_start_final    <= '1';
+            end if;
+        else
+            cnt_delay           <= (others => '0');
+            cktp_start_final    <= '0';
+        end if;
+    end if;
+end process;
+
 testPulse_proc: process(clk_160) -- 160 MHz
     begin
         if rising_edge(clk_160) then
-            if(cktp_start_sync = '0' and cktp_primary_sync = '0')then
+            if(cktp_start_final = '0' and cktp_primary_sync = '0')then
                 cktp_cnt            <= 0;
                 vmm_cktp            <= '0';
                 cktp_start_aligned  <= '0';
@@ -140,7 +161,7 @@ testPulse_proc: process(clk_160) -- 160 MHz
                     align_cnt <= (others => '0');
                 end if;
                 
-                if cktp_start_sync = '0' then       -- Align CKTP generation to rising edge of CKBC
+                if cktp_start_final = '0' then       -- Align CKTP generation to rising edge of CKBC
                     cktp_start_aligned <= '0';
                 elsif (align_cnt = align_cnt_thresh) then
                     cktp_start_aligned <= '1';

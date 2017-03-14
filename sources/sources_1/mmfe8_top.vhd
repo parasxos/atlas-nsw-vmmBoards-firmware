@@ -489,7 +489,6 @@ architecture Behavioral of mmfe8_top is
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
-    signal cktp_enable_flow         : std_logic := '0';
     signal cktp_enable              : std_logic := '0';
     signal art_out_ff               : std_logic := '0';
    
@@ -2311,12 +2310,13 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     cnt_vmm                 <= 1;
                     
                     daq_enable_i            <= '0';
+                    pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
                     vmm_ena_all             <= '0';
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
-                    cktp_enable_flow        <= '0';
+                    vmm_cktp_primary        <= '0';
                     daq_vmm_ena_wen_enable  <= x"00";
                     daq_cktk_out_enable     <= x"00";
                     sel_cs                  <= "11";    -- drive CS high
@@ -2424,6 +2424,9 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
 
                 when DAQ_INIT =>
                     is_state                <= "0011";
+                    for I in 1 to 100 loop
+                        vmm_cktp_primary    <= '1';
+                    end loop;
                     sel_cs                  <= "11"; -- drive CS high
                     vmm_ena_all             <= '1';
                     tren                    <= '0';
@@ -2432,45 +2435,32 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     daq_enable_i            <= '1';
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
-                    vmm_cktp_primary        <= '1'; -- drive cktp_primary high
-
-                    if(wait_cnt < "00111111")then -- 63 = 504 ns of cktp_primary high
-                        wait_cnt    <= wait_cnt + 1;
-                        state       <= DAQ_INIT;
-                    else
-                        wait_cnt    <= (others => '0');
-                        state       <= TRIG;
-                    end if;
                     
-                when TRIG =>
-                    is_state            <= "0100";
-                    vmm_tki             <= '1';
-                    rstFIFO_top         <= '0';
-                    ckbc_enable         <= '1';
-                    pf_reset            <= '0';
-                    tren                <= '1';
-                    vmm_cktp_primary    <= '0';   -- ground cktp_primary
-
-                    if(wait_cnt < "00001010")then -- enable ckbc 80 ns before CKTP
-                        wait_cnt  <= wait_cnt + 1;
-                        state     <= TRIG;
-                    else
-                        wait_cnt  <= (others => '0');
-                        state     <= DAQ;
-                    end if;
-      
-                when DAQ =>
-                    is_state            <= "0101";
-                    cktp_enable_flow    <= '1';     
-                    
-                    if(daq_on = '0')then  -- Reset came
+                    if(daq_off = '1')then    -- Reset came
                         daq_vmm_ena_wen_enable  <= x"00";
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
                         pf_reset                <= '0';
                         state                   <= IDLE;
                     else
-                        state                   <= DAQ;
+                        state   <= TRIG;
+                    end if;
+                    
+                when TRIG =>
+                    is_state            <= "0100";
+                    vmm_tki             <= '1';
+                    vmm_cktp_primary    <= '0';
+                    rstFIFO_top         <= '0';
+                    pf_reset            <= '0';
+                    tren                <= '1';
+                    state               <= DAQ;
+      
+                when DAQ =>
+                    is_state            <= "0101";
+                    ckbc_enable         <= '1';
+                    if(daq_off = '1')then  -- Reset came
+                        daq_enable_i    <= '0';
+                        state           <= DAQ_INIT;
                     end if;
                     
                 when XADC_init =>
@@ -2515,7 +2505,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
 end process;
 
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
-    cktp_enable             <= (not trig_mode_int) and cktp_enable_flow;
+    cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
     
     pf_newCycle             <= tr_out_i;

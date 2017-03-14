@@ -37,7 +37,10 @@ set_false_path -from [get_ports CH_TRIGGER]
 set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg] -to [get_cells CKTP_i_reg]
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]    -to [get_cells CKTP_i_reg]
 
-# CKBC/CKTP control signals ignore
+# CKTP/CKBC enabling false path
+set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
+set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
+set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
 set_false_path -from [get_cells vmm_cktp_primary_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##

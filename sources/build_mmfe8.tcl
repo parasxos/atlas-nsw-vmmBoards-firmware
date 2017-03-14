@@ -151,6 +151,10 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/configuration/vmm_config_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/select_vmm.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/axi_quad_top.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/clk_gen_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/cktp_gen.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/ckbc_gen.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/skew_gen.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_REQ.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_RX.vhd"]"\
@@ -203,6 +207,8 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/clk_wiz_gen.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_clk_gen.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
@@ -243,6 +249,26 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/configuration/axi_quad_top.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/clk_gen_wrapper.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/cktp_gen.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/ckbc_gen.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/skew_gen.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -629,6 +655,20 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/clk_wiz_gen.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vio_clk_gen.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

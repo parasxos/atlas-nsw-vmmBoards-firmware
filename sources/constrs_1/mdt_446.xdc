@@ -25,13 +25,23 @@ set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 ## SPI FLASH END ##
 
 set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
-set_false_path -from [get_ports CH_TRIGGER]
 #============================= Primary Clocks =========================
 #======================================================================
 
 
 #======================= TIMING EXCEPTIONS SECTION ====================
 #=============================== False Paths ==========================
+set_false_path -from [get_ports CH_TRIGGER]
+
+# CKTP registering false paths
+set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg] -to [get_cells CKTP_i_reg]
+set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]    -to [get_cells CKTP_i_reg]
+
+# CKTP/CKBC enabling false path
+set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
+set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
+set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
+set_false_path -from [get_cells vmm_cktp_primary_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input
@@ -112,6 +122,66 @@ set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
 #=====================================================================
+
+#======================= Configurable CKBC/CKTP Constraints ==========
+set_false_path -from [get_cells {VIO_CKBC_CKTP/inst/PROBE_OUT_ALL_INST/G_PROBE_OUT[*].PROBE_OUT0_INST/Probe_out_reg[*]}]
+
+# 160 MHz global clock buffer placement constraint
+set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_ckbc_cktp/inst/clkout1_buf]
+# 500 Mhz global clock buffer placement constraint
+set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_ckbc_cktp/inst/clkout2_buf]
+
+# CKBC global buffer placement constraint
+set_property LOC BUFGCTRL_X0Y0 [get_cells ckbc_cktp_generator/CKBC_BUFGCE]
+# register-to-CKBC buffer placement constraint
+set_property LOC SLICE_X83Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
+
+# CKTP global buffer placement constraint
+set_property LOC BUFGCTRL_X0Y3 [get_cells ckbc_cktp_generator/CKTP_BUFGMUX]
+# register-to-CKTP buffer placement constraint
+set_property LOC SLICE_X83Y146 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+set_property LOC SLICE_X83Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+
+# critical register of cktp generator placement constraint
+set_property LOC SLICE_X82Y146 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
+
+#ASYNC_REG to skewing pipeline
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_04_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_08_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_10_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_12_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_14_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_16_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_18_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_20_reg]
+set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_22_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_24_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_26_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_28_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_30_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_32_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_34_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_36_reg]
+
+# PBLOCKS (obsolete)
+#create_pblock pblock_skewing_module
+#add_cells_to_pblock [get_pblocks pblock_skewing_module] [get_cells -quiet [list ckbc_cktp_generator/skewing_module]]
+#resize_pblock [get_pblocks pblock_skewing_module] -add {SLICE_X82Y146:SLICE_X83Y148}
+#create_pblock pblock_ckbc_generator_block
+#add_cells_to_pblock [get_pblocks pblock_ckbc_generator_block] [get_cells -quiet [list ckbc_cktp_generator/ckbc_generator]]
+#resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {SLICE_X76Y138:SLICE_X83Y146}
+#resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {RAMB18_X4Y56:RAMB18_X4Y57}
+#resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {RAMB36_X4Y28:RAMB36_X4Y28}
+#create_pblock pblock_cktp_generator_block
+#add_cells_to_pblock [get_pblocks pblock_cktp_generator_block] [get_cells -quiet [list ckbc_cktp_generator/cktp_generator]]
+#resize_pblock [get_pblocks pblock_cktp_generator_block] -add {SLICE_X74Y147:SLICE_X83Y160}
+#resize_pblock [get_pblocks pblock_cktp_generator_block] -add {RAMB18_X4Y60:RAMB18_X4Y63}
+#resize_pblock [get_pblocks pblock_cktp_generator_block] -add {RAMB36_X4Y30:RAMB36_X4Y31}
+#============================================================================================
 
 #====================== I/O Placement - IOSTANDARDS ===================
 ############################# MDT #############################

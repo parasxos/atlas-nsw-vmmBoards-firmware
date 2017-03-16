@@ -41,7 +41,6 @@ set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
 set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
-set_false_path -from [get_cells vmm_cktp_primary_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input
@@ -118,14 +117,14 @@ set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_i_reg[*]]
+set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
 #=====================================================================
 
 #======================= Configurable CKBC/CKTP Constraints ==========
-set_false_path -from [get_cells {VIO_CKBC_CKTP/inst/PROBE_OUT_ALL_INST/G_PROBE_OUT[*].PROBE_OUT0_INST/Probe_out_reg[*]}]
-
 # 160 MHz global clock buffer placement constraint
 set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_ckbc_cktp/inst/clkout1_buf]
 # 500 Mhz global clock buffer placement constraint

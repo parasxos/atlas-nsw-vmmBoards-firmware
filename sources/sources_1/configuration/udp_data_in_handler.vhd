@@ -20,6 +20,7 @@
 -- 08.02.2017 Broke down the processes into two sub-components. (Christos Bakalis)
 -- 27.02.2017 Changes to integrate with new flow_fsm clock (125 Mhz). (Christos Bakalis)
 -- 07.03.2017 Added CKBC/CKTP configuration functionality. (Christos Bakalis)
+-- 14.03.2017 FPGA register address configuration scheme deployed. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------------
 library IEEE;
@@ -40,7 +41,6 @@ entity udp_data_in_handler is
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
-    daq_off             : out std_logic;
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
     ------------------------------------
@@ -91,6 +91,9 @@ architecture RTL of udp_data_in_handler is
         cnt_bytes           : in  unsigned(7 downto 0);
         user_din_udp        : in  std_logic_vector(7 downto 0);
         ------------------------------------
+        -------- UDP Interface -------------
+        udp_rx              : in  udp_rx_type;
+        ------------------------------------
         ---------- XADC Interface ----------
         xadc_conf           : in  std_logic;
         xadcPacket_rdy      : out std_logic;
@@ -117,7 +120,6 @@ architecture RTL of udp_data_in_handler is
         fpga_conf           : in  std_logic;
         fpgaPacket_rdy      : out std_logic;
         latency             : out std_logic_vector(15 downto 0);
-        daq_off             : out std_logic;
         daq_on              : out std_logic;
         ext_trigger         : out std_logic
     );
@@ -193,7 +195,6 @@ architecture RTL of udp_data_in_handler is
 
     --attribute mark_debug of latency                   : signal is "true";
     --attribute mark_debug of fpga_rst_conf             : signal is "true";
-    --attribute mark_debug of daq_off                   : signal is "true";
     --attribute mark_debug of daq_on                    : signal is "true";
     --attribute mark_debug of ext_trigger               : signal is "true";
     --attribute mark_debug of udp_rx.data.data_in       : signal is "true";
@@ -416,6 +417,9 @@ fpga_config_logic: fpga_config_block
         cnt_bytes           => cnt_bytes,
         user_din_udp        => user_data_prv,
         ------------------------------------
+        -------- UDP Interface -------------
+        udp_rx              => udp_rx,
+        ------------------------------------
         ---------- XADC Interface ----------
         xadc_conf           => xadc_conf,
         xadcPacket_rdy      => xadcPacket_rdy,
@@ -442,7 +446,6 @@ fpga_config_logic: fpga_config_block
         fpga_conf           => fpga_conf,
         fpgaPacket_rdy      => fpgaPacket_rdy,
         latency             => latency,
-        daq_off             => daq_off,
         daq_on              => daq_on,
         ext_trigger         => ext_trigger
     );

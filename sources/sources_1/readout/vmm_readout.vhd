@@ -39,6 +39,7 @@ entity vmm_readout is
 
             daq_enable              : in std_logic;
             trigger_pulse           : in std_logic;                     -- Trigger
+            cktk_max                : in std_logic_vector(7 downto 0);  -- Max number of CKTKs
             vmmId                   : in std_logic_vector(2 downto 0);  -- VMM to be readout
             ethernet_fifo_wr_en     : out std_logic;                    -- To be used for reading out seperate FIFOs in VMMx8 parallel readout
             vmm_data_buf            : buffer std_logic_vector(37 downto 0);
@@ -65,7 +66,9 @@ architecture Behavioral of vmm_readout is
     signal trig_latency_counter : std_logic_vector( 31 DOWNTO 0 )   := ( others => '0' );   -- Latency per VMM ()
     signal trig_latency         : std_logic_vector( 31 DOWNTO 0 )   := x"0000008C";         -- x"0000008C";  700ns @200MHz (User defined)
     signal NoFlg_counter        : integer   := 0;                                           -- Counter of CKTKs
-    signal NoFlg                : integer   := 7;                                           -- How many (#+1) CKTKs before soft reset (User defined)
+--    signal NoFlg                : integer   := 7; -- Obsolete. See cktk_max               -- How many (#+1) CKTKs before soft reset (User defined)
+    signal cktk_max_i           : std_logic_vector(7 downto 0) := x"07";
+    signal cktk_max_sync        : std_logic_vector(7 downto 0) := x"07";
     signal vmmEventDone_i       : std_logic := '0';
     signal vmmEventDone_stage1  : std_logic := '0';
     signal vmmEventDone_ff_sync : std_logic := '0';
@@ -204,8 +207,8 @@ begin
                             NoFlg_counter   <= 0;
                             dt_state        <= x"6";
                         else
-                            if (NoFlg_counter = NoFlg) then
-                                dt_state    <= x"7";            -- If NoFlg = 4 : time to soft reset and transmit data
+                            if (NoFlg_counter = to_integer(unsigned(cktk_max_sync))) then
+                                dt_state    <= x"7";            -- If NoFlg = cktk max number : time to soft reset and transmit data
                             else
                                 dt_state    <= x"3";            -- Send new CKTK strobe
                             end if;
@@ -335,6 +338,8 @@ begin
         daq_enable_ff_sync      <= daq_enable_stage1;
         trigger_pulse_stage1    <= trigger_pulse_i;
         trigger_pulse_ff_sync   <= trigger_pulse_stage1;
+        cktk_max_i              <= cktk_max;
+        cktk_max_sync           <= cktk_max_i;
     end if;
 end process;
 
@@ -380,7 +385,7 @@ port map(
 
     probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
     probe0_out(4 downto 1)      <=  dt_state;                                                                       -- OK
-    probe0_out(7 downto 5)      <=  std_logic_vector(to_unsigned(NoFlg, probe0_out(7 downto 5)'length));            -- OK
+    probe0_out(7 downto 5)      <=  (others => '0');
     probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
     probe0_out(14 downto 11)    <=  dt_cntr_st;                                                                     -- OK
     probe0_out(15)              <=  daq_enable_ff_sync;                                                             -- OK

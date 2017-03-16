@@ -25,6 +25,7 @@
 -- a VIO. Added new internal_trigger process (Christos Bakalis)
 -- 12.03.2017 Changed flow_fsm's primary cktp assertion to comply with cktp_gen
 -- module. (Christos Bakalis)
+-- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -194,7 +195,7 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80004";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
   signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
 
@@ -417,7 +418,6 @@ architecture Behavioral of mmfe8_top is
   signal newIP_rdy          : std_logic := '0';
   signal xadc_conf_rdy      : std_logic := '0';
   signal daq_on             : std_logic := '0';
-  signal daq_off            : std_logic := '0';
   signal vmmConf_done       : std_logic := '0';
   signal fpga_reset_conf    : std_logic := '0';
   signal flash_busy         : std_logic := '0';
@@ -541,7 +541,7 @@ architecture Behavioral of mmfe8_top is
     -- xADC signals
     ------------------------------------------------------------------
     signal xadc_start           : std_logic;
-    signal vmm_id_xadc          : std_logic_vector (15 downto 0);
+    signal vmm_id_xadc          : std_logic_vector (15 downto 0) := (others => '0');
     signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1023 packets
     signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1023 samples over ~0.7 seconds
     signal xadc_end_of_data     : std_logic;
@@ -580,10 +580,12 @@ architecture Behavioral of mmfe8_top is
     signal ckbc_ready_vio   : std_logic := '0';
     signal cktp_enable_vio  : std_logic := '0';
     signal CKBC_glbl        : std_logic := '0';
-    signal cktp_pulse_width : std_logic_vector(4 downto 0)     := "00100"; -- 2 us
-    signal cktp_period      : std_logic_vector(15 downto 0)    := "0001001110001000"; -- 1 ms
-    signal cktp_skew        : std_logic_vector(4 downto 0)     := "00000"; 
-    signal ckbc_freq        : std_logic_vector(5 downto 0)     := "101000"; --40 Mhz
+    signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04"; -- 2 us
+    signal cktp_period      : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
+    signal cktp_skew        : std_logic_vector(7 downto 0)     := (others => '0'); 
+    signal ckbc_freq        : std_logic_vector(7 downto 0)     := x"28"; --40 Mhz
+    signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
+    signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
     signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
     -------------------------------------------------
     -- Flow FSM signals
@@ -804,25 +806,6 @@ architecture Behavioral of mmfe8_top is
           
 --    attribute keep of default_MAC            : signal is "TRUE";
 --    attribute dont_touch of default_MAC      : signal is "TRUE";
-
-    -------------------------------------------------------------------
-    -- CKBC VIO keep/dont_touch (will remove with VIO in the future)
-    -------------------------------------------------------------------
-
-    attribute keep of rst_gen                 : signal is "TRUE";
-    attribute dont_touch of rst_gen           : signal is "TRUE";  
-
-    attribute keep of cktp_pulse_width        : signal is "TRUE";
-    attribute dont_touch of cktp_pulse_width  : signal is "TRUE";  
-
-    attribute keep of cktp_period             : signal is "TRUE";
-    attribute dont_touch of cktp_period       : signal is "TRUE";  
-
-    attribute keep of cktp_skew               : signal is "TRUE";
-    attribute dont_touch of cktp_skew         : signal is "TRUE";  
-
-    attribute keep of ckbc_freq               : signal is "TRUE";
-    attribute dont_touch of ckbc_freq         : signal is "TRUE";  
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -852,7 +835,6 @@ architecture Behavioral of mmfe8_top is
     -- 23. CDCC
     -- 24. VIO_IP
     -- 25. clk_gen_wrapper
-    -- 26. vio_clk_gen
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -953,6 +935,7 @@ architecture Behavioral of mmfe8_top is
 
             daq_enable              : in std_logic;
             trigger_pulse           : in std_logic;                     -- Trigger
+            cktk_max                : in std_logic_vector(7 downto 0);
             vmmId                   : in std_logic_vector(2 downto 0);  -- VMM to be readout
             ethernet_fifo_wr_en     : out std_logic;                    -- To be used for reading out seperate FIFOs in VMMx8 parallel readout
             vmm_data_buf            : buffer std_logic_vector(37 downto 0);
@@ -1228,7 +1211,6 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
-    daq_off             : out std_logic;
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
     ------------------------------------
@@ -1435,20 +1417,7 @@ architecture Behavioral of mmfe8_top is
         CKTP                : out std_logic;
         CKBC                : out std_logic
     );
-    end component;
-    -- 26
-    component vio_clk_gen
-      Port (
-        clk : IN STD_LOGIC;
-        probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out1 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out2 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out3 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-        probe_out4 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out5 : OUT STD_LOGIC_VECTOR(4 DOWNTO 0);
-        probe_out6 : OUT STD_LOGIC_VECTOR(5 DOWNTO 0)
-      );
-    end component;    
+    end component;   
 
 begin
 
@@ -1700,7 +1669,6 @@ udp_din_conf_block: udp_data_in_handler
         ------------------------------------
         -------- FPGA Config Interface -----
         latency             => latency_conf,
-        daq_off             => daq_off,
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
         ------------------------------------
@@ -1715,12 +1683,12 @@ udp_din_conf_block: udp_data_in_handler
         destIP_set          => destIP_set,
         ------------------------------------
         -------- CKTP/CKBC Interface -------
-        ckbc_freq           => open,
-        cktk_max_num        => open,
-        cktp_max_num        => open,
-        cktp_skew           => open,
-        cktp_period         => open,
-        cktp_width          => open,
+        ckbc_freq           => ckbc_freq,
+        cktk_max_num        => cktk_max_num,
+        cktp_max_num        => cktp_max_num,
+        cktp_skew           => cktp_skew,
+        cktp_period         => cktp_period,
+        cktp_width          => cktp_pulse_width,
         ------------------------------------
         ------ VMM Config Interface --------
         vmm_id              => vmm_id,
@@ -1810,6 +1778,7 @@ readout_vmm: vmm_readout
 
         daq_enable              => daq_enable_i,
         trigger_pulse           => pf_trigVmmRo,
+        cktk_max                => cktk_max_num,
         vmmId                   => pf_vmmIdRo,
         ethernet_fifo_wr_en     => open,
         vmm_data_buf            => open,
@@ -2028,27 +1997,15 @@ ckbc_cktp_generator: clk_gen_wrapper
         ckbc_enable         => ckbc_enable,
         cktp_enable         => cktp_enable,
         cktp_primary        => vmm_cktp_primary, -- from flow_fsm
-        cktp_pulse_width    => cktp_pulse_width,
+        cktp_pulse_width    => cktp_pulse_width(4 downto 0),
         cktp_period         => cktp_period,
-        cktp_skew           => cktp_skew,
-        ckbc_freq           => ckbc_freq,
+        cktp_skew           => cktp_skew(4 downto 0),
+        ckbc_freq           => ckbc_freq(5 downto 0),
         ------------------------------------
         ---------- VMM Interface -----------
         CKTP                => CKTP_glbl,
         CKBC                => CKBC_glbl
     );
-
-VIO_CKBC_CKTP: vio_clk_gen
-        PORT MAP (
-          clk           => clk_160_gen,
-          probe_out0(0) => rst_gen,
-          probe_out1(0) => ckbc_ready_vio,  -- unused
-          probe_out2(0) => cktp_enable_vio, -- unused
-          probe_out3    => cktp_pulse_width,
-          probe_out4    => cktp_period,
-          probe_out5    => cktp_skew,
-          probe_out6    => ckbc_freq
-        );
 
 QSPI_IO0_0: IOBUF    
    port map (
@@ -2436,7 +2393,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
                     
-                    if(daq_off = '1')then    -- Reset came
+                    if(daq_on = '0')then    -- Reset came
                         daq_vmm_ena_wen_enable  <= x"00";
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
@@ -2458,7 +2415,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                 when DAQ =>
                     is_state            <= "0101";
                     ckbc_enable         <= '1';
-                    if(daq_off = '1')then  -- Reset came
+                    if(daq_on = '0')then  -- Reset came
                         daq_enable_i    <= '0';
                         state           <= DAQ_INIT;
                     end if;

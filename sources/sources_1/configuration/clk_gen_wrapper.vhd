@@ -99,8 +99,9 @@ architecture RTL of clk_gen_wrapper is
     
     signal sel_skew_gen         : std_logic := '0';
     signal skew_cktp_gen        : std_logic_vector(4 downto 0)  := (others => '0');
-    signal cktp_width_final     : std_logic_vector(11 downto 0) := (others => '0');
-    signal cktp_period_final    : std_logic_vector(21 downto 0) := (others => '0');
+    
+    signal cktp_width_final     : std_logic_vector(11 downto 0) := "000101000000";           --4 * 80 = 320
+    signal cktp_period_final    : std_logic_vector(21 downto 0) := "0000100111000100000000"; --5'000 * 32 = 160'000 
     
 begin
 

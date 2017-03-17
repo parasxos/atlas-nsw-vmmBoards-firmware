@@ -10,7 +10,7 @@
 * [Contact Information](#contact)
 
 ## How to use my VMM board?
-If you want to use your VMM board and do not want to dive into the firmware developments, just peak your .bin file from the bitstream directory and flash it into your board. Then follow the instructions on the [VMM Readout Software][1] git repo on how to install the software and operate the board.
+If you want to use your VMM board and do not want to dive into the firmware developments, just pick your .bin file from the bitstream directory and flash it into your board. Then follow the instructions on the [VMM Readout Software][1] git repo on how to install the software and operate the board.
 
 ## Recommended Release
 Every version that has been tested thoroughly enough is tagged and a bin file has been stored into the bitstream directory. Look into the available tags and choose the latest for the board that the firmware is to be used. Currently both VMM2 and VMM3 boards are supported. If you are brave enough you can use one of the versions in the development branches but this is not supported!

@@ -287,7 +287,7 @@ begin
         else
             case st_master is
 
-            -- wait for valid signal to initialize counter
+            -- wait for valid signal to initialize counter. ignore inhibit flag if FPGA configuration
             when ST_IDLE =>
                 conf_state  <= "000"; 
                 vmm_conf    <= '0';
@@ -297,6 +297,10 @@ begin
                 rst_fifo    <= '0';
 
                 if(udp_rx.data.data_in_valid = '1' and inhibit_conf = '0')then
+                    cnt_bytes   <= cnt_bytes + 1;
+                    st_master   <= ST_CHK_PORT;
+                elsif(udp_rx.data.data_in_valid = '1' and inhibit_conf = '1' and 
+                     (udp_rx.hdr.dst_port = x"1777" or udp_rx.hdr.dst_port = x"19C8"))then
                     cnt_bytes   <= cnt_bytes + 1;
                     st_master   <= ST_CHK_PORT;
                 else

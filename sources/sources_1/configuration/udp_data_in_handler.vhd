@@ -21,6 +21,8 @@
 -- 27.02.2017 Changes to integrate with new flow_fsm clock (125 Mhz). (Christos Bakalis)
 -- 07.03.2017 Added CKBC/CKTP configuration functionality. (Christos Bakalis)
 -- 14.03.2017 FPGA register address configuration scheme deployed. (Christos Bakalis)
+-- 17.03.2017 Added configuration-inhibit signal which is high if flow_fsm is not in
+-- IDLE state. Change if fpga_glbl_rst is added again. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------------
 library IEEE;
@@ -37,6 +39,7 @@ entity udp_data_in_handler is
     ------- General Interface ----------
     clk_125             : in  std_logic;
     clk_40              : in  std_logic;
+    inhibit_conf        : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
@@ -293,7 +296,7 @@ begin
                 xadc_conf   <= '0';
                 rst_fifo    <= '0';
 
-                if(udp_rx.data.data_in_valid = '1')then
+                if(udp_rx.data.data_in_valid = '1' and inhibit_conf = '0')then
                     cnt_bytes   <= cnt_bytes + 1;
                     st_master   <= ST_CHK_PORT;
                 else

@@ -348,7 +348,6 @@ begin
                     flash_conf  <= '0';
                     st_master   <= ST_WAIT_FOR_IDLE;
                 elsif(fpgaPacket_rdy = '1' and udp_rx.data.data_in_valid = '0')then -- no need to wait, jump to idle state
-                    fpga_conf   <= '0';
                     st_master   <= ST_IDLE;
                 elsif(vmm_conf_rdy = '1')then -- initialize serialization
                     init_ser    <= '1';

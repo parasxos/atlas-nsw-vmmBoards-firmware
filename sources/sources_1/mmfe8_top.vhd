@@ -421,6 +421,7 @@ architecture Behavioral of mmfe8_top is
   signal vmmConf_done       : std_logic := '0';
   signal fpga_reset_conf    : std_logic := '0';
   signal flash_busy         : std_logic := '0';
+  signal inhibit_conf       : std_logic := '0';
 
     -------------------------------------------------
     -- VMM Signals                   
@@ -1207,6 +1208,7 @@ architecture Behavioral of mmfe8_top is
     ------- General Interface ----------
     clk_125             : in  std_logic;
     clk_40              : in  std_logic;
+    inhibit_conf        : in  std_logic;
     rst                 : in  std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
@@ -1665,6 +1667,7 @@ udp_din_conf_block: udp_data_in_handler
         ------- General Interface ----------
         clk_125             => userclk2,
         clk_40              => clk_40,
+        inhibit_conf        => inhibit_conf,
         rst                 => glbl_rst_i,
         ------------------------------------
         -------- FPGA Config Interface -----
@@ -2463,6 +2466,7 @@ end process;
 
     vmm_cs                  <= vmm_cs_all or cs_vio(0);
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
+    inhibit_conf            <= '0' when (state = IDLE) else '1';
     cktk_out_vec            <= conf_cktk_out_vec_i or (ro_cktk_out_vec and daq_cktk_out_enable);
     
     pf_newCycle             <= tr_out_i;

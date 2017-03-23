@@ -19,6 +19,7 @@
 -- 07.03.2017 Changed FPGA_conf_proc to accomodate CKBC/CKTP configuration
 -- and future register address configuration scheme. (Christos Bakalis)
 -- 14.03.2017 Register address configuration scheme deployed. (Christos Bakalis)
+-- 17.03.2017 Added synchronizers for daq and trigger signals. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -85,6 +86,12 @@ architecture RTL of fpga_config_block is
     
     -- signal to control the timing of the register address/value assertion
     signal latch_enable     : std_logic := '0';
+    
+    -- synchronizer signals
+    signal daq_on_i         : std_logic := '0';
+    signal daq_on_sync      : std_logic := '0';
+    signal ext_trg_i        : std_logic := '0';
+    signal ext_trg_sync     : std_logic := '0';
 
 begin
     
@@ -109,6 +116,7 @@ begin
         else
             if((fpga_conf = '1' or flash_conf = '1' or xadc_conf = '1') and din_valid = '1')then
                 case cnt_bytes is
+                ----------------------------
                 --- register addresses -----
                 when "00001100" => -- 12
                     reg_address <= user_din_udp;
@@ -216,8 +224,6 @@ begin
                 fpgaPacket_rdy  <= '0';
                 flashPacket_rdy <= '0';
                 xadcPacket_rdy  <= '0';
-               -- reg_address     <= (others => '0');
-               -- reg_value       <= (others => '0');
             end if;
         end if;
     end if;
@@ -275,23 +281,34 @@ begin
 end process;
 
 -- process to handle daq state
-daqOnOff_proc: process(daq_state_reg)
+daqOnOff_proc: process(daq_state_reg, daq_on_i)
 begin
     case daq_state_reg is
-    when x"01"  => daq_on <= '1';
-    when x"00"  => daq_on <= '0';
-    when others => null;
+    when x"01"  => daq_on_i <= '1';
+    when x"00"  => daq_on_i <= '0';
+    when others => daq_on_i <= daq_on_i;
     end case;
 end process;
 
 -- process to handle trigger state
-triggerState_proc: process(trig_state_reg)
+triggerState_proc: process(trig_state_reg, ext_trg_i)
 begin
     case trig_state_reg is
-    when x"04"  => ext_trigger <= '1';
-    when x"07"  => ext_trigger <= '0';
-    when others => null;
+    when x"04"  => ext_trg_i <= '1';
+    when x"07"  => ext_trg_i <= '0';
+    when others => ext_trg_i <= ext_trg_i;
     end case;
+end process;
+
+-- synchronizing circuit
+syncProc: process(clk_125)
+begin
+    if(rising_edge(clk_125))then
+        daq_on_sync     <= daq_on_i;
+        daq_on          <= daq_on_sync;
+        ext_trg_sync    <= ext_trg_i;
+        ext_trigger     <= ext_trg_sync;
+    end if;
 end process;
 
 end RTL;

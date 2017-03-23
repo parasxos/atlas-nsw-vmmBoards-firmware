@@ -39,6 +39,7 @@ set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
 
 # CKTP/CKBC enabling false path
 set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
 #============================== Min/Max Delay =========================
@@ -117,6 +118,11 @@ set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
+
+set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_i_reg]
+set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_sync_reg]
+set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/ext_trg_i_reg]
+set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/ext_trg_sync_reg]
 #=====================================================================
 
 #======================= Configurable CKBC/CKTP Constraints ==========

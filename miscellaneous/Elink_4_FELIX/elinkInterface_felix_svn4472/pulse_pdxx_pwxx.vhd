@@ -11,15 +11,15 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 --! generates a one clk-pulse pd clkss after trigger rising edge
 entity pulse_pdxx_pwxx is
-    generic (
-        pd : integer := 0; -- pulse delay in clks
-        pw : integer := 1  -- pulse width in clks
-        );
-    Port ( 
-        clk         : in   std_logic;
-        trigger     : in   std_logic;
-        pulseout    : out  std_logic
-        );
+generic (
+    pd : integer := 0; -- pulse delay in clks
+    pw : integer := 1  -- pulse width in clks
+    );
+port ( 
+    clk         : in   std_logic;
+    trigger     : in   std_logic;
+    pulseout    : out  std_logic
+    );
 end pulse_pdxx_pwxx;
 
 architecture Behavioral of pulse_pdxx_pwxx is
@@ -40,7 +40,7 @@ begin
 
 process (clk)
 begin
-    if clk'event and clk = '1' then
+    if rising_edge(clk) then
         trigger_1clk_delayed <= trigger;
     end if;
 end process; 
@@ -57,11 +57,21 @@ on_s <= t0;
 end generate pd0_case;
 --
 --
-pd_gt0_case: if (pd > 0) generate
+pd1_case: if (pd = 1) generate
+process (clk)
+begin
+    if rising_edge(clk) then
+        on_s <= t0;
+    end if;
+end process;
+end generate pd1_case;
+--
+--
+pd_gt1_case: if (pd > 1) generate
 --
 process (clk)
 begin
-    if clk'event and clk = '1' then
+    if rising_edge(clk) then
         if t0 = '1' then
             shreg_pd <= shreg_pd_zeros(pd-1 downto 0) & '1';
         else
@@ -71,7 +81,7 @@ begin
 end process;
 --
 on_s <= shreg_pd(pd-1);
-end generate pd_gt0_case;
+end generate pd_gt1_case;
 
 
 ----------------------------------------
@@ -85,7 +95,7 @@ pw_gt1_case: if (pw > 1) generate
 --
 process (clk)
 begin
-    if clk'event and clk = '1' then
+    if rising_edge(clk) then
         if on_s = '1' then
             shreg_pw <= shreg_pw_zeros(pw-1 downto 0) & '1';
         else
@@ -98,7 +108,7 @@ off_s <= shreg_pw(pw-1);
 --
 process (clk)
 begin
-    if clk'event and clk = '1' then
+    if rising_edge(clk) then
         if off_s = '1' then
             pulseout_s_pw_gt1_case_s <= '0';
         elsif on_s = '1' then

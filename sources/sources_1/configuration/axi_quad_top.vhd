@@ -53,6 +53,7 @@ entity AXI4_SPI is
             destIP_set              : in std_logic_vector(31 downto 0);     -- Signal coming from config_logic. Used to set destIP
             
             newip_start             : in std_logic;                         -- Flag that initiates the process for setting newIP
+            axi4spi_busy            : out std_logic;                        -- Flag that indicates the module is busy setting newIP
             
             -- refer to Micron documentation for the signals below: https://www.micron.com/~/media/documents/products/data-sheet/nor-flash/serial-nor/n25q/n25q_256mb_1_8v.pdf
             io0_i                   : IN STD_LOGIC;                         -- Signals for DQ0 (MOSI)
@@ -371,11 +372,15 @@ spi_ip_config: process(clk_50)  -- Process that handles Dynamic IP Configuration
         case ip_config_state is     -- State machine that handles Dynamic IP Configuration. Can be though of as wrapper that allows proper function of Dynamic IP Configuration
             when IDLE =>
                 spi_ip_config_state_is <= "0000";
+                
                 if (system_start = '0') then                     -- Checked when system is started to set IP
+                    axi4spi_busy    <= '1';
                     ip_config_state <= CHECK_IP_SET; 
                 elsif (newip_start = '1') then                   -- This is set when UDP dest port 6604 receives data
+                    axi4spi_busy    <= '1';
                     ip_config_state <= NEW_IP;
                 else
+                    axi4spi_busy    <= '0';
                     ip_config_state <= IDLE;
                 end if;
             when CHECK_IP_SET =>

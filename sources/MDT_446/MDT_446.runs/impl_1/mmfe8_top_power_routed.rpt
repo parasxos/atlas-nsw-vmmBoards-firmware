@@ -1,0 +1,1483 @@
+Copyright 1986-2016 Xilinx, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version     : Vivado v.2016.4 (lin64) Build 1756540 Mon Jan 23 19:11:19 MST 2017
+| Date             : Wed Mar  8 21:39:11 2017
+| Host             : pcatlnswfelix01.cern.ch running 64-bit Scientific Linux CERN SLC release 6.8 (Carbon)
+| Command          : report_power -file mmfe8_top_power_routed.rpt -pb mmfe8_top_power_summary_routed.pb -rpx mmfe8_top_power_routed.rpx
+| Design           : mmfe8_top
+| Device           : xc7a200tfbg484-2
+| Design State     : routed
+| Grade            : commercial
+| Process          : typical
+| Characterization : Production
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Power Report
+
+Table of Contents
+-----------------
+1. Summary
+1.1 On-Chip Components
+1.2 Power Supply Summary
+1.3 Confidence Level
+2. Settings
+2.1 Environment
+2.2 Clock Constraints
+3. Detailed Reports
+3.1 By Hierarchy
+
+1. Summary
+----------
+
++--------------------------+-------+
+| Total On-Chip Power (W)  | 1.043 |
+| Dynamic (W)              | 0.873 |
+| Device Static (W)        | 0.170 |
+| Effective TJA (C/W)      | 2.5   |
+| Max Ambient (C)          | 82.4  |
+| Junction Temperature (C) | 27.6  |
+| Confidence Level         | Low   |
+| Setting File             | ---   |
+| Simulation Activity File | ---   |
+| Design Nets Matched      | NA    |
++--------------------------+-------+
+
+
+1.1 On-Chip Components
+----------------------
+
++--------------------------+-----------+----------+-----------+-----------------+
+| On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
++--------------------------+-----------+----------+-----------+-----------------+
+| Clocks                   |     0.089 |       22 |       --- |             --- |
+| Slice Logic              |     0.014 |    24762 |       --- |             --- |
+|   LUT as Logic           |     0.012 |     7969 |    133800 |            5.96 |
+|   CARRY4                 |     0.001 |      675 |     33450 |            2.02 |
+|   Register               |    <0.001 |    12012 |    267600 |            4.49 |
+|   LUT as Shift Register  |    <0.001 |      658 |     46200 |            1.42 |
+|   LUT as Distributed RAM |    <0.001 |       96 |     46200 |            0.21 |
+|   BUFG                   |    <0.001 |        1 |        32 |            3.13 |
+|   F7/F8 Muxes            |    <0.001 |       85 |    133800 |            0.06 |
+|   Others                 |     0.000 |     1231 |       --- |             --- |
+| Signals                  |     0.016 |    18415 |       --- |             --- |
+| Block RAM                |     0.055 |    109.5 |       365 |           30.00 |
+| MMCM                     |     0.484 |        4 |        10 |           40.00 |
+| I/O                      |     0.094 |       44 |       285 |           15.44 |
+| GTP                      |     0.117 |        1 |       --- |             --- |
+| XADC                     |     0.004 |        1 |       --- |             --- |
+| Static Power             |     0.170 |          |           |                 |
+| Total                    |     1.043 |          |           |                 |
++--------------------------+-----------+----------+-----------+-----------------+
+
+
+1.2 Power Supply Summary
+------------------------
+
++-----------+-------------+-----------+-------------+------------+
+| Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) |
++-----------+-------------+-----------+-------------+------------+
+| Vccint    |       1.000 |     0.221 |       0.185 |      0.036 |
+| Vccaux    |       1.800 |     0.308 |       0.278 |      0.031 |
+| Vcco33    |       3.300 |     0.005 |       0.000 |      0.005 |
+| Vcco25    |       2.500 |     0.005 |       0.000 |      0.005 |
+| Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |
+| Vcco15    |       1.500 |     0.000 |       0.000 |      0.000 |
+| Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |
+| Vcco12    |       1.200 |     0.064 |       0.059 |      0.005 |
+| Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |
+| Vccbram   |       1.000 |     0.007 |       0.004 |      0.003 |
+| MGTAVcc   |       1.000 |     0.061 |       0.059 |      0.001 |
+| MGTAVtt   |       1.200 |     0.045 |       0.042 |      0.003 |
+| Vccadc    |       1.800 |     0.022 |       0.002 |      0.020 |
++-----------+-------------+-----------+-------------+------------+
+
+
+1.3 Confidence Level
+--------------------
+
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| User Input Data             | Confidence | Details                                                | Action                                                                                                     |
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| Design implementation state | High       | Design is routed                                       |                                                                                                            |
+| Clock nodes activity        | High       | User specified more than 95% of clocks                 |                                                                                                            |
+| I/O nodes activity          | Low        | More than 75% of inputs are missing user specification | Provide missing input activity with simulation results or by editing the "By Resource Type -> I/Os" view   |
+| Internal nodes activity     | Medium     | User specified less than 25% of internal nodes         | Provide missing internal nodes activity with simulation results or by editing the "By Resource Type" views |
+| Device models               | High       | Device models are Production                           |                                                                                                            |
+|                             |            |                                                        |                                                                                                            |
+| Overall confidence level    | Low        |                                                        |                                                                                                            |
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+
+
+2. Settings
+-----------
+
+2.1 Environment
+---------------
+
++-----------------------+--------------------------+
+| Ambient Temp (C)      | 25.0                     |
+| ThetaJA (C/W)         | 2.5                      |
+| Airflow (LFM)         | 250                      |
+| Heat Sink             | medium (Medium Profile)  |
+| ThetaSA (C/W)         | 4.2                      |
+| Board Selection       | medium (10"x10")         |
+| # of Board Layers     | 12to15 (12 to 15 Layers) |
+| Board Temperature (C) | 25.0                     |
++-----------------------+--------------------------+
+
+
+2.2 Clock Constraints
+---------------------
+
++--------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------+
+| Clock                                                                                                        | Domain                                                                                               | Constraint (ns) |
++--------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------+
+| X_2V5_DIFF_CLK_P                                                                                             | X_2V5_DIFF_CLK_P                                                                                     |             5.0 |
+| clk_10_o_clk_wiz_0                                                                                           | clk_user_inst/inst/clk_10_o_clk_wiz_0                                                                |           100.0 |
+| clk_10_phase45_o_clk_wiz_0                                                                                   | clk_user_inst/inst/clk_10_phase45_o_clk_wiz_0                                                        |           100.0 |
+| clk_160_o_clk_wiz_0                                                                                          | clk_user_inst/inst/clk_160_o_clk_wiz_0                                                               |             6.3 |
+| clk_200_o_clk_wiz_0                                                                                          | clk_user_inst/inst/clk_200_o_clk_wiz_0                                                               |             5.0 |
+| clk_40_o_clk_wiz_0                                                                                           | clk_user_inst/inst/clk_40_o_clk_wiz_0                                                                |            25.0 |
+| clk_50_o_clk_wiz_0                                                                                           | clk_user_inst/inst/clk_50_o_clk_wiz_0                                                                |            20.0 |
+| clk_out1_clk_wiz_low_jitter                                                                                  | clk_400_low_jitter_inst/inst/clk_out1_clk_wiz_low_jitter                                             |             2.5 |
+| clk_out_400_clk_wiz_200_to_400                                                                               | clk_200_to_400_inst/inst/clk_out_400_clk_wiz_200_to_400                                              |             2.5 |
+| clkfbout                                                                                                     | core_wrapper/U0/core_clocking_i/clkfbout                                                             |            16.0 |
+| clkfbout_clk_wiz_0                                                                                           | clk_user_inst/inst/clkfbout_clk_wiz_0                                                                |             2.5 |
+| clkfbout_clk_wiz_200_to_400                                                                                  | clk_200_to_400_inst/inst/clkfbout_clk_wiz_200_to_400                                                 |             5.0 |
+| clkfbout_clk_wiz_low_jitter                                                                                  | clk_400_low_jitter_inst/inst/clkfbout_clk_wiz_low_jitter                                             |             2.5 |
+| clkout0                                                                                                      | core_wrapper/U0/core_clocking_i/clkout0                                                              |             8.0 |
+| clkout1                                                                                                      | core_wrapper/U0/core_clocking_i/clkout1                                                              |            16.0 |
+| core_wrapper/U0/pcs_pma_block_i/transceiver_inst/gtwizard_inst/U0/gtwizard_i/gt0_GTWIZARD_i/gtpe2_i/RXOUTCLK | core_wrapper/U0/pcs_pma_block_i/transceiver_inst/gtwizard_inst/U0/gtwizard_i/gt0_GTWIZARD_i/rxoutclk |            16.0 |
+| core_wrapper/U0/pcs_pma_block_i/transceiver_inst/gtwizard_inst/U0/gtwizard_i/gt0_GTWIZARD_i/gtpe2_i/TXOUTCLK | core_wrapper/U0/pcs_pma_block_i/transceiver_inst/gtwizard_inst/U0/gtwizard_i/gt0_GTWIZARD_i/txoutclk |            16.0 |
+| dbg_hub/inst/SWITCH_N_EXT_BSCAN.bscan_inst/SERIES7_BSCAN.bscan_inst/TCK                                      | dbg_hub/inst/SWITCH_N_EXT_BSCAN.bscan_inst/tck_bs                                                    |            33.0 |
+| gtrefclk_p                                                                                                   | gtrefclk_p                                                                                           |             8.0 |
++--------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+-----------------+
+
+
+3. Detailed Reports
+-------------------
+
+3.1 By Hierarchy
+----------------
+
++----------------------------------------------------------------------------------------------+-----------+
+| Name                                                                                         | Power (W) |
++----------------------------------------------------------------------------------------------+-----------+
+| mmfe8_top                                                                                    |     0.873 |
+|   FIFO2UDP_instance                                                                          |     0.003 |
+|     daq_FIFO_instance                                                                        |     0.001 |
+|       U0                                                                                     |     0.001 |
+|         inst_fifo_gen                                                                        |     0.001 |
+|           gconvfifo.rf                                                                       |     0.001 |
+|             grf.rf                                                                           |     0.001 |
+|               gntv_or_sync_fifo.gl0.rd                                                       |    <0.001 |
+|                 grss.rsts                                                                    |    <0.001 |
+|                   c1                                                                         |    <0.001 |
+|                   c2                                                                         |    <0.001 |
+|                 rpntr                                                                        |    <0.001 |
+|               gntv_or_sync_fifo.gl0.wr                                                       |    <0.001 |
+|                 gwss.wsts                                                                    |    <0.001 |
+|                   c0                                                                         |    <0.001 |
+|                   c1                                                                         |    <0.001 |
+|                 wpntr                                                                        |    <0.001 |
+|               gntv_or_sync_fifo.mem                                                          |    <0.001 |
+|                 gbm.gbmg.gbmga.ngecc.bmg                                                     |    <0.001 |
+|                   inst_blk_mem_gen                                                           |    <0.001 |
+|                     gnbram.gnativebmg.native_blk_mem_gen                                     |    <0.001 |
+|                       valid.cstr                                                             |    <0.001 |
+|                         has_mux_b.B                                                          |    <0.001 |
+|                         ramloop[0].ram.r                                                     |    <0.001 |
+|                           prim_noinit.ram                                                    |    <0.001 |
+|                         ramloop[1].ram.r                                                     |    <0.001 |
+|                           prim_noinit.ram                                                    |    <0.001 |
+|                         ramloop[2].ram.r                                                     |    <0.001 |
+|                           prim_noinit.ram                                                    |    <0.001 |
+|                         ramloop[3].ram.r                                                     |    <0.001 |
+|                           prim_noinit.ram                                                    |    <0.001 |
+|     packet_len_fifo_instance                                                                 |    <0.001 |
+|       U0                                                                                     |    <0.001 |
+|         inst_fifo_gen                                                                        |    <0.001 |
+|           gconvfifo.rf                                                                       |    <0.001 |
+|             grf.rf                                                                           |    <0.001 |
+|               gntv_or_sync_fifo.gl0.rd                                                       |    <0.001 |
+|                 grss.rsts                                                                    |    <0.001 |
+|                 rpntr                                                                        |    <0.001 |
+|               gntv_or_sync_fifo.gl0.wr                                                       |    <0.001 |
+|                 gwss.wsts                                                                    |    <0.001 |
+|                 wpntr                                                                        |    <0.001 |
+|               gntv_or_sync_fifo.mem                                                          |    <0.001 |
+|                 gbm.gbmg.gbmga.ngecc.bmg                                                     |    <0.001 |
+|                   inst_blk_mem_gen                                                           |    <0.001 |
+|                     gnbram.gnativebmg.native_blk_mem_gen                                     |    <0.001 |
+|                       valid.cstr                                                             |    <0.001 |
+|                         ramloop[0].ram.r                                                     |    <0.001 |
+|                           prim_noinit.ram                                                    |    <0.001 |
+|   OBUFTDS_inst                                                                               |     0.007 |
+|   OBUFTDS_inst_CKBC                                                                          |     0.009 |
+|   QSPI_IO0_0                                                                                 |    <0.001 |
+|   QSPI_IO1_0                                                                                 |    <0.001 |
+|   QSPI_SS_0                                                                                  |    <0.001 |
+|   TKI_diff_1                                                                                 |     0.007 |
+|   UDP_ICMP_block                                                                             |     0.023 |
+|     IP_block                                                                                 |     0.018 |
+|       IP_layer                                                                               |     0.005 |
+|         RX                                                                                   |    <0.001 |
+|         TX                                                                                   |     0.004 |
+|       mac_tx_arb                                                                             |    <0.001 |
+|       multi_entry_arp.arp_layer                                                              |     0.014 |
+|         req                                                                                  |     0.003 |
+|         rx                                                                                   |    <0.001 |
+|         store                                                                                |     0.008 |
+|         sync                                                                                 |    <0.001 |
+|         tx                                                                                   |     0.001 |
+|     icmp_rx_block                                                                            |    <0.001 |
+|     icmp_tx_block                                                                            |    <0.001 |
+|     ping_reply_block                                                                         |     0.003 |
+|       fifo_payload_buffer                                                                    |     0.001 |
+|         U0                                                                                   |     0.001 |
+|           inst_fifo_gen                                                                      |     0.001 |
+|             gconvfifo.rf                                                                     |     0.001 |
+|               grf.rf                                                                         |     0.001 |
+|                 gntv_or_sync_fifo.gcx.clkx                                                   |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[1].rd_stg_inst                                       |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[1].wr_stg_inst                                       |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[2].rd_stg_inst                                       |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[2].wr_stg_inst                                       |    <0.001 |
+|                 gntv_or_sync_fifo.gl0.rd                                                     |    <0.001 |
+|                   gras.rsts                                                                  |    <0.001 |
+|                     c0                                                                       |    <0.001 |
+|                     c1                                                                       |    <0.001 |
+|                   rpntr                                                                      |    <0.001 |
+|                 gntv_or_sync_fifo.gl0.wr                                                     |    <0.001 |
+|                   gwas.wsts                                                                  |    <0.001 |
+|                     c1                                                                       |    <0.001 |
+|                     c2                                                                       |    <0.001 |
+|                   wpntr                                                                      |    <0.001 |
+|                 gntv_or_sync_fifo.mem                                                        |    <0.001 |
+|                   gbm.gbmg.gbmgc.ngecc.bmg                                                   |    <0.001 |
+|                     inst_blk_mem_gen                                                         |    <0.001 |
+|                       gnbram.gnativebmg.native_blk_mem_gen                                   |    <0.001 |
+|                         valid.cstr                                                           |    <0.001 |
+|                           ramloop[0].ram.r                                                   |    <0.001 |
+|                             prim_noinit.ram                                                  |    <0.001 |
+|                 rstblk                                                                       |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[1].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[2].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[3].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[4].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[1].rd_rst_inst     |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[1].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[1].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[2].rd_rst_inst     |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[2].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[2].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[3].rd_rst_inst     |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[3].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[3].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[4].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[4].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].wrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].wrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[3].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[3].wrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[4].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[4].wrst_inst                   |    <0.001 |
+|     udp_rx_block                                                                             |    <0.001 |
+|     udp_tx_block                                                                             |    <0.001 |
+|   art_clk_diff_1                                                                             |     0.016 |
+|   art_out_diff_1                                                                             |     0.007 |
+|   axi4_spi_instance                                                                          |     0.008 |
+|     CDCC_125to50                                                                             |     0.001 |
+|     CDCC_50to125                                                                             |     0.002 |
+|     axi_SPI                                                                                  |     0.002 |
+|       U0                                                                                     |     0.002 |
+|         NO_DUAL_QUAD_MODE.QSPI_NORMAL                                                        |     0.002 |
+|           QSPI_LEGACY_MD_GEN.AXI_LITE_IPIF_I                                                 |    <0.001 |
+|             I_SLAVE_ATTACHMENT                                                               |    <0.001 |
+|               I_DECODER                                                                      |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[0].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[10].MULTIPLE_CES_THIS_CS_GEN.CE_I               |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[11].MULTIPLE_CES_THIS_CS_GEN.CE_I               |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[12].MULTIPLE_CES_THIS_CS_GEN.CE_I               |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[13].MULTIPLE_CES_THIS_CS_GEN.CE_I               |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[14].MULTIPLE_CES_THIS_CS_GEN.CE_I               |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[1].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[2].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[3].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[4].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[5].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[6].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[7].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[8].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[0].PER_CE_GEN[9].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[1].PER_CE_GEN[2].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[1].PER_CE_GEN[6].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[2].PER_CE_GEN[2].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|                 MEM_DECODE_GEN[2].PER_CE_GEN[6].MULTIPLE_CES_THIS_CS_GEN.CE_I                |    <0.001 |
+|           QSPI_LEGACY_MD_GEN.QSPI_CORE_INTERFACE_I                                           |     0.002 |
+|             CONTROL_REG_I                                                                    |    <0.001 |
+|             FIFO_EXISTS.CLK_CROSS_I                                                          |    <0.001 |
+|             FIFO_EXISTS.FIFO_IF_MODULE_I                                                     |    <0.001 |
+|             FIFO_EXISTS.RX_FIFO_EMPTY_SYNC_AXI_2_SPI_CDC                                     |    <0.001 |
+|             FIFO_EXISTS.RX_FIFO_FULL_CNTR_I                                                  |    <0.001 |
+|             FIFO_EXISTS.RX_FIFO_FULL_SYNCED_SPI_2_AXI_CDC                                    |    <0.001 |
+|             FIFO_EXISTS.RX_FIFO_II                                                           |    <0.001 |
+|               USE_2N_DEPTH.V6_S6_AND_LATER.I_ASYNC_FIFO_BRAM                                 |    <0.001 |
+|                 inst_fifo_gen                                                                |    <0.001 |
+|                   gconvfifo.rf                                                               |    <0.001 |
+|                     grf.rf                                                                   |    <0.001 |
+|                       gntv_or_sync_fifo.gcx.clkx                                             |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].wr_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].wr_stg_inst                                 |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.rd                                               |    <0.001 |
+|                         gr1.gr1_int.rfwft                                                    |    <0.001 |
+|                         gras.rsts                                                            |    <0.001 |
+|                         rpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.wr                                               |    <0.001 |
+|                         gwas.wsts                                                            |    <0.001 |
+|                         wpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.mem                                                  |    <0.001 |
+|                         gdm.dm_gen.dm                                                        |    <0.001 |
+|                           RAM_reg_0_15_0_5                                                   |    <0.001 |
+|                           RAM_reg_0_15_6_7                                                   |    <0.001 |
+|                       rstblk                                                                 |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].wrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].wrst_inst             |    <0.001 |
+|             FIFO_EXISTS.TX_FIFO_EMPTY_CNTR_I                                                 |    <0.001 |
+|             FIFO_EXISTS.TX_FIFO_II                                                           |    <0.001 |
+|               USE_2N_DEPTH.V6_S6_AND_LATER.I_ASYNC_FIFO_BRAM                                 |    <0.001 |
+|                 inst_fifo_gen                                                                |    <0.001 |
+|                   gconvfifo.rf                                                               |    <0.001 |
+|                     grf.rf                                                                   |    <0.001 |
+|                       gntv_or_sync_fifo.gcx.clkx                                             |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].wr_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].wr_stg_inst                                 |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.rd                                               |    <0.001 |
+|                         gr1.gr1_int.rfwft                                                    |    <0.001 |
+|                         gras.rsts                                                            |    <0.001 |
+|                         rpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.wr                                               |    <0.001 |
+|                         gwas.wsts                                                            |    <0.001 |
+|                         wpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.mem                                                  |    <0.001 |
+|                         gdm.dm_gen.dm                                                        |    <0.001 |
+|                           RAM_reg_0_15_0_5                                                   |    <0.001 |
+|                           RAM_reg_0_15_6_7                                                   |    <0.001 |
+|                       rstblk                                                                 |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].wrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].wrst_inst             |    <0.001 |
+|             INTERRUPT_CONTROL_I                                                              |    <0.001 |
+|             LOGIC_FOR_MD_0_GEN.SCK_MISO_STARTUP_USED.QSPI_STARTUP_BLOCK_I                    |    <0.001 |
+|             LOGIC_FOR_MD_0_GEN.SPI_MODULE_I                                                  |    <0.001 |
+|             RESET_SYNC_AXI_SPI_CLK_INST                                                      |    <0.001 |
+|             SOFT_RESET_I                                                                     |    <0.001 |
+|             STATUS_REG_MODE_0_GEN.STATUS_SLAVE_SEL_REG_I                                     |    <0.001 |
+|   axi_lite_reset_gen                                                                         |    <0.001 |
+|   ckdt_diff_1                                                                                |     0.007 |
+|   cktk_diff_1                                                                                |     0.007 |
+|   clk_200_to_400_inst                                                                        |     0.129 |
+|     inst                                                                                     |     0.129 |
+|   clk_400_low_jitter_inst                                                                    |     0.159 |
+|     inst                                                                                     |     0.159 |
+|   clk_user_inst                                                                              |     0.106 |
+|     inst                                                                                     |     0.106 |
+|   config_vector                                                                              |    <0.001 |
+|     upspeed_sync                                                                             |    <0.001 |
+|   core_wrapper                                                                               |     0.243 |
+|     U0                                                                                       |     0.243 |
+|       core_clocking_i                                                                        |     0.107 |
+|       core_gt_common_i                                                                       |    <0.001 |
+|       core_gt_common_reset_i                                                                 |    <0.001 |
+|       core_resets_i                                                                          |    <0.001 |
+|       pcs_pma_block_i                                                                        |     0.135 |
+|         gig_ethernet_pcs_pma_0_core                                                          |     0.002 |
+|           gpcs_pma_inst                                                                      |     0.002 |
+|             HAS_AUTO_NEG.AN_RX_GMII_AT_TXOUTCLK.AUTO_NEGOTIATION                             |    <0.001 |
+|             MGT_RESET.SYNC_ASYNC_RESET                                                       |    <0.001 |
+|             RX_GMII_AT_TXOUTCLK.RECEIVER_TXOUTCLK                                            |    <0.001 |
+|             RX_GMII_AT_TXOUTCLK.SYNCHRONISATION                                              |    <0.001 |
+|             SYNC_SIGNAL_DETECT                                                               |    <0.001 |
+|             TRANSMITTER                                                                      |    <0.001 |
+|         sgmii_logic                                                                          |    <0.001 |
+|           clock_generation                                                                   |    <0.001 |
+|             clk_div_stage1                                                                   |    <0.001 |
+|             clk_div_stage2                                                                   |    <0.001 |
+|           gen_sync_reset                                                                     |    <0.001 |
+|           receiver                                                                           |    <0.001 |
+|           resync_speed_100                                                                   |    <0.001 |
+|           resync_speed_10_100                                                                |    <0.001 |
+|           transmitter                                                                        |    <0.001 |
+|         transceiver_inst                                                                     |     0.132 |
+|           gtwizard_inst                                                                      |     0.127 |
+|             U0                                                                               |     0.127 |
+|               gt0_rxresetfsm_i                                                               |     0.003 |
+|                 sync_RXRESETDONE                                                             |    <0.001 |
+|                 sync_data_valid                                                              |    <0.001 |
+|                 sync_mmcm_lock_reclocked                                                     |    <0.001 |
+|                 sync_pll0lock                                                                |    <0.001 |
+|                 sync_run_phase_alignment_int                                                 |    <0.001 |
+|                 sync_rx_fsm_reset_done_int                                                   |    <0.001 |
+|                 sync_time_out_wait_bypass                                                    |    <0.001 |
+|               gt0_txresetfsm_i                                                               |     0.004 |
+|                 sync_PLL0LOCK                                                                |    <0.001 |
+|                 sync_TXRESETDONE                                                             |    <0.001 |
+|                 sync_mmcm_lock_reclocked                                                     |    <0.001 |
+|                 sync_run_phase_alignment_int                                                 |    <0.001 |
+|                 sync_time_out_wait_bypass                                                    |    <0.001 |
+|                 sync_tx_fsm_reset_done_int                                                   |    <0.001 |
+|               gtwizard_i                                                                     |     0.119 |
+|                 gt0_GTWIZARD_i                                                               |     0.119 |
+|                   gtrxreset_seq_i                                                            |     0.001 |
+|                     sync_gtrxreset_in                                                        |    <0.001 |
+|                     sync_rst_sync                                                            |    <0.001 |
+|                     sync_rxpmaresetdone                                                      |    <0.001 |
+|                   rxpmarst_seq_i                                                             |    <0.001 |
+|                     sync_RXPMARESETDONE                                                      |    <0.001 |
+|                     sync_rst_sync                                                            |    <0.001 |
+|           reclock_encommaalign                                                               |    <0.001 |
+|           reclock_rxreset                                                                    |    <0.001 |
+|           reclock_rxreset_ind_clk                                                            |    <0.001 |
+|           reclock_txreset                                                                    |    <0.001 |
+|           reset_wtd_timer                                                                    |    <0.001 |
+|           rx_elastic_buffer_inst                                                             |     0.003 |
+|             ram_reg_0_63_0_2                                                                 |    <0.001 |
+|             ram_reg_0_63_12_14                                                               |    <0.001 |
+|             ram_reg_0_63_15_17                                                               |    <0.001 |
+|             ram_reg_0_63_18_20                                                               |    <0.001 |
+|             ram_reg_0_63_21_23                                                               |    <0.001 |
+|             ram_reg_0_63_24_26                                                               |    <0.001 |
+|             ram_reg_0_63_27_29                                                               |    <0.001 |
+|             ram_reg_0_63_3_5                                                                 |    <0.001 |
+|             ram_reg_0_63_6_8                                                                 |    <0.001 |
+|             ram_reg_0_63_9_11                                                                |    <0.001 |
+|             reclock_rd_addrgray[0].sync_rd_addrgray                                          |    <0.001 |
+|             reclock_rd_addrgray[1].sync_rd_addrgray                                          |    <0.001 |
+|             reclock_rd_addrgray[2].sync_rd_addrgray                                          |    <0.001 |
+|             reclock_rd_addrgray[3].sync_rd_addrgray                                          |    <0.001 |
+|             reclock_rd_addrgray[4].sync_rd_addrgray                                          |    <0.001 |
+|             reclock_rd_addrgray[5].sync_rd_addrgray                                          |    <0.001 |
+|             reclock_wr_addrgray[0].sync_wr_addrgray                                          |    <0.001 |
+|             reclock_wr_addrgray[1].sync_wr_addrgray                                          |    <0.001 |
+|             reclock_wr_addrgray[2].sync_wr_addrgray                                          |    <0.001 |
+|             reclock_wr_addrgray[3].sync_wr_addrgray                                          |    <0.001 |
+|             reclock_wr_addrgray[4].sync_wr_addrgray                                          |    <0.001 |
+|             reclock_wr_addrgray[5].sync_wr_addrgray                                          |    <0.001 |
+|             sync_initialize_ram_comp                                                         |    <0.001 |
+|           sync_block_data_valid                                                              |    <0.001 |
+|   dbg_hub                                                                                    |     0.003 |
+|     inst                                                                                     |     0.003 |
+|       CORE_XSDB.UUT_MASTER                                                                   |     0.003 |
+|         U_ICON_INTERFACE                                                                     |     0.002 |
+|           U_CMD1                                                                             |    <0.001 |
+|           U_CMD2                                                                             |    <0.001 |
+|           U_CMD3                                                                             |    <0.001 |
+|           U_CMD4                                                                             |    <0.001 |
+|           U_CMD5                                                                             |    <0.001 |
+|           U_CMD6_RD                                                                          |    <0.001 |
+|             U_RD_FIFO                                                                        |    <0.001 |
+|               SUBCORE_FIFO.xsdbm_v2_0_2_rdfifo_inst                                          |    <0.001 |
+|                 inst_fifo_gen                                                                |    <0.001 |
+|                   gconvfifo.rf                                                               |    <0.001 |
+|                     grf.rf                                                                   |    <0.001 |
+|                       gntv_or_sync_fifo.gcx.clkx                                             |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].wr_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].wr_stg_inst                                 |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.rd                                               |    <0.001 |
+|                         gr1.gr1_int.rfwft                                                    |    <0.001 |
+|                         gras.rsts                                                            |    <0.001 |
+|                         rpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.wr                                               |    <0.001 |
+|                         gwas.wsts                                                            |    <0.001 |
+|                         wpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.mem                                                  |    <0.001 |
+|                         gdm.dm_gen.dm                                                        |    <0.001 |
+|                           RAM_reg_0_15_0_5                                                   |    <0.001 |
+|                           RAM_reg_0_15_12_15                                                 |    <0.001 |
+|                           RAM_reg_0_15_6_11                                                  |    <0.001 |
+|                       rstblk                                                                 |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].wrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].wrst_inst             |    <0.001 |
+|           U_CMD6_WR                                                                          |    <0.001 |
+|             U_WR_FIFO                                                                        |    <0.001 |
+|               SUBCORE_FIFO.xsdbm_v2_0_2_wrfifo_inst                                          |    <0.001 |
+|                 inst_fifo_gen                                                                |    <0.001 |
+|                   gconvfifo.rf                                                               |    <0.001 |
+|                     grf.rf                                                                   |    <0.001 |
+|                       gntv_or_sync_fifo.gcx.clkx                                             |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[1].wr_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].rd_stg_inst                                 |    <0.001 |
+|                         gnxpm_cdc.gsync_stage[2].wr_stg_inst                                 |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.rd                                               |    <0.001 |
+|                         gras.rsts                                                            |    <0.001 |
+|                         rpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.gl0.wr                                               |    <0.001 |
+|                         gwas.wsts                                                            |    <0.001 |
+|                         wpntr                                                                |    <0.001 |
+|                       gntv_or_sync_fifo.mem                                                  |    <0.001 |
+|                         gdm.dm_gen.dm                                                        |    <0.001 |
+|                           RAM_reg_0_15_0_5                                                   |    <0.001 |
+|                           RAM_reg_0_15_12_15                                                 |    <0.001 |
+|                           RAM_reg_0_15_6_11                                                  |    <0.001 |
+|                       rstblk                                                                 |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].wrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].rrst_inst             |    <0.001 |
+|                         ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].wrst_inst             |    <0.001 |
+|           U_CMD7_CTL                                                                         |    <0.001 |
+|           U_CMD7_STAT                                                                        |    <0.001 |
+|           U_STATIC_STATUS                                                                    |    <0.001 |
+|         U_XSDB_ADDRESS_CONTROLLER                                                            |    <0.001 |
+|         U_XSDB_BURST_WD_LEN_CONTROLLER                                                       |    <0.001 |
+|         U_XSDB_BUS_CONTROLLER                                                                |    <0.001 |
+|           U_RD_ABORT_FLAG                                                                    |    <0.001 |
+|           U_RD_REQ_FLAG                                                                      |    <0.001 |
+|           U_TIMER                                                                            |    <0.001 |
+|         U_XSDB_BUS_MSTR2SL_PORT_IFACE                                                        |    <0.001 |
+|           U_RD_DIN_BUS_MUX                                                                   |    <0.001 |
+|       CORE_XSDB.U_ICON                                                                       |    <0.001 |
+|         U_CMD                                                                                |    <0.001 |
+|         U_STAT                                                                               |    <0.001 |
+|         U_SYNC                                                                               |    <0.001 |
+|       SWITCH_N_EXT_BSCAN.bscan_inst                                                          |    <0.001 |
+|       SWITCH_N_EXT_BSCAN.bscan_switch                                                        |    <0.001 |
+|   dout_art_clk                                                                               |     0.016 |
+|   ena_diff_1                                                                                 |     0.007 |
+|   event_timing_reset_instance                                                                |    <0.001 |
+|   gtx_reset_gen                                                                              |    <0.001 |
+|   i2c_module                                                                                 |    <0.001 |
+|   ila_top                                                                                    |     0.056 |
+|     U0                                                                                       |     0.056 |
+|       ila_core_inst                                                                          |     0.056 |
+|         ila_trace_memory_inst                                                                |     0.036 |
+|           SUBCORE_RAM_BLK_MEM_1.trace_block_memory                                           |     0.036 |
+|             inst_blk_mem_gen                                                                 |     0.036 |
+|               gnbram.gnativebmg.native_blk_mem_gen                                           |     0.036 |
+|                 valid.cstr                                                                   |     0.036 |
+|                   has_mux_b.B                                                                |    <0.001 |
+|                   ramloop[0].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[10].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[11].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[12].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[13].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[14].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[15].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[16].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[17].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[18].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[19].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[1].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[20].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[21].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[22].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[23].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[24].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[25].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[26].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[27].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[28].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[29].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[2].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[30].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[31].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[32].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[33].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[34].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[35].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[36].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[37].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[38].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[39].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[3].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[40].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[41].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[42].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[43].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[44].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[45].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[46].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[47].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[48].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[49].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[4].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[50].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[51].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[52].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[53].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[54].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[55].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[56].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[57].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[58].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[59].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[5].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[60].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[61].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[62].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[63].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[64].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[65].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[66].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[67].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[68].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[69].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[6].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[70].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[71].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[72].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[73].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[74].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[75].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[76].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[77].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[78].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[79].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[7].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[80].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[81].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[82].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[83].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[84].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[85].ram.r                                                          |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[8].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|                   ramloop[9].ram.r                                                           |    <0.001 |
+|                     prim_noinit.ram                                                          |    <0.001 |
+|         u_ila_cap_ctrl                                                                       |     0.002 |
+|           U_CDONE                                                                            |    <0.001 |
+|           U_NS0                                                                              |    <0.001 |
+|           U_NS1                                                                              |    <0.001 |
+|           u_cap_addrgen                                                                      |     0.002 |
+|             U_CMPRESET                                                                       |    <0.001 |
+|             u_cap_sample_counter                                                             |    <0.001 |
+|               U_SCE                                                                          |    <0.001 |
+|               U_SCMPCE                                                                       |    <0.001 |
+|               U_SCRST                                                                        |    <0.001 |
+|               u_scnt_cmp                                                                     |    <0.001 |
+|                 allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                      |    <0.001 |
+|                   DUT                                                                        |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|             u_cap_window_counter                                                             |    <0.001 |
+|               U_WCE                                                                          |    <0.001 |
+|               U_WHCMPCE                                                                      |    <0.001 |
+|               U_WLCMPCE                                                                      |    <0.001 |
+|               u_wcnt_hcmp                                                                    |    <0.001 |
+|                 allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                      |    <0.001 |
+|                   DUT                                                                        |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|               u_wcnt_lcmp                                                                    |    <0.001 |
+|                 allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                      |    <0.001 |
+|                   DUT                                                                        |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|         u_ila_regs                                                                           |     0.005 |
+|           MU_SRL[0].mu_srl_reg                                                               |    <0.001 |
+|           MU_SRL[1].mu_srl_reg                                                               |    <0.001 |
+|           MU_SRL[2].mu_srl_reg                                                               |    <0.001 |
+|           MU_SRL[3].mu_srl_reg                                                               |    <0.001 |
+|           MU_SRL[4].mu_srl_reg                                                               |    <0.001 |
+|           MU_SRL[5].mu_srl_reg                                                               |    <0.001 |
+|           TC_SRL[0].tc_srl_reg                                                               |    <0.001 |
+|           U_XSDB_SLAVE                                                                       |    <0.001 |
+|           reg_15                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_16                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_17                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_18                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_19                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_1a                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_6                                                                              |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_7                                                                              |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_8                                                                              |    <0.001 |
+|             I_EN_STAT_EQ1.U_STAT                                                             |    <0.001 |
+|           reg_80                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_81                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_82                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_83                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_84                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_85                                                                             |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_887                                                                            |    <0.001 |
+|             I_EN_STAT_EQ1.U_STAT                                                             |    <0.001 |
+|           reg_88d                                                                            |    <0.001 |
+|             I_EN_STAT_EQ1.U_STAT                                                             |    <0.001 |
+|           reg_890                                                                            |    <0.001 |
+|             I_EN_STAT_EQ1.U_STAT                                                             |    <0.001 |
+|           reg_9                                                                              |    <0.001 |
+|             I_EN_STAT_EQ1.U_STAT                                                             |    <0.001 |
+|           reg_srl_fff                                                                        |    <0.001 |
+|           reg_stream_ffd                                                                     |    <0.001 |
+|             I_EN_CTL_EQ1.U_CTL                                                               |    <0.001 |
+|           reg_stream_ffe                                                                     |    <0.001 |
+|             I_EN_STAT_EQ1.U_STAT                                                             |    <0.001 |
+|         u_ila_reset_ctrl                                                                     |    <0.001 |
+|           arm_detection_inst                                                                 |    <0.001 |
+|           asyncrounous_transfer.arm_in_transfer_inst                                         |    <0.001 |
+|           asyncrounous_transfer.arm_out_transfer_inst                                        |    <0.001 |
+|           asyncrounous_transfer.halt_in_transfer_inst                                        |    <0.001 |
+|           asyncrounous_transfer.halt_out_transfer_inst                                       |    <0.001 |
+|           halt_detection_inst                                                                |    <0.001 |
+|         u_trig                                                                               |     0.006 |
+|           N_DDR_TC.N_DDR_TC_INST[0].U_TC                                                     |    <0.001 |
+|             allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                          |    <0.001 |
+|               DUT                                                                            |    <0.001 |
+|                 I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                                 |    <0.001 |
+|                   u_srlA                                                                     |    <0.001 |
+|                   u_srlB                                                                     |    <0.001 |
+|                   u_srlC                                                                     |    <0.001 |
+|                   u_srlD                                                                     |    <0.001 |
+|           U_TM                                                                               |     0.006 |
+|             N_DDR_MODE.G_NMU[0].U_M                                                          |     0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |     0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|             N_DDR_MODE.G_NMU[1].U_M                                                          |     0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |     0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|             N_DDR_MODE.G_NMU[2].U_M                                                          |    <0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |    <0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|             N_DDR_MODE.G_NMU[3].U_M                                                          |     0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |     0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|             N_DDR_MODE.G_NMU[4].U_M                                                          |     0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |     0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|             N_DDR_MODE.G_NMU[5].U_M                                                          |    <0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |    <0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|         xsdb_memory_read_inst                                                                |     0.002 |
+|   packet_formation_instance                                                                  |     0.001 |
+|   readout_vmm                                                                                |     0.023 |
+|     VMMdemux                                                                                 |     0.000 |
+|     ilaDAQ                                                                                   |     0.021 |
+|       U0                                                                                     |     0.021 |
+|         ila_core_inst                                                                        |     0.021 |
+|           ila_trace_memory_inst                                                              |     0.012 |
+|             SUBCORE_RAM_BLK_MEM_1.trace_block_memory                                         |     0.012 |
+|               inst_blk_mem_gen                                                               |     0.012 |
+|                 gnbram.gnativebmg.native_blk_mem_gen                                         |     0.012 |
+|                   valid.cstr                                                                 |     0.012 |
+|                     ramloop[0].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[10].ram.r                                                        |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[11].ram.r                                                        |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[12].ram.r                                                        |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[13].ram.r                                                        |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[14].ram.r                                                        |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[1].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[2].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[3].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[4].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[5].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[6].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[7].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[8].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|                     ramloop[9].ram.r                                                         |    <0.001 |
+|                       prim_noinit.ram                                                        |    <0.001 |
+|           u_ila_cap_ctrl                                                                     |     0.001 |
+|             U_CDONE                                                                          |    <0.001 |
+|             U_NS0                                                                            |    <0.001 |
+|             U_NS1                                                                            |    <0.001 |
+|             u_cap_addrgen                                                                    |     0.001 |
+|               U_CMPRESET                                                                     |    <0.001 |
+|               u_cap_sample_counter                                                           |    <0.001 |
+|                 U_SCE                                                                        |    <0.001 |
+|                 U_SCMPCE                                                                     |    <0.001 |
+|                 U_SCRST                                                                      |    <0.001 |
+|                 u_scnt_cmp                                                                   |    <0.001 |
+|                   allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                    |    <0.001 |
+|                     DUT                                                                      |    <0.001 |
+|                       I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                           |    <0.001 |
+|                         u_srlA                                                               |    <0.001 |
+|                         u_srlB                                                               |    <0.001 |
+|                         u_srlC                                                               |    <0.001 |
+|                         u_srlD                                                               |    <0.001 |
+|                       I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                           |    <0.001 |
+|                         u_srlA                                                               |    <0.001 |
+|                         u_srlB                                                               |    <0.001 |
+|                         u_srlC                                                               |    <0.001 |
+|                         u_srlD                                                               |    <0.001 |
+|               u_cap_window_counter                                                           |    <0.001 |
+|                 U_WCE                                                                        |    <0.001 |
+|                 U_WHCMPCE                                                                    |    <0.001 |
+|                 U_WLCMPCE                                                                    |    <0.001 |
+|                 u_wcnt_hcmp                                                                  |    <0.001 |
+|                   allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                    |    <0.001 |
+|                     DUT                                                                      |    <0.001 |
+|                       I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                           |    <0.001 |
+|                         u_srlA                                                               |    <0.001 |
+|                         u_srlB                                                               |    <0.001 |
+|                         u_srlC                                                               |    <0.001 |
+|                         u_srlD                                                               |    <0.001 |
+|                       I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                           |    <0.001 |
+|                         u_srlA                                                               |    <0.001 |
+|                         u_srlB                                                               |    <0.001 |
+|                         u_srlC                                                               |    <0.001 |
+|                         u_srlD                                                               |    <0.001 |
+|                 u_wcnt_lcmp                                                                  |    <0.001 |
+|                   allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                    |    <0.001 |
+|                     DUT                                                                      |    <0.001 |
+|                       I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                           |    <0.001 |
+|                         u_srlA                                                               |    <0.001 |
+|                         u_srlB                                                               |    <0.001 |
+|                         u_srlC                                                               |    <0.001 |
+|                         u_srlD                                                               |    <0.001 |
+|                       I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                           |    <0.001 |
+|                         u_srlA                                                               |    <0.001 |
+|                         u_srlB                                                               |    <0.001 |
+|                         u_srlC                                                               |    <0.001 |
+|                         u_srlD                                                               |    <0.001 |
+|           u_ila_regs                                                                         |     0.003 |
+|             MU_SRL[0].mu_srl_reg                                                             |    <0.001 |
+|             TC_SRL[0].tc_srl_reg                                                             |    <0.001 |
+|             U_XSDB_SLAVE                                                                     |    <0.001 |
+|             reg_15                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_16                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_17                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_18                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_19                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_1a                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_6                                                                            |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_7                                                                            |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_8                                                                            |    <0.001 |
+|               I_EN_STAT_EQ1.U_STAT                                                           |    <0.001 |
+|             reg_80                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_81                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_82                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_83                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_84                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_85                                                                           |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_887                                                                          |    <0.001 |
+|               I_EN_STAT_EQ1.U_STAT                                                           |    <0.001 |
+|             reg_88d                                                                          |    <0.001 |
+|               I_EN_STAT_EQ1.U_STAT                                                           |    <0.001 |
+|             reg_890                                                                          |    <0.001 |
+|               I_EN_STAT_EQ1.U_STAT                                                           |    <0.001 |
+|             reg_9                                                                            |    <0.001 |
+|               I_EN_STAT_EQ1.U_STAT                                                           |    <0.001 |
+|             reg_srl_fff                                                                      |    <0.001 |
+|             reg_stream_ffd                                                                   |    <0.001 |
+|               I_EN_CTL_EQ1.U_CTL                                                             |    <0.001 |
+|             reg_stream_ffe                                                                   |    <0.001 |
+|               I_EN_STAT_EQ1.U_STAT                                                           |    <0.001 |
+|           u_ila_reset_ctrl                                                                   |    <0.001 |
+|             arm_detection_inst                                                               |    <0.001 |
+|             asyncrounous_transfer.arm_in_transfer_inst                                       |    <0.001 |
+|             asyncrounous_transfer.arm_out_transfer_inst                                      |    <0.001 |
+|             asyncrounous_transfer.halt_in_transfer_inst                                      |    <0.001 |
+|             asyncrounous_transfer.halt_out_transfer_inst                                     |    <0.001 |
+|             halt_detection_inst                                                              |    <0.001 |
+|           u_trig                                                                             |     0.002 |
+|             N_DDR_TC.N_DDR_TC_INST[0].U_TC                                                   |    <0.001 |
+|               allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                        |    <0.001 |
+|                 DUT                                                                          |    <0.001 |
+|                   I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                               |    <0.001 |
+|                     u_srlA                                                                   |    <0.001 |
+|                     u_srlB                                                                   |    <0.001 |
+|                     u_srlC                                                                   |    <0.001 |
+|                     u_srlD                                                                   |    <0.001 |
+|             U_TM                                                                             |     0.002 |
+|               N_DDR_MODE.G_NMU[0].U_M                                                        |     0.002 |
+|                 allx_typeA_match_detection.ltlib_v1_0_0_allx_typeA_inst                      |     0.002 |
+|                   DUT                                                                        |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[0].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[10].U_ALL_SRL_SLICE                            |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[11].U_ALL_SRL_SLICE                            |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[12].U_ALL_SRL_SLICE                            |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[13].U_ALL_SRL_SLICE                            |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[14].U_ALL_SRL_SLICE                            |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[15].U_ALL_SRL_SLICE                            |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[1].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[2].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[3].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[4].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[5].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[6].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[7].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[8].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|                     I_WHOLE_SLICE.G_SLICE_IDX[9].U_ALL_SRL_SLICE                             |    <0.001 |
+|                       u_srlA                                                                 |    <0.001 |
+|                       u_srlB                                                                 |    <0.001 |
+|                       u_srlC                                                                 |    <0.001 |
+|                       u_srlD                                                                 |    <0.001 |
+|           xsdb_memory_read_inst                                                              |    <0.001 |
+|   tri_fifo                                                                                   |     0.009 |
+|     rx_mac_reset_gen                                                                         |    <0.001 |
+|     trimac_block                                                                             |     0.006 |
+|       trimac_core                                                                            |     0.006 |
+|         U0                                                                                   |     0.006 |
+|           temac_10_100_1000_core                                                             |     0.006 |
+|             addr_filter_top                                                                  |    <0.001 |
+|               address_filter_inst                                                            |    <0.001 |
+|                 byte_wide_ram[0].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[1].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[2].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[3].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[4].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[5].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[6].header_field_dist_ram                                       |    <0.001 |
+|                 byte_wide_ram[7].header_field_dist_ram                                       |    <0.001 |
+|                 resync_promiscuous_mode                                                      |    <0.001 |
+|             flow                                                                             |     0.001 |
+|               pfc_tx                                                                         |    <0.001 |
+|               rx                                                                             |    <0.001 |
+|               rx_pause                                                                       |    <0.001 |
+|               sync_rx_enable                                                                 |    <0.001 |
+|               sync_tx_enable                                                                 |    <0.001 |
+|               tx                                                                             |    <0.001 |
+|               tx_pause                                                                       |    <0.001 |
+|                 sync_good_rx                                                                 |    <0.001 |
+|             no_avb_tx_axi_intf.tx_axi_shim                                                   |    <0.001 |
+|             rx_axi_shim                                                                      |    <0.001 |
+|             rxgen                                                                            |     0.001 |
+|               FCS_CHECK                                                                      |    <0.001 |
+|               FRAME_CHECKER                                                                  |    <0.001 |
+|               FRAME_DECODER                                                                  |    <0.001 |
+|               RX_SM                                                                          |    <0.001 |
+|             sync_axi_rx_rstn_rx_clk                                                          |    <0.001 |
+|             sync_glbl_rstn_rx_clk                                                            |    <0.001 |
+|             sync_glbl_rstn_tx_clk                                                            |    <0.001 |
+|             sync_int_rx_rst_mgmt_rx_clk                                                      |    <0.001 |
+|             sync_int_tx_rst_mgmt_tx_clk                                                      |    <0.001 |
+|             sync_tx_axi_rstn_tx_clk                                                          |    <0.001 |
+|             txgen                                                                            |     0.001 |
+|               TX_SM1                                                                         |     0.001 |
+|                 CRCGEN                                                                       |    <0.001 |
+|     tx_mac_reset_gen                                                                         |    <0.001 |
+|     user_side_FIFO                                                                           |     0.003 |
+|       rx_fifo_i                                                                              |     0.001 |
+|         ramgen_l                                                                             |    <0.001 |
+|         ramgen_u                                                                             |    <0.001 |
+|         resync_wr_store_frame_tog                                                            |    <0.001 |
+|         sync_rd_addr_tog                                                                     |    <0.001 |
+|       tx_fifo_i                                                                              |     0.002 |
+|         ramgen_l                                                                             |    <0.001 |
+|         ramgen_u                                                                             |    <0.001 |
+|         resync_rd_tran_frame_tog                                                             |    <0.001 |
+|         resync_rd_txfer_tog                                                                  |    <0.001 |
+|         resync_wr_frame_in_fifo                                                              |    <0.001 |
+|   trigger_instance                                                                           |    <0.001 |
+|   udp_din_conf_block                                                                         |     0.003 |
+|     CDCC_125to40                                                                             |    <0.001 |
+|     CDCC_40to125                                                                             |    <0.001 |
+|     fpga_config_logic                                                                        |     0.002 |
+|     vmm_config_logic                                                                         |     0.001 |
+|       FIFO_serializer                                                                        |     0.001 |
+|         U0                                                                                   |     0.001 |
+|           inst_fifo_gen                                                                      |     0.001 |
+|             gconvfifo.rf                                                                     |     0.001 |
+|               grf.rf                                                                         |     0.001 |
+|                 gntv_or_sync_fifo.gcx.clkx                                                   |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[1].rd_stg_inst                                       |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[1].wr_stg_inst                                       |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[2].rd_stg_inst                                       |    <0.001 |
+|                   gnxpm_cdc.gsync_stage[2].wr_stg_inst                                       |    <0.001 |
+|                 gntv_or_sync_fifo.gl0.rd                                                     |    <0.001 |
+|                   gras.rsts                                                                  |    <0.001 |
+|                     c0                                                                       |    <0.001 |
+|                     c1                                                                       |    <0.001 |
+|                   rpntr                                                                      |    <0.001 |
+|                 gntv_or_sync_fifo.gl0.wr                                                     |    <0.001 |
+|                   gwas.wsts                                                                  |    <0.001 |
+|                   wpntr                                                                      |    <0.001 |
+|                 gntv_or_sync_fifo.mem                                                        |    <0.001 |
+|                   gbm.gbmg.gbmgc.ngecc.bmg                                                   |    <0.001 |
+|                     inst_blk_mem_gen                                                         |    <0.001 |
+|                       gnbram.gnativebmg.native_blk_mem_gen                                   |    <0.001 |
+|                         valid.cstr                                                           |    <0.001 |
+|                           ramloop[0].ram.r                                                   |    <0.001 |
+|                             prim_noinit.ram                                                  |    <0.001 |
+|                 rstblk                                                                       |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[1].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[2].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[3].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.garst_sync[4].arst_sync_inst             |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[1].rd_rst_inst     |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[1].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[1].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[2].rd_rst_inst     |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[2].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[2].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[3].rd_rst_inst     |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[3].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[3].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[4].rd_rst_wr_inst  |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gsckt_wrst.gic_rst.garst_sync_ic[4].wr_rst_ext_inst |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[1].wrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[2].wrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[3].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[3].wrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[4].rrst_inst                   |    <0.001 |
+|                   ngwrdrst.grst.g7serrst.gwrrd_rst_sync_stage[4].wrst_inst                   |    <0.001 |
+|   xadc_instance                                                                              |     0.011 |
+|     CDCC_200to125                                                                            |    <0.001 |
+|     XADC                                                                                     |     0.002 |
+|     xadc                                                                                     |     0.004 |
++----------------------------------------------------------------------------------------------+-----------+
+
+

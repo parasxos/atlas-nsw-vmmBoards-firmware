@@ -190,13 +190,23 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/FIFO2UDP.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/trigger.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/vmm_readout.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/conf_xadc_mux.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/dout_mux.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/packet_formation_ram.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/RAM2UDP.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/udp_mux.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_driver.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/VMM_parallel_top_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_0.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_1.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_2.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_3.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_4.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_5.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_6.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/parallel_readout/vmm_readout_7.vhd"]"\
  "[file normalize "$origin_dir/sources_1/xadc/xadc.v"]"\
  "[file normalize "$origin_dir/sources_1/xadc/xadc_read.v"]"\
 ]
@@ -384,16 +394,6 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/readout/select_data.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
 set file "$origin_dir/sources_1/readout/FIFO2UDP.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -404,17 +404,77 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/readout/packet_formation.vhd"
+set file "$origin_dir/sources_1/parallel_readout/conf_xadc_mux.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/readout/vmm_readout.vhd"
+set file "$origin_dir/sources_1/parallel_readout/dout_mux.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/readout/packet_formation.vhd"
+set file "$origin_dir/sources_1/parallel_readout/packet_formation_ram.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/RAM2UDP.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/udp_mux.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_driver.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/VMM_parallel_top_wrapper.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_0.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_1.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_2.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_3.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_4.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_5.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_6.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/parallel_readout/vmm_readout_7.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -462,20 +522,6 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/clk_wiz_200_to_400.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_pf.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/readout_fifo.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 
@@ -553,6 +599,34 @@ add_files -norecurse -fileset $obj $files
 set obj [get_filesets sources_1]
 set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/conf_xadc_fifo.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/data_ram.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/ila_para_readout_wrapper.xcix"]"\
+]
+add_files -norecurse -fileset $obj $files
+
+# Set 'sources_1' fileset object
+set obj [get_filesets sources_1]
+set files [list \
+ "[file normalize "$origin_dir/sources_1/ip/vmm_temp_buffer.xcix"]"\
 ]
 add_files -norecurse -fileset $obj $files
 

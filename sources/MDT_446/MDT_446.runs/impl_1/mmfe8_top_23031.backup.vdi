@@ -1,0 +1,671 @@
+#-----------------------------------------------------------
+# Vivado v2016.4 (64-bit)
+# SW Build 1756540 on Mon Jan 23 19:11:19 MST 2017
+# IP Build 1755317 on Mon Jan 23 20:30:07 MST 2017
+# Start of session at: Wed Mar  8 21:25:56 2017
+# Process ID: 23031
+# Current directory: /home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1
+# Command line: vivado -log mmfe8_top.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source mmfe8_top.tcl -notrace
+# Log file: /home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top.vdi
+# Journal file: /home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/vivado.jou
+#-----------------------------------------------------------
+source mmfe8_top.tcl -notrace
+Design is defaulting to srcset: sources_1
+Design is defaulting to constrset: constrs_1
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/temac_10_100_1000/temac_10_100_1000.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/icmp_payload_buffer/icmp_payload_buffer.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/vmm_conf_buffer/vmm_conf_buffer.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/readout_fifo/readout_fifo.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/ila_readout/ila_readout.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/packet_len_fifo/packet_len_fifo.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/xadc_wiz_0/xadc_wiz_0.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/axi_quad_spi_0/axi_quad_spi_0.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/ila_top_level/ila_top_level.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_0/clk_wiz_0.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_200_to_400/clk_wiz_200_to_400.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_low_jitter/clk_wiz_low_jitter.dcp]
+WARNING: [filemgmt 56-147] Overwrite of existing file isn't enabled.  Please specify -force to overwrite file  [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/gig_ethernet_pcs_pma_0/gig_ethernet_pcs_pma_0.dcp]
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_200_to_400/clk_wiz_200_to_400.dcp' for cell 'clk_200_to_400_inst'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_low_jitter/clk_wiz_low_jitter.dcp' for cell 'clk_400_low_jitter_inst'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_0/clk_wiz_0.dcp' for cell 'clk_user_inst'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/gig_ethernet_pcs_pma_0/gig_ethernet_pcs_pma_0.dcp' for cell 'core_wrapper'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/ila_top_level/ila_top_level.dcp' for cell 'ila_top'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/readout_fifo/readout_fifo.dcp' for cell 'FIFO2UDP_instance/daq_FIFO_instance'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/packet_len_fifo/packet_len_fifo.dcp' for cell 'FIFO2UDP_instance/packet_len_fifo_instance'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/icmp_payload_buffer/icmp_payload_buffer.dcp' for cell 'UDP_ICMP_block/ping_reply_block/fifo_payload_buffer'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/axi_quad_spi_0/axi_quad_spi_0.dcp' for cell 'axi4_spi_instance/axi_SPI'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/ila_readout/ila_readout.dcp' for cell 'readout_vmm/ilaDAQ'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/temac_10_100_1000/temac_10_100_1000.dcp' for cell 'tri_fifo/trimac_block/trimac_core'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/vmm_conf_buffer/vmm_conf_buffer.dcp' for cell 'udp_din_conf_block/vmm_config_logic/FIFO_serializer'
+INFO: [Project 1-454] Reading design checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/xadc_wiz_0/xadc_wiz_0.dcp' for cell 'xadc_instance/xadc'
+INFO: [Netlist 29-17] Analyzing 1034 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2016.4
+INFO: [Device 21-403] Loading part xc7a200tfbg484-2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-140] Inserted 2 IBUFs to IO ports without IO buffers.
+WARNING: [Constraints 18-548] Could not create 'IOSTANDARD' constraint because invalid IOSTANDARD value 'UNTUNED_SPLIT_60' specified. The default IOSTANDARD will be used instead. 'IOSTANDARD' is ignored by Vivado but preserved for implementation tool. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/mmfe8_top.vhd:2045]
+WARNING: [Constraints 18-548] Could not create 'IOSTANDARD' constraint because invalid IOSTANDARD value 'UNTUNED_SPLIT_60' specified. The default IOSTANDARD will be used instead. 'IOSTANDARD' is ignored by Vivado but preserved for implementation tool. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/mmfe8_top.vhd:2041]
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/temac_10_100_1000/synth/temac_10_100_1000_board.xdc] for cell 'tri_fifo/trimac_block/trimac_core/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/temac_10_100_1000/synth/temac_10_100_1000_board.xdc] for cell 'tri_fifo/trimac_block/trimac_core/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/temac_10_100_1000/synth/temac_10_100_1000.xdc] for cell 'tri_fifo/trimac_block/trimac_core/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/temac_10_100_1000/synth/temac_10_100_1000.xdc] for cell 'tri_fifo/trimac_block/trimac_core/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/icmp_payload_buffer/icmp_payload_buffer/icmp_payload_buffer.xdc] for cell 'UDP_ICMP_block/ping_reply_block/fifo_payload_buffer/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/icmp_payload_buffer/icmp_payload_buffer/icmp_payload_buffer.xdc] for cell 'UDP_ICMP_block/ping_reply_block/fifo_payload_buffer/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/vmm_conf_buffer/vmm_conf_buffer/vmm_conf_buffer.xdc] for cell 'udp_din_conf_block/vmm_config_logic/FIFO_serializer/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/vmm_conf_buffer/vmm_conf_buffer/vmm_conf_buffer.xdc] for cell 'udp_din_conf_block/vmm_config_logic/FIFO_serializer/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/readout_fifo/readout_fifo/readout_fifo.xdc] for cell 'FIFO2UDP_instance/daq_FIFO_instance/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/readout_fifo/readout_fifo/readout_fifo.xdc] for cell 'FIFO2UDP_instance/daq_FIFO_instance/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/ila_readout/ila_v6_2/constraints/ila.xdc] for cell 'readout_vmm/ilaDAQ/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/ila_readout/ila_v6_2/constraints/ila.xdc] for cell 'readout_vmm/ilaDAQ/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/packet_len_fifo/packet_len_fifo/packet_len_fifo.xdc] for cell 'FIFO2UDP_instance/packet_len_fifo_instance/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/packet_len_fifo/packet_len_fifo/packet_len_fifo.xdc] for cell 'FIFO2UDP_instance/packet_len_fifo_instance/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xdc] for cell 'xadc_instance/xadc/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/xadc_wiz_0/xadc_wiz_0.xdc] for cell 'xadc_instance/xadc/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/axi_quad_spi_0/axi_quad_spi_0_board.xdc] for cell 'axi4_spi_instance/axi_SPI/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/axi_quad_spi_0/axi_quad_spi_0_board.xdc] for cell 'axi4_spi_instance/axi_SPI/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/axi_quad_spi_0/axi_quad_spi_0.xdc] for cell 'axi4_spi_instance/axi_SPI/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/axi_quad_spi_0/axi_quad_spi_0.xdc] for cell 'axi4_spi_instance/axi_SPI/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/ila_top_level/ila_v6_2/constraints/ila.xdc] for cell 'ila_top/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/ila_top_level/ila_v6_2/constraints/ila.xdc] for cell 'ila_top/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc] for cell 'clk_user_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc] for cell 'clk_user_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc] for cell 'clk_user_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc] for cell 'clk_user_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400_board.xdc] for cell 'clk_200_to_400_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400_board.xdc] for cell 'clk_200_to_400_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400.xdc] for cell 'clk_200_to_400_inst/inst'
+INFO: [Timing 38-35] Done setting XDC timing constraints. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400.xdc:57]
+INFO: [Timing 38-2] Deriving generated clocks [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400.xdc:57]
+get_clocks: Time (s): cpu = 00:00:09 ; elapsed = 00:00:08 . Memory (MB): peak = 2004.098 ; gain = 557.652 ; free physical = 23789 ; free virtual = 41333
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400.xdc] for cell 'clk_200_to_400_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_low_jitter/clk_wiz_low_jitter_board.xdc] for cell 'clk_400_low_jitter_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_low_jitter/clk_wiz_low_jitter_board.xdc] for cell 'clk_400_low_jitter_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_low_jitter/clk_wiz_low_jitter.xdc] for cell 'clk_400_low_jitter_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_low_jitter/clk_wiz_low_jitter.xdc] for cell 'clk_400_low_jitter_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/gig_ethernet_pcs_pma_0/gig_ethernet_pcs_pma_0_board.xdc] for cell 'core_wrapper/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/gig_ethernet_pcs_pma_0/gig_ethernet_pcs_pma_0_board.xdc] for cell 'core_wrapper/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/gig_ethernet_pcs_pma_0/synth/gig_ethernet_pcs_pma_0.xdc] for cell 'core_wrapper/U0'
+INFO: [Timing 38-2] Deriving generated clocks [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/gig_ethernet_pcs_pma_0/synth/gig_ethernet_pcs_pma_0.xdc:42]
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/gig_ethernet_pcs_pma_0/synth/gig_ethernet_pcs_pma_0.xdc] for cell 'core_wrapper/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc]
+WARNING: [Constraints 18-619] A clock with name 'X_2V5_DIFF_CLK_P' already exists, overwriting the previous clock with the same name. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc:3]
+INFO: [Vivado 12-2286] Implicit search of objects for pattern 'clk_sck' matched to 'clock' objects. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc:46]
+Resolution: To avoid ambiguous patterns, provide proper objects using get commands e.g. [get_nets xyz].
+INFO: [Vivado 12-2286] Implicit search of objects for pattern 'clk_sck' matched to 'clock' objects. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc:47]
+Resolution: To avoid ambiguous patterns, provide proper objects using get commands e.g. [get_nets xyz].
+INFO: [Vivado 12-2286] Implicit search of objects for pattern 'clk_sck' matched to 'clock' objects. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc:48]
+Resolution: To avoid ambiguous patterns, provide proper objects using get commands e.g. [get_nets xyz].
+INFO: [Vivado 12-2286] Implicit search of objects for pattern 'clk_sck' matched to 'clock' objects. [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc:49]
+Resolution: To avoid ambiguous patterns, provide proper objects using get commands e.g. [get_nets xyz].
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/constrs_1/mdt_446.xdc]
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/temac_10_100_1000/temac_10_100_1000.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/icmp_payload_buffer/icmp_payload_buffer.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/vmm_conf_buffer/vmm_conf_buffer.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/readout_fifo/readout_fifo.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/ila_readout/ila_readout.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/packet_len_fifo/packet_len_fifo.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/xadc_wiz_0/xadc_wiz_0.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/axi_quad_spi_0/axi_quad_spi_0.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/ila_top_level/ila_top_level.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_0/clk_wiz_0.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_200_to_400/clk_wiz_200_to_400.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/clk_wiz_low_jitter/clk_wiz_low_jitter.dcp'
+INFO: [Project 1-538] Using original IP XDC constraints instead of the XDC constraints in dcp '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/.Xil/Vivado-23031-pcatlnswfelix01.cern.ch/gig_ethernet_pcs_pma_0/gig_ethernet_pcs_pma_0.dcp'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/temac_10_100_1000/synth/temac_10_100_1000_clocks.xdc] for cell 'tri_fifo/trimac_block/trimac_core/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/temac_10_100_1000/synth/temac_10_100_1000_clocks.xdc] for cell 'tri_fifo/trimac_block/trimac_core/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/icmp_payload_buffer/icmp_payload_buffer/icmp_payload_buffer_clocks.xdc] for cell 'UDP_ICMP_block/ping_reply_block/fifo_payload_buffer/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/icmp_payload_buffer/icmp_payload_buffer/icmp_payload_buffer_clocks.xdc] for cell 'UDP_ICMP_block/ping_reply_block/fifo_payload_buffer/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/vmm_conf_buffer/vmm_conf_buffer/vmm_conf_buffer_clocks.xdc] for cell 'udp_din_conf_block/vmm_config_logic/FIFO_serializer/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/vmm_conf_buffer/vmm_conf_buffer/vmm_conf_buffer_clocks.xdc] for cell 'udp_din_conf_block/vmm_config_logic/FIFO_serializer/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/axi_quad_spi_0/axi_quad_spi_0_clocks.xdc] for cell 'axi4_spi_instance/axi_SPI/U0'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/axi_quad_spi_0/axi_quad_spi_0_clocks.xdc] for cell 'axi4_spi_instance/axi_SPI/U0'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_0/clk_wiz_0_late.xdc] for cell 'clk_user_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_0/clk_wiz_0_late.xdc] for cell 'clk_user_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400_late.xdc] for cell 'clk_200_to_400_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_200_to_400/clk_wiz_200_to_400_late.xdc] for cell 'clk_200_to_400_inst/inst'
+Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_low_jitter/clk_wiz_low_jitter_late.xdc] for cell 'clk_400_low_jitter_inst/inst'
+Finished Parsing XDC File [/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/sources_1/ip/clk_wiz_low_jitter/clk_wiz_low_jitter_late.xdc] for cell 'clk_400_low_jitter_inst/inst'
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 346 instances were transformed.
+  CFGLUT5 => CFGLUT5 (SRLC32E, SRL16E): 312 instances
+  IOBUF => IOBUF (IBUF, OBUFT): 3 instances
+  OBUFDS => OBUFDS_DUAL_BUF (INV, OBUFDS, OBUFDS): 7 instances
+  OBUFTDS => OBUFTDS_DUAL_BUF (INV, OBUFTDS, OBUFTDS): 2 instances
+  RAM32M => RAM32M (RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMD32, RAMS32, RAMS32): 4 instances
+  RAM64M => RAM64M (RAMD64E, RAMD64E, RAMD64E, RAMD64E): 10 instances
+  RAM64X1D => RAM64X1D (RAMD64E, RAMD64E): 8 instances
+
+link_design: Time (s): cpu = 00:00:23 ; elapsed = 00:00:21 . Memory (MB): peak = 2009.102 ; gain = 1018.961 ; free physical = 23823 ; free virtual = 41327
+INFO: [Vivado_Tcl 4-424] Cannot write hardware definition file as there are no IPI block design hardware handoff files present
+Command: opt_design
+Attempting to get a license for feature 'Implementation' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7a200t'
+Running DRC as a precondition to command opt_design
+
+Starting DRC Task
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Project 1-461] DRC finished with 0 Errors
+INFO: [Project 1-462] Please refer to the DRC report (report_drc) for more information.
+
+Time (s): cpu = 00:00:01 ; elapsed = 00:00:00.46 . Memory (MB): peak = 2089.129 ; gain = 80.027 ; free physical = 23813 ; free virtual = 41318
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+
+Starting Logic Optimization Task
+
+Phase 1 Generate And Synthesize Debug Cores
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/opt/Xilinx/Vivado/2016.4/data/ip'.
+INFO: [IP_Flow 19-3806] Processing IP xilinx.com:ip:xsdbm:2.0 for cell dbg_hub_CV.
+INFO: [Chipscope 16-220] Re-using generated and synthesized IP, "xilinx.com:ip:xsdbm:2.0", from Vivado IP cache entry "4333fd9684291250".
+Netlist sorting complete. Time (s): cpu = 00:00:00.04 ; elapsed = 00:00:00.04 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23789 ; free virtual = 41296
+Phase 1 Generate And Synthesize Debug Cores | Checksum: 12eebdd3d
+
+Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23789 ; free virtual = 41296
+Implement Debug Cores | Checksum: 140c09e8d
+
+Phase 2 Retarget
+INFO: [Opt 31-138] Pushed 2 inverter(s) to 8 load pin(s).
+INFO: [Opt 31-49] Retargeted 0 cell(s).
+Phase 2 Retarget | Checksum: 12797d75d
+
+Time (s): cpu = 00:00:23 ; elapsed = 00:00:22 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23788 ; free virtual = 41295
+
+Phase 3 Constant propagation
+INFO: [Opt 31-138] Pushed 1 inverter(s) to 1 load pin(s).
+INFO: [Opt 31-10] Eliminated 565 cells.
+Phase 3 Constant propagation | Checksum: 1047e86cd
+
+Time (s): cpu = 00:00:24 ; elapsed = 00:00:24 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23787 ; free virtual = 41294
+
+Phase 4 Sweep
+INFO: [Opt 31-12] Eliminated 2813 unconnected nets.
+INFO: [Opt 31-120] Instance select_vmm_block (select_vmm) has been optimized to an empty box cell during sweep but it has constraints that prevent its removal. Empty box cells do not impact the implementation flow but they have no functional relevance.
+Resolution: If this is not expected, please check for DONT_TOUCH properties or timing constraint set on the empty box cell or on nets connected to the cell. If found, remove the relevant DONT_TOUCH property or timing constraint and re-run opt_design.
+INFO: [Opt 31-11] Eliminated 810 unconnected cells.
+Phase 4 Sweep | Checksum: 2350e7683
+
+Time (s): cpu = 00:00:26 ; elapsed = 00:00:25 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23787 ; free virtual = 41294
+
+Phase 5 BUFG optimization
+INFO: [Opt 31-12] Eliminated 0 unconnected nets.
+INFO: [Opt 31-11] Eliminated 0 unconnected cells.
+Phase 5 BUFG optimization | Checksum: 23adfaa0e
+
+Time (s): cpu = 00:00:27 ; elapsed = 00:00:26 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23787 ; free virtual = 41294
+
+Starting Connectivity Check Task
+
+Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.04 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23787 ; free virtual = 41294
+Ending Logic Optimization Task | Checksum: 23adfaa0e
+
+Time (s): cpu = 00:00:27 ; elapsed = 00:00:27 . Memory (MB): peak = 2089.129 ; gain = 0.000 ; free physical = 23787 ; free virtual = 41294
+
+Starting Power Optimization Task
+INFO: [Pwropt 34-132] Skipping clock gating for clocks with a period < 2.00 ns.
+INFO: [Power 33-23] Power model is not available for STARTUP_7SERIES_GEN.STARTUP2_7SERIES_inst
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Running Vector-less Activity Propagation...
+
+Finished Running Vector-less Activity Propagation
+INFO: [Pwropt 34-9] Applying IDT optimizations ...
+INFO: [Pwropt 34-10] Applying ODC optimizations ...
+
+
+Starting PowerOpt Patch Enables Task
+INFO: [Pwropt 34-162] WRITE_MODE attribute of 5 BRAM(s) out of a total of 114 has been updated to save power. Run report_power_opt to get a complete listing of the BRAMs updated.
+INFO: [Pwropt 34-201] Structural ODC has moved 4 WE to EN ports
+Number of BRAM Ports augmented: 30 newly gated: 6 Total Ports: 228
+Ending PowerOpt Patch Enables Task | Checksum: 17ffa0313
+
+Time (s): cpu = 00:00:00.09 ; elapsed = 00:00:00.08 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23317 ; free virtual = 40824
+Ending Power Optimization Task | Checksum: 17ffa0313
+
+Time (s): cpu = 00:00:17 ; elapsed = 00:00:10 . Memory (MB): peak = 2662.109 ; gain = 572.980 ; free physical = 23317 ; free virtual = 40824
+INFO: [Common 17-83] Releasing license: Implementation
+72 Infos, 16 Warnings, 0 Critical Warnings and 0 Errors encountered.
+opt_design completed successfully
+opt_design: Time (s): cpu = 00:00:47 ; elapsed = 00:00:38 . Memory (MB): peak = 2662.109 ; gain = 653.008 ; free physical = 23317 ; free virtual = 40824
+Writing placer database...
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:00.06 ; elapsed = 00:00:00.02 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23315 ; free virtual = 40824
+INFO: [Common 17-1381] The checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top_opt.dcp' has been generated.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Coretcl 2-168] The results of DRC are in file /home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top_drc_opted.rpt.
+INFO: [Chipscope 16-240] Debug cores have already been implemented
+Command: place_design
+Attempting to get a license for feature 'Implementation' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7a200t'
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+Running DRC as a precondition to command place_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+WARNING: [DRC 23-20] Rule violation (REQP-1840) RAMB18 async control check - The RAMB18E1 tri_fifo/user_side_FIFO/rx_fifo_i/ramgen_l/ramb_bl.ramb18_dp_bl.ram18_bl has an input control pin tri_fifo/user_side_FIFO/rx_fifo_i/ramgen_l/ramb_bl.ramb18_dp_bl.ram18_bl/RSTRAMARSTRAM (net: tri_fifo/user_side_FIFO/rx_fifo_i/ramgen_l/reset_out) which is driven by a register (tri_fifo/rx_mac_reset_gen/reset_sync2) that has an active asychronous set or reset. This may cause corruption of the memory contents and/or read values when the set/reset is asserted and is not analyzed by the default static timing analysis. It is suggested to eliminate the use of a set/reset to registers driving this RAMB pin or else use a synchronous reset in which the assertion of the reset is timed by default.
+WARNING: [DRC 23-20] Rule violation (REQP-1840) RAMB18 async control check - The RAMB18E1 tri_fifo/user_side_FIFO/rx_fifo_i/ramgen_u/ramb_bl.ramb18_dp_bl.ram18_bl has an input control pin tri_fifo/user_side_FIFO/rx_fifo_i/ramgen_u/ramb_bl.ramb18_dp_bl.ram18_bl/RSTRAMARSTRAM (net: tri_fifo/user_side_FIFO/rx_fifo_i/ramgen_u/reset_out) which is driven by a register (tri_fifo/rx_mac_reset_gen/reset_sync2) that has an active asychronous set or reset. This may cause corruption of the memory contents and/or read values when the set/reset is asserted and is not analyzed by the default static timing analysis. It is suggested to eliminate the use of a set/reset to registers driving this RAMB pin or else use a synchronous reset in which the assertion of the reset is timed by default.
+WARNING: [DRC 23-20] Rule violation (REQP-1840) RAMB18 async control check - The RAMB18E1 tri_fifo/user_side_FIFO/tx_fifo_i/ramgen_l/ramb_bl.ramb18_dp_bl.ram18_bl has an input control pin tri_fifo/user_side_FIFO/tx_fifo_i/ramgen_l/ramb_bl.ramb18_dp_bl.ram18_bl/RSTRAMB (net: tri_fifo/user_side_FIFO/tx_fifo_i/ramgen_l/reset_sync2[0]) which is driven by a register (tri_fifo/tx_mac_reset_gen/reset_sync2) that has an active asychronous set or reset. This may cause corruption of the memory contents and/or read values when the set/reset is asserted and is not analyzed by the default static timing analysis. It is suggested to eliminate the use of a set/reset to registers driving this RAMB pin or else use a synchronous reset in which the assertion of the reset is timed by default.
+WARNING: [DRC 23-20] Rule violation (REQP-1840) RAMB18 async control check - The RAMB18E1 tri_fifo/user_side_FIFO/tx_fifo_i/ramgen_u/ramb_bl.ramb18_dp_bl.ram18_bl has an input control pin tri_fifo/user_side_FIFO/tx_fifo_i/ramgen_u/ramb_bl.ramb18_dp_bl.ram18_bl/RSTRAMB (net: tri_fifo/user_side_FIFO/tx_fifo_i/ramgen_u/reset_sync2[0]) which is driven by a register (tri_fifo/tx_mac_reset_gen/reset_sync2) that has an active asychronous set or reset. This may cause corruption of the memory contents and/or read values when the set/reset is asserted and is not analyzed by the default static timing analysis. It is suggested to eliminate the use of a set/reset to registers driving this RAMB pin or else use a synchronous reset in which the assertion of the reset is timed by default.
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors, 4 Warnings
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+
+Starting Placer Task
+INFO: [Place 30-611] Multithreading enabled for place_design using a maximum of 8 CPUs
+
+Phase 1 Placer Initialization
+Netlist sorting complete. Time (s): cpu = 00:00:00.05 ; elapsed = 00:00:00.05 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23309 ; free virtual = 40822
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.03 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23309 ; free virtual = 40821
+
+Phase 1.1 IO Placement/ Clock Placement/ Build Placer Device
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+WARNING: [Place 30-574] Poor placement for routing between an IO pin and BUFG. This is normally an ERROR but the CLOCK_DEDICATED_ROUTE constraint is set to FALSE allowing your design to continue. The use of this override is highly discouraged as it may lead to very poor timing results. It is recommended that this error condition be corrected in the design.
+
+	art_in_diff_1 (IBUFDS.O) is locked to IOB_X0Y216
+	art_in_diff_1_n_0_BUFG_inst (BUFG.I) is provisionally placed by clockplacer on BUFGCTRL_X0Y7
+Resolution: Poor placement of an IO pin and a BUFG has resulted in the router using a non-dedicated path between the two.  There are several things that could trigger this DRC, each of which can cause unpredictable clock insertion delays that result in poor timing.  This DRC could be caused by any of the following: (a) a clock port was placed on a pin that is not a CCIO-pin (b)the BUFG has not been placed in the same half of the device or SLR as the CCIO-pin (c) a single ended clock has been placed on the N-Side of a differential pair CCIO-pin.
+Phase 1.1 IO Placement/ Clock Placement/ Build Placer Device | Checksum: da89d866
+
+Time (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23308 ; free virtual = 40820
+
+Phase 1.2 Build Placer Netlist Model
+Phase 1.2 Build Placer Netlist Model | Checksum: 15af96b9f
+
+Time (s): cpu = 00:00:27 ; elapsed = 00:00:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23308 ; free virtual = 40820
+
+Phase 1.3 Constrain Clocks/Macros
+Phase 1.3 Constrain Clocks/Macros | Checksum: 15af96b9f
+
+Time (s): cpu = 00:00:27 ; elapsed = 00:00:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23308 ; free virtual = 40820
+Phase 1 Placer Initialization | Checksum: 15af96b9f
+
+Time (s): cpu = 00:00:27 ; elapsed = 00:00:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23308 ; free virtual = 40820
+
+Phase 2 Global Placement
+Phase 2 Global Placement | Checksum: 18da16b27
+
+Time (s): cpu = 00:01:17 ; elapsed = 00:00:28 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23305 ; free virtual = 40817
+
+Phase 3 Detail Placement
+
+Phase 3.1 Commit Multi Column Macros
+Phase 3.1 Commit Multi Column Macros | Checksum: 18da16b27
+
+Time (s): cpu = 00:01:18 ; elapsed = 00:00:28 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23305 ; free virtual = 40817
+
+Phase 3.2 Commit Most Macros & LUTRAMs
+Phase 3.2 Commit Most Macros & LUTRAMs | Checksum: ed3a4b96
+
+Time (s): cpu = 00:01:28 ; elapsed = 00:00:31 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23305 ; free virtual = 40817
+
+Phase 3.3 Area Swap Optimization
+Phase 3.3 Area Swap Optimization | Checksum: d755f66c
+
+Time (s): cpu = 00:01:28 ; elapsed = 00:00:31 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23305 ; free virtual = 40817
+
+Phase 3.4 Pipeline Register Optimization
+Phase 3.4 Pipeline Register Optimization | Checksum: 1ac5dac82
+
+Time (s): cpu = 00:01:28 ; elapsed = 00:00:31 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23305 ; free virtual = 40817
+
+Phase 3.5 Timing Path Optimizer
+Phase 3.5 Timing Path Optimizer | Checksum: 116f8152c
+
+Time (s): cpu = 00:01:31 ; elapsed = 00:00:32 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23305 ; free virtual = 40817
+
+Phase 3.6 Fast Optimization
+Phase 3.6 Fast Optimization | Checksum: f8d1a176
+
+Time (s): cpu = 00:01:32 ; elapsed = 00:00:33 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23303 ; free virtual = 40815
+
+Phase 3.7 Small Shape Detail Placement
+Phase 3.7 Small Shape Detail Placement | Checksum: 1fe21885a
+
+Time (s): cpu = 00:01:38 ; elapsed = 00:00:38 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23304 ; free virtual = 40817
+
+Phase 3.8 Re-assign LUT pins
+Phase 3.8 Re-assign LUT pins | Checksum: 1767615e4
+
+Time (s): cpu = 00:01:39 ; elapsed = 00:00:39 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23304 ; free virtual = 40817
+
+Phase 3.9 Pipeline Register Optimization
+Phase 3.9 Pipeline Register Optimization | Checksum: 18bf729ca
+
+Time (s): cpu = 00:01:39 ; elapsed = 00:00:39 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23304 ; free virtual = 40817
+
+Phase 3.10 Fast Optimization
+Phase 3.10 Fast Optimization | Checksum: 181f6e565
+
+Time (s): cpu = 00:01:47 ; elapsed = 00:00:42 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23304 ; free virtual = 40816
+Phase 3 Detail Placement | Checksum: 181f6e565
+
+Time (s): cpu = 00:01:47 ; elapsed = 00:00:42 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23304 ; free virtual = 40816
+
+Phase 4 Post Placement Optimization and Clean-Up
+
+Phase 4.1 Post Commit Optimization
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+
+Phase 4.1.1 Post Placement Optimization
+INFO: [Place 30-746] Post Placement Timing Summary WNS=-4.826. For the most accurate timing information please run report_timing.
+Phase 4.1.1 Post Placement Optimization | Checksum: 1c469a1c3
+
+Time (s): cpu = 00:02:22 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+Phase 4.1 Post Commit Optimization | Checksum: 1c469a1c3
+
+Time (s): cpu = 00:02:23 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+
+Phase 4.2 Post Placement Cleanup
+Phase 4.2 Post Placement Cleanup | Checksum: 1c469a1c3
+
+Time (s): cpu = 00:02:23 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+
+Phase 4.3 Placer Reporting
+Phase 4.3 Placer Reporting | Checksum: 1c469a1c3
+
+Time (s): cpu = 00:02:23 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+
+Phase 4.4 Final Placement Cleanup
+Phase 4.4 Final Placement Cleanup | Checksum: 10b0eacbb
+
+Time (s): cpu = 00:02:23 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+Phase 4 Post Placement Optimization and Clean-Up | Checksum: 10b0eacbb
+
+Time (s): cpu = 00:02:24 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+Ending Placer Task | Checksum: 106fa6e42
+
+Time (s): cpu = 00:02:24 ; elapsed = 00:01:11 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+INFO: [Common 17-83] Releasing license: Implementation
+90 Infos, 21 Warnings, 0 Critical Warnings and 0 Errors encountered.
+place_design completed successfully
+place_design: Time (s): cpu = 00:02:28 ; elapsed = 00:01:13 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23307 ; free virtual = 40819
+Writing placer database...
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:03 ; elapsed = 00:00:00.88 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23281 ; free virtual = 40819
+INFO: [Common 17-1381] The checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top_placed.dcp' has been generated.
+report_io: Time (s): cpu = 00:00:00.08 ; elapsed = 00:00:00.14 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23298 ; free virtual = 40818
+report_utilization: Time (s): cpu = 00:00:00.18 ; elapsed = 00:00:00.23 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23297 ; free virtual = 40817
+report_control_sets: Time (s): cpu = 00:00:00.08 ; elapsed = 00:00:00.14 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23297 ; free virtual = 40818
+Command: route_design
+Attempting to get a license for feature 'Implementation' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xc7a200t'
+Running DRC as a precondition to command route_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+WARNING: [DRC 23-20] Rule violation (PLCK-12) Clock Placer Checks - Poor placement for routing between an IO pin and BUFG. 
+Resolution: Poor placement of an IO pin and a BUFG has resulted in the router using a non-dedicated path between the two.  There are several things that could trigger this DRC, each of which can cause unpredictable clock insertion delays that result in poor timing.  This DRC could be caused by any of the following: (a) a clock port was placed on a pin that is not a CCIO-pin (b)the BUFG has not been placed in the same half of the device or SLR as the CCIO-pin (c) a single ended clock has been placed on the N-Side of a differential pair CCIO-pin.
+ This is normally an ERROR but the CLOCK_DEDICATED_ROUTE constraint is set to FALSE allowing your design to continue. The use of this override is highly discouraged as it may lead to very poor timing results. It is recommended that this error condition be corrected in the design.
+
+	art_in_diff_1 (IBUFDS.O) is locked to A18
+	art_in_diff_1_n_0_BUFG_inst (BUFG.I) is provisionally placed by clockplacer on BUFGCTRL_X0Y7
+
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors, 1 Warnings
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+
+
+Starting Routing Task
+INFO: [Route 35-254] Multithreading enabled for route_design using a maximum of 8 CPUs
+Checksum: PlaceDB: e711fdfb ConstDB: 0 ShapeSum: 1fe87047 RouteDB: 0
+
+Phase 1 Build RT Design
+Phase 1 Build RT Design | Checksum: 1169434ca
+
+Time (s): cpu = 00:00:38 ; elapsed = 00:00:29 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23297 ; free virtual = 40817
+
+Phase 2 Router Initialization
+
+Phase 2.1 Create Timer
+Phase 2.1 Create Timer | Checksum: 1169434ca
+
+Time (s): cpu = 00:00:38 ; elapsed = 00:00:29 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23297 ; free virtual = 40817
+
+Phase 2.2 Fix Topology Constraints
+Phase 2.2 Fix Topology Constraints | Checksum: 1169434ca
+
+Time (s): cpu = 00:00:39 ; elapsed = 00:00:29 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23297 ; free virtual = 40817
+
+Phase 2.3 Pre Route Cleanup
+Phase 2.3 Pre Route Cleanup | Checksum: 1169434ca
+
+Time (s): cpu = 00:00:39 ; elapsed = 00:00:29 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23297 ; free virtual = 40817
+ Number of Nodes with overlaps = 0
+
+Phase 2.4 Update Timing
+Phase 2.4 Update Timing | Checksum: 1f55348ff
+
+Time (s): cpu = 00:00:55 ; elapsed = 00:00:37 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23286 ; free virtual = 40807
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-4.671 | TNS=-1502.490| WHS=-2.014 | THS=-973.523|
+
+
+Phase 2.5 Update Timing for Bus Skew
+
+Phase 2.5.1 Update Timing
+Phase 2.5.1 Update Timing | Checksum: 11fe0e572
+
+Time (s): cpu = 00:01:01 ; elapsed = 00:00:39 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23287 ; free virtual = 40807
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-4.671 | TNS=-1502.126| WHS=N/A    | THS=N/A    |
+
+Phase 2.5 Update Timing for Bus Skew | Checksum: 1e6ce30cd
+
+Time (s): cpu = 00:01:02 ; elapsed = 00:00:39 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23287 ; free virtual = 40807
+Phase 2 Router Initialization | Checksum: 11ef780a0
+
+Time (s): cpu = 00:01:02 ; elapsed = 00:00:39 . Memory (MB): peak = 2662.109 ; gain = 0.000 ; free physical = 23287 ; free virtual = 40807
+
+Phase 3 Initial Routing
+Phase 3 Initial Routing | Checksum: 13cfc7b6b
+
+Time (s): cpu = 00:01:44 ; elapsed = 00:00:50 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23027 ; free virtual = 40547
+
+Phase 4 Rip-up And Reroute
+
+Phase 4.1 Global Iteration 0
+ Number of Nodes with overlaps = 1822
+ Number of Nodes with overlaps = 106
+ Number of Nodes with overlaps = 5
+ Number of Nodes with overlaps = 3
+ Number of Nodes with overlaps = 7
+ Number of Nodes with overlaps = 3
+ Number of Nodes with overlaps = 1
+ Number of Nodes with overlaps = 0
+
+Phase 4.1.1 Update Timing
+Phase 4.1.1 Update Timing | Checksum: 2217cf9df
+
+Time (s): cpu = 00:03:16 ; elapsed = 00:01:23 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-5.022 | TNS=-1715.115| WHS=N/A    | THS=N/A    |
+
+
+Phase 4.1.2 GlobIterForTiming
+
+Phase 4.1.2.1 Update Timing
+Phase 4.1.2.1 Update Timing | Checksum: b0686772
+
+Time (s): cpu = 00:03:16 ; elapsed = 00:01:24 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+
+Phase 4.1.2.2 Fast Budgeting
+Phase 4.1.2.2 Fast Budgeting | Checksum: 148287dda
+
+Time (s): cpu = 00:03:17 ; elapsed = 00:01:24 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+Phase 4.1.2 GlobIterForTiming | Checksum: 1bd60c6a3
+
+Time (s): cpu = 00:03:17 ; elapsed = 00:01:25 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+Phase 4.1 Global Iteration 0 | Checksum: 1bd60c6a3
+
+Time (s): cpu = 00:03:17 ; elapsed = 00:01:25 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+
+Phase 4.2 Global Iteration 1
+ Number of Nodes with overlaps = 1
+ Number of Nodes with overlaps = 0
+
+Phase 4.2.1 Update Timing
+Phase 4.2.1 Update Timing | Checksum: 1180075d7
+
+Time (s): cpu = 00:03:18 ; elapsed = 00:01:25 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40546
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-5.031 | TNS=-1713.417| WHS=N/A    | THS=N/A    |
+
+Phase 4.2 Global Iteration 1 | Checksum: 239c57129
+
+Time (s): cpu = 00:03:18 ; elapsed = 00:01:25 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40546
+Phase 4 Rip-up And Reroute | Checksum: 239c57129
+
+Time (s): cpu = 00:03:18 ; elapsed = 00:01:25 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40546
+
+Phase 5 Delay and Skew Optimization
+
+Phase 5.1 Delay CleanUp
+
+Phase 5.1.1 Update Timing
+Phase 5.1.1 Update Timing | Checksum: 28cadd17c
+
+Time (s): cpu = 00:03:20 ; elapsed = 00:01:26 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-5.022 | TNS=-1713.282| WHS=N/A    | THS=N/A    |
+
+ Number of Nodes with overlaps = 0
+Phase 5.1 Delay CleanUp | Checksum: 112ff0be9
+
+Time (s): cpu = 00:03:22 ; elapsed = 00:01:27 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40546
+
+Phase 5.2 Clock Skew Optimization
+Phase 5.2 Clock Skew Optimization | Checksum: 112ff0be9
+
+Time (s): cpu = 00:03:22 ; elapsed = 00:01:27 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40546
+Phase 5 Delay and Skew Optimization | Checksum: 112ff0be9
+
+Time (s): cpu = 00:03:22 ; elapsed = 00:01:27 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40546
+
+Phase 6 Post Hold Fix
+
+Phase 6.1 Hold Fix Iter
+
+Phase 6.1.1 Update Timing
+Phase 6.1.1 Update Timing | Checksum: b1ec2f82
+
+Time (s): cpu = 00:03:24 ; elapsed = 00:01:28 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-4.990 | TNS=-1711.453| WHS=-0.047 | THS=-0.047 |
+
+
+Phase 6.1.2 Lut RouteThru Assignment for hold
+Phase 6.1.2 Lut RouteThru Assignment for hold | Checksum: 16d1cf9f2
+
+Time (s): cpu = 00:03:29 ; elapsed = 00:01:32 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+Phase 6.1 Hold Fix Iter | Checksum: 16d1cf9f2
+
+Time (s): cpu = 00:03:29 ; elapsed = 00:01:32 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23026 ; free virtual = 40546
+
+Phase 6.2 Additional Hold Fix
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-4.990 | TNS=-1711.453| WHS=-0.047 | THS=-0.047 |
+
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=-4.990 | TNS=-1711.453| WHS=-0.047 | THS=-0.047 |
+
+Phase 6.2 Additional Hold Fix | Checksum: 134f4f86a
+
+Time (s): cpu = 00:03:39 ; elapsed = 00:01:40 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+WARNING: [Route 35-468] The router encountered 60 pins that are both setup-critical and hold-critical and tried to fix hold violations at the expense of setup slack. Such pins are:
+	readout_vmm/daq_enable_stage1_reg/D
+	readout_vmm/trigger_pulse_stage1_reg/D
+	xadc_instance/st[1]_i_4/I2
+	xadc_instance/st[1]_i_4/I0
+	xadc_instance/st[1]_i_9/I2
+	xadc_instance/st[1]_i_9/I0
+	xadc_instance/st[1]_i_8/I5
+	xadc_instance/st[1]_i_8/I0
+	xadc_instance/st[1]_i_6/I2
+	xadc_instance/st[1]_i_5/I5
+	.. and 50 more pins.
+
+Phase 6 Post Hold Fix | Checksum: 134f4f86a
+
+Time (s): cpu = 00:03:39 ; elapsed = 00:01:40 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+
+Phase 7 Route finalize
+
+Router Utilization Summary
+  Global Vertical Routing Utilization    = 1.77421 %
+  Global Horizontal Routing Utilization  = 2.24326 %
+  Routable Net Status*
+  *Does not include unroutable nets such as driverless and loadless.
+  Run report_route_status for detailed report.
+  Number of Failed Nets               = 0
+  Number of Unrouted Nets             = 0
+  Number of Partially Routed Nets     = 0
+  Number of Node Overlaps             = 0
+
+Congestion Report
+North Dir 1x1 Area, Max Cong = 51.3514%, No Congested Regions.
+South Dir 1x1 Area, Max Cong = 61.2613%, No Congested Regions.
+East Dir 1x1 Area, Max Cong = 69.1176%, No Congested Regions.
+West Dir 1x1 Area, Max Cong = 60.2941%, No Congested Regions.
+Phase 7 Route finalize | Checksum: ff8ee69d
+
+Time (s): cpu = 00:03:40 ; elapsed = 00:01:40 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+
+Phase 8 Verifying routed nets
+
+ Verification completed successfully
+Phase 8 Verifying routed nets | Checksum: ff8ee69d
+
+Time (s): cpu = 00:03:40 ; elapsed = 00:01:40 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+
+Phase 9 Depositing Routes
+Phase 9 Depositing Routes | Checksum: fa890482
+
+Time (s): cpu = 00:03:41 ; elapsed = 00:01:41 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+
+Phase 10 Post Router Timing
+
+Phase 10.1 Update Timing
+Phase 10.1 Update Timing | Checksum: 16f613c76
+
+Time (s): cpu = 00:03:43 ; elapsed = 00:01:42 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+INFO: [Route 35-57] Estimated Timing Summary | WNS=-4.990 | TNS=-1711.453| WHS=-0.047 | THS=-0.047 |
+
+WARNING: [Route 35-328] Router estimated timing not met.
+Resolution: For a complete and accurate timing signoff, report_timing_summary must be run after route_design. Alternatively, route_design can be run with the -timing_summary option to enable a complete timing signoff at the end of route_design.
+Phase 10 Post Router Timing | Checksum: 16f613c76
+
+Time (s): cpu = 00:03:43 ; elapsed = 00:01:42 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+WARNING: [Route 35-456] Router was unable to fix hold violation on 1 pins because of tight setup and hold constraints. Such pins are:
+	readout_vmm/daq_enable_stage1_reg/D
+
+Resolution: Run report_timing_summary to analyze the hold violations.
+INFO: [Route 35-16] Router Completed Successfully
+
+Time (s): cpu = 00:03:43 ; elapsed = 00:01:42 . Memory (MB): peak = 2725.082 ; gain = 62.973 ; free physical = 23025 ; free virtual = 40545
+
+Routing Is Done.
+INFO: [Common 17-83] Releasing license: Implementation
+107 Infos, 25 Warnings, 0 Critical Warnings and 0 Errors encountered.
+route_design completed successfully
+route_design: Time (s): cpu = 00:03:47 ; elapsed = 00:01:43 . Memory (MB): peak = 2725.086 ; gain = 62.977 ; free physical = 23025 ; free virtual = 40545
+Writing placer database...
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:03 ; elapsed = 00:00:01 . Memory (MB): peak = 2755.098 ; gain = 0.004 ; free physical = 22993 ; free virtual = 40545
+INFO: [Common 17-1381] The checkpoint '/home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top_routed.dcp' has been generated.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Coretcl 2-168] The results of DRC are in file /home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top_drc_routed.rpt.
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [DRC 23-133] Running Methodology with 8 threads
+INFO: [Coretcl 2-1520] The results of Report Methodology are in file /home/pmoschov/myGitRepos/atlas-nsw-mmfe8-firmware/sources/MDT_446/MDT_446.runs/impl_1/mmfe8_top_methodology_drc_routed.rpt.
+report_methodology: Time (s): cpu = 00:00:18 ; elapsed = 00:00:05 . Memory (MB): peak = 2805.117 ; gain = 0.000 ; free physical = 23013 ; free virtual = 40544
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -2, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+CRITICAL WARNING: [Timing 38-282] The design failed to meet the timing requirements. Please see the timing summary report for details on the timing violations.
+WARNING: [Timing 38-436] There are set_bus_skew constraint(s) in this design. Please run report_bus_skew to ensure that bus skew requirements are met.
+Command: report_power -file mmfe8_top_power_routed.rpt -pb mmfe8_top_power_summary_routed.pb -rpx mmfe8_top_power_routed.rpx
+INFO: [Power 33-23] Power model is not available for STARTUP_7SERIES_GEN.STARTUP2_7SERIES_inst
+Running Vector-less Activity Propagation...
+
+Finished Running Vector-less Activity Propagation
+118 Infos, 26 Warnings, 1 Critical Warnings and 0 Errors encountered.
+report_power completed successfully
+INFO: [Common 17-206] Exiting Vivado at Wed Mar  8 21:30:24 2017...

@@ -96,8 +96,8 @@ architecture Behavioral of FIFO2UDP is
 
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
   
-    attribute mark_debug : string;
-
+--    attribute mark_debug : string;
+ 
 --    attribute mark_debug of prog_fifo_empty         : signal is "true";
 --    attribute mark_debug of fifo_empty_UDP          : signal is "true";     
 --    attribute mark_debug of daq_fifo_re             : signal is "true";     
@@ -106,24 +106,31 @@ architecture Behavioral of FIFO2UDP is
 --    attribute mark_debug of data_out_valid          : signal is "true";
 --    attribute mark_debug of sending                 : signal is "true";
 --    attribute mark_debug of udp_tx_data_out_ready   : signal is "true";
+--    attribute mark_debug of udp_tx_data_out_ready   : signal is "true";
 --    attribute mark_debug of daq_data_out            : signal is "true";
 --    attribute mark_debug of udp_tx_start            : signal is "true";
 --    attribute mark_debug of end_packet_synced       : signal is "true";     
 --    attribute mark_debug of i                       : signal is "true";     
---    attribute mark_debug of packet_length           : signal is "true";        
+--    attribute mark_debug of packet_length           : signal is "true";            
 --    attribute mark_debug of count                   : signal is "true";
 --    attribute mark_debug of count_length            : signal is "true";
+--    attribute mark_debug of daq_data_in_int         : signal is "true";
 --    attribute mark_debug of wr_en_int               : signal is "true";
 --    attribute mark_debug of fifo_full_UDP           : signal is "true";
 --    attribute mark_debug of fifo_empty_len          : signal is "true";
---    attribute mark_debug of wr_en                   : signal is "true";    
+--    attribute mark_debug of wr_en                   : signal is "true";
+--    attribute mark_debug of wr_en                   : signal is "true";
+    
+--    attribute mark_debug of packet_length_in        : signal is "true";
 --    attribute mark_debug of packet_length_in        : signal is "true";
 --    attribute mark_debug of vmmID_i                 : signal is "true";
 --    attribute mark_debug of trigger                 : signal is "true";
+
 --    attribute mark_debug of len_cnt                 : signal is "true";
 --    attribute mark_debug of fifo_len_wr_en          : signal is "true";
 --    attribute mark_debug of fifo_len_rd_en          : signal is "true";
 --    attribute mark_debug of packet_len_r            : signal is "true";
+  
   
 component conf_xadc_fifo is
 
@@ -345,4 +352,43 @@ end process;
     wr_en_int                   <= wr_en;
     sending_o                   <= sending;
    
+--ila_daq_send : ila_0
+--    port map
+--    (
+--        clk           => clk_125, 
+--        probe0        => daq_out,
+--        probe1        => udp_tx_data_out_ready
+--    );   
+
+--daq_out(0)              <= end_packet_synced;
+--daq_out(1)              <= fifo_empty_UDP;
+--daq_out(2)              <= daq_fifo_re;
+--daq_out(3)              <= data_out_valid;
+--daq_out(4)              <= data_out_last;   
+--daq_out(12 downto 5)    <= data_out;
+--daq_out(16 downto 13)   <= std_logic_vector(count);
+--daq_out(38 downto 17)   <= (others => '0');
+--daq_out(39)             <= udp_tx_start_int;
+--daq_out(40)             <= '0'; --udp_tx_data_out_ready;
+--daq_out(48 downto 41)   <= daq_data_out;
+--daq_out(112 downto 49)  <= daq_data_in;
+--daq_out(113)            <= sending;
+--daq_out(129 downto 114) <= std_logic_vector(packet_length);
+--daq_out(145 downto 130) <= std_logic_vector(count_length);     
+--daq_out(157 downto 146) <= packet_len_r;
+--daq_out(221 downto 158) <= daq_data_in_int;
+--daq_out(222)            <= wr_en_int;
+--daq_out(223)            <= wr_en;
+--daq_out(235 downto 224) <= packet_length_in;
+--daq_out(236)            <= udp_tx_data_out_ready;
+--daq_out(237)            <= fifo_len_wr_en;
+--daq_out(238)            <= fifo_len_rd_en;
+--daq_out(239)            <= fifo_empty_len;
+--daq_out(240)            <= fifo_full_UDP;
+--daq_out(243 downto 241) <= vmmID_i;
+--daq_out(244)            <= trigger;
+--daq_out(252 downto 245) <= std_logic_vector(len_cnt);
+--daq_out(255 downto 253) <= (others => '0');
+
+
 end Behavioral;

@@ -171,6 +171,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/fifo/temac_10_100_1000_ten_100_1g_eth_fifo.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_reset_sync.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_sync_block.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/CDCC.vhd"]"\
  "[file normalize "$origin_dir/sources_1/ip/clk_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_0_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_user_FIFO.xcix"]"\
@@ -379,6 +380,11 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_sync_block.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/CDCC.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -639,9 +645,9 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 set obj [get_filesets constrs_1]
 
 # Add/Import constrs file and set constrs file properties
-set file "[file normalize "$origin_dir/constrs_1/mmfe8.xdc"]"
+set file "[file normalize "$origin_dir/constrs_1/mmfe8_constr.xdc"]"
 set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/constrs_1/mmfe8.xdc"
+set file "$origin_dir/constrs_1/mmfe8_constr.xdc"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
 set_property "file_type" "XDC" $file_obj

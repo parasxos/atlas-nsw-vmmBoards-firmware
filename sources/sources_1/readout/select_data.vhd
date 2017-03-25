@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
 -- Company: NTU ATHNENS - BNL
 -- Engineer: Panagiotis Gkountoumis
 -- 
@@ -20,7 +20,7 @@
 -- 19.07.2016 Reverted component to work asynchronously (Reid Pinkham)
 -- 20.07.2016 Changed packet length from integer to std_logic_vector (Reid Pinkham)
 -- 04.08.2016 Added XADC support (Reid Pinkham)
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
 
 library unisim;
 use unisim.vcomponents.all;

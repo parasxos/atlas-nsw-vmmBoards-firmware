@@ -19,6 +19,7 @@
 -- 23.02.2017 Slowed down the skewing process to 500 Mhz. (Christos Bakalis)
 -- 09.03.2017 Shortened the bus widths and added conversion multipliers for
 -- area usage optimization. (Christos Bakalis)
+-- 26.03.2017 Added CKTP counting module. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -42,6 +43,7 @@ entity clk_gen_wrapper is
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
         cktp_pulse_width    : in  std_logic_vector(4 downto 0);
+        cktp_max_num        : in  std_logic_vector(15 downto 0);
         cktp_period         : in  std_logic_vector(15 downto 0);
         cktp_skew           : in  std_logic_vector(4 downto 0);        
         ckbc_freq           : in  std_logic_vector(5 downto 0);
@@ -68,6 +70,16 @@ architecture RTL of clk_gen_wrapper is
     );
     end component;
 
+    component cktp_counter
+    port(
+        clk_160         : in  std_logic;
+        cktp_start      : in  std_logic;
+        cktp_pulse      : in  std_logic;
+        cktp_max        : in  std_logic_vector(15 downto 0);
+        cktp_inhibit    : out std_logic
+    );
+    end component;
+
     component ckbc_gen
     port(  
         clk_160       : in std_logic;
@@ -89,6 +101,8 @@ architecture RTL of clk_gen_wrapper is
 
     signal ckbc_start           : std_logic := '0';
     signal cktp_start           : std_logic := '0';
+    signal cktp_gen_start       : std_logic := '0';
+    signal cktp_inhibit         : std_logic := '0';
 
     signal CKBC_preBuf          : std_logic := '0';
     signal CKBC_glbl            : std_logic := '0';
@@ -120,7 +134,7 @@ CKBC_BUFGCE: BUFGCE
 cktp_generator: cktp_gen
     port map(
         clk_160         => clk_160,
-        cktp_start      => cktp_start,
+        cktp_start      => cktp_gen_start,
         cktp_primary    => cktp_primary,
         vmm_ckbc        => CKBC_preBuf, -- CKBC_glbl
         ckbc_freq       => ckbc_freq,
@@ -130,6 +144,14 @@ cktp_generator: cktp_gen
         CKTP            => CKTP_from_orig_gen
     );
 
+cktp_max_module: cktp_counter
+    port map(
+        clk_160         => clk_160,
+        cktp_start      => cktp_start,
+        cktp_pulse      => CKTP_from_orig_gen, -- maybe CKTP_glbl? but needs sync
+        cktp_max        => cktp_max_num,
+        cktp_inhibit    => cktp_inhibit
+    );
     
 skewing_module: skew_gen
     port map(
@@ -160,6 +182,7 @@ begin
 end process;
 
     cktp_start      <= not rst and cktp_enable and mmcm_locked;
+    cktp_gen_start  <= not rst and cktp_enable and mmcm_locked and not cktp_inhibit;
     ckbc_start      <= not rst and ckbc_enable and mmcm_locked;
 
     CKBC            <= CKBC_glbl;

@@ -241,12 +241,14 @@ begin
     end if;
 end process;
 
-UDPDone_proc: process (clk_125, fifo_empty_UDP)
+UDPDone_proc: process (clk_125)
 begin
-    if fifo_empty_UDP = '1' and fifo_empty_len = '1' then -- IF Statement to inidcate when packets have been sent
-        UDPDone <= '1';
-    else
-        UDPDone <= '0';
+    if rising_edge(clk_125) then
+        if fifo_empty_UDP = '1' and fifo_empty_len = '1' then -- IF Statement to inidcate when packets have been sent
+            UDPDone <= '1';
+        else
+            UDPDone <= '0';
+        end if;
     end if;
 end process;
 

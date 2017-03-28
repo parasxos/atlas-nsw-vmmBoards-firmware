@@ -26,7 +26,7 @@
 -- 12.03.2017 Changed flow_fsm's primary cktp assertion to comply with cktp_gen
 -- module. (Christos Bakalis)
 -- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
--- 28.03.2017 Changed to accomodate to MMFE8 VMM3. (Christos Bakalis)
+-- 28.03.2017 Changes to accomodate to MMFE8 VMM3. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ entity mmfe8_top is
         rxp                   : IN  STD_LOGIC;                     -- Differential +ve for serial reception from PMD to PMA.
         rxn                   : IN  STD_LOGIC;                     -- Differential -ve for serial reception from PMD to PMA.
         phy_int               : OUT STD_LOGIC;
-        phy_rstn_out 		  : OUT STD_LOGIC;
+        phy_rstn_out          : OUT STD_LOGIC;
 
         -- VMM3 Signals
         -------------------------------------
@@ -139,14 +139,14 @@ entity mmfe8_top is
         CKTK_7_P, CKTK_7_N    : OUT STD_LOGIC;
         CKTK_8_P, CKTK_8_N    : OUT STD_LOGIC;
 
-        CKTP_1_P, CKTP_1_N	  :	OUT	STD_LOGIC;
-        CKTP_2_P, CKTP_2_N	  :	OUT	STD_LOGIC;
-        CKTP_3_P, CKTP_3_N	  :	OUT	STD_LOGIC;
-        CKTP_4_P, CKTP_4_N	  :	OUT	STD_LOGIC;
-        CKTP_5_P, CKTP_5_N	  :	OUT	STD_LOGIC;
-        CKTP_6_P, CKTP_6_N	  :	OUT	STD_LOGIC;
-        CKTP_7_P, CKTP_7_N	  :	OUT	STD_LOGIC;
-        CKTP_8_P, CKTP_8_N	  :	OUT	STD_LOGIC;
+        CKTP_1_P, CKTP_1_N    : OUT STD_LOGIC;
+        CKTP_2_P, CKTP_2_N    : OUT STD_LOGIC;
+        CKTP_3_P, CKTP_3_N    : OUT STD_LOGIC;
+        CKTP_4_P, CKTP_4_N    : OUT STD_LOGIC;
+        CKTP_5_P, CKTP_5_N    : OUT STD_LOGIC;
+        CKTP_6_P, CKTP_6_N    : OUT STD_LOGIC;
+        CKTP_7_P, CKTP_7_N    : OUT STD_LOGIC;
+        CKTP_8_P, CKTP_8_N    : OUT STD_LOGIC;
     
         CKBC_1_P, CKBC_1_N    : OUT STD_LOGIC;
         CKBC_2_P, CKBC_2_N    : OUT STD_LOGIC;
@@ -177,6 +177,17 @@ entity mmfe8_top is
         CKART_6_P, CKART_6_N  : OUT STD_LOGIC;
         CKART_7_P, CKART_7_N  : OUT STD_LOGIC;
         CKART_8_P, CKART_8_N  : OUT STD_LOGIC;
+
+        SETT_P,    SETT_N     : OUT STD_LOGIC; 
+        SETB_P,    SETB_N     : OUT STD_LOGIC;
+        CK6B_1_P,  CK6B_1_N   : OUT STD_LOGIC;
+        CK6B_2_P,  CK6B_2_N   : OUT STD_LOGIC;
+        CK6B_3_P,  CK6B_3_N   : OUT STD_LOGIC;
+        CK6B_4_P,  CK6B_4_N   : OUT STD_LOGIC;
+        CK6B_5_P,  CK6B_5_N   : OUT STD_LOGIC;
+        CK6B_6_P,  CK6B_6_N   : OUT STD_LOGIC;
+        CK6B_7_P,  CK6B_7_N   : OUT STD_LOGIC;
+        CK6B_8_P,  CK6B_8_N   : OUT STD_LOGIC;
 
         -- ADDC ART CLK
         -------------------------------------
@@ -215,7 +226,7 @@ entity mmfe8_top is
         IO0_IO                : INOUT STD_LOGIC;
         IO1_IO                : INOUT STD_LOGIC;
         SS_IO                 : INOUT STD_LOGIC
-	  );
+      );
 end mmfe8_top;
 
 architecture Behavioral of mmfe8_top is
@@ -257,31 +268,31 @@ architecture Behavioral of mmfe8_top is
   
   ----------------------------panos---------------------------------
 --TODO: Review signals and distribute to appropriate "set" i.e Ethernet/UDP/Config etc (Christos)
-  signal gmii_txd_emac 			     : std_logic_vector(7 downto 0);
-  signal gmii_tx_en_emac		     : std_logic; 
-  signal gmii_tx_er_emac		     : std_logic; 
-  signal gmii_rxd_emac 			     : std_logic_vector(7 downto 0);
-  signal gmii_rx_dv_emac		     : std_logic; 
-  signal gmii_rx_er_emac		     : std_logic; 
-  signal sgmii_clk_int			     : std_logic;
-  signal speed_is_10_100		     : std_logic;
-  signal speed_is_100			     : std_logic;
+  signal gmii_txd_emac               : std_logic_vector(7 downto 0);
+  signal gmii_tx_en_emac             : std_logic; 
+  signal gmii_tx_er_emac             : std_logic; 
+  signal gmii_rxd_emac               : std_logic_vector(7 downto 0);
+  signal gmii_rx_dv_emac             : std_logic; 
+  signal gmii_rx_er_emac             : std_logic; 
+  signal sgmii_clk_int               : std_logic;
+  signal speed_is_10_100             : std_logic;
+  signal speed_is_100                : std_logic;
   signal tx_axis_mac_tready_int      : std_logic;
   signal rx_axis_mac_tuser_int       : std_logic;
   signal rx_axis_mac_tlast_int       : std_logic;
   signal rx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);
   signal rx_axis_mac_tvalid_int      : std_logic;
-  signal local_gtx_reset		     : std_logic;
-  signal rx_reset		 			 : std_logic;
-  signal tx_reset		 			 : std_logic;
+  signal local_gtx_reset             : std_logic;
+  signal rx_reset                    : std_logic;
+  signal tx_reset                    : std_logic;
   signal gtx_pre_resetn              : std_logic := '0';
-  signal tx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);	
+  signal tx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);    
   signal tx_axis_mac_tvalid_int      : std_logic;
   signal tx_axis_mac_tlast_int       : std_logic;  
-  signal gtx_resetn				     : std_logic;
-  signal glbl_rstn        	         : std_logic;
-  signal glbl_rst_i        	         : std_logic := '0';
-  signal gtx_clk_reset_int		     : std_logic;
+  signal gtx_resetn                  : std_logic;
+  signal glbl_rstn                   : std_logic;
+  signal glbl_rst_i                  : std_logic := '0';
+  signal gtx_clk_reset_int           : std_logic;
   signal an_restart_config_int       : std_logic;
   signal rx_axis_mac_tready_int      : std_logic;
   signal rx_configuration_vector_int : std_logic_vector(79 downto 0);
@@ -290,23 +301,23 @@ architecture Behavioral of mmfe8_top is
   signal vector_pre_resetn           : std_logic := '0';
   signal vector_reset_int            : std_logic;
   signal independent_clock_int       : std_logic;
-  signal rst_gtclk_int				 : std_logic;
-  signal clk_enable_int				 : std_logic;
-  signal sgmii_clk_int_oddr			 : std_logic;
-  signal udp_txi_int				 : udp_tx_type;
+  signal rst_gtclk_int               : std_logic;
+  signal clk_enable_int              : std_logic;
+  signal sgmii_clk_int_oddr          : std_logic;
+  signal udp_txi_int                 : udp_tx_type;
   signal control                     : udp_control_type;
   signal udp_rx_int                  : udp_rx_type;
   signal ip_rx_hdr_int               : ipv4_rx_header_type;
-  signal udp_tx_data_out_ready_int	 : std_logic;
-  signal udp_tx_start_int			 : std_logic;
+  signal udp_tx_data_out_ready_int   : std_logic;
+  signal udp_tx_start_int            : std_logic;
   signal rxp_int                     : std_logic;
-  signal rxn_int		             : std_logic;
+  signal rxn_int                     : std_logic;
   signal clkfbout2, clkfbout1        : std_logic;
   signal tx_axis_mac_tuser_int       : std_logic := '1';
   signal test_data                   : std_logic_vector(7 downto 0); 
   signal test_valid, test_last       : std_logic;
-  signal icmp_rx_start	             : std_logic;
-  signal icmp_rxo  		     		 : icmp_rx_type;
+  signal icmp_rx_start               : std_logic;
+  signal icmp_rxo                    : icmp_rx_type;
 
   signal test_data_out                   : std_logic_vector(7 downto 0); 
   signal test_valid_out, test_last_out       : std_logic;  
@@ -329,7 +340,7 @@ architecture Behavioral of mmfe8_top is
   signal status_int_old               : std_logic_vector(3 downto 0);
   
 --TODO: Review signals with updated configuration (Christos)
---  signal  VMM_SCK 		              :  std_logic;
+--  signal  VMM_SCK                       :  std_logic;
   signal  vmm_cs_all                 :  std_logic := '0'; 
   signal  vmm_sck_all                :  std_logic := '0';
   signal  vmm_sdi_all                :  std_logic := '0';
@@ -487,6 +498,7 @@ architecture Behavioral of mmfe8_top is
     signal CKTP_glbl_s125   : std_logic := '0';        
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
+    signal tied_to_gnd_i    : std_logic := '0';
     signal vmm_ckbc         : std_logic;
 
 --TODO: Fix with MMFE8 VMM3 (paris)
@@ -586,6 +598,11 @@ architecture Behavioral of mmfe8_top is
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
     signal xadc_busy            : std_logic;
+    signal MuxAddr0_i           : std_logic := '0';
+    signal MuxAddr1_i           : std_logic := '0';
+    signal MuxAddr2_i           : std_logic := '0';
+    signal MuxAddr3_p_i         : std_logic := '0';
+    signal MuxAddr3_n_i         : std_logic := '0';
 
     ------------------------------------------------------------------
     -- Dynamic IP signals
@@ -1097,43 +1114,43 @@ architecture Behavioral of mmfe8_top is
             gt0_pll0lock_out        : out std_logic);
     end component;
     -- 11
-	component UDP_ICMP_Complete_nomac
-	   Port (
-			-- UDP TX signals
-			udp_tx_start			: in std_logic;							    -- indicates req to tx UDP
-			udp_txi					: in udp_tx_type;							-- UDP tx cxns
-			udp_tx_result			: out std_logic_vector (1 downto 0);        -- tx status (changes during transmission)
-			udp_tx_data_out_ready   : out std_logic;							-- indicates udp_tx is ready to take data
-			-- UDP RX signals
-			udp_rx_start			: out std_logic;							-- indicates receipt of udp header
-			udp_rxo					: out udp_rx_type;
-			-- ICMP RX signals
-			icmp_rx_start		    : out std_logic;
-			icmp_rxo		        : out icmp_rx_type;
-			-- IP RX signals
-			ip_rx_hdr				: out ipv4_rx_header_type;
-			-- system signals
-			rx_clk					: in  STD_LOGIC;
-			tx_clk					: in  STD_LOGIC;
-			reset 					: in  STD_LOGIC;
-			our_ip_address 		    : in STD_LOGIC_VECTOR (31 downto 0);
-			our_mac_address 		: in std_logic_vector (47 downto 0);
-			control					: in udp_control_type;
-			-- status signals
-			arp_pkt_count			: out std_logic_vector(7 downto 0);			-- count of arp pkts received
-			ip_pkt_count			: out std_logic_vector(7 downto 0);			-- number of IP pkts received for us
-			-- MAC Transmitter
-			mac_tx_tdata            : out  std_logic_vector(7 downto 0);	    -- data byte to tx
-			mac_tx_tvalid           : out  std_logic;							-- tdata is valid
-			mac_tx_tready           : in std_logic;							    -- mac is ready to accept data
-			mac_tx_tfirst           : out  std_logic;							-- indicates first byte of frame
-			mac_tx_tlast            : out  std_logic;							-- indicates last byte of frame
-			-- MAC Receiver
-			mac_rx_tdata            : in std_logic_vector(7 downto 0);	        -- data byte received
-			mac_rx_tvalid           : in std_logic;							    -- indicates tdata is valid
-			mac_rx_tready           : out  std_logic;							-- tells mac that we are ready to take data
-			mac_rx_tlast            : in std_logic);							-- indicates last byte of the trame
-	end component;
+    component UDP_ICMP_Complete_nomac
+       Port (
+            -- UDP TX signals
+            udp_tx_start            : in std_logic;                             -- indicates req to tx UDP
+            udp_txi                 : in udp_tx_type;                           -- UDP tx cxns
+            udp_tx_result           : out std_logic_vector (1 downto 0);        -- tx status (changes during transmission)
+            udp_tx_data_out_ready   : out std_logic;                            -- indicates udp_tx is ready to take data
+            -- UDP RX signals
+            udp_rx_start            : out std_logic;                            -- indicates receipt of udp header
+            udp_rxo                 : out udp_rx_type;
+            -- ICMP RX signals
+            icmp_rx_start           : out std_logic;
+            icmp_rxo                : out icmp_rx_type;
+            -- IP RX signals
+            ip_rx_hdr               : out ipv4_rx_header_type;
+            -- system signals
+            rx_clk                  : in  STD_LOGIC;
+            tx_clk                  : in  STD_LOGIC;
+            reset                   : in  STD_LOGIC;
+            our_ip_address          : in STD_LOGIC_VECTOR (31 downto 0);
+            our_mac_address         : in std_logic_vector (47 downto 0);
+            control                 : in udp_control_type;
+            -- status signals
+            arp_pkt_count           : out std_logic_vector(7 downto 0);         -- count of arp pkts received
+            ip_pkt_count            : out std_logic_vector(7 downto 0);         -- number of IP pkts received for us
+            -- MAC Transmitter
+            mac_tx_tdata            : out  std_logic_vector(7 downto 0);        -- data byte to tx
+            mac_tx_tvalid           : out  std_logic;                           -- tdata is valid
+            mac_tx_tready           : in std_logic;                             -- mac is ready to accept data
+            mac_tx_tfirst           : out  std_logic;                           -- indicates first byte of frame
+            mac_tx_tlast            : out  std_logic;                           -- indicates last byte of frame
+            -- MAC Receiver
+            mac_rx_tdata            : in std_logic_vector(7 downto 0);          -- data byte received
+            mac_rx_tvalid           : in std_logic;                             -- indicates tdata is valid
+            mac_rx_tready           : out  std_logic;                           -- tells mac that we are ready to take data
+            mac_rx_tlast            : in std_logic);                            -- indicates last byte of the trame
+    end component;
     -- 12
     component temac_10_100_1000_fifo_block
     port(
@@ -1437,9 +1454,9 @@ architecture Behavioral of mmfe8_top is
 
 begin
 
-	glbl_rstn	     <= not glbl_rst_i;
-	phy_int          <= '1';
-	
+    glbl_rstn        <= not glbl_rst_i;
+    phy_int          <= '1';
+    
 gen_vector_reset: process (userclk2)
     begin
      if userclk2'event and userclk2 = '1' then
@@ -1503,26 +1520,26 @@ core_wrapper: gig_ethernet_pcs_pma_0
       status_vector        => status_vector_int, -- status_vector_int,
       reset                => glbl_rst_i,
       signal_detect        => '1', -- signal_detect
-      speed_is_10_100	   => speed_is_10_100,
-	  speed_is_100		   => speed_is_100,
-	  an_interrupt         => open,                    -- Interrupt to processor to signal that Auto-Negotiation has completed
+      speed_is_10_100      => speed_is_10_100,
+      speed_is_100         => speed_is_100,
+      an_interrupt         => open,                    -- Interrupt to processor to signal that Auto-Negotiation has completed
       an_adv_config_vector =>  "1111111000000001",-- Alternate interface to program REG4 (AN ADV)
       an_restart_config    => an_restart_config_int,                     -- Alternate signal to modify AN restart bit in REG0
 
-	  gt0_pll0outclk_out     => open,
+      gt0_pll0outclk_out     => open,
       gt0_pll0outrefclk_out  => open,
       gt0_pll1outclk_out     => open,
       gt0_pll1outrefclk_out  => open,
       gt0_pll0refclklost_out => open,
       gt0_pll0lock_out       => open);
 
-	process(userclk2)
+    process(userclk2)
         begin
-			if (local_gtx_reset = '1') then 
-				an_restart_config_int <= '1';
-			else
-				an_restart_config_int <= '0';
-			end if;
+            if (local_gtx_reset = '1') then 
+                an_restart_config_int <= '1';
+            else
+                an_restart_config_int <= '0';
+            end if;
     end process;
 
 tri_fifo: temac_10_100_1000_fifo_block
@@ -1571,22 +1588,22 @@ tri_fifo: temac_10_100_1000_fifo_block
       gmii_rxd                  => gmii_rxd_emac,
       gmii_rx_dv                => gmii_rx_dv_emac,
       gmii_rx_er                => gmii_rx_er_emac,
-	  clk_enable			    => clk_enable_int,
+      clk_enable                => clk_enable_int,
       speedis100                => speed_is_100,
       speedis10100              => speed_is_10_100,
       -- Configuration Vector
       -------------------------
       rx_configuration_vector   => rx_configuration_vector_int, -- x"0605_0403_02da_0000_2022",
       tx_configuration_vector   => tx_configuration_vector_int);  -- x"0605_0403_02da_0000_2022"
-	
-	-- Control vector reset
+    
+    -- Control vector reset
 axi_lite_reset_gen: temac_10_100_1000_reset_sync
    port map (
        clk                      => userclk2,
        enable                   => '1',
        reset_in                 => glbl_rst_i,
-       reset_out                => vector_reset_int);	
-		
+       reset_out                => vector_reset_int);   
+        
 config_vector: temac_10_100_1000_config_vector_sm
     port map(
       gtx_clk                   => userclk2, --sgmii_clk_int, --userclk2,
@@ -1609,9 +1626,9 @@ config_vector: temac_10_100_1000_config_vector_sm
          gmii_tx_er_int  <= gmii_tx_er_emac;
       end if;
     end process;
-		
-	local_gtx_reset <= glbl_rst_i or rx_reset or tx_reset;
-	
+        
+    local_gtx_reset <= glbl_rst_i or rx_reset or tx_reset;
+    
 gtx_reset_gen: temac_10_100_1000_reset_sync
     port map (
        clk              => userclk2,
@@ -1643,37 +1660,37 @@ gen_gtx_reset: process (userclk2)
    end process;
 
 UDP_ICMP_block: UDP_ICMP_Complete_nomac
-	Port map(
-			udp_tx_start				=> udp_tx_start_int,
-			udp_txi						=> udp_txi_int, 
-			udp_tx_result				=> open,
-			udp_tx_data_out_ready	    => udp_tx_data_out_ready_int, 
-			udp_rx_start				=> udp_header_int,									-- indicates receipt of udp header
-			udp_rxo						=> udp_rx_int,
-			icmp_rx_start		        => icmp_rx_start,
-			icmp_rxo		            => icmp_rxo,
-			ip_rx_hdr					=> ip_rx_hdr_int,	
-			rx_clk						=> userclk2,
-			tx_clk						=> userclk2,
-			reset 						=> glbl_rst_i,
-			our_ip_address 			    => myIP,
-			our_mac_address 			=> myMAC,
-			control						=> control,
-			arp_pkt_count				=> open,
-			ip_pkt_count				=> open,
-			mac_tx_tdata         	    => tx_axis_mac_tdata_int,
-			mac_tx_tvalid        	    => tx_axis_mac_tvalid_int,
-			mac_tx_tready        	    => tx_axis_mac_tready_int,
-			mac_tx_tfirst        	    => open,
-			mac_tx_tlast         	    => tx_axis_mac_tlast_int,
-			mac_rx_tdata         	    => rx_axis_mac_tdata_int,
-			mac_rx_tvalid        	    => rx_axis_mac_tvalid_int,
-			mac_rx_tready        	    => rx_axis_mac_tready_int,
-			mac_rx_tlast         	    => rx_axis_mac_tlast_int);
+    Port map(
+            udp_tx_start                => udp_tx_start_int,
+            udp_txi                     => udp_txi_int, 
+            udp_tx_result               => open,
+            udp_tx_data_out_ready       => udp_tx_data_out_ready_int, 
+            udp_rx_start                => udp_header_int,                                  -- indicates receipt of udp header
+            udp_rxo                     => udp_rx_int,
+            icmp_rx_start               => icmp_rx_start,
+            icmp_rxo                    => icmp_rxo,
+            ip_rx_hdr                   => ip_rx_hdr_int,   
+            rx_clk                      => userclk2,
+            tx_clk                      => userclk2,
+            reset                       => glbl_rst_i,
+            our_ip_address              => myIP,
+            our_mac_address             => myMAC,
+            control                     => control,
+            arp_pkt_count               => open,
+            ip_pkt_count                => open,
+            mac_tx_tdata                => tx_axis_mac_tdata_int,
+            mac_tx_tvalid               => tx_axis_mac_tvalid_int,
+            mac_tx_tready               => tx_axis_mac_tready_int,
+            mac_tx_tfirst               => open,
+            mac_tx_tlast                => tx_axis_mac_tlast_int,
+            mac_rx_tdata                => rx_axis_mac_tdata_int,
+            mac_rx_tvalid               => rx_axis_mac_tvalid_int,
+            mac_rx_tready               => rx_axis_mac_tready_int,
+            mac_rx_tlast                => rx_axis_mac_tlast_int);
 
 i2c_module: i2c_top
-	   port map(  clk_in       			=> clk_200,
-		          phy_rstn_out 			=> phy_rstn_out);
+       port map(  clk_in                => clk_200,
+                  phy_rstn_out          => phy_rstn_out);
 
 udp_din_conf_block: udp_data_in_handler
     port map(
@@ -1906,7 +1923,7 @@ data_selection:  select_data
 
 xadc_instance: xadc
     port map(
-		clk125                      => userclk2,
+        clk125                      => userclk2,
         rst                         => '0', -- change this plz
         
         VP_0                        => VP_0,
@@ -1933,11 +1950,11 @@ xadc_instance: xadc
         delay_in                    => xadc_delay,
         UDPDone                     => UDPDone,
     
-        MuxAddr0                    => MuxAddr0,
-        MuxAddr1                    => MuxAddr1,
-        MuxAddr2                    => MuxAddr2,
-        MuxAddr3_p                  => MuxAddr3_p,
-        MuxAddr3_n                  => MuxAddr3_n,
+        MuxAddr0                    => MuxAddr0_i,
+        MuxAddr1                    => MuxAddr1_i,
+        MuxAddr2                    => MuxAddr2_i,
+        MuxAddr3_p                  => MuxAddr3_p_i,
+        MuxAddr3_n                  => MuxAddr3_n_i,
         end_of_data                 => xadc_end_of_data,
         fifo_bus                    => xadc_fifo_bus,
         data_fifo_enable            => xadc_fifo_enable,
@@ -2016,7 +2033,7 @@ QSPI_IO1_0: IOBUF
       I  => io1_o,
       T  => io1_t
    );
-	
+    
 QSPI_SS_0: IOBUF     
    port map (
       O  => ss_i(0),
@@ -2054,6 +2071,18 @@ sdi_obuf_5:  OBUF  port map  (O => SDI_5, I => vmm_sdi_vec_obuf(5));
 sdi_obuf_6:  OBUF  port map  (O => SDI_6, I => vmm_sdi_vec_obuf(6));
 sdi_obuf_7:  OBUF  port map  (O => SDI_7, I => vmm_sdi_vec_obuf(7));
 sdi_obuf_8:  OBUF  port map  (O => SDI_8, I => vmm_sdi_vec_obuf(8));
+
+---------------------------------------------------SETT/SETB/CK6B---------------------------------------------------
+sett_obuf:   OBUFDS port map (O => SETT_P,   OB => SETT_N,   I => tied_to_gnd_i);    
+setb_obuf:   OBUFDS port map (O => SETB_P,   OB => SETB_N,   I => tied_to_gnd_i);
+ck6b_obuf_1: OBUFDS port map (O => CK6B_1_P, OB => CK6B_1_N, I => tied_to_gnd_i);
+ck6b_obuf_2: OBUFDS port map (O => CK6B_2_P, OB => CK6B_2_N, I => tied_to_gnd_i);
+ck6b_obuf_3: OBUFDS port map (O => CK6B_3_P, OB => CK6B_3_N, I => tied_to_gnd_i);
+ck6b_obuf_4: OBUFDS port map (O => CK6B_4_P, OB => CK6B_4_N, I => tied_to_gnd_i);
+ck6b_obuf_5: OBUFDS port map (O => CK6B_5_P, OB => CK6B_5_N, I => tied_to_gnd_i);
+ck6b_obuf_6: OBUFDS port map (O => CK6B_6_P, OB => CK6B_6_N, I => tied_to_gnd_i);
+ck6b_obuf_7: OBUFDS port map (O => CK6B_7_P, OB => CK6B_7_N, I => tied_to_gnd_i);
+ck6b_obuf_8: OBUFDS port map (O => CK6B_8_P, OB => CK6B_8_N, I => tied_to_gnd_i);
 
 ----------------------------------------------------SDO-------------------------------------------------------------
 sdo_ibuf_1: IBUF port map ( O =>  vmm_sdo_vec_i(1), I =>  SDO_1);
@@ -2139,7 +2168,7 @@ data1_diff_8: IBUFDS port map ( O => data1_in_vec(8), I => DATA1_8_P, IB => DATA
 TKI_diff_1: OBUFDS port map ( O =>  TKI_P, OB => TKI_N, I => vmm_tki);
 TKO_diff_1: IBUFDS port map ( O =>  tko_i, I => TKO_P, IB => TKO_N);
 
----------------------------------------------------CKART--------------------------------------------------------------
+---------------------------------------------------CKART-----------------------------------------------------------------
 ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => clk_160);
 ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => clk_160);
 ckart_diff_3: OBUFDS port map ( O => CKART_3_P, OB => CKART_3_N, I => clk_160);
@@ -2149,7 +2178,13 @@ ckart_diff_6: OBUFDS port map ( O => CKART_6_P, OB => CKART_6_N, I => clk_160);
 ckart_diff_7: OBUFDS port map ( O => CKART_7_P, OB => CKART_7_N, I => clk_160);
 ckart_diff_8: OBUFDS port map ( O => CKART_8_P, OB => CKART_8_N, I => clk_160);
 
-ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_P, I => clk_160);
+ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_N, I => clk_160);
+
+----------------------------------------------------XADC-----------------------------------------------------------------
+xadc_mux0_obuf:   OBUF   port map  (O => MuxAddr0, I => MuxAddr0_i);
+xadc_mux1_obuf:   OBUF   port map  (O => MuxAddr1, I => MuxAddr1_i);
+xadc_mux2_obuf:   OBUF   port map  (O => MuxAddr2, I => MuxAddr2_i);
+xadc_mux3_obufds: OBUFDS port map  (O => MuxAddr3_p, OB => MuxAddr3_n, I => MuxAddr3_p_i);
  
 -------------------------------------------------------------------
 --                        Processes                              --
@@ -2448,7 +2483,7 @@ end process;
     test_last_out           <= udp_txi_int.data.data_out_last;
     
     fifo_data               <= fifo_data_out_int;
-	re_out                  <= re_out_int;
+    re_out                  <= re_out_int;
 
     -- configuration assertion
     vmm_cs_vec_obuf(1)  <= vmm_cs_all and vmm_bitmask(0);
@@ -2486,6 +2521,8 @@ end process;
     vmm_ena_vec_obuf(6) <= vmm_ena_all and vmm_bitmask(5);
     vmm_ena_vec_obuf(7) <= vmm_ena_all and vmm_bitmask(6);
     vmm_ena_vec_obuf(8) <= vmm_ena_all and vmm_bitmask(7);
+
+    tied_to_gnd_i       <= '0'; -- ground CK6B/SETT/SETB (unused)
 
 --VIO_inst: vio_1
 --    port map(

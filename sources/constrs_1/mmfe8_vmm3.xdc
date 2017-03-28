@@ -24,14 +24,12 @@ set_output_delay -clock clk_sck -max 2.050 [get_ports IO*_IO]
 set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 ## SPI FLASH END ##
 
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
 #============================= Primary Clocks =========================
 #======================================================================
 
 
 #======================= TIMING EXCEPTIONS SECTION ====================
 #=============================== False Paths ==========================
-set_false_path -from [get_ports CH_TRIGGER]
 
 # CKTP registering false paths
 set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg] -to [get_cells CKTP_i_reg]
@@ -81,16 +79,6 @@ set tclk_trace_delay_max 0.2
 set tclk_trace_delay_min 0.2
 ### End of user provided delay numbers
 ## SPI FLASH END ##
-#============================= Disable Timing =========================
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets gtx_clk]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_pins FDCE_inst/C] 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {CLK_40_IBUF}]
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_P]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_N]
-#======================================================================
 
 #====================== PHYSICAL CONSTRAINTS SECTION ==================
 #====================== ASYNC_REG for synchronizers ===================
@@ -121,8 +109,9 @@ set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_i_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 
-set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
-set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
+#Uncomment if external trigger is used
+#set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
+#set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
 
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_i_reg]
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_sync_reg]
@@ -189,13 +178,11 @@ set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_2
 #============================================================================================
 
 #====================== I/O Placement - IOSTANDARDS ===================
-############################# MDT #############################
+############################# MMFE8 #############################
 set_property PACKAGE_PIN W19     [get_ports X_2V5_DIFF_CLK_P]
 set_property PACKAGE_PIN W20     [get_ports X_2V5_DIFF_CLK_N]
 set_property IOSTANDARD LVDS_25  [get_ports X_2V5_DIFF_CLK_P]
 set_property IOSTANDARD LVDS_25  [get_ports X_2V5_DIFF_CLK_N]
-#set_property PACKAGE_PIN V20     [get_ports CLK_40]
-#set_property IOSTANDARD LVCMOS33 [get_ports CLK_40]
 ############################# Ethernet #############################
 set_property PACKAGE_PIN F6      [get_ports gtrefclk_p]
 set_property PACKAGE_PIN E6      [get_ports gtrefclk_n]
@@ -211,13 +198,13 @@ set_property IOSTANDARD LVCMOS25 [get_ports phy_rstn_out]
 #########################DATA0 VMM3#############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_1_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_1_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_1_N]
+set_property PACKAGE_PIN K17         [get_ports DATA0_1_P]
+set_property PACKAGE_PIN J17         [get_ports DATA0_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_2_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_2_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_2_N]
+set_property PACKAGE_PIN G17         [get_ports DATA0_2_P]
+set_property PACKAGE_PIN G18         [get_ports DATA0_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_3_P]
@@ -226,82 +213,82 @@ set_property PACKAGE_PIN B18         [get_ports DATA0_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_4_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_4_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_4_N]
+set_property PACKAGE_PIN C18         [get_ports DATA0_4_P]
+set_property PACKAGE_PIN C19         [get_ports DATA0_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_5_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_5_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_5_N]
+set_property PACKAGE_PIN E1          [get_ports DATA0_5_P]
+set_property PACKAGE_PIN D1          [get_ports DATA0_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_6_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_6_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_6_N]
+set_property PACKAGE_PIN M1          [get_ports DATA0_6_P]
+set_property PACKAGE_PIN L1          [get_ports DATA0_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_7_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_7_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_7_N]
+set_property PACKAGE_PIN Y4          [get_ports DATA0_7_P]
+set_property PACKAGE_PIN AA4         [get_ports DATA0_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_8_P]
-set_property PACKAGE_PIN B17         [get_ports DATA0_8_P]
-set_property PACKAGE_PIN B18         [get_ports DATA0_8_N]
+set_property PACKAGE_PIN Y6          [get_ports DATA0_8_P]
+set_property PACKAGE_PIN AA6         [get_ports DATA0_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_8_N]
 
 #########################DATA1 VMM3#############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_1_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_1_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_1_N]
+set_property PACKAGE_PIN K13         [get_ports DATA1_1_P]
+set_property PACKAGE_PIN K14         [get_ports DATA1_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_2_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_2_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_2_N]
+set_property PACKAGE_PIN H17         [get_ports DATA1_2_P]
+set_property PACKAGE_PIN H18         [get_ports DATA1_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_3_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_3_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_3_N]
+set_property PACKAGE_PIN B15         [get_ports DATA1_3_P]
+set_property PACKAGE_PIN B16         [get_ports DATA1_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_4_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_4_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_4_N]
+set_property PACKAGE_PIN D20         [get_ports DATA1_4_P]
+set_property PACKAGE_PIN C20         [get_ports DATA1_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_5_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_5_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_5_N]
+set_property PACKAGE_PIN E2          [get_ports DATA1_5_P]
+set_property PACKAGE_PIN D2          [get_ports DATA1_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_6_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_6_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_6_N]
+set_property PACKAGE_PIN L3          [get_ports DATA1_6_P]
+set_property PACKAGE_PIN K3          [get_ports DATA1_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_7_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_7_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_7_N]
+set_property PACKAGE_PIN W2          [get_ports DATA1_7_P]
+set_property PACKAGE_PIN Y2          [get_ports DATA1_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_8_P]
-set_property PACKAGE_PIN B17         [get_ports DATA1_8_P]
-set_property PACKAGE_PIN B18         [get_ports DATA1_8_N]
+set_property PACKAGE_PIN Y8          [get_ports DATA1_8_P]
+set_property PACKAGE_PIN Y7          [get_ports DATA1_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_8_N]
 
 ##########################CKDT VMM3##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_1_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_1_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_1_N]
+set_property PACKAGE_PIN J20         [get_ports CKDT_1_P]
+set_property PACKAGE_PIN J21         [get_ports CKDT_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_2_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_2_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_2_N]
+set_property PACKAGE_PIN C14         [get_ports CKDT_2_P]
+set_property PACKAGE_PIN C15         [get_ports CKDT_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_3_P]
@@ -310,40 +297,40 @@ set_property PACKAGE_PIN A21         [get_ports CKDT_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_4_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_4_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_4_N]
+set_property PACKAGE_PIN B1          [get_ports CKDT_4_P]
+set_property PACKAGE_PIN A1          [get_ports CKDT_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_5_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_5_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_5_N]
+set_property PACKAGE_PIN F3          [get_ports CKDT_5_P]
+set_property PACKAGE_PIN E3          [get_ports CKDT_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_6_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_6_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_6_N]
+set_property PACKAGE_PIN U2          [get_ports CKDT_6_P]
+set_property PACKAGE_PIN V2          [get_ports CKDT_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_7_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_7_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_7_N]
+set_property PACKAGE_PIN V4          [get_ports CKDT_7_P]
+set_property PACKAGE_PIN W4          [get_ports CKDT_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_8_P]
-set_property PACKAGE_PIN B21         [get_ports CKDT_8_P]
-set_property PACKAGE_PIN A21         [get_ports CKDT_8_N]
+set_property PACKAGE_PIN AB7         [get_ports CKDT_8_P]
+set_property PACKAGE_PIN AB6         [get_ports CKDT_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_8_N]
 
 ##########################CKBC VMM3##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_1_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_1_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_1_N]
+set_property PACKAGE_PIN N18         [get_ports CKBC_1_P]
+set_property PACKAGE_PIN N19         [get_ports CKBC_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_2_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_2_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_2_N]
+set_property PACKAGE_PIN N22         [get_ports CKBC_2_P]
+set_property PACKAGE_PIN M22         [get_ports CKBC_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_3_P]
@@ -352,41 +339,41 @@ set_property PACKAGE_PIN E14         [get_ports CKBC_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_4_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_4_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_4_N]
+set_property PACKAGE_PIN F19         [get_ports CKBC_4_P]
+set_property PACKAGE_PIN F20         [get_ports CKBC_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_5_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_5_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_5_N]
+set_property PACKAGE_PIN K1          [get_ports CKBC_5_P]
+set_property PACKAGE_PIN J1          [get_ports CKBC_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_6_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_6_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_6_N]
+set_property PACKAGE_PIN K6          [get_ports CKBC_6_P]
+set_property PACKAGE_PIN J6          [get_ports CKBC_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_7_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_7_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_7_N]
+set_property PACKAGE_PIN R3          [get_ports CKBC_7_P]
+set_property PACKAGE_PIN R2          [get_ports CKBC_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_8_P]
-set_property PACKAGE_PIN E13         [get_ports CKBC_8_P]
-set_property PACKAGE_PIN E14         [get_ports CKBC_8_N]
+set_property PACKAGE_PIN T5          [get_ports CKBC_8_P]
+set_property PACKAGE_PIN U5          [get_ports CKBC_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_8_N]
 
 
 ##########################CKTP VMM3##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_1_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_1_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_1_N]
+set_property PACKAGE_PIN L16         [get_ports CKTP_1_P]
+set_property PACKAGE_PIN K16         [get_ports CKTP_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_2_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_2_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_2_N]
+set_property PACKAGE_PIN F13         [get_ports CKTP_2_P]
+set_property PACKAGE_PIN F14         [get_ports CKTP_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_3_P]
@@ -395,40 +382,40 @@ set_property PACKAGE_PIN B22         [get_ports CKTP_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_4_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_4_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_4_N]
+set_property PACKAGE_PIN P2          [get_ports CKTP_4_P]
+set_property PACKAGE_PIN N2          [get_ports CKTP_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_5_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_5_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_5_N]
+set_property PACKAGE_PIN H2          [get_ports CKTP_5_P]
+set_property PACKAGE_PIN G2          [get_ports CKTP_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_6_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_6_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_6_N]
+set_property PACKAGE_PIN M3          [get_ports CKTP_6_P]
+set_property PACKAGE_PIN M2          [get_ports CKTP_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_7_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_7_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_7_N]
+set_property PACKAGE_PIN U3          [get_ports CKTP_7_P]
+set_property PACKAGE_PIN V3          [get_ports CKTP_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_8_P]
-set_property PACKAGE_PIN C22         [get_ports CKTP_8_P]
-set_property PACKAGE_PIN B22         [get_ports CKTP_8_N]
+set_property PACKAGE_PIN R4          [get_ports CKTP_8_P]
+set_property PACKAGE_PIN T4          [get_ports CKTP_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_8_N]
 
 ##########################CKTK VMM3##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_1_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_1_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_1_N]
+set_property PACKAGE_PIN J19         [get_ports CKTK_1_P]
+set_property PACKAGE_PIN H19         [get_ports CKTK_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_2_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_2_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_2_N]
+set_property PACKAGE_PIN G21         [get_ports CKTK_2_P]
+set_property PACKAGE_PIN G22         [get_ports CKTK_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_3_P]
@@ -437,80 +424,80 @@ set_property PACKAGE_PIN A16         [get_ports CKTK_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_4_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_4_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_4_N]
+set_property PACKAGE_PIN B20         [get_ports CKTK_4_P]
+set_property PACKAGE_PIN A20         [get_ports CKTK_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_5_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_5_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_5_N]
+set_property PACKAGE_PIN C2          [get_ports CKTK_5_P]
+set_property PACKAGE_PIN B2          [get_ports CKTK_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_6_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_6_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_6_N]
+set_property PACKAGE_PIN P5          [get_ports CKTK_6_P]
+set_property PACKAGE_PIN P4          [get_ports CKTK_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_7_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_7_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_7_N]
+set_property PACKAGE_PIN AB3         [get_ports CKTK_7_P]
+set_property PACKAGE_PIN AB2         [get_ports CKTK_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_8_P]
-set_property PACKAGE_PIN A15         [get_ports CKTK_8_P]
-set_property PACKAGE_PIN A16         [get_ports CKTK_8_N]
+set_property PACKAGE_PIN AA8         [get_ports CKTK_8_P]
+set_property PACKAGE_PIN AB8         [get_ports CKTK_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_8_N]
 
 #############################SDI VMM3###########################
 
-set_property PACKAGE_PIN C13         [get_ports SDI_1]
+set_property PACKAGE_PIN M13         [get_ports SDI_1]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_1]
 
-set_property PACKAGE_PIN C13         [get_ports SDI_2]
+set_property PACKAGE_PIN L19         [get_ports SDI_2]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_2]
 
 set_property PACKAGE_PIN C13         [get_ports SDI_3]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_3]
 
-set_property PACKAGE_PIN C13         [get_ports SDI_4]
+set_property PACKAGE_PIN F18         [get_ports SDI_4]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_4]
 
-set_property PACKAGE_PIN C13         [get_ports SDI_5]
+set_property PACKAGE_PIN H3          [get_ports SDI_5]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_5]
 
-set_property PACKAGE_PIN C13         [get_ports SDI_6]
+set_property PACKAGE_PIN L5          [get_ports SDI_6]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_6]
 
-set_property PACKAGE_PIN C13         [get_ports SDI_7]
+set_property PACKAGE_PIN W9          [get_ports SDI_7]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_7]
 
-set_property PACKAGE_PIN C13         [get_ports SDI_8]
+set_property PACKAGE_PIN V9          [get_ports SDI_8]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_8]
 
 #############################SDO VMM3###########################
 
-set_property PACKAGE_PIN B13         [get_ports SDO_1]
+set_property PACKAGE_PIN L13         [get_ports SDO_1]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_1]
 
-set_property PACKAGE_PIN B13         [get_ports SDO_2]
+set_property PACKAGE_PIN L20         [get_ports SDO_2]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_2]
 
 set_property PACKAGE_PIN B13         [get_ports SDO_3]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_3]
 
-set_property PACKAGE_PIN B13         [get_ports SDO_4]
+set_property PACKAGE_PIN E18         [get_ports SDO_4]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_4]
 
-set_property PACKAGE_PIN B13         [get_ports SDO_5]
+set_property PACKAGE_PIN G3          [get_ports SDO_5]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_5]
 
-set_property PACKAGE_PIN B13         [get_ports SDO_6]
+set_property PACKAGE_PIN L4          [get_ports SDO_6]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_6]
 
-set_property PACKAGE_PIN B13         [get_ports SDO_7]
+set_property PACKAGE_PIN Y9          [get_ports SDO_7]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_7]
 
-set_property PACKAGE_PIN B13         [get_ports SDO_8]
+set_property PACKAGE_PIN V8          [get_ports SDO_8]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_8]
 
 #############################TKI/TKO###########################
@@ -530,13 +517,13 @@ set_property IOSTANDARD DIFF_HSUL_12  [get_ports TKO_N]
 ##########################ENA VMM3##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_1_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_1_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_1_N]
+set_property PACKAGE_PIN M18         [get_ports ENA_1_P]
+set_property PACKAGE_PIN L18         [get_ports ENA_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_2_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_2_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_2_N]
+set_property PACKAGE_PIN K18         [get_ports ENA_2_P]
+set_property PACKAGE_PIN K19         [get_ports ENA_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_3_P]
@@ -545,194 +532,236 @@ set_property PACKAGE_PIN A14         [get_ports ENA_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_4_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_4_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_4_N]
+set_property PACKAGE_PIN E19         [get_ports ENA_4_P]
+set_property PACKAGE_PIN D19         [get_ports ENA_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_5_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_5_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_5_N]
+set_property PACKAGE_PIN G1          [get_ports ENA_5_P]
+set_property PACKAGE_PIN F1          [get_ports ENA_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_6_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_6_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_6_N]
+set_property PACKAGE_PIN K4          [get_ports ENA_6_P]
+set_property PACKAGE_PIN J4          [get_ports ENA_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_7_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_7_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_7_N]
+set_property PACKAGE_PIN AA5         [get_ports ENA_7_P]
+set_property PACKAGE_PIN AB5         [get_ports ENA_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_8_P]
-set_property PACKAGE_PIN A13         [get_ports ENA_8_P]
-set_property PACKAGE_PIN A14         [get_ports ENA_8_N]
+set_property PACKAGE_PIN V7          [get_ports ENA_8_P]
+set_property PACKAGE_PIN W7          [get_ports ENA_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_8_N]
 
 ##########################CS VMM3##############################
 
-set_property PACKAGE_PIN E19         [get_ports CS_1]
+set_property PACKAGE_PIN N20         [get_ports CS_1]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_1]
 
-set_property PACKAGE_PIN E19         [get_ports CS_2]
+set_property PACKAGE_PIN F16         [get_ports CS_2]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_2]
 
-set_property PACKAGE_PIN E19         [get_ports CS_3]
+set_property PACKAGE_PIN D14         [get_ports CS_3]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_3]
 
-set_property PACKAGE_PIN E19         [get_ports CS_4]
+set_property PACKAGE_PIN A18         [get_ports CS_4]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_4]
 
-set_property PACKAGE_PIN E19         [get_ports CS_5]
+set_property PACKAGE_PIN K2          [get_ports CS_5]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_5]
 
-set_property PACKAGE_PIN E19         [get_ports CS_6]
+set_property PACKAGE_PIN N4          [get_ports CS_6]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_6]
 
-set_property PACKAGE_PIN E19         [get_ports CS_7]
+set_property PACKAGE_PIN W1          [get_ports CS_7]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_7]
 
-set_property PACKAGE_PIN E19         [get_ports CS_8]
+set_property PACKAGE_PIN R6          [get_ports CS_8]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_8]
 
 ##########################SCK VMM3##############################
 
-set_property PACKAGE_PIN E19         [get_ports SCK_1]
+set_property PACKAGE_PIN M20         [get_ports SCK_1]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_1]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_2]
+set_property PACKAGE_PIN E17         [get_ports SCK_2]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_2]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_3]
+set_property PACKAGE_PIN D15         [get_ports SCK_3]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_3]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_4]
+set_property PACKAGE_PIN A19         [get_ports SCK_4]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_4]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_5]
+set_property PACKAGE_PIN J2          [get_ports SCK_5]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_5]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_6]
+set_property PACKAGE_PIN N3          [get_ports SCK_6]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_6]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_7]
+set_property PACKAGE_PIN Y1          [get_ports SCK_7]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_7]
 
-set_property PACKAGE_PIN E19         [get_ports SCK_8]
+set_property PACKAGE_PIN T6          [get_ports SCK_8]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_8]
+
+##########################SETT/SETB/CK6B VMM3#####################
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports SETT_P]
+set_property PACKAGE_PIN AA15        [get_ports SETT_P]
+set_property PACKAGE_PIN AB15        [get_ports SETT_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports SETT_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports SETB_P]
+set_property PACKAGE_PIN AB16        [get_ports SETB_P]
+set_property PACKAGE_PIN AB17        [get_ports SETB_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports SETB_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_1_P]
+set_property PACKAGE_PIN M15         [get_ports CK6B_1_P]
+set_property PACKAGE_PIN M16         [get_ports CK6B_1_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_1_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_2_P]
+set_property PACKAGE_PIN E22         [get_ports CK6B_2_P]
+set_property PACKAGE_PIN D22         [get_ports CK6B_2_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_2_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_3_P]
+set_property PACKAGE_PIN E16         [get_ports CK6B_3_P]
+set_property PACKAGE_PIN D16         [get_ports CK6B_3_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_3_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_4_P]
+set_property PACKAGE_PIN P6          [get_ports CK6B_4_P]
+set_property PACKAGE_PIN N5          [get_ports CK6B_4_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_4_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_5_P]
+set_property PACKAGE_PIN J5          [get_ports CK6B_5_P]
+set_property PACKAGE_PIN H5          [get_ports CK6B_5_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_5_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_6_P]
+set_property PACKAGE_PIN R1          [get_ports CK6B_6_P]
+set_property PACKAGE_PIN P1          [get_ports CK6B_6_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_6_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_7_P]
+set_property PACKAGE_PIN Y3          [get_ports CK6B_7_P]
+set_property PACKAGE_PIN AA3         [get_ports CK6B_7_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_7_N]
+
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_8_P]
+set_property PACKAGE_PIN U6          [get_ports CK6B_8_P]
+set_property PACKAGE_PIN V5          [get_ports CK6B_8_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports CK6B_8_N]
 
 ##########################CKART VMM3##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_1_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_1_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_1_N]
+set_property PACKAGE_PIN L14         [get_ports CKART_1_P]
+set_property PACKAGE_PIN L15         [get_ports CKART_1_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_1_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_2_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_2_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_2_N]
+set_property PACKAGE_PIN E21         [get_ports CKART_2_P]
+set_property PACKAGE_PIN D21         [get_ports CKART_2_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_2_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_3_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_3_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_3_N]
+set_property PACKAGE_PIN D17         [get_ports CKART_3_P]
+set_property PACKAGE_PIN C17         [get_ports CKART_3_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_3_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_4_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_4_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_4_N]
+set_property PACKAGE_PIN M6          [get_ports CKART_4_P]
+set_property PACKAGE_PIN M5          [get_ports CKART_4_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_4_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_5_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_5_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_5_N]
+set_property PACKAGE_PIN H4          [get_ports CKART_5_P]
+set_property PACKAGE_PIN G4          [get_ports CKART_5_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_5_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_6_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_6_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_6_N]
+set_property PACKAGE_PIN T1          [get_ports CKART_6_P]
+set_property PACKAGE_PIN U1          [get_ports CKART_6_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_6_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_7_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_7_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_7_N]
+set_property PACKAGE_PIN AA1         [get_ports CKART_7_P]
+set_property PACKAGE_PIN AB1         [get_ports CKART_7_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_7_N]
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_8_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_8_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_8_N]
+set_property PACKAGE_PIN W6          [get_ports CKART_8_P]
+set_property PACKAGE_PIN W5          [get_ports CKART_8_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_8_N]
 
 ##########################CKART ADDC##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_ADDC_P]
-set_property PACKAGE_PIN A13         [get_ports CKART_ADDC_P]
-set_property PACKAGE_PIN A14         [get_ports CKART_ADDC_N]
+set_property PACKAGE_PIN V10         [get_ports CKART_ADDC_P]
+set_property PACKAGE_PIN W10         [get_ports CKART_ADDC_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_ADDC_N]
 
-###########################XADC MDT#############################
+###########################XADC MMFE8#############################
 # Dedicated Analog Inputs
-set_property IOSTANDARD LVCMOS25 [get_ports VP_0]
-set_property PACKAGE_PIN L10 [get_ports VP_0]
-set_property IOSTANDARD LVCMOS25 [get_ports VN_0]
-set_property PACKAGE_PIN M9 [get_ports VN_0]
+set_property IOSTANDARD LVCMOS25     [get_ports VP_0]
+set_property PACKAGE_PIN L10         [get_ports VP_0]
+set_property PACKAGE_PIN M9          [get_ports VN_0]
+set_property IOSTANDARD LVCMOS25     [get_ports VN_0]
 
 ## Analog Multiplexer Pins
-#set_property PACKAGE_PIN T20 [get_ports MuxAddr0]
-#set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr0]
-#set_property PACKAGE_PIN P14 [get_ports MuxAddr1]
-#set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr1]
-#set_property PACKAGE_PIN R14 [get_ports MuxAddr2]
-#set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr2]
-#set_property PACKAGE_PIN R18 [get_ports MuxAddr3_p]
-#set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr3_p]
-#set_property PACKAGE_PIN T18 [get_ports MuxAddr3_n]
-#set_property IOSTANDARD LVCMOS33 [get_ports MuxAddr3_n]
+set_property PACKAGE_PIN T20     [get_ports MuxAddr0]
+set_property IOSTANDARD LVCMOS25 [get_ports MuxAddr0]
+set_property PACKAGE_PIN P14     [get_ports MuxAddr1]
+set_property IOSTANDARD LVCMOS25 [get_ports MuxAddr1]
+set_property PACKAGE_PIN R14     [get_ports MuxAddr2]
+set_property IOSTANDARD LVCMOS25 [get_ports MuxAddr2]
+set_property PACKAGE_PIN R18     [get_ports MuxAddr3_p]
+set_property IOSTANDARD LVDS_25  [get_ports MuxAddr3_p]
+set_property PACKAGE_PIN T18     [get_ports MuxAddr3_n]
+set_property IOSTANDARD LVDS_25  [get_ports MuxAddr3_n]
 
-#PDO
-set_property PACKAGE_PIN G16 [get_ports Vaux8_v_n]
-set_property PACKAGE_PIN G15 [get_ports Vaux8_v_p]
 
-#TDO
-set_property PACKAGE_PIN H14 [get_ports Vaux1_v_n]
+set_property PACKAGE_PIN H13 [get_ports Vaux0_v_p]
+set_property PACKAGE_PIN G13 [get_ports Vaux0_v_n]
 set_property PACKAGE_PIN J14 [get_ports Vaux1_v_p]
+set_property PACKAGE_PIN H14 [get_ports Vaux1_v_n]
+set_property PACKAGE_PIN J22 [get_ports Vaux2_v_p]
+set_property PACKAGE_PIN H22 [get_ports Vaux2_v_n]
+set_property PACKAGE_PIN K21 [get_ports Vaux3_v_p]
+set_property PACKAGE_PIN K22 [get_ports Vaux3_v_n]
+set_property PACKAGE_PIN G15 [get_ports Vaux8_v_p]
+set_property PACKAGE_PIN G16 [get_ports Vaux8_v_n]
+set_property PACKAGE_PIN J15 [get_ports Vaux9_v_p]
+set_property PACKAGE_PIN H15 [get_ports Vaux9_v_n]
+set_property PACKAGE_PIN H20 [get_ports Vaux10_v_p]
+set_property PACKAGE_PIN G20 [get_ports Vaux10_v_n]
+set_property PACKAGE_PIN M21 [get_ports Vaux11_v_p]
+set_property PACKAGE_PIN L21 [get_ports Vaux11_v_n]
 
-#set_property PACKAGE_PIN J22 [get_ports Vaux2_v_p]
-#set_property PACKAGE_PIN H22 [get_ports Vaux2_v_n]
-#set_property PACKAGE_PIN K22 [get_ports Vaux3_v_n]
-#set_property PACKAGE_PIN K21 [get_ports Vaux3_v_p]
-
-#set_property PACKAGE_PIN H15 [get_ports Vaux9_v_n]
-#set_property PACKAGE_PIN J15 [get_ports Vaux9_v_p]
-
-#set_property PACKAGE_PIN G20 [get_ports Vaux10_v_n]
-#set_property PACKAGE_PIN H20 [get_ports Vaux10_v_p]
-
-#set_property PACKAGE_PIN N22 [get_ports Vaux10_v_n]
-#set_property PACKAGE_PIN M22 [get_ports Vaux10_v_p]
-
-#set_property PACKAGE_PIN L21 [get_ports Vaux11_v_n]
-#set_property PACKAGE_PIN M21 [get_ports Vaux11_v_p]
-
-#set_property PACKAGE_PIN L19 [get_ports Vaux11_v_n]
-#set_property PACKAGE_PIN L20 [get_ports Vaux11_v_p]
-
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux0_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux0_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux0_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux0_v_n]
 set_property IOSTANDARD LVCMOS12 [get_ports Vaux1_v_n]
 set_property IOSTANDARD LVCMOS12 [get_ports Vaux1_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux2_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux2_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux3_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux3_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux2_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux2_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux3_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux3_v_p]
 set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_n]
 set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux9_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux9_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_p]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_n]
-#set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux9_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux9_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_p]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_n]
+set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_p]
 
 ######################### SPI FLASH ##########################
 

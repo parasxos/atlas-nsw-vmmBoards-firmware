@@ -104,8 +104,7 @@ end
 always @(config_in_r)
 begin
     case (config_in_r)
-        // 5'b00000 : begin input_select_r <= 5'h10; mux_select_r <= 4'b1000; end // PDO 0
-        5'b00000 : begin input_select_r <= 5'h18; mux_select_r <= 4'b1000; end // PDO 0 (old PDO4 was @ aux8, which is now the current PDO)
+        5'b00000 : begin input_select_r <= 5'h10; mux_select_r <= 4'b1000; end // PDO 0
         5'b00001 : begin input_select_r <= 5'h11; mux_select_r <= 4'b1000; end // PDO 1
         5'b00010 : begin input_select_r <= 5'h12; mux_select_r <= 4'b1000; end // PDO 2
         5'b00011 : begin input_select_r <= 5'h13; mux_select_r <= 4'b1000; end // PDO 3

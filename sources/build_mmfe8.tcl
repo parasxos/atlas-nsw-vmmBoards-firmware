@@ -60,8 +60,11 @@ set origin_dir [file dirname [info script]]
         } elseif {$argv == "mdt_446"} {
             set projectname "MDT_446"
             puts "Correct. Building Project for MDT 446..."
+        } elseif {$argv == "mmfe8_vmm3"} {
+            set projectname "MMFE8_VMM3"
+            puts "Correct. Building Project for MMFE8 VMM3..."
         } else {
-            puts "ERROR! Please, give argument mdt_mu2e or mdt_446."
+            puts "ERROR! Please, give argument mdt_mu2e or mdt_446 or mmfe8_vmm3."
         }
 
 # Create project
@@ -149,7 +152,6 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/configuration/udp_data_in_handler.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/fpga_config_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/vmm_config_block.vhd"]"\
- "[file normalize "$origin_dir/sources_1/configuration/select_vmm.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/axi_quad_top.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/clk_gen_wrapper.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/cktp_gen.vhd"]"\
@@ -268,11 +270,6 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/configuration/skew_gen.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/sources_1/configuration/select_vmm.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -691,6 +688,14 @@ if {$argv == "mdt_mu2e"} {
     set file "[file normalize "$origin_dir/constrs_1/mdt_446.xdc"]"
     set file_added [add_files -norecurse -fileset $obj $file]
     set file "$origin_dir/constrs_1/mdt_446.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+    } elseif {$argv == "mmfe8_vmm3"} {
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/mmfe8_vmm3.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/mmfe8_vmm3.xdc"
     set file [file normalize $file]
     set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
     set_property "file_type" "XDC" $file_obj

@@ -23,6 +23,7 @@
 -- 14.03.2017 FPGA register address configuration scheme deployed. (Christos Bakalis)
 -- 17.03.2017 Added configuration-inhibit signal which is high if flow_fsm is not in
 -- IDLE state. Change if fpga_glbl_rst is added again. (Christos Bakalis)
+-- 28.03.2017 Module now samples the header data as well. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------------
 library IEEE;
@@ -44,6 +45,7 @@ entity udp_data_in_handler is
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
+    serial_number       : out std_logic_vector(31 downto 0);
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
     ------------------------------------
@@ -66,7 +68,7 @@ entity udp_data_in_handler is
     cktp_width          : out std_logic_vector(7 downto 0);
     ------------------------------------
     ------ VMM Config Interface --------
-    vmm_id              : out std_logic_vector(15 downto 0);
+    vmm_bitmask         : out std_logic_vector(7 downto 0);
     vmmConf_rdy         : out std_logic;
     vmmConf_done        : out std_logic;
     vmm_sck             : out std_logic;
@@ -144,7 +146,6 @@ architecture RTL of udp_data_in_handler is
         user_last_udp       : in  std_logic;
         ------------------------------------
         ------ VMM Config Interface --------
-        vmm_id              : out std_logic_vector(15 downto 0);
         vmmConf_rdy         : out std_logic;
         vmmConf_done        : out std_logic;
         vmm_sck             : out std_logic;
@@ -167,11 +168,13 @@ architecture RTL of udp_data_in_handler is
     );
     END COMPONENT;
 
-    signal user_data_prv    : std_logic_vector(7 downto 0) := (others => '0');
+    signal user_data_prv    : std_logic_vector(7 downto 0)  := (others => '0');
+    signal command          : std_logic_vector(15 downto 0) := (others => '0');
     signal user_valid_prv   : std_logic := '0';
     signal user_last_prv    : std_logic := '0';
     signal cnt_bytes        : unsigned(7 downto 0) := (others => '0');
     signal conf_state       : unsigned(2 downto 0) := (others => '0');
+    signal sample_hdr       : std_logic := '0';
     signal vmm_conf         : std_logic := '0';
     signal vmm_ser_done     : std_logic := '0';
     signal vmmSer_done_s125 : std_logic := '0';
@@ -209,7 +212,6 @@ architecture RTL of udp_data_in_handler is
     --attribute mark_debug of myIP_set                  : signal is "true";
     --attribute mark_debug of myMAC_set                 : signal is "true";
     --attribute mark_debug of destIP_set                : signal is "true";
-    --attribute mark_debug of vmm_id                    : signal is "true";
     --attribute mark_debug of vmmConf_rdy               : signal is "true";
     --attribute mark_debug of vmmConf_done              : signal is "true";
     --attribute mark_debug of vmm_cktk                  : signal is "true";
@@ -248,13 +250,8 @@ architecture RTL of udp_data_in_handler is
     --------------- List of Processes/FSMs ----------------
     -------------------------------------------------------
     --- 1. delay_din            (clk_125)
-    --- 2. master_conf_FSM      (clk_125)
-    --- 3. XADC_conf_proc       (clk_125)
-    --- 4. FLASH_conf_proc      (clk_125)
-    --- 5. FPGA_conf_proc       (clk_125)
-    --- 6. VMM_conf_proc        (clk_125)
-    --- 7. VMM_conf_SCK_FSM     (clk_40)
-    --- 8. FIFO_valid_MUX       (async)
+    --- 2. master_handling_FSM  (clk_125)
+    --- 3. sample_header_proc   (clk_125)
     -------------------------------------------------------
     -------------------------------------------------------
 begin
@@ -414,6 +411,38 @@ begin
     end if;
 end process;
 
+-- process that samples the header data from the UDP packet
+sample_header_proc: process(clk_125)
+begin
+    if(rising_edge(clk_125))then
+        if(sample_hdr = '1')then
+            case cnt_bytes is
+            ---- sample s/n
+            when "00000001" => --1
+                serial_number(31 downto 24) <= user_data_prv;
+            when "00000010" => --2
+                serial_number(23 downto 16) <= user_data_prv;
+            when "00000011" => --3
+                serial_number(15 downto 8)  <= user_data_prv;
+            when "00000100" => --4
+                serial_number(7 downto 0)   <= user_data_prv;
+
+            -- sample bitmask
+            when "00000110" => --6
+                vmm_bitmask                 <= user_data_prv;
+
+            -- sample command
+            when "00000111" => --7
+                command(15 downto 8)        <= user_data_prv;
+            when "00001000" => --8
+                command(7 downto 0)         <= user_data_prv;
+            when others => null;
+            end case;
+        else null;
+        end if;
+    end if;
+end process;
+
 fpga_config_logic: fpga_config_block
     port map(
         -----------------------------------
@@ -472,7 +501,6 @@ vmm_config_logic: vmm_config_block
         user_last_udp       => user_last_prv,
         ------------------------------------
         ------ VMM Config Interface --------
-        vmm_id              => vmm_id,
         vmmConf_rdy         => vmm_conf_rdy,
         vmmConf_done        => vmm_ser_done,
         vmm_sck             => vmm_sck,
@@ -487,6 +515,7 @@ vmm_config_logic: vmm_config_block
     newIP_rdy       <= flashPacket_rdy;
     vmmConf_rdy     <= init_ser;
     vmmConf_done    <= vmmSer_done_s125;
+    sample_hdr      <= '0' when st_master = ST_IDLE else '1';
 
 ---------------------------------------------------------
 --------- Clock Domain Crossing Sync Block --------------

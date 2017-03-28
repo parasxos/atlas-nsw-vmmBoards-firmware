@@ -8,14 +8,14 @@
 -- Project Name: MMFE8 - NTUA
 -- Target Devices: Artix7 xc7a200t-2fbg484 and xc7a200t-3fbg484
 -- Tool Versions: Vivado 2016.2
--- Description: Module that samples the data coming from the UDP/Ethernet
--- to produce the vmm_id signal. It also stores the VMM configuration data
--- in a FIFO for serialization, and drives the CKTK signal.
+-- Description: Module that stores the data coming from the UDP/Ethernet for VMM
+-- configuration using a FIFO serializer. It also drives the SCK and CS signals.
 
 -- Dependencies: MMFE8 NTUA Project
 -- 
 -- Changelog:
 -- 16.02.2017 Modified the serialization FSM for VMM3 configuration. (Christos Bakalis)
+-- 28.03.2017 VMM_ID is now sampled one level above. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------------
 library IEEE;
@@ -38,7 +38,6 @@ entity vmm_config_block is
     user_last_udp       : in  std_logic; --prv
     ------------------------------------
     ------ VMM Config Interface --------
-    vmm_id              : out std_logic_vector(15 downto 0);
     vmmConf_rdy         : out std_logic;
     vmmConf_done        : out std_logic;
     vmm_sck             : out std_logic;
@@ -80,23 +79,18 @@ architecture RTL of vmm_config_block is
 
 begin
 
--- sub-process that first samples the vmm_id and then drives the data into
--- the FIFO used for VMM configuration. it also detects the 'last' pulse 
--- sent from the UDP block to initialize the VMM config data serialization
+-- sub-process that drives the data into the FIFO used for VMM configuration. 
+-- it also detects the 'last' pulse sent from the UDP block to initialize the 
+-- VMM config data serialization
 VMM_conf_proc: process(clk_125)
 begin
     if(rising_edge(clk_125))then
         if(rst = '1')then
-            vmm_id          <= (others => '0');
             sel_vmm_data    <= '0';
             vmmConf_rdy     <= '0';
         else
             if(vmm_conf = '1' and user_last_udp = '0')then
                 case cnt_bytes is 
-                when "00000101" => --5
-                    vmm_id(15 downto 8) <= user_din_udp;
-                when "00000110" => --6
-                    vmm_id(7 downto 0)  <= user_din_udp;
                 when "00001000" => --8
                     sel_vmm_data        <= '1'; -- select the correct data at the MUX
                 when others => null;

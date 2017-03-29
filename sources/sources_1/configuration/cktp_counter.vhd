@@ -82,7 +82,7 @@ end process;
 FSM_CKTP_cnt_proc: process(clk_160)
 begin
     if(rising_edge(clk_160))then
-        if(fsm_enable = '1')then
+        if(fsm_enable_s = '1')then
             case cktp_cnt_state is
 
             -- wait for pulse

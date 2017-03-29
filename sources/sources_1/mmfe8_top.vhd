@@ -1442,6 +1442,7 @@ architecture Behavioral of mmfe8_top is
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
         cktp_pulse_width    : in  std_logic_vector(4 downto 0);
+        cktp_max_num        : in  std_logic_vector(15 downto 0);
         cktp_period         : in  std_logic_vector(15 downto 0);
         cktp_skew           : in  std_logic_vector(4 downto 0);        
         ckbc_freq           : in  std_logic_vector(5 downto 0);
@@ -2009,6 +2010,7 @@ ckbc_cktp_generator: clk_gen_wrapper
         cktp_enable         => cktp_enable,
         cktp_primary        => vmm_cktp_primary, -- from flow_fsm
         cktp_pulse_width    => cktp_pulse_width(4 downto 0),
+        cktp_max_num        => cktp_max_num,
         cktp_period         => cktp_period,
         cktp_skew           => cktp_skew(4 downto 0),
         ckbc_freq           => ckbc_freq(5 downto 0),

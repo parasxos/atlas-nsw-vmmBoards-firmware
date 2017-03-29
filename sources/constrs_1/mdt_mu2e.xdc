@@ -383,8 +383,9 @@ set_property IOSTANDARD LVCMOS12 [get_ports Vaux8_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux10_v_p]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_n]
 #set_property IOSTANDARD LVCMOS12 [get_ports Vaux11_v_p]
+
 ######################### SPI FLASH ####################
-set_property CONFIG_MODE SPIx1      [current_design]
+
 #set_property IOSTANDARD LVCMOS25 [get_ports SPI_CLK]
 set_property IOSTANDARD LVCMOS33    [get_ports IO0_IO]
 set_property IOSTANDARD LVCMOS33    [get_ports IO1_IO]
@@ -393,9 +394,12 @@ set_property IOSTANDARD LVCMOS33    [get_ports SS_IO]
 set_property PACKAGE_PIN P22        [get_ports IO0_IO]
 set_property PACKAGE_PIN R22        [get_ports IO1_IO]
 set_property PACKAGE_PIN T19        [get_ports SS_IO]
-set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 1 [current_design]
 #set_property OFFCHIP_TERM NONE [get_ports SPI_CLK]
 set_property OFFCHIP_TERM NONE [get_ports IO0_IO]
 set_property OFFCHIP_TERM NONE [get_ports IO1_IO]
 set_property OFFCHIP_TERM NONE [get_ports SS_IO]
-########################################################
+
+################# GENERAL CONSTRAINTS ########################
+set_property CONFIG_MODE SPIx4 [current_design]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]

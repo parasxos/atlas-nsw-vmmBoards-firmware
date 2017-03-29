@@ -105,7 +105,7 @@ begin
             -- check the counter and assert flag+stay here if limit is reached, and
             -- wait to be rest by configuration
             when ST_CNT_CHECK =>
-                if(cktp_cnt < unsigned(cktp_max))then
+                if(cktp_cnt <= unsigned(cktp_max))then
                     cktp_cnt_state      <= ST_IDLE;
                 else
                     cktp_cnt_state      <= ST_CNT_CHECK;

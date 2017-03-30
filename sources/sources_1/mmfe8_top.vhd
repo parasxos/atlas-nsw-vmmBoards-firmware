@@ -193,6 +193,14 @@ entity mmfe8_top is
         -------------------------------------
         CKART_ADDC_P          : OUT STD_LOGIC;
         CKART_ADDC_N          : OUT STD_LOGIC;
+        
+        -- MDT_446/MDT_MU2E Specific Pins
+        TRIGGER_OUT_P         : OUT STD_LOGIC;
+        TRIGGER_OUT_N         : OUT STD_LOGIC;
+        CH_TRIGGER            : IN  STD_LOGIC;
+        MO                    : OUT STD_LOGIC;
+        ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
+        ART_P, ART_N          : IN  STD_LOGIC;
 
         -- xADC Interface
         -------------------------------------
@@ -235,6 +243,9 @@ architecture Behavioral of mmfe8_top is
   signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
   signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
+  
+  -- Set to '1' if MMFE8 VMM3 is used
+  signal is_mmfe8       : std_logic := '0';
 
   -- clock generation signals for tranceiver
   signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.
@@ -1831,7 +1842,7 @@ trigger_instance: trigger
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
-        trext           => '0',                 -- External trigger is to be driven to this port(TEMPORARILY GROUNDED)
+        trext           => CH_TRIGGER,          -- External trigger is to be driven to this port(TEMPORARILY GROUNDED)
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
         reset           => tr_reset,
@@ -2187,6 +2198,9 @@ xadc_mux0_obuf:   OBUF   port map  (O => MuxAddr0, I => MuxAddr0_i);
 xadc_mux1_obuf:   OBUF   port map  (O => MuxAddr1, I => MuxAddr1_i);
 xadc_mux2_obuf:   OBUF   port map  (O => MuxAddr2, I => MuxAddr2_i);
 xadc_mux3_obufds: OBUFDS port map  (O => MuxAddr3_p, OB => MuxAddr3_n, I => MuxAddr3_p_i);
+
+art_in_diff_1:    IBUFDS port map (O =>  art_in_i, I => ART_P, IB => ART_N);
+art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
  
 -------------------------------------------------------------------
 --                        Processes                              --
@@ -2197,6 +2211,31 @@ xadc_mux3_obufds: OBUFDS port map  (O => MuxAddr3_p, OB => MuxAddr3_n, I => MuxA
     -- 4. sel_cs
     -- 5. flow_fsm
 -------------------------------------------------------------------
+art_process: process(userclk2, art2)
+begin
+    if rising_edge(userclk2) then  
+        if art_cnt2 < 125 and art2 = '1' then 
+            art_out_ff     <= '1';
+            art_cnt2     <= art_cnt2 + 1;
+        elsif art_cnt2 = 125 then
+            reset_FF    <= '1';
+            art_cnt2     <= art_cnt2 + 1;
+        else
+            art_cnt2     <= 0;
+            reset_FF    <= '0';
+        end if;
+    end if;
+end process;    
+
+FDCE_inst: FDCE
+generic map (INIT => '0') -- Initial value of register ('0' or '1')
+port map (
+    Q   => art2, -- Data output
+    C   => art_in_i, -- Clock input
+    CE  => '1', -- Clock enable input
+    CLR => reset_ff, -- Asynchronous clear input
+    D   => '1' -- Data input
+);
 
 -- sync CKTP to userclk2
 cktpSync_proc: process(userclk2)
@@ -2476,6 +2515,10 @@ end process;
     vmm_bitmask             <= "11111111";
     
     pf_newCycle             <= tr_out_i;
+    CH_TRIGGER_i            <= CH_TRIGGER;
+    TRIGGER_OUT_P           <= art2;
+    TRIGGER_OUT_N           <= not art2;
+    MO                      <= MO_i;  
 
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;

@@ -205,7 +205,6 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/gig_ethernet_pcs_pma_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_top_level.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
@@ -220,11 +219,8 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/FIFO2UDP.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/trigger.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmm_readout.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
- "[file normalize "$origin_dir/sources_1/xadc/xadc.v"]"\
- "[file normalize "$origin_dir/sources_1/xadc/xadc_read.v"]"\
 ]
 
 add_files -norecurse -fileset $obj $files
@@ -495,15 +491,46 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/xadc/xadc.v"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "verilog" $file_obj
+if {$argv == "mmfe8_vmm3"} {
 
-set file "$origin_dir/sources_1/xadc/xadc_read.v"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "verilog" $file_obj
+    set obj [get_filesets sources_1]
+    set files [list \
+     "[file normalize "$origin_dir/sources_1/xadc/mmfe8_xadc/xadc.v"]"\
+     "[file normalize "$origin_dir/sources_1/xadc/mmfe8_xadc/xadc_read.v"]"\
+     "[file normalize "$origin_dir/sources_1/xadc/mmfe8_xadc/xadc_wiz_0.xcix"]"
+    ]
+    add_files -norecurse -fileset $obj $files
+
+    set file "$origin_dir/sources_1/xadc/mmfe8_xadc/xadc.v"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+    set_property "file_type" "verilog" $file_obj
+
+    set file "$origin_dir/sources_1/xadc/mmfe8_xadc/xadc_read.v"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+    set_property "file_type" "verilog" $file_obj
+
+} else {
+
+    set obj [get_filesets sources_1]
+    set files [list \
+     "[file normalize "$origin_dir/sources_1/xadc/mdt_xadc/xadc.v"]"\
+     "[file normalize "$origin_dir/sources_1/xadc/mdt_xadc/xadc_read.v"]"\
+     "[file normalize "$origin_dir/sources_1/xadc/mdt_xadc/xadc_wiz_0.xcix"]"
+    ]
+    add_files -norecurse -fileset $obj $files
+
+    set file "$origin_dir/sources_1/xadc/mdt_xadc/xadc.v"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+    set_property "file_type" "verilog" $file_obj
+
+    set file "$origin_dir/sources_1/xadc/mdt_xadc/xadc_read.v"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+    set_property "file_type" "verilog" $file_obj
+}
 
 
 # Set 'sources_1' fileset file properties for local files
@@ -512,166 +539,6 @@ set_property "file_type" "verilog" $file_obj
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
 set_property "top" "mmfe8_top" $obj
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_0.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_0_1.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_user_FIFO.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_200_to_400.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_pf.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/readout_fifo.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_low_jitter.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_readout.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/temac_10_100_1000.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/gig_ethernet_pcs_pma_0.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_top_level.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/xadc_wiz_0.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset object
-set obj [get_filesets sources_1]
-set files [list \
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_gen.xcix"]"\
-]
-add_files -norecurse -fileset $obj $files
-
-# Set 'sources_1' fileset file properties for remote files
-# None
-
-# Set 'sources_1' fileset file properties for local files
-# None
 
 # Create 'constrs_1' fileset (if not found)
 if {[string equal [get_filesets -quiet constrs_1] ""]} {

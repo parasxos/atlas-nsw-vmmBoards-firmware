@@ -26,6 +26,11 @@ use UNISIM.VComponents.all;
 entity trigger is
     Port (
             clk             : in STD_LOGIC;
+            ckbc            : in STD_LOGIC;
+            clk_art         : in STD_LOGIC;
+            
+            ckbcMode        : in STD_LOGIC;
+            request2ckbc    : out STD_LOGIC;
             
             tren            : in STD_LOGIC;
             tr_hold         : in STD_LOGIC;
@@ -52,6 +57,11 @@ architecture Behavioral of trigger is
     signal trext_stage1      : std_logic := '0';
     signal trext_ff_synced   : std_logic := '0';    
     signal tren_buff         : std_logic                         := '0'; -- buffered enable signal
+    -- Special Readout Mode
+    signal trext_roMode_stage1      : std_logic := '0';
+    signal trext_RoMode_ff_synced   : std_logic := '0';
+    signal trext_RoMod_stage1       : std_logic := '0';
+    signal request2ckbc_i           : std_logic := '0';
     
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
 --    signal hold_state       : std_logic_vector(3 downto 0);
@@ -160,6 +170,14 @@ begin
 --end process;
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
 
+trReadoutMode2Ckbc: process(clk_art)
+begin
+    if rising_edge(clk_art) and ckbcMode = '1' then
+        request2ckbc    <= '1';
+    else 
+        request2ckbc    <= '0';
+    end if;
+end process;
 
 trenAnd: process(tren, tr_hold)
 begin
@@ -208,6 +226,14 @@ triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint)
         end if;
     end process;
 
+externalTriggerSynchronizerSpecialReadoutMode: process(clk_art, trext, trext_stage1)
+begin
+    if rising_edge(clk_art) then 
+        trext_roMode_stage1    <= trext;
+        trext_RoMode_ff_synced <= trext_RoMod_stage1;
+    end if;
+end process;
+
 externalTriggerSynchronizer: process(clk, trext, trext_stage1)
 begin
     if rising_edge(clk) then 
@@ -250,6 +276,7 @@ eventCounterProc: process (clk, reset, mode, trext, trint)
 -- Signal assignments
 event_counter       <= event_counter_i;
 tr_out              <= tr_out_i;
+request2ckbc        <= request2ckbc_i;
 
 -- Instantiations if any
 

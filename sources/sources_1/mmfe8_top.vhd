@@ -570,6 +570,7 @@ architecture Behavioral of mmfe8_top is
     signal ext_trigger_i      : std_logic;  
     signal internalTrigger_state : integer := 0;
     signal CH_TRIGGER_i       : std_logic := '0';
+    signal request2ckbc       : std_logic := '0';
   
     -------------------------------------------------
     -- Event Timing & Soft Reset
@@ -652,6 +653,7 @@ architecture Behavioral of mmfe8_top is
     signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
     signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
     signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
+    signal ckbcMode         : std_logic := '0';
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -1015,6 +1017,11 @@ architecture Behavioral of mmfe8_top is
     component trigger is
       port (
           clk             : in std_logic;
+          ckbc            : in std_logic;
+          clk_art         : in std_logic;
+          
+          ckbcMode        : in std_logic;
+          request2ckbc    : out std_logic;
           
           tren            : in std_logic;
           tr_hold         : in std_logic;
@@ -1257,6 +1264,7 @@ architecture Behavioral of mmfe8_top is
     serial_number       : out std_logic_vector(31 downto 0);
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
+    ckbcMode            : out std_logic;
     ------------------------------------
     -------- UDP Interface -------------
     udp_rx              : in  udp_rx_type;
@@ -1718,6 +1726,7 @@ udp_din_conf_block: udp_data_in_handler
         serial_number       => open,
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
+        ckbcMode            => ckbcMode,
         ------------------------------------
         -------- UDP Interface -------------
         udp_rx              => udp_rx_int,
@@ -1838,7 +1847,12 @@ readout_vmm: vmm_readout
 trigger_instance: trigger
     port map(
         clk             => userclk2,
-
+        ckbc            => clk_40,
+        clk_art         => clk_160_gen,
+        
+        ckbcMode        => ckbcMode,
+        request2ckbc    => request2ckbc,
+        
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external

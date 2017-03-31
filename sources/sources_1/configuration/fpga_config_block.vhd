@@ -69,7 +69,8 @@ entity fpga_config_block is
     fpgaPacket_rdy      : out std_logic;
     latency             : out std_logic_vector(15 downto 0);
     daq_on              : out std_logic;
-    ext_trigger         : out std_logic
+    ext_trigger         : out std_logic;
+    ckbcMode            : out std_logic
     );
 end fpga_config_block;
 
@@ -83,6 +84,7 @@ architecture RTL of fpga_config_block is
     -- internal registers
     signal daq_state_reg    : std_logic_vector(7 downto 0)  := (others => '0');
     signal trig_state_reg   : std_logic_vector(7 downto 0)  := (others => '0');
+    signal ckbcMode         : std_logic := '0';
     
     -- signal to control the timing of the register address/value assertion
     signal latch_enable     : std_logic := '0';
@@ -295,6 +297,7 @@ triggerState_proc: process(trig_state_reg, ext_trg_i)
 begin
     case trig_state_reg is
     when x"04"  => ext_trg_i <= '1';
+    when x"05"  => ckbcMode  <= '1';
     when x"07"  => ext_trg_i <= '0';
     when others => ext_trg_i <= ext_trg_i;
     end case;

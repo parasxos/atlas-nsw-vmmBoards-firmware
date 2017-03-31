@@ -48,6 +48,7 @@ entity udp_data_in_handler is
     serial_number       : out std_logic_vector(31 downto 0);
     daq_on              : out std_logic;
     ext_trigger         : out std_logic;
+    ckbcMode            : out std_logic;
     ------------------------------------
     -------- UDP Interface -------------
     udp_rx              : in  udp_rx_type;
@@ -126,7 +127,8 @@ architecture RTL of udp_data_in_handler is
         fpgaPacket_rdy      : out std_logic;
         latency             : out std_logic_vector(15 downto 0);
         daq_on              : out std_logic;
-        ext_trigger         : out std_logic
+        ext_trigger         : out std_logic;
+        ckbcMode            : out std_logic
     );
     END COMPONENT;
 

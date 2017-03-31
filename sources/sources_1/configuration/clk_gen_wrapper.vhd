@@ -42,6 +42,8 @@ entity clk_gen_wrapper is
         ckbc_enable         : in  std_logic;
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
+        readout_mode        : in  std_logic;
+        enable_ro_ckbc      : in  std_logic;
         cktp_pulse_width    : in  std_logic_vector(4 downto 0);
         cktp_max_num        : in  std_logic_vector(15 downto 0);
         cktp_period         : in  std_logic_vector(15 downto 0);
@@ -82,11 +84,14 @@ architecture RTL of clk_gen_wrapper is
 
     component ckbc_gen
     port(  
-        clk_160       : in std_logic;
-        duty_cycle    : in std_logic_vector(7 downto 0);
-        freq          : in std_logic_vector(5 downto 0);
-        ready         : in std_logic;
-        ckbc_out      : out std_logic
+        clk_160         : in  std_logic;
+        duty_cycle      : in  std_logic_vector(7 downto 0);
+        freq            : in  std_logic_vector(5 downto 0);
+        readout_mode    : in  std_logic;
+        enable_ro_ckbc  : in  std_logic;
+        ready           : in  std_logic;
+        ckbc_ro_out     : out std_logic;
+        ckbc_out        : out std_logic
     );
     end component;
     
@@ -105,6 +110,7 @@ architecture RTL of clk_gen_wrapper is
     signal cktp_inhibit         : std_logic := '0';
 
     signal CKBC_preBuf          : std_logic := '0';
+    signal CKBC_ro_preBuf       : std_logic := '0';
     signal CKBC_glbl            : std_logic := '0';
     
     signal CKTP_from_orig_gen   : std_logic := '0';
@@ -121,15 +127,18 @@ begin
 
 ckbc_generator: ckbc_gen
     port map(  
-        clk_160       => clk_160,
-        duty_cycle    => (others => '0'), -- unused
-        freq          => ckbc_freq,
-        ready         => ckbc_start,
-        ckbc_out      => CKBC_preBuf
+        clk_160         => clk_160,
+        duty_cycle      => (others => '0'), -- unused
+        readout_mode    => readout_mode,
+        enable_ro_ckbc  => enable_ro_ckbc,
+        freq            => ckbc_freq,
+        ready           => ckbc_start,
+        ckbc_ro_out     => CKBC_ro_preBuf,
+        ckbc_out        => CKBC_preBuf
     );
       
-CKBC_BUFGCE: BUFGCE
-    port map(O => CKBC_glbl,  CE => ckbc_start, I => CKBC_preBuf);
+CKBC_BUFGMUX: BUFGMUX
+    port map(O => CKBC_glbl, I0 => CKBC_preBuf, I1 => CKBC_ro_preBuf, S => readout_mode);
 
 cktp_generator: cktp_gen
     port map(

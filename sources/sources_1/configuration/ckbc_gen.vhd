@@ -16,6 +16,7 @@
 -- 20.02.2017 Changed the FSM to create a multicycle path. Changed the input clock
 -- frequency to 160 Mhz. (Christos Bakalis)
 -- 12.03.2017 Removed FSM. (Christos Bakalis)
+-- 31.03.2017 Added CKBC for readout mode. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -24,11 +25,14 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity ckbc_gen is
     port(  
-        clk_160       : in std_logic;
-        duty_cycle    : in std_logic_vector(7 downto 0);
-        freq          : in std_logic_vector(5 downto 0);
-        ready         : in std_logic;
-        ckbc_out      : out std_logic
+        clk_160         : in  std_logic;
+        duty_cycle      : in  std_logic_vector(7 downto 0);
+        freq            : in  std_logic_vector(5 downto 0);
+        readout_mode    : in  std_logic;
+        enable_ro_ckbc  : in  std_logic;
+        ready           : in  std_logic;
+        ckbc_ro_out     : out std_logic;
+        ckbc_out        : out std_logic
     );
 end ckbc_gen;
 
@@ -44,10 +48,25 @@ architecture Behavioral of ckbc_gen is
     
     signal ready_i       : std_logic := '0';
     signal ready_sync    : std_logic := '0';
-    
+
+    type ckbc_ro_type is (ST_IDLE, ST_SEND, ST_WAIT);
+    type ckbc_cnt_type is (ST_IDLE, ST_WAIT_CKBC, ST_WAIT_ENABLE, ST_INCR);
+    signal state            : ckbc_ro_type  := ST_IDLE;
+    signal state_cnt        : ckbc_cnt_type := ST_IDLE;
+
+    signal ckbc_inhibit     : std_logic := '0';
+    signal readout_mode_i   : std_logic := '0';
+    signal readout_mode_s   : std_logic := '0';
+    signal count_ro         : unsigned(7 downto 0) := to_unsigned(0,8);
+    signal ckbc_max_cnt     : unsigned(2 downto 0) := to_unsigned(0, 3);
+    signal ckbc_ro          : std_logic := '0';
+
+
     attribute ASYNC_REG : string;
     attribute ASYNC_REG of ready_i         : signal is "TRUE";
     attribute ASYNC_REG of ready_sync      : signal is "TRUE";
+    attribute ASYNC_REG of readout_mode_i  : signal is "TRUE";
+    attribute ASYNC_REG of readout_mode_s  : signal is "TRUE";
 
 begin
 
@@ -55,8 +74,10 @@ begin
 sync_ready: process(clk_160)
 begin
     if(rising_edge(clk_160))then
-        ready_i     <= ready;
-        ready_sync  <= ready_i;
+        ready_i             <= ready;
+        ready_sync          <= ready_i;
+        readout_mode_i      <= readout_mode;
+        readout_mode_s      <= readout_mode_i;
     end if;
 end process;
 
@@ -82,6 +103,113 @@ clocking_proc: process(clk_160)
     end if;
 end process;
 
+readout_mode_proc: process(clk_160)
+begin
+    if(rising_edge(clk_160))then
+        if(readout_mode_s = '1')then
+
+            case state is
+
+            -- wait for enable signal to go high
+            when ST_IDLE =>
+                if(enable_ro_ckbc = '1')then
+                    state <= ST_SEND;
+                else
+                    state <= ST_IDLE;
+                end if;
+
+            -- send two CKBC pulses    
+            when ST_SEND =>
+                if(ckbc_inhibit = '0')then
+                    if(count_ro < (p_high+p_low)) then
+                        if(count_ro < p_high)then
+                            ckbc_ro <= '1';
+                        elsif (count_ro < (p_high+p_low)) then
+                            ckbc_ro <= '0';
+                        end if;
+                        count_ro <= count_ro + 1;
+                    elsif (p_high >= 1 and p_low >= 1) then
+                        count_ro <= to_unsigned(1,8);
+                        ckbc_ro  <= '1';
+                    end if;
+                else
+                    count_ro    <= (others => '0');
+                    state       <= ST_WAIT;
+                    ckbc_ro     <= '0';
+                end if;
+
+            -- wait for inhibit to go low
+            when ST_WAIT =>
+                if(ckbc_inhibit = '0')then
+                    state   <= ST_IDLE;
+                else
+                    state   <= ST_WAIT;
+                end if;
+
+            when others => state <= ST_IDLE;
+            end case;
+
+        else
+           ckbc_ro  <= '0';
+           count_ro <= (others => '0');
+           state    <= ST_IDLE;
+        end if; 
+    end if;
+end process;
+
+count_ckbc_proc: process(clk_160)
+begin
+    if(rising_edge(clk_160))then
+        if(readout_mode_s = '1')then
+            case state_cnt is
+
+            when ST_IDLE =>
+                if(ckbc_ro = '1')then
+                    state_cnt <= ST_WAIT_CKBC;
+                else
+                    state_cnt <= ST_IDLE;
+                end if;
+
+            when ST_WAIT_CKBC =>
+                if(ckbc_ro = '0')then
+                    state_cnt       <= ST_INCR;
+                    ckbc_max_cnt    <= ckbc_max_cnt + 1;
+                else
+                    state_cnt       <= ST_WAIT_CKBC;
+                end if;
+
+            when ST_INCR =>
+                if(ckbc_max_cnt = 2)then
+                    ckbc_inhibit    <= '1';
+                    state_cnt       <= ST_WAIT_ENABLE;    
+                else
+                    state_cnt       <= ST_IDLE;
+                end if;
+
+            when ST_WAIT_ENABLE =>
+                if(enable_ro_ckbc = '0')then
+                    state_cnt       <= ST_IDLE;
+                    ckbc_inhibit    <= '0';
+                else
+                    state_cnt       <= ST_WAIT_ENABLE;
+                end if;
+
+                ckbc_max_cnt <= (others => '0');
+
+            when others =>
+                ckbc_inhibit    <= '0';
+                state_cnt       <= ST_IDLE;
+                ckbc_max_cnt    <= (others => '0');
+
+            end case;
+        else
+            ckbc_inhibit    <= '0';
+            state_cnt       <= ST_IDLE;
+            ckbc_max_cnt    <= (others => '0');
+        end if;    
+    end if;
+end process;
+
 t_high_proc: process(freq)
 begin
     case freq is
@@ -102,5 +230,6 @@ end process;
       
       p_high        <= (t_high / to_unsigned(6250, 16)); -- input clock period: 160 Mhz = 6.250 ns
       p_low         <= (t_low  / to_unsigned(6250, 16));
+      ckbc_ro_out   <= ckbc_ro;
 
 end Behavioral;

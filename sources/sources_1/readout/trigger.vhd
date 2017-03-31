@@ -12,7 +12,8 @@
 -- Changelog:
 -- 18.08.2016 Added tr_hold signal to hold trigger when reading out (Reid Pinkham)
 -- 26.02.2017 Moved to a global clock domain @125MHz (Paris)
--- 27.02.2017 Synced trout
+-- 27.02.2017 Synced trout (Paris)
+-- 31.0.3.2017 Added 2 ckbc mode, requests 2 CKBC upon ext trigger (Paris)
 --
 ----------------------------------------------------------------------------------
 
@@ -173,9 +174,11 @@ begin
 trReadoutMode2Ckbc: process(clk_art)
 begin
     if rising_edge(clk_art) and ckbcMode = '1' then
-        request2ckbc    <= '1';
-    else 
-        request2ckbc    <= '0';
+        if trext_RoMode_ff_synced = '1' then
+            request2ckbc_i  <= '1';
+        else 
+            request2ckbc_i  <= '0';
+        end if;
     end if;
 end process;
 

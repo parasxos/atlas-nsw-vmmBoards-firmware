@@ -20,6 +20,7 @@
 -- and future register address configuration scheme. (Christos Bakalis)
 -- 14.03.2017 Register address configuration scheme deployed. (Christos Bakalis)
 -- 17.03.2017 Added synchronizers for daq and trigger signals. (Christos Bakalis)
+-- 31.03.2017 Added 2 ckbc mode register (Paris)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -84,7 +85,7 @@ architecture RTL of fpga_config_block is
     -- internal registers
     signal daq_state_reg    : std_logic_vector(7 downto 0)  := (others => '0');
     signal trig_state_reg   : std_logic_vector(7 downto 0)  := (others => '0');
-    signal ckbcMode         : std_logic := '0';
+    signal ckbcMode_i       : std_logic := '0';
     
     -- signal to control the timing of the register address/value assertion
     signal latch_enable     : std_logic := '0';
@@ -297,7 +298,7 @@ triggerState_proc: process(trig_state_reg, ext_trg_i)
 begin
     case trig_state_reg is
     when x"04"  => ext_trg_i <= '1';
-    when x"05"  => ckbcMode  <= '1';
+    when x"05"  => ckbcMode_i<= '1';
     when x"07"  => ext_trg_i <= '0';
     when others => ext_trg_i <= ext_trg_i;
     end case;
@@ -313,5 +314,8 @@ begin
         ext_trigger     <= ext_trg_sync;
     end if;
 end process;
+
+-- To be synchronized into ckbc_gen
+ckbcMode    <= ckbcMode_i;
 
 end RTL;

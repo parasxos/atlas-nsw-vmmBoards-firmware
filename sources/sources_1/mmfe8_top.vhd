@@ -27,6 +27,7 @@
 -- module. (Christos Bakalis)
 -- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
 -- 28.03.2017 Changes to accomodate to MMFE8 VMM3. (Christos Bakalis)
+-- 31.03.2017 Adding 2 CKBC readout mode (Paris)
 --
 ----------------------------------------------------------------------------------
 
@@ -1497,14 +1498,14 @@ gen_vector_reset: process (userclk2)
    -----------------------------------------------------------------------------
    
    -- Create a reset pulse of a decent length
-   process(glbl_rst_i, clk_200)
-   begin
-     if (glbl_rst_i = '1') then
-       pma_reset_pipe <= "1111";
-     elsif clk_200'event and clk_200 = '1' then
-       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
-     end if;
-   end process;
+--   process(glbl_rst_i, clk_200)
+--   begin
+--     if (glbl_rst_i = '1') then
+--       pma_reset_pipe <= "1111";
+--     elsif clk_200'event and clk_200 = '1' then
+--       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
+--     end if;
+--   end process;
 
    pma_reset <= pma_reset_pipe(3);
 

@@ -206,6 +206,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_top_level.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/ila_overview.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\

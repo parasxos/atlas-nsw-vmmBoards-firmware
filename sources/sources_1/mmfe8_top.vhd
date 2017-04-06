@@ -481,6 +481,8 @@ architecture Behavioral of mmfe8_top is
   signal fpga_reset_conf    : std_logic := '0';
   signal flash_busy         : std_logic := '0';
   signal inhibit_conf       : std_logic := '0';
+  signal conf_state         : std_logic_vector(2 downto 0) := (others => '0');
+  signal din_valid          : std_logic := '0';
 
     -------------------------------------------------
     -- VMM Signals                   
@@ -783,6 +785,8 @@ architecture Behavioral of mmfe8_top is
     attribute keep of UDPDone                   : signal is "TRUE";
     attribute keep of CKBC_glbl                 : signal is "TRUE";
     attribute keep of tr_out_i                  : signal is "TRUE";
+    attribute keep of conf_state                : signal is "TRUE";
+    attribute keep of din_valid                 : signal is "TRUE";
     
 --    attribute keep of set_reset                 : signal is "TRUE";
 --    attribute dont_touch of set_reset           : signal is "TRUE";
@@ -1285,6 +1289,8 @@ architecture Behavioral of mmfe8_top is
     clk_40              : in  std_logic;
     inhibit_conf        : in  std_logic;
     rst                 : in  std_logic;
+    state_o             : out std_logic_vector(2 downto 0);
+    valid_o             : out std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
@@ -1756,6 +1762,8 @@ udp_din_conf_block: udp_data_in_handler
         clk_40              => clk_40,
         inhibit_conf        => inhibit_conf,
         rst                 => glbl_rst_i,
+        state_o             => conf_state,
+        valid_o             => din_valid,
         ------------------------------------
         -------- FPGA Config Interface -----
         latency             => latency_conf,
@@ -2670,7 +2678,9 @@ ila_top: ila_overview
     overviewProbe(22)                  <= UDPDone;
     overviewProbe(23)                  <= CKBC_glbl;
     overviewProbe(24)                  <= tr_out_i;
-    overviewProbe(63 downto 25)        <= (others => '0');
+    overviewProbe(25)                  <= din_valid;
+    overviewProbe(28 downto 26)        <= conf_state;
+    overviewProbe(63 downto 29)        <= (others => '0');
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;

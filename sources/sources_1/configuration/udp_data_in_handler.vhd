@@ -42,6 +42,8 @@ entity udp_data_in_handler is
     clk_40              : in  std_logic;
     inhibit_conf        : in  std_logic;
     rst                 : in  std_logic;
+    state_o             : out std_logic_vector(2 downto 0);
+    valid_o             : out std_logic;
     ------------------------------------
     -------- FPGA Config Interface -----
     latency             : out std_logic_vector(15 downto 0);
@@ -519,6 +521,8 @@ vmm_config_logic: vmm_config_block
     vmmConf_rdy     <= init_ser;
     vmmConf_done    <= vmmSer_done_s125;
     sample_hdr      <= '0' when st_master = ST_IDLE else '1';
+    state_o         <= std_logic_vector(conf_state);
+    valid_o         <= user_valid_prv;
 
 ---------------------------------------------------------
 --------- Clock Domain Crossing Sync Block --------------

@@ -40,6 +40,12 @@ set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_g
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
+set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
+set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
+set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/rst_generator/cktp_enable_i_reg]
+set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/rst_generator/rst_enable_i_reg]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input

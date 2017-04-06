@@ -20,6 +20,7 @@
 -- 09.03.2017 Shortened the bus widths and added conversion multipliers for
 -- area usage optimization. (Christos Bakalis)
 -- 26.03.2017 Added CKTP counting module. (Christos Bakalis)
+-- 05.04.2017 Added periodic soft reset module. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -37,6 +38,8 @@ entity clk_gen_wrapper is
         clk_160             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
+        rst_enable          : in  std_logic;
+        pf_busy             : in  std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -45,12 +48,15 @@ entity clk_gen_wrapper is
         cktp_pulse_width    : in  std_logic_vector(4 downto 0);
         cktp_max_num        : in  std_logic_vector(15 downto 0);
         cktp_period         : in  std_logic_vector(15 downto 0);
+        rst_period          : in  std_logic_vector(15 downto 0);
+        rst_before_cktp     : in  std_logic_vector(7 downto 0);
         cktp_skew           : in  std_logic_vector(4 downto 0);        
         ckbc_freq           : in  std_logic_vector(5 downto 0);
         ------------------------------------
         ---------- VMM Interface -----------
         CKTP                : out std_logic;
-        CKBC                : out std_logic
+        CKBC                : out std_logic;
+        RST_VMM             : out std_logic
     );
 end clk_gen_wrapper;
 
@@ -77,6 +83,20 @@ architecture RTL of clk_gen_wrapper is
         cktp_pulse      : in  std_logic;
         cktp_max        : in  std_logic_vector(15 downto 0);
         cktp_inhibit    : out std_logic
+    );
+    end component;
+    
+    component rst_gen
+    port(
+        clk_160         : in  std_logic;
+        rst_enable      : in  std_logic;
+        cktp_enable     : in  std_logic;
+        pf_busy         : in  std_logic;
+        cktp            : in  std_logic;
+        cktp_period     : in  std_logic_vector(21 downto 0);
+        rst_period      : in  std_logic_vector(21 downto 0);
+        rst_before_cktp : in  std_logic_vector(7 downto 0);
+        rst_vmm         : out std_logic
     );
     end component;
 
@@ -115,7 +135,8 @@ architecture RTL of clk_gen_wrapper is
     signal skew_cktp_gen        : std_logic_vector(4 downto 0)  := (others => '0');
     
     signal cktp_width_final     : std_logic_vector(11 downto 0) := "000101000000";           --4 * 80 = 320
-    signal cktp_period_final    : std_logic_vector(21 downto 0) := "0000100111000100000000"; --5'000 * 32 = 160'000 
+    signal cktp_period_final    : std_logic_vector(21 downto 0) := "0000100111000100000000"; --5'000 * 32 = 160'000
+    signal rst_period_final     : std_logic_vector(21 downto 0) := "0000100111000100000000"; --5'000 * 32 = 160'000 
     
 begin
 
@@ -136,7 +157,7 @@ cktp_generator: cktp_gen
         clk_160         => clk_160,
         cktp_start      => cktp_gen_start,
         cktp_primary    => cktp_primary,
-        vmm_ckbc        => CKBC_preBuf, -- CKBC_glbl
+        vmm_ckbc        => CKBC_preBuf,
         ckbc_freq       => ckbc_freq,
         skew            => skew_cktp_gen,
         pulse_width     => cktp_width_final,
@@ -148,7 +169,7 @@ cktp_max_module: cktp_counter
     port map(
         clk_160         => clk_160,
         cktp_start      => cktp_start,
-        cktp_pulse      => CKTP_from_orig_gen, -- maybe CKTP_glbl? but needs sync
+        cktp_pulse      => CKTP_from_orig_gen,
         cktp_max        => cktp_max_num,
         cktp_inhibit    => cktp_inhibit
     );
@@ -159,6 +180,19 @@ skewing_module: skew_gen
         CKTP_preSkew    => CKTP_from_orig_gen,
         skew            => cktp_skew,
         CKTP_skewed     => CKTP_from_skew_gen
+    );
+    
+rst_generator: rst_gen
+    port map(
+        clk_160         => clk_160,
+        rst_enable      => rst_enable,
+        cktp_enable     => cktp_start,
+        pf_busy         => pf_busy,
+        cktp            => CKTP_from_orig_gen,
+        cktp_period     => cktp_period_final,
+        rst_period      => rst_period_final,
+        rst_before_cktp => rst_before_cktp,
+        rst_vmm         => RST_VMM
     );
 
 CKTP_BUFGMUX: BUFGMUX
@@ -191,5 +225,6 @@ end process;
     --- conversions ----
     cktp_width_final    <= std_logic_vector(unsigned(cktp_pulse_width)*"1010000");  -- input x 80
     cktp_period_final   <= std_logic_vector(unsigned(cktp_period)*"100000");        -- input x 32
+    rst_period_final    <= std_logic_vector(unsigned(rst_period)*"100000");         -- input x 32
     
 end RTL;

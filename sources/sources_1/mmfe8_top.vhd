@@ -353,6 +353,8 @@ architecture Behavioral of mmfe8_top is
 --TODO: Review signals with updated configuration (Christos)
 --  signal  VMM_SCK                       :  std_logic;
   signal  vmm_cs_all                 :  std_logic := '0'; 
+  signal  vmm_cs_fsm                 :  std_logic := '0';
+  signal  vmm_cs_rst_module          :  std_logic := '0';
   signal  vmm_sck_all                :  std_logic := '0';
   signal  vmm_sdi_all                :  std_logic := '0';
   signal  vmm_bitmask                :  std_logic_vector(7 downto 0) := "11111111";
@@ -509,6 +511,8 @@ architecture Behavioral of mmfe8_top is
     signal CKTP_glbl_s125   : std_logic := '0';        
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
+    signal vmm_ena_fsm      : std_logic := '1';
+    signal vmm_ena_rst_module : std_logic := '1';
     signal tied_to_gnd_i    : std_logic := '0';
     signal vmm_ckbc         : std_logic;
 
@@ -645,6 +649,11 @@ architecture Behavioral of mmfe8_top is
     signal ckbc_ready_vio   : std_logic := '0';
     signal cktp_enable_vio  : std_logic := '0';
     signal CKBC_glbl        : std_logic := '0';
+    signal rst_enable       : std_logic := '0';
+    signal rst_enable_conf  : std_logic := '0';
+    signal rst_vmm_gen      : std_logic := '0';
+    signal rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
+    signal rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
     signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04"; -- 2 us
     signal cktp_period      : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
     signal cktp_skew        : std_logic_vector(7 downto 0)     := (others => '0'); 
@@ -871,6 +880,15 @@ architecture Behavioral of mmfe8_top is
           
 --    attribute keep of default_MAC            : signal is "TRUE";
 --    attribute dont_touch of default_MAC      : signal is "TRUE";
+
+     attribute keep of rst_enable_conf          : signal is "TRUE";
+     attribute dont_touch of rst_enable_conf    : signal is "TRUE";
+     
+     attribute keep of rst_period               : signal is "TRUE";
+     attribute dont_touch of rst_period         : signal is "TRUE";
+     
+     attribute keep of rst_before_cktp          : signal is "TRUE";
+     attribute dont_touch of rst_before_cktp    : signal is "TRUE";
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -1434,8 +1452,9 @@ architecture Behavioral of mmfe8_top is
     COMPONENT vio_ip
       PORT (
         clk        : IN STD_LOGIC;
-        probe_out0 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe_out1 : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+        probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe_out1 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe_out2 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
       );
     END COMPONENT;
     -- 24
@@ -1447,6 +1466,8 @@ architecture Behavioral of mmfe8_top is
         clk_160             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
+        rst_enable          : in  std_logic;
+        pf_busy             : in  std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -1455,12 +1476,15 @@ architecture Behavioral of mmfe8_top is
         cktp_pulse_width    : in  std_logic_vector(4 downto 0);
         cktp_max_num        : in  std_logic_vector(15 downto 0);
         cktp_period         : in  std_logic_vector(15 downto 0);
+        rst_period          : in  std_logic_vector(15 downto 0);
+        rst_before_cktp     : in  std_logic_vector(7 downto 0);
         cktp_skew           : in  std_logic_vector(4 downto 0);        
         ckbc_freq           : in  std_logic_vector(5 downto 0);
         ------------------------------------
         ---------- VMM Interface -----------
         CKTP                : out std_logic;
-        CKBC                : out std_logic
+        CKBC                : out std_logic;
+        RST_VMM             : out std_logic
     );
     end component;   
 
@@ -2015,6 +2039,8 @@ ckbc_cktp_generator: clk_gen_wrapper
         clk_160             => clk_160_gen,
         rst                 => rst_gen,
         mmcm_locked         => clk_gen_locked,
+        rst_enable          => rst_enable,
+        pf_busy             => pfBusy_i,
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         => ckbc_enable,
@@ -2023,12 +2049,15 @@ ckbc_cktp_generator: clk_gen_wrapper
         cktp_pulse_width    => cktp_pulse_width(4 downto 0),
         cktp_max_num        => cktp_max_num,
         cktp_period         => cktp_period,
+        rst_period          => rst_period,
+        rst_before_cktp     => rst_before_cktp,
         cktp_skew           => cktp_skew(4 downto 0),
         ckbc_freq           => ckbc_freq(5 downto 0),
         ------------------------------------
         ---------- VMM Interface -----------
         CKTP                => CKTP_glbl,
-        CKBC                => CKBC_glbl
+        CKBC                => CKBC_glbl,
+        RST_VMM             => rst_vmm_gen
     );
 
 QSPI_IO0_0: IOBUF    
@@ -2287,12 +2316,27 @@ end process;
 sel_cs_proc: process(sel_cs, vmm_cs_i)
 begin
     case sel_cs is
-    when "00"   => vmm_cs_all <= '0';
-    when "01"   => vmm_cs_all <= vmm_cs_i;
-    when "10"   => vmm_cs_all <= vmm_cs_i;
-    when "11"   => vmm_cs_all <= '1'; 
-    when others => vmm_cs_all <= '0';
+    when "00"   => vmm_cs_fsm <= '0';
+    when "01"   => vmm_cs_fsm <= vmm_cs_i;
+    when "10"   => vmm_cs_fsm <= vmm_cs_i;
+    when "11"   => vmm_cs_fsm <= '1'; 
+    when others => vmm_cs_fsm <= '0';
     end case;   
+end process;
+
+sel_cs_ena_final_proc: process(rst_enable, vmm_cs_fsm, vmm_ena_fsm, vmm_cs_rst_module, vmm_ena_rst_module)
+begin
+    case rst_enable is
+    when '0'    => 
+        vmm_cs_all  <= vmm_cs_fsm;
+        vmm_ena_all <= vmm_ena_fsm;
+    when '1'    =>
+        vmm_cs_all  <= vmm_cs_rst_module;
+        vmm_ena_all <= vmm_ena_rst_module;
+    when others =>
+        vmm_cs_all  <= vmm_cs_fsm;
+        vmm_ena_all <= vmm_ena_fsm;
+    end case;
 end process;
 
 flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_done_i, conf_done_i)
@@ -2319,7 +2363,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
-                    vmm_ena_all             <= '0';
+                    vmm_ena_fsm             <= '0';
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
                     vmm_cktp_primary        <= '0';
@@ -2380,7 +2424,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
 
                 when    CONF_DONE    =>
                  --   sel_cs          <= "10"; -- select CS from config
-                    vmm_ena_all     <= '1';
+                    vmm_ena_fsm       <= '1';
                     is_state        <= "0010";
                     if w = 40 then
                         cnt_vmm     <= cnt_vmm - 1;
@@ -2401,7 +2445,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     is_state        <= "1011";
                     if (w >= 19) then
                         w           <= 0;
-                        vmm_ena_all     <= '0';
+                        vmm_ena_fsm       <= '0';
                         sel_cs          <= "00"; -- drive CS to gnd
                         state           <= CONFIGURE;
                     else
@@ -2411,7 +2455,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                 when    SEND_CONF_REPLY    =>
                     is_state            <= "1010";
                     sel_cs          <= "00"; -- drive CS to gnd
-                    vmm_ena_all     <= '0';                     
+                    vmm_ena_fsm     <= '0';                     
                     if cnt_reply = 0 then
                         user_data_out_i <= conf_data_out_i;
                         cnt_reply   <= cnt_reply + 1;
@@ -2434,7 +2478,7 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         vmm_cktp_primary    <= '1';
                     end loop;
                     sel_cs                  <= "11"; -- drive CS high
-                    vmm_ena_all             <= '1';
+                    vmm_ena_fsm             <= '1';
                     tren                    <= '0';
                     daq_vmm_ena_wen_enable  <= x"ff";
                     daq_cktk_out_enable     <= x"ff";
@@ -2511,8 +2555,11 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
 end process;
 
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
+    rst_enable              <= '1' when (state = DAQ and rst_enable_conf = '1') else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
     vmm_bitmask             <= "11111111";
+    vmm_cs_rst_module       <= not rst_vmm_gen;
+    vmm_ena_rst_module      <= not rst_vmm_gen;
     
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= CH_TRIGGER;
@@ -2591,12 +2638,18 @@ end process;
 --        probe5  => flowProbe
 --    );
     
---VIO_DEFAULT_IP: vio_ip
---      PORT MAP (
---        clk         => clk_50,
---        probe_out0  => default_IP,
---        probe_out1  => default_MAC
---      );
+VIO_CLK_GEN: vio_ip
+      PORT MAP (
+        clk                         => clk_160_gen,
+        probe_out0(0)               => rst_enable_conf,
+        probe_out1(15 downto 0)     => rst_period,
+        probe_out2(7 downto 0)      => rst_before_cktp
+      );
+      
+      
+--          signal   : std_logic := '0';
+--      signal rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
+--      signal rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;

@@ -3,23 +3,17 @@
 -- Engineer: Paris Moschovakos, Panagiotis Gkountoumis & Christos Bakalis
 -- 
 -- Create Date: 16.3.2016
--- Design Name: MMFE8
+-- Design Name: VMM3 firmware
 -- Module Name: mmfe8_top
--- Project Name: MMFE8 
+-- Project Name: VMM3 firmware 
 -- Target Devices: Artix7 xc7a200t-2fbg484 and xc7a200t-3fbg484 
--- Tool Versions: Vivado 2016.2
+-- Tool Versions: Vivado 2016.4
 --
 -- Changelog:
--- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals
--- (Reid Pinkham)
--- 10.08.2016 Changed the FIFO2UDP rstFIFO input signals (swapped rstDAQFIFO <--> daqFIFO_reset)
--- at the OR gate. (Christos Bakalis)
+-- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals (Reid Pinkham)
 -- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added Dynamic IP configuration. (Lev Kurilenko)
--- 16.02.2017 Added new configuration component (udp_data_in_handler). Changes
--- at flow_fsm and axi4-spi flash module. (Christos Bakalis)
--- 27.02.2017 Added CDCC to top level. Added sel_cs mux to avoid clock domain
--- crossing. (Christos Bakalis)
+-- 16.02.2017 Added new configuration component (udp_data_in_handler) (Christos Bakalis)
 -- 27.02.2017 Changed main logic clock to 125MHz (Paris)
 -- 10.03.2017 Added configurable CKTP/CKBC module. For the moment controlled by
 -- a VIO. Added new internal_trigger process (Christos Bakalis)
@@ -1061,7 +1055,8 @@ architecture Behavioral of mmfe8_top is
           reset           : in std_logic;
           
           event_counter   : out std_logic_vector(31 DOWNTO 0);
-          tr_out          : out std_logic
+          tr_out          : out std_logic;
+          latency         : in std_logic_vector(15 DOWNTO 0)
       );
     end component;
     -- 9
@@ -1909,7 +1904,8 @@ trigger_instance: trigger
         reset           => tr_reset,
 
         event_counter   => event_counter_i,
-        tr_out          => tr_out_i
+        tr_out          => tr_out_i,
+        latency         => latency_conf
     );
 
 FIFO2UDP_instance: FIFO2UDP

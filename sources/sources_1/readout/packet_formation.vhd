@@ -13,7 +13,8 @@
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
 -- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
---
+-- 06.04.2017 Hard setting latency to 300ns as configurable latency was moved to trigger module (Paris)
+-- 
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -327,7 +328,7 @@ end process;
     end_packet      <= end_packet_int;
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
-    trigLatency     <= to_integer(unsigned(latency));
+    trigLatency     <= 37; --(hard set to 300ns )--to_integer(unsigned(latency));
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);

@@ -13,8 +13,9 @@
 -- 18.08.2016 Added tr_hold signal to hold trigger when reading out (Reid Pinkham)
 -- 26.02.2017 Moved to a global clock domain @125MHz (Paris)
 -- 27.02.2017 Synced trout (Paris)
--- 31.0.3.2017 Added 2 ckbc mode, requests 2 CKBC upon ext trigger (Paris)
---
+-- 31.03.2017 Added 2 ckbc mode, requests 2 CKBC upon ext trigger (Paris)
+-- 06.04.2017 Configurable latency was added for the 2 CKBC mode (Paris)
+-- 
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -42,7 +43,8 @@ entity trigger is
             reset           : in STD_LOGIC;
 
             event_counter   : out STD_LOGIC_VECTOR(31 DOWNTO 0);
-            tr_out          : out STD_LOGIC
+            tr_out          : out STD_LOGIC;
+            latency         : in STD_LOGIC_VECTOR(15 DOWNTO 0)
             );
 end trigger;
 
@@ -62,6 +64,11 @@ architecture Behavioral of trigger is
     signal trext_RoMode_stage1      : std_logic := '0';
     signal trext_RoMode_ff_synced   : std_logic := '0';
     signal request2ckbc_i           : std_logic := '0';
+    signal trigLatencyCnt           : integer := 0;
+    signal trigLatency              : integer := 140;
+    
+    type stateType is (waiting, latencyCounting);
+    signal state            : stateType;
     
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
 --    signal hold_state       : std_logic_vector(3 downto 0);
@@ -172,11 +179,16 @@ begin
 
 trReadoutMode2Ckbc: process(clk_art)
 begin
-    if rising_edge(clk_art) then
-        if trext_RoMode_ff_synced = '1' and ckbcMode = '1' then
-            request2ckbc_i  <= '1';
-        else 
-            request2ckbc_i  <= '0';
+    if rising_edge(clk_art) then  
+        if trigLatencyCnt < trigLatency and trext_RoMode_ff_synced = '1' and ckbcMode = '1' then 
+            trigLatencyCnt      <= trigLatencyCnt + 1;
+            request2ckbc_i      <= '0';
+        elsif trigLatencyCnt = trigLatency then
+            trigLatencyCnt      <= trigLatencyCnt + 1;
+            request2ckbc_i      <= '1';
+        else
+            trigLatencyCnt      <= 0;
+            request2ckbc_i      <= '0';
         end if;
     end if;
 end process;
@@ -279,6 +291,7 @@ eventCounterProc: process (clk, reset, mode, trext, trint)
 event_counter       <= event_counter_i;
 tr_out              <= tr_out_i;
 request2ckbc        <= request2ckbc_i;
+trigLatency         <= to_integer(unsigned(latency));
 
 -- Instantiations if any
 

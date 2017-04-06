@@ -215,7 +215,7 @@ changeModeCommandProc: process (clk, reset, tren_buff, trmode)
         end if;
     end process;
 
-triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint)
+triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint, tren_buff)
     begin
         if reset = '1' then
             tr_out_i            <= '0';

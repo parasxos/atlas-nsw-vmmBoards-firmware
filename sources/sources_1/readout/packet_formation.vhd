@@ -328,7 +328,7 @@ end process;
     end_packet      <= end_packet_int;
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
-    trigLatency     <= 37; --(hard set to 300ns )--to_integer(unsigned(latency));
+    trigLatency     <= 37 + to_integer(unsigned(latency)); --(hard set to 300ns )--to_integer(unsigned(latency));
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);

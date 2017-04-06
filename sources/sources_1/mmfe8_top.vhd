@@ -235,8 +235,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320793227";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320793225";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
   
   -- Set to '1' if MMFE8 VMM3 is used
@@ -2294,7 +2294,7 @@ port map (
     Q   => art2, -- Data output
     C   => art_in_i, -- Clock input
     CE  => '1', -- Clock enable input
-    CLR => reset_ff, -- Asynchronous clear input
+    CLR => reset_FF, -- Asynchronous clear input
     D   => '1' -- Data input
 );
 

@@ -46,7 +46,10 @@ entity vmm_readout is
 
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
-            vmmEventDone            : out std_logic
+            vmmEventDone            : out std_logic;
+            
+            dt_state_o              : out std_logic_vector(3 downto 0);
+            dt_cntr_st_o            : out std_logic_vector(3 downto 0)
            );
 end vmm_readout;
 
@@ -360,6 +363,9 @@ end process;
     vmm_data1_i         <= vmm_data1;               -- Used
     vmmWord             <= vmmWord_ff_sync;         -- Used
     trigger_pulse_i     <= trigger_pulse;           -- Used
+    
+    dt_state_o          <= dt_state;
+    dt_cntr_st_o        <= dt_cntr_st;
 
 VMMdemux: vmmSignalsDemux
 port map(

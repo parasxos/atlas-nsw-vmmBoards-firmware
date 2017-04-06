@@ -55,13 +55,12 @@ architecture Behavioral of trigger is
     signal mode              : std_logic;
     signal trint_pre         : std_logic                        := '0';
     signal trext_pre         : std_logic                        := '0';
-    signal trext_stage1      : std_logic := '0';
-    signal trext_ff_synced   : std_logic := '0';    
-    signal tren_buff         : std_logic                         := '0'; -- buffered enable signal
+    signal trext_stage1      : std_logic                        := '0';
+    signal trext_ff_synced   : std_logic                        := '0';    
+    signal tren_buff         : std_logic                        := '0'; -- buffered enable signal
     -- Special Readout Mode
-    signal trext_roMode_stage1      : std_logic := '0';
+    signal trext_RoMode_stage1      : std_logic := '0';
     signal trext_RoMode_ff_synced   : std_logic := '0';
-    signal trext_RoMod_stage1       : std_logic := '0';
     signal request2ckbc_i           : std_logic := '0';
     
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
@@ -173,8 +172,8 @@ begin
 
 trReadoutMode2Ckbc: process(clk_art)
 begin
-    if rising_edge(clk_art) and ckbcMode = '1' then
-        if trext_RoMode_ff_synced = '1' then
+    if rising_edge(clk_art) then
+        if trext_RoMode_ff_synced = '1' and ckbcMode = '1' then
             request2ckbc_i  <= '1';
         else 
             request2ckbc_i  <= '0';
@@ -229,15 +228,15 @@ triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint)
         end if;
     end process;
 
-externalTriggerSynchronizerSpecialReadoutMode: process(clk_art, trext, trext_stage1)
+externalTriggerSynchronizerSpecialReadoutMode: process(clk_art)
 begin
     if rising_edge(clk_art) then 
-        trext_roMode_stage1    <= trext;
-        trext_RoMode_ff_synced <= trext_RoMod_stage1;
+        trext_RoMode_stage1    <= trext;
+        trext_RoMode_ff_synced <= trext_RoMode_stage1;
     end if;
 end process;
 
-externalTriggerSynchronizer: process(clk, trext, trext_stage1)
+externalTriggerSynchronizer: process(clk)
 begin
     if rising_edge(clk) then 
         trext_stage1    <= trext;

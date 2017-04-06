@@ -50,8 +50,8 @@ entity packet_formation is
         --resetting   : in std_logic;
         rst_FIFO    : out std_logic;
         
-        latency     : in std_logic_vector(15 downto 0)
-
+        latency     : in std_logic_vector(15 downto 0);
+        dbg_st_o    : out std_logic_vector(4 downto 0)
         --trigger     : in std_logic -- is not used
     );
 end packet_formation;
@@ -333,6 +333,7 @@ end process;
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";  
                             --    8    &    16    &     5    &   3
+    dbg_st_o        <= debug_state;
 
 --ilaPacketFormation: ila_pf
 --port map(

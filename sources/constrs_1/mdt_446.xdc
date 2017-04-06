@@ -127,6 +127,8 @@ set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trext_RoMode_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trext_RoMode_ff_synced_reg]
 
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_i_reg]
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_sync_reg]

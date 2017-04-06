@@ -57,7 +57,9 @@ entity FIFO2UDP is
 
         vmmID                       : in  std_logic_vector(2 downto 0);
         
-        trigger_out                 : out std_logic
+        trigger_out                 : out std_logic;
+        count_o                     : out std_logic_vector(3 downto 0);
+        faifouki                    : out std_logic
     );
 end FIFO2UDP;
 
@@ -397,6 +399,8 @@ wr_en_int                   <= wr_en;
 end_packet_synced           <= end_packet;
 
 trigger_out                 <= trigger;
+count_o                     <= std_logic_vector(count);
+faifouki                    <= fifo_empty_len;
    
 --ila_daq_send : ila_0
 --    port map

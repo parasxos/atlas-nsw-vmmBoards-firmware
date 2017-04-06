@@ -294,13 +294,13 @@ begin
 end process;
 
 -- process to handle trigger state
-triggerState_proc: process(trig_state_reg, ext_trg_i)
+triggerState_proc: process(trig_state_reg, ext_trg_i, ckbcMode_i)
 begin
     case trig_state_reg is
     when x"04"  => ext_trg_i <= '1';
     when x"05"  => ckbcMode_i<= '1';
-    when x"07"  => ext_trg_i <= '0';
-    when others => ext_trg_i <= ext_trg_i;
+    when x"07"  => ext_trg_i <= '0'; ckbcMode_i <= '0';
+    when others => ext_trg_i <= ext_trg_i; ckbcMode_i <= ckbcMode_i;
     end case;
 end process;
 

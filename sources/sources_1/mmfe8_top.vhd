@@ -241,8 +241,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320793227";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
   
   -- Set to '1' if MMFE8 VMM3 is used
@@ -552,6 +552,8 @@ architecture Behavioral of mmfe8_top is
     signal ckbc_enable              : std_logic := '0';
     signal cktp_enable              : std_logic := '0';
     signal art_out_ff               : std_logic := '0';
+    signal dt_state                 : std_logic_vector(3 downto 0) := b"0000";
+    signal dt_cntr_st               : std_logic_vector(3 downto 0) := b"0000";
    
     -------------------------------------------------
     -- Trigger Signals
@@ -598,7 +600,13 @@ architecture Behavioral of mmfe8_top is
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
     signal pfBusy_i     : std_logic := '0';
+    signal pf_dbg_st    : std_logic_vector(4 downto 0) := b"00000";
     
+    -------------------------------------------------
+    -- FIFO2UDP Signals
+    -------------------------------------------------    
+    signal FIFO2UDP_state   : std_logic_vector(3 downto 0) := b"0000";
+    signal faifouki         : std_logic := '0';
     ------------------------------------------------------------------
     -- xADC signals
     ------------------------------------------------------------------
@@ -665,6 +673,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Debugging Signals
     -------------------------------------------------
+    signal overviewProbe        : std_logic_vector(63 downto 0);
     signal vmmSignalsProbe      : std_logic_vector(63 downto 0);
     signal triggerETRProbe      : std_logic_vector(63 downto 0);
     signal configurationProbe   : std_logic_vector(63 downto 0);
@@ -765,6 +774,16 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------
+    attribute keep of is_state                  : signal is "TRUE";
+    attribute keep of pf_dbg_st                 : signal is "TRUE";
+    attribute keep of dt_state                  : signal is "TRUE";
+    attribute keep of dt_cntr_st                : signal is "TRUE";
+    attribute keep of FIFO2UDP_state            : signal is "TRUE";
+    attribute keep of faifouki                  : signal is "TRUE";
+    attribute keep of UDPDone                   : signal is "TRUE";
+    attribute keep of CKBC_glbl                 : signal is "TRUE";
+    attribute keep of tr_out_i                  : signal is "TRUE";
+    
 --    attribute keep of set_reset                 : signal is "TRUE";
 --    attribute dont_touch of set_reset           : signal is "TRUE";
 --    attribute keep of tx_axis_mac_tready_int    : signal is "TRUE";
@@ -902,6 +921,7 @@ architecture Behavioral of mmfe8_top is
     -- 22. CDCC
     -- 23. VIO_IP
     -- 24. clk_gen_wrapper
+    -- 25. ila_overview
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -987,7 +1007,10 @@ architecture Behavioral of mmfe8_top is
             
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
-            vmmEventDone            : out std_logic
+            vmmEventDone            : out std_logic;
+            
+            dt_state_o              : out std_logic_vector(3 downto 0);
+            dt_cntr_st_o            : out std_logic_vector(3 downto 0)
         );
     end component;
     -- 7
@@ -1011,7 +1034,9 @@ architecture Behavioral of mmfe8_top is
     
             vmmID                       : in  std_logic_vector(2 downto 0);
             
-            trigger_out                 : out std_logic
+            trigger_out                 : out std_logic;
+            count_o                     : out std_logic_vector(3 downto 0);
+            faifouki                    : out std_logic
         );
     end component;
     -- 8
@@ -1063,7 +1088,8 @@ architecture Behavioral of mmfe8_top is
             --resetting   : in std_logic;
             rst_FIFO    : out std_logic;
             
-            latency     : in std_logic_vector(15 downto 0)
+            latency     : in std_logic_vector(15 downto 0);
+            dbg_st_o    : out std_logic_vector(4 downto 0)
             
             --trigger     : in std_logic
     );
@@ -1461,6 +1487,8 @@ architecture Behavioral of mmfe8_top is
         ckbc_enable         : in  std_logic;
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
+        readout_mode        : in  std_logic;
+        enable_ro_ckbc      : in  std_logic;
         cktp_pulse_width    : in  std_logic_vector(4 downto 0);
         cktp_max_num        : in  std_logic_vector(15 downto 0);
         cktp_period         : in  std_logic_vector(15 downto 0);
@@ -1471,7 +1499,14 @@ architecture Behavioral of mmfe8_top is
         CKTP                : out std_logic;
         CKBC                : out std_logic
     );
-    end component;   
+    end component;
+    -- 25
+    component ila_overview
+    Port(
+        clk     : in std_logic;
+        probe0  : in std_logic_vector(63 downto 0)
+    );
+    end component;
 
 begin
 
@@ -1842,7 +1877,10 @@ readout_vmm: vmm_readout
         
         vmmWordReady            => vmmWordReady_i,
         vmmWord                 => vmmWord_i,
-        vmmEventDone            => vmmEventDone_i
+        vmmEventDone            => vmmEventDone_i,
+        
+        dt_state_o              => dt_state,
+        dt_cntr_st_o            => dt_cntr_st
     );
 
 trigger_instance: trigger
@@ -1886,7 +1924,9 @@ FIFO2UDP_instance: FIFO2UDP
 
         vmmID                       => pf_vmmIdRo,
         
-        trigger_out                 => trigger_i
+        trigger_out                 => trigger_i,
+        count_o                     => FIFO2UDP_state,
+        faifouki                    => faifouki
     );       
 
 packet_formation_instance: packet_formation
@@ -1916,8 +1956,8 @@ packet_formation_instance: packet_formation
         --resetting       => etr_reset_latched,
         rst_FIFO        => pf_rst_FIFO,
 
-        latency         => latency_conf
-        
+        latency         => latency_conf,
+        dbg_st_o        => pf_dbg_st
         --trigger         => trigger_i
     );   
         
@@ -2035,6 +2075,8 @@ ckbc_cktp_generator: clk_gen_wrapper
         ckbc_enable         => ckbc_enable,
         cktp_enable         => cktp_enable,
         cktp_primary        => vmm_cktp_primary, -- from flow_fsm
+        readout_mode        => ckbcMode,
+        enable_ro_ckbc      => request2ckbc,
         cktp_pulse_width    => cktp_pulse_width(4 downto 0),
         cktp_max_num        => cktp_max_num,
         cktp_period         => cktp_period,
@@ -2605,6 +2647,12 @@ end process;
 --        probe4  => dataOutProbe,
 --        probe5  => flowProbe
 --    );
+
+ila_top: ila_overview
+    port map (
+        clk     => userclk2,
+        probe0  => overviewProbe
+    );
     
 --VIO_DEFAULT_IP: vio_ip
 --      PORT MAP (
@@ -2612,6 +2660,17 @@ end process;
 --        probe_out0  => default_IP,
 --        probe_out1  => default_MAC
 --      );
+
+    overviewProbe(3 downto 0)          <= is_state;
+    overviewProbe(8 downto 4)          <= pf_dbg_st;
+    overviewProbe(12 downto 9)         <= dt_state;
+    overviewProbe(16 downto 13)        <= dt_cntr_st;
+    overviewProbe(20 downto 17)        <= FIFO2UDP_state;
+    overviewProbe(21)                  <= faifouki;
+    overviewProbe(22)                  <= UDPDone;
+    overviewProbe(23)                  <= CKBC_glbl;
+    overviewProbe(24)                  <= tr_out_i;
+    overviewProbe(63 downto 25)        <= (others => '0');
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;

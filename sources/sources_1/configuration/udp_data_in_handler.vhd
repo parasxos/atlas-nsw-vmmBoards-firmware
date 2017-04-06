@@ -484,7 +484,8 @@ fpga_config_logic: fpga_config_block
         fpgaPacket_rdy      => fpgaPacket_rdy,
         latency             => latency,
         daq_on              => daq_on,
-        ext_trigger         => ext_trigger
+        ext_trigger         => ext_trigger,
+        ckbcMode            => ckbcMode
     );
 
 vmm_config_logic: vmm_config_block

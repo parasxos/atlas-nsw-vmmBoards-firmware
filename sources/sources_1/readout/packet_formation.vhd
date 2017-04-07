@@ -26,34 +26,34 @@ use UNISIM.VComponents.all;
 
 entity packet_formation is
     Port(
-        clk         : in std_logic;
+        clk             : in std_logic;
 
-        newCycle    : in std_logic;
+        newCycle        : in std_logic;
         
-        trigVmmRo   : out std_logic;
-        vmmId       : out std_logic_vector(2 downto 0);
-        vmmWord     : in std_logic_vector(63 downto 0);
-        vmmWordReady: in std_logic;
-        vmmEventDone: in std_logic;
+        trigVmmRo       : out std_logic;
+        vmmId           : out std_logic_vector(2 downto 0);
+        vmmWord         : in std_logic_vector(63 downto 0);
+        vmmWordReady    : in std_logic;
+        vmmEventDone    : in std_logic;
 
-        UDPDone     : in std_logic;
-        pfBusy      : out std_logic;				        -- Control signal to ETR
-        glBCID      : in std_logic_vector(11 downto 0);		-- glBCID counter from ETR
+        UDPDone         : in std_logic;
+        pfBusy          : out std_logic;				        -- Control signal to ETR
+        glBCID          : in std_logic_vector(11 downto 0);		-- glBCID counter from ETR
 
-        packLen     : out std_logic_vector(11 downto 0);
-        dataout     : out std_logic_vector(63 downto 0);
-        wrenable    : out std_logic;
-        end_packet  : out std_logic;
+        packLen         : out std_logic_vector(11 downto 0);
+        dataout         : out std_logic_vector(63 downto 0);
+        wrenable        : out std_logic;
+        end_packet      : out std_logic;
         
-        tr_hold     : out std_logic;
-        reset       : in std_logic;
-        rst_vmm     : out std_logic;
+        tr_hold         : out std_logic;
+        reset           : in std_logic;
+        rst_vmm         : out std_logic;
         --resetting   : in std_logic;
-        rst_FIFO    : out std_logic;
+        rst_FIFO        : out std_logic;
         
-        latency     : in std_logic_vector(15 downto 0);
-        dbg_st_o    : out std_logic_vector(4 downto 0)
-        --trigger     : in std_logic -- is not used
+        latency         : in std_logic_vector(15 downto 0);
+        dbg_st_o        : out std_logic_vector(4 downto 0);
+        trext_synced125 : in std_logic
     );
 end packet_formation;
 
@@ -136,6 +136,7 @@ begin
         if reset = '1' then
             debug_state             <= "11111";
             eventCounter_i          <= to_unsigned(0, 32);
+            tr_hold                 <= '0';
             pfBusy_i		        <= '0';
             triggerVmmReadout_i     <= '0';
             rst_FIFO                <= '1';
@@ -157,20 +158,17 @@ begin
                 selectDataInput         <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
-                	daqFIFO_wr_en   <= '0';
                 	state           <= increaseCounter;
-                else
-                    tr_hold         <= '0';
                 end if;
                 
             when increaseCounter =>
-                debug_state <= "00001";
+                debug_state     <= "00001";
                 eventCounter_i  <= eventCounter_i + 1;
                 state           <= waitForLatency;
                 
             when waitForLatency =>
                 debug_state <= "00010";
-                --tr_hold         <= '1';                 -- Prevent new triggers
+                tr_hold             <= '1'; -- Prevent new triggers
                 if trigLatencyCnt > trigLatency then 
                     state           <= captureEventID;
                 else
@@ -293,9 +291,8 @@ begin
                 
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
                 debug_state <= "01111";
-                --tr_hold         <= '0';     -- Allow new triggers
-                if newCycle /= '1' then
-                    tr_hold         <= '0';
+                if trext_synced125 /= '1' then
+                    tr_hold                 <= '0'; -- Allow new triggers
                     state           <= waitingForNewCycle;
                 end if;
 

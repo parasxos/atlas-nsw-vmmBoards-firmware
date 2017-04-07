@@ -235,8 +235,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320793225";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123223";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
   
   -- Set to '1' if MMFE8 VMM3 is used
@@ -570,6 +570,7 @@ architecture Behavioral of mmfe8_top is
     signal internalTrigger_state : integer := 0;
     signal CH_TRIGGER_i       : std_logic := '0';
     signal request2ckbc       : std_logic := '0';
+    signal trext_synced125_i  : std_logic := '0';
   
     -------------------------------------------------
     -- Event Timing & Soft Reset
@@ -1056,41 +1057,42 @@ architecture Behavioral of mmfe8_top is
           
           event_counter   : out std_logic_vector(31 DOWNTO 0);
           tr_out          : out std_logic;
+          trext_synced125 : out std_logic;
           latency         : in std_logic_vector(15 DOWNTO 0)
       );
     end component;
     -- 9
     component packet_formation is
     port (
-            clk         : in std_logic;
+            clk             : in std_logic;
     
-            newCycle    : in std_logic;
+            newCycle        : in std_logic;
             
-            trigVmmRo   : out std_logic;
-            vmmId       : out std_logic_vector(2 downto 0);
-            vmmWord     : in std_logic_vector(63 downto 0);
-            vmmWordReady: in std_logic;
-            vmmEventDone: in std_logic;
+            trigVmmRo       : out std_logic;
+            vmmId           : out std_logic_vector(2 downto 0);
+            vmmWord         : in std_logic_vector(63 downto 0);
+            vmmWordReady    : in std_logic;
+            vmmEventDone    : in std_logic;
         
-            UDPDone     : in std_logic;
-            pfBusy      : out std_logic;
-            glBCID      : in std_logic_vector(11 downto 0);
+            UDPDone         : in std_logic;
+            pfBusy          : out std_logic;
+            glBCID          : in std_logic_vector(11 downto 0);
 
-            packLen     : out std_logic_vector(11 downto 0);
-            dataout     : out std_logic_vector(63 downto 0);
-            wrenable    : out std_logic;
-            end_packet  : out std_logic;
+            packLen         : out std_logic_vector(11 downto 0);
+            dataout         : out std_logic_vector(63 downto 0);
+            wrenable        : out std_logic;
+            end_packet      : out std_logic;
             
-            tr_hold     : out std_logic;
-            reset       : in std_logic;
-            rst_vmm     : out std_logic;
+            tr_hold         : out std_logic;
+            reset           : in std_logic;
+            rst_vmm         : out std_logic;
             --resetting   : in std_logic;
-            rst_FIFO    : out std_logic;
+            rst_FIFO        : out std_logic;
             
-            latency     : in std_logic_vector(15 downto 0);
-            dbg_st_o    : out std_logic_vector(4 downto 0)
+            latency         : in std_logic_vector(15 downto 0);
+            dbg_st_o        : out std_logic_vector(4 downto 0);
             
-            --trigger     : in std_logic
+            trext_synced125 : in std_logic
     );
     end component;
     -- 10
@@ -1898,13 +1900,14 @@ trigger_instance: trigger
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
-        trext           => CH_TRIGGER,          -- External trigger is to be driven to this port(TEMPORARILY GROUNDED)
+        trext           => CH_TRIGGER,          -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
         reset           => tr_reset,
 
         event_counter   => event_counter_i,
         tr_out          => tr_out_i,
+        trext_synced125 => trext_synced125_i,
         latency         => latency_conf
     );
 
@@ -1961,8 +1964,8 @@ packet_formation_instance: packet_formation
         rst_FIFO        => pf_rst_FIFO,
 
         latency         => latency_conf,
-        dbg_st_o        => pf_dbg_st
-        --trigger         => trigger_i
+        dbg_st_o        => pf_dbg_st,
+        trext_synced125 => trext_synced125_i
     );   
         
 data_selection:  select_data

@@ -44,6 +44,7 @@ entity trigger is
 
             event_counter   : out STD_LOGIC_VECTOR(31 DOWNTO 0);
             tr_out          : out STD_LOGIC;
+            trext_synced125 : out STD_LOGIC;
             latency         : in STD_LOGIC_VECTOR(15 DOWNTO 0)
             );
 end trigger;
@@ -52,22 +53,24 @@ architecture Behavioral of trigger is
 
 -- Signals
 
-    signal event_counter_i   : std_logic_vector(31 downto 0)    := ( others => '0' );
-    signal tr_out_i          : std_logic                        := '0';
-    signal mode              : std_logic;
-    signal trint_pre         : std_logic                        := '0';
-    signal trext_pre         : std_logic                        := '0';
-    signal trext_stage1      : std_logic                        := '0';
-    signal trext_ff_synced   : std_logic                        := '0';    
-    signal tren_buff         : std_logic                        := '0'; -- buffered enable signal
+    signal event_counter_i      : std_logic_vector(31 downto 0)    := ( others => '0' );
+    signal tr_out_i             : std_logic := '0';
+    signal mode                 : std_logic := '0';
+    signal trint_pre            : std_logic := '0';
+    signal trext_pre            : std_logic := '0';
+    signal trext_stage1         : std_logic := '0';
+    signal trext_ff_synced      : std_logic := '0';    
+    signal tren_buff            : std_logic := '0'; -- buffered enable signal
+    signal tr_out_i_stage1      : std_logic := '0';
+    signal tr_out_i_ff_synced   : std_logic := '0';
+    signal trext_stage_resynced : std_logic := '0';
+    signal trext_ff_resynced    : std_logic := '0';
     -- Special Readout Mode
-    signal trext_RoMode_stage1      : std_logic := '0';
-    signal trext_RoMode_ff_synced   : std_logic := '0';
-    signal request2ckbc_i           : std_logic := '0';
-    signal trigLatencyCnt           : integer := 0;
-    signal trigLatency              : integer := 140;
+    signal request2ckbc_i    : std_logic := '0';
+    signal trigLatencyCnt    : integer := 0;
+    signal trigLatency       : integer := 140;
     
-    type stateType is (waiting, latencyCounting);
+    type stateType is (waitingForTrigger, waitingForLatency, issueRequest);
     signal state            : stateType;
     
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
@@ -79,7 +82,7 @@ architecture Behavioral of trigger is
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
     
     -- Debugging
-    signal probe0_out         : std_logic_vector(39 DOWNTO 0);
+    signal probe0_out         : std_logic_vector(63 downto 0);
     
 -- Attributes
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
@@ -87,25 +90,28 @@ architecture Behavioral of trigger is
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
 
 -------------------------------------------------------------------
--- Keep signals for ILA
+-- Mark debug signals for ILA
 -------------------------------------------------------------------    
---    attribute keep : string;
+    attribute mark_debug : string;
 
---    attribute keep of event_counter_i       :    signal    is    "true";
---    attribute keep of tr_out_i              :    signal    is    "true";
---    attribute keep of tren                  :    signal    is    "true";
---    attribute keep of trmode                :    signal    is    "true";
---    attribute keep of trint                 :    signal    is    "true";
---    attribute keep of mode                  :    signal    is    "true";
---    attribute keep of trint_pre             :    signal    is    "true";
---    attribute keep of trext_pre             :    signal    is    "true";
+    attribute mark_debug of event_counter_i     :    signal    is    "true";
+    attribute mark_debug of tr_out_i            :    signal    is    "true";
+    attribute mark_debug of tren                :    signal    is    "true";
+    attribute mark_debug of trmode              :    signal    is    "true";
+    attribute mark_debug of trint               :    signal    is    "true";
+    attribute mark_debug of mode                :    signal    is    "true";
+    attribute mark_debug of trint_pre           :    signal    is    "true";
+    attribute mark_debug of trext_pre           :    signal    is    "true";
+    attribute mark_debug of tr_out_i_ff_synced  :    signal    is    "true";
+    attribute mark_debug of trext               :    signal    is    "true";
+    attribute mark_debug of tren_buff           :    signal    is    "true";
     
 -- Components if any
 
     component ila_trigger
     port(
-        clk     : IN STD_LOGIC;
-        probe0  : IN STD_LOGIC_VECTOR(39 DOWNTO 0)
+        clk     : in std_logic;
+        probe0  : in std_logic_vector(63 downto 0)
     );
     end component;
 
@@ -177,19 +183,37 @@ begin
 --end process;
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
 
-trReadoutMode2Ckbc: process(clk_art)
+trReadoutMode2CkbcDelayedRequest: process(clk_art)
 begin
-    if rising_edge(clk_art) then  
-        if trigLatencyCnt < trigLatency and trext_RoMode_ff_synced = '1' and ckbcMode = '1' then 
-            trigLatencyCnt      <= trigLatencyCnt + 1;
-            request2ckbc_i      <= '0';
-        elsif trigLatencyCnt = trigLatency then
-            trigLatencyCnt      <= trigLatencyCnt + 1;
-            request2ckbc_i      <= '1';
-        else
-            trigLatencyCnt      <= 0;
-            request2ckbc_i      <= '0';
-        end if;
+    if rising_edge(clk_art) then
+        
+        case state is
+        
+            when waitingForTrigger =>
+                request2ckbc_i      <= '0';
+                if  tren_buff = '1' and tr_out_i_ff_synced = '1' and ckbcMode = '1' then
+                    trigLatencyCnt      <= 0;
+                    state               <= waitingForLatency;
+                end if;
+                
+            when waitingForLatency =>
+                if trigLatencyCnt < trigLatency then
+                    trigLatencyCnt  <= trigLatencyCnt + 1;
+                else
+                    state           <= issueRequest;
+                end if;
+                
+            when issueRequest =>
+                request2ckbc_i      <= '1';
+                state               <= waitingForTrigger;
+                
+            when others =>
+                request2ckbc_i      <= '0';
+                trigLatencyCnt      <= 0;
+                state               <= waitingForTrigger;
+
+        end case;
+        
     end if;
 end process;
 
@@ -240,28 +264,30 @@ triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint, tren_buff)
         end if;
     end process;
 
-externalTriggerSynchronizerSpecialReadoutMode: process(clk_art)
+troutSyncToFpgaLogic: process(clk)
 begin
-    if rising_edge(clk_art) then 
-        trext_RoMode_stage1    <= trext;
-        trext_RoMode_ff_synced <= trext_RoMode_stage1;
+    if rising_edge(clk) then 
+        tr_out_i_stage1     <= tr_out_i;
+        tr_out_i_ff_synced  <= tr_out_i_stage1;
+        trext_stage_resynced<=trext_ff_synced;
+        trext_ff_resynced   <=trext_stage_resynced;
     end if;
 end process;
 
-externalTriggerSynchronizer: process(clk)
+externalTriggerSynchronizer160: process(clk_art)
 begin
-    if rising_edge(clk) then 
+    if rising_edge(clk_art) then 
         trext_stage1    <= trext;
         trext_ff_synced <= trext_stage1;
     end if;
 end process;
 
-eventCounterProc: process (clk, reset, mode, trext, trint)
+eventCounterProc: process (clk_art, reset)
     begin
         if reset = '1' then
             event_counter_i     <= x"00000000";
         else
-            if rising_edge(clk) then
+            if rising_edge(clk_art) then
                 if mode = '0' then
                     if (tren_buff = '1' and trmode = '0' and trint = '1' and trint_pre = '0') then
                         event_counter_i     <= event_counter_i + 1;
@@ -289,27 +315,31 @@ eventCounterProc: process (clk, reset, mode, trext, trint)
     
 -- Signal assignments
 event_counter       <= event_counter_i;
-tr_out              <= tr_out_i;
+tr_out              <= tr_out_i_ff_synced;
 request2ckbc        <= request2ckbc_i;
+trext_synced125     <= trext_ff_resynced;
 trigLatency         <= to_integer(unsigned(latency));
 
 -- Instantiations if any
 
---ilaTRIG: ila_trigger
---port map(
---    clk                     =>  clk,
---    probe0                  =>  probe0_out
---    );
+ilaTRIG: ila_trigger
+port map(
+    clk                     =>  clk_art,
+    probe0                  =>  probe0_out
+    );
     
---    probe0_out(0)               <=  tr_out_i;
---    probe0_out(1)               <=  tren;
---    probe0_out(2)               <=  trmode;
---    probe0_out(3)               <=  trint;
---    probe0_out(4)               <=  mode;
---    probe0_out(36 downto 5)     <=  event_counter_i;
---    probe0_out(37)              <=  trint_pre;
---    probe0_out(38)              <=  trext_pre;
---    probe0_out(39)              <=  '0';
+    probe0_out(0)               <= tr_out_i_ff_synced;
+    probe0_out(1)               <= trext;
+    probe0_out(2)               <= trmode;
+    probe0_out(3)               <= trint;
+    probe0_out(4)               <= mode;
+    probe0_out(5)               <= trint_pre;
+    probe0_out(6)               <= trext_pre;
+    probe0_out(7)               <= tren_buff;
+    probe0_out(8)               <= request2ckbc_i;
+    probe0_out(9)               <= trext_ff_synced;
+    probe0_out(63 downto 10)    <= (others => '0');
+    --probe0_out(36 downto 5)     <=  event_counter_i;
     
 
 end Behavioral;

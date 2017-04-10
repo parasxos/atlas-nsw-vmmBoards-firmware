@@ -235,8 +235,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123222";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123223";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
   
   -- Set to '1' if MMFE8 VMM3 is used
@@ -1761,7 +1761,7 @@ trigger_instance: trigger
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
-        trext           => CH_TRIGGER,          -- External trigger is to be driven to this port
+        trext           => CH_TRIGGER_i,        -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
         reset           => tr_reset,
@@ -2424,9 +2424,9 @@ end process;
     vmm_bitmask             <= "11111111";
     
     pf_newCycle             <= tr_out_i;
-    CH_TRIGGER_i            <= CH_TRIGGER;
-    TRIGGER_OUT_P           <= not art2;
-    TRIGGER_OUT_N           <= art2;
+    CH_TRIGGER_i            <= not CH_TRIGGER;
+    TRIGGER_OUT_P           <= art2;
+    TRIGGER_OUT_N           <= not art2;
     MO                      <= MO_i;  
 
     test_data               <= udp_rx_int.data.data_in;

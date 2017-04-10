@@ -235,8 +235,8 @@ end mmfe8_top;
 architecture Behavioral of mmfe8_top is
 
   -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123223";
+  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123222";
   signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
   
   -- Set to '1' if MMFE8 VMM3 is used
@@ -272,7 +272,6 @@ architecture Behavioral of mmfe8_top is
   -- Extra registers to ease IOB placement
   signal status_vector_int : std_logic_vector(15 downto 0);
   
-  ----------------------------panos---------------------------------
 --TODO: Review signals and distribute to appropriate "set" i.e Ethernet/UDP/Config etc (Christos)
   signal gmii_txd_emac               : std_logic_vector(7 downto 0);
   signal gmii_tx_en_emac             : std_logic; 
@@ -324,7 +323,6 @@ architecture Behavioral of mmfe8_top is
   signal test_valid, test_last       : std_logic;
   signal icmp_rx_start               : std_logic;
   signal icmp_rxo                    : icmp_rx_type;
-
   signal test_data_out                   : std_logic_vector(7 downto 0); 
   signal test_valid_out, test_last_out       : std_logic;  
   signal user_data_out_i             : std_logic_vector(63 downto 0);
@@ -335,7 +333,6 @@ architecture Behavioral of mmfe8_top is
   signal user_wr_en_int              : std_logic := '0';
   signal reset                       : std_logic := '0';
   signal end_packet_i                : std_logic := '0';    
-  signal conf_done_int_synced        : std_logic := '0';
   signal we_conf_int                 : std_logic := '0';    
   signal packet_length_int           : std_logic_vector(11 downto 0);
   signal daq_data_out_i              : std_logic_vector(63 downto 0);
@@ -343,7 +340,6 @@ architecture Behavioral of mmfe8_top is
   signal daq_wr_en_i                 : std_logic := '0';    
   signal end_packet_daq              : std_logic := '0'; 
   signal start_conf_proc_int         : std_logic := '0';
-  signal status_int_old               : std_logic_vector(3 downto 0);
   
 --TODO: Review signals with updated configuration (Christos)
 --  signal  VMM_SCK                       :  std_logic;
@@ -405,7 +401,7 @@ architecture Behavioral of mmfe8_top is
   signal vmm_ena_acq_rst  : std_logic := '0';
   signal vmm_wen_acq_rst  : std_logic := '0';
   
-  -- vmm signals
+  -- misc signals
   signal conf_di_i        : std_logic;
   signal conf_do_i        : std_logic;
   signal conf_ena_i       : std_logic := '0';
@@ -432,8 +428,6 @@ architecture Behavioral of mmfe8_top is
   signal fifo_data_out_int  : std_logic_vector(7 downto 0) := x"00";
   signal fifo_data          : std_logic_vector(7 downto 0) := x"00";
   signal re_out             : std_logic := '0';
-  signal status_int         : std_logic_vector(3 downto 0) := "0000";
-  signal status_int_synced  : std_logic_vector(3 downto 0) := "0000";
   signal cnt_reset          : integer := 0;
   signal set_reset          : std_logic := '0';
   signal art_in_i           : std_logic := '0';
@@ -444,28 +438,22 @@ architecture Behavioral of mmfe8_top is
   signal vmm_ena_conf       : std_logic := '1';
   signal tko_i              : std_logic;
   signal probe_out0         : std_logic_vector(0 downto 0);
-  
   signal MO_i               : std_logic := 'Z';
-  
-  signal conf_done_int      : std_logic := '0';
   signal cs_int             : std_logic := '1';
   signal udp_header_int     : std_logic := '0';
   signal cnt_reply          : integer := 0;
-  
-  signal end_packet_conf_int     : std_logic := '0';
-  signal end_packet_daq_int     : std_logic := '0';
+  signal end_packet_conf_int: std_logic := '0';
+  signal end_packet_daq_int : std_logic := '0';
   signal is_state           : std_logic_vector(3 downto 0)  := "1010";
   signal latency_conf       : std_logic_vector(15 downto 0) := x"0000";
   signal test               : std_logic := '0';
   signal count_test         : integer := 0;
   signal art_out            : std_logic := '0';
   signal art_cnt            : integer := 0;
-  signal art_cnt2            : integer := 0;
+  signal art_cnt2           : integer := 0;
   signal art2               : std_logic := '0';
   signal artall             : std_logic := '0';
-  
   signal reset_FF           : std_logic := '0';
-  
   signal wait_cnt           : unsigned(7 downto 0) := (others => '0');
   signal vmm_id_rdy         : std_logic := '0';
   signal newIP_rdy          : std_logic := '0';
@@ -483,7 +471,6 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     signal vmm_wen_vec      : std_logic_vector(8 downto 1);
     signal vmm_ena_vec      : std_logic_vector(8 downto 1);
---TODO: Fix with MMFE8 VMM3 (paris)
     signal vmm_ena          : std_logic;
     signal cktk_out_vec     : std_logic_vector(8 downto 1);
     signal ckdt_out_vec     : std_logic_vector(8 downto 1);
@@ -494,8 +481,6 @@ architecture Behavioral of mmfe8_top is
     signal cktk_out_i       : std_logic;
     signal vmm_id           : std_logic_vector(15 downto 0) := x"0000";
     signal vmm_id_int       : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_synced    : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_old       : std_logic_vector(15 downto 0) := x"0000";  
     signal vmm_do_1         : std_logic;  
     signal VMM_SDI_i        : std_logic;
     signal vmm_tki          : std_logic := '0';
@@ -506,27 +491,7 @@ architecture Behavioral of mmfe8_top is
     signal CKTP_glbl_s125   : std_logic := '0';        
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
-    signal tied_to_gnd_i    : std_logic := '0';
     signal vmm_ckbc         : std_logic;
-
---TODO: Fix with MMFE8 VMM3 (paris)
---    signal vmm_cktp_1       : std_logic;
---    signal vmm_cktp_2       : std_logic;
---    signal vmm_cktp_3       : std_logic;
---    signal vmm_cktp_4       : std_logic;
---    signal vmm_cktp_5       : std_logic;
---    signal vmm_cktp_6       : std_logic;
---    signal vmm_cktp_7       : std_logic;
---    signal vmm_cktp_8       : std_logic;
-    
---    signal vmm_sdo_1         : std_logic;
---    signal vmm_sdo_2         : std_logic;
---    signal vmm_sdo_3         : std_logic;
---    signal vmm_sdo_4         : std_logic;
---    signal vmm_sdo_5         : std_logic;
---    signal vmm_sdo_6         : std_logic;
---    signal vmm_sdo_7         : std_logic;
---    signal vmm_sdo_8         : std_logic;
 
     -------------------------------------------------
     -- Readout Signals
@@ -604,6 +569,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------    
     signal FIFO2UDP_state   : std_logic_vector(3 downto 0) := b"0000";
     signal faifouki         : std_logic := '0';
+    
     ------------------------------------------------------------------
     -- xADC signals
     ------------------------------------------------------------------
@@ -660,6 +626,7 @@ architecture Behavioral of mmfe8_top is
     signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
     signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
     signal ckbcMode         : std_logic := '0';
+    
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -751,7 +718,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Packet Formation
     -------------------------------------------------------------------
---    attribute keep of pf_newCycle           :  signal  is  "true";
+--    attribute keep of pf_newCycle           : signal is "true";
 --    attribute keep of pfBusy_i              : signal is "true";
 --    attribute dont_touch of pfBusy_i        : signal is "true";
     
@@ -769,129 +736,23 @@ architecture Behavioral of mmfe8_top is
 --    attribute keep of ss_t                          : signal is "TRUE";  
     
     -------------------------------------------------------------------
-    -- Other
+    -- Overview
     -------------------------------------------------------------------
-    attribute keep of is_state                  : signal is "TRUE";
-    attribute keep of pf_dbg_st                 : signal is "TRUE";
-    attribute keep of dt_state                  : signal is "TRUE";
-    attribute keep of dt_cntr_st                : signal is "TRUE";
-    attribute keep of FIFO2UDP_state            : signal is "TRUE";
-    attribute keep of faifouki                  : signal is "TRUE";
-    attribute keep of UDPDone                   : signal is "TRUE";
-    attribute keep of CKBC_glbl                 : signal is "TRUE";
-    attribute keep of tr_out_i                  : signal is "TRUE";
-    attribute keep of conf_state                : signal is "TRUE";
-    attribute keep of din_valid                 : signal is "TRUE";
-    
---    attribute keep of set_reset                 : signal is "TRUE";
---    attribute dont_touch of set_reset           : signal is "TRUE";
---    attribute keep of tx_axis_mac_tready_int    : signal is "TRUE";
---    attribute keep of test_data                 : signal is "TRUE";
---    attribute keep of status_int                : signal is "TRUE";
---    attribute keep of status_int_synced         : signal is "TRUE";
---    attribute keep of user_data_out_i           : signal is "TRUE";
---    attribute dont_touch of user_data_out_i     : signal is "TRUE";
---    attribute keep of we_conf_int               : signal is "TRUE";
---    attribute keep of fifo_data_out_int         : signal is "TRUE";
---    attribute keep of re_out_int                : signal is "TRUE";
---    attribute keep of daqFIFO_wr_en_i           : signal is "TRUE";
---    attribute keep of daqFIFO_din_i             : signal is "TRUE";
---    attribute keep of user_conf_i               : signal is "TRUE";
---    attribute keep of send_error_int            : signal is "TRUE";
---    attribute keep of test_data_out             : signal is "TRUE";
---    attribute keep of test_valid_out            : signal is "TRUE";
---    attribute keep of test_last_out             : signal is "TRUE";
---    attribute keep of udp_tx_start_int          : signal is "TRUE";
---    attribute keep of udp_tx_data_out_ready_int : signal is "TRUE";
---    attribute keep of vmm_id                    : signal is "TRUE";
---    attribute keep of vmm_id_synced             : signal is "TRUE";
---    attribute keep of vmm_id_old                : signal is "TRUE";
---    attribute keep of cnt_vmm                   : signal is "TRUE";
---    attribute keep of conf_done_int             : signal is "TRUE";
---    attribute keep of conf_done_int_synced      : signal is "TRUE";
---    attribute keep of conf_wen_i                : signal is "TRUE";
---    attribute dont_touch of conf_wen_i          : signal is "TRUE";
---    attribute keep of conf_ena_i                : signal is "TRUE";
---    attribute dont_touch of conf_ena_i          : signal is "TRUE";
---    attribute keep of conf_di_i                 : signal is "TRUE";
---    attribute keep of vmm_di_vec_i              : signal is "TRUE";
---    attribute dont_touch of vmm_di_vec_i        : signal is "TRUE";
---    attribute keep of start_conf_proc_int       : signal is "TRUE";
---    attribute keep of cnt_reply                 : signal is "TRUE";
---    attribute keep of end_packet_conf_int       : signal is "TRUE";
---    attribute keep of xadc_busy                 : signal is "TRUE";
---    attribute keep of daqFIFO_reset             : signal is "TRUE";
---    attribute keep of rstFIFO_top               : signal is "TRUE";
---    attribute keep of pf_rst_FIFO               : signal is "TRUE";
-    
---    attribute keep of trigger_i                 : signal is "TRUE";
---    attribute dont_touch of trigger_i           : signal is "TRUE";
-    
---    attribute keep of VMM_SDI_i                 : signal is "TRUE";
---    attribute dont_touch of VMM_SDI_i           : signal is "TRUE";
-    
---    attribute keep of vmm_cktp                  : signal is "TRUE";
---    attribute dont_touch of vmm_cktp            : signal is "TRUE";
-    
---    attribute keep of test                      : signal is "TRUE";
---    attribute dont_touch of test                : signal is "TRUE";
-    
---    attribute keep of count_test                : signal is "TRUE";
---    attribute dont_touch of count_test          : signal is "TRUE";
-    
---    attribute keep of art_in_i                  : signal is "TRUE";
---    attribute dont_touch of art_in_i            : signal is "TRUE";
-    
---    attribute keep of vmm_ckbc                  : signal is "TRUE";
---    attribute dont_touch of vmm_ckbc            : signal is "TRUE";  
-    
---    attribute keep of first_cktp                : signal is "TRUE";
---    attribute dont_touch of first_cktp          : signal is "TRUE";      
-    
---    attribute keep of first_cktp_ok             : signal is "TRUE";
---    attribute dont_touch of first_cktp_ok       : signal is "TRUE";
-    
---    attribute keep of vmm_cs_all                : signal is "TRUE";
---    attribute dont_touch of vmm_cs_all          : signal is "TRUE";   
-        
---    attribute keep of vmm_ena_vec               : signal is "TRUE";
---    attribute dont_touch of vmm_ena_vec         : signal is "TRUE";   
-        
---    attribute keep of vmm_cktp_all              : signal is "TRUE";
---    attribute dont_touch of vmm_cktp_all        : signal is "TRUE";   
-        
---    attribute keep of vmm_ena_all               : signal is "TRUE";
---    attribute dont_touch of vmm_ena_all         : signal is "TRUE";     
+--    attribute keep of is_state                  : signal is "TRUE";
+--    attribute keep of pf_dbg_st                 : signal is "TRUE";
+--    attribute keep of dt_state                  : signal is "TRUE";
+--    attribute keep of dt_cntr_st                : signal is "TRUE";
+--    attribute keep of FIFO2UDP_state            : signal is "TRUE";
+--    attribute keep of faifouki                  : signal is "TRUE";
+--    attribute keep of UDPDone                   : signal is "TRUE";
+--    attribute keep of CKBC_glbl                 : signal is "TRUE";
+--    attribute keep of tr_out_i                  : signal is "TRUE";
+--    attribute keep of conf_state                : signal is "TRUE";
+--    attribute keep of din_valid                 : signal is "TRUE";
 
---    attribute keep of tko_i                     : signal is "TRUE";
---    attribute dont_touch of tko_i               : signal is "TRUE";    
-          
---    attribute keep of cktp_vio                  : signal is "TRUE";
---    attribute dont_touch of cktp_vio            : signal is "TRUE";    
-
---    attribute keep of art_out                   : signal is "TRUE";
---    attribute dont_touch of art_out             : signal is "TRUE";    
-
---    attribute keep of art2                      : signal is "TRUE";
---    attribute dont_touch of art2                : signal is "TRUE"; 
-    
---    attribute keep of artall                    : signal is "TRUE";
---    attribute dont_touch of artall              : signal is "TRUE";     
-    
---    attribute keep of reset_FF                  : signal is "TRUE";
---    attribute dont_touch of reset_FF            : signal is "TRUE";         
-
---    attribute keep of art_out_ff                : signal is "TRUE";
---    attribute dont_touch of art_out_ff          : signal is "TRUE";  
-
---    attribute keep of CH_TRIGGER_i              : signal is "TRUE";
---    attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
-    
---    attribute keep of default_IP            : signal is "TRUE";
---    attribute dont_touch of default_IP      : signal is "TRUE";
-          
---    attribute keep of default_MAC            : signal is "TRUE";
---    attribute dont_touch of default_MAC      : signal is "TRUE";
+    -------------------------------------------------------------------
+    -- Other
+    -------------------------------------------------------------------   
     
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -2150,16 +2011,16 @@ sdi_obuf_7:  OBUF  port map  (O => SDI_7, I => vmm_sdi_vec_obuf(7));
 sdi_obuf_8:  OBUF  port map  (O => SDI_8, I => vmm_sdi_vec_obuf(8));
 
 ---------------------------------------------------SETT/SETB/CK6B---------------------------------------------------
-sett_obuf:   OBUFDS port map (O => SETT_P,   OB => SETT_N,   I => tied_to_gnd_i);    
-setb_obuf:   OBUFDS port map (O => SETB_P,   OB => SETB_N,   I => tied_to_gnd_i);
-ck6b_obuf_1: OBUFDS port map (O => CK6B_1_P, OB => CK6B_1_N, I => tied_to_gnd_i);
-ck6b_obuf_2: OBUFDS port map (O => CK6B_2_P, OB => CK6B_2_N, I => tied_to_gnd_i);
-ck6b_obuf_3: OBUFDS port map (O => CK6B_3_P, OB => CK6B_3_N, I => tied_to_gnd_i);
-ck6b_obuf_4: OBUFDS port map (O => CK6B_4_P, OB => CK6B_4_N, I => tied_to_gnd_i);
-ck6b_obuf_5: OBUFDS port map (O => CK6B_5_P, OB => CK6B_5_N, I => tied_to_gnd_i);
-ck6b_obuf_6: OBUFDS port map (O => CK6B_6_P, OB => CK6B_6_N, I => tied_to_gnd_i);
-ck6b_obuf_7: OBUFDS port map (O => CK6B_7_P, OB => CK6B_7_N, I => tied_to_gnd_i);
-ck6b_obuf_8: OBUFDS port map (O => CK6B_8_P, OB => CK6B_8_N, I => tied_to_gnd_i);
+sett_obuf:   OBUFDS port map (O => SETT_P,   OB => SETT_N,   I => '0');    
+setb_obuf:   OBUFDS port map (O => SETB_P,   OB => SETB_N,   I => '0');
+ck6b_obuf_1: OBUFDS port map (O => CK6B_1_P, OB => CK6B_1_N, I => '0');
+ck6b_obuf_2: OBUFDS port map (O => CK6B_2_P, OB => CK6B_2_N, I => '0');
+ck6b_obuf_3: OBUFDS port map (O => CK6B_3_P, OB => CK6B_3_N, I => '0');
+ck6b_obuf_4: OBUFDS port map (O => CK6B_4_P, OB => CK6B_4_N, I => '0');
+ck6b_obuf_5: OBUFDS port map (O => CK6B_5_P, OB => CK6B_5_N, I => '0');
+ck6b_obuf_6: OBUFDS port map (O => CK6B_6_P, OB => CK6B_6_N, I => '0');
+ck6b_obuf_7: OBUFDS port map (O => CK6B_7_P, OB => CK6B_7_N, I => '0');
+ck6b_obuf_8: OBUFDS port map (O => CK6B_8_P, OB => CK6B_8_N, I => '0');
 
 ----------------------------------------------------SDO-------------------------------------------------------------
 sdo_ibuf_1: IBUF port map ( O =>  vmm_sdo_vec_i(1), I =>  SDO_1);
@@ -2279,13 +2140,13 @@ art_process: process(userclk2, art2)
 begin
     if rising_edge(userclk2) then  
         if art_cnt2 < 125 and art2 = '1' then 
-            art_out_ff     <= '1';
-            art_cnt2     <= art_cnt2 + 1;
+            art_out_ff  <= '1';
+            art_cnt2    <= art_cnt2 + 1;
         elsif art_cnt2 = 125 then
             reset_FF    <= '1';
-            art_cnt2     <= art_cnt2 + 1;
+            art_cnt2    <= art_cnt2 + 1;
         else
-            art_cnt2     <= 0;
+            art_cnt2    <= 0;
             reset_FF    <= '0';
         end if;
     end if;
@@ -2332,34 +2193,18 @@ begin
     end if;
 end process;
 
-synced_to_flowFSM: process(userclk2)
-    begin
-    if rising_edge(userclk2) then
-        status_int_old          <= status_int;
-        if status_int_old = status_int then
-            status_int_synced   <= status_int_old;
-        end if;
-
-        vmm_id_old              <= vmm_id;
-        if vmm_id_old = vmm_id then
-            vmm_id_synced       <= vmm_id_old;
-        end if;
-        conf_done_int_synced    <= conf_done_int;
-    end if;
-end process;
-
 sel_cs_proc: process(sel_cs, vmm_cs_i)
 begin
     case sel_cs is
-    when "00"   => vmm_cs_all <= '0';
-    when "01"   => vmm_cs_all <= vmm_cs_i;
-    when "10"   => vmm_cs_all <= vmm_cs_i;
-    when "11"   => vmm_cs_all <= '1'; 
-    when others => vmm_cs_all <= '0';
+        when "00"   => vmm_cs_all <= '0';
+        when "01"   => vmm_cs_all <= vmm_cs_i;
+        when "10"   => vmm_cs_all <= vmm_cs_i;
+        when "11"   => vmm_cs_all <= '1'; 
+        when others => vmm_cs_all <= '0';
     end case;   
 end process;
 
-flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_done_i, conf_done_i)
+flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
     begin
     if rising_edge(userclk2) then
         if glbl_rst_i = '1' then
@@ -2580,8 +2425,8 @@ end process;
     
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= CH_TRIGGER;
-    TRIGGER_OUT_P           <= art2;
-    TRIGGER_OUT_N           <= not art2;
+    TRIGGER_OUT_P           <= not art2;
+    TRIGGER_OUT_N           <= art2;
     MO                      <= MO_i;  
 
     test_data               <= udp_rx_int.data.data_in;
@@ -2631,8 +2476,6 @@ end process;
     vmm_ena_vec_obuf(7) <= vmm_ena_all and vmm_bitmask(6);
     vmm_ena_vec_obuf(8) <= vmm_ena_all and vmm_bitmask(7);
 
-    tied_to_gnd_i       <= '0'; -- ground CK6B/SETT/SETB (unused)
-
 --VIO_inst: vio_1
 --    port map(
 --        clk         => userclk2,
@@ -2655,11 +2498,11 @@ end process;
 --        probe5  => flowProbe
 --    );
 
-ila_top: ila_overview
-    port map (
-        clk     => userclk2,
-        probe0  => overviewProbe
-    );
+--ila_top: ila_overview
+--    port map (
+--        clk     => userclk2,
+--        probe0  => overviewProbe
+--    );
     
 --VIO_DEFAULT_IP: vio_ip
 --      PORT MAP (
@@ -2735,8 +2578,8 @@ ila_top: ila_overview
     dataOutProbe(63 downto 0)      <= daq_data_out_i;
 
     flowProbe(3 downto 0)       <= is_state;
-    flowProbe(7 downto 4)       <= status_int;
-    flowProbe(11 downto 8)      <= status_int_synced;
+    flowProbe(7 downto 4)       <= (others => '0');
+    flowProbe(11 downto 8)      <= (others => '0');
     flowProbe(12)               <= daq_enable_i;
     flowProbe(13)               <= xadc_busy;
     flowProbe(21 downto 14)     <= daq_vmm_ena_wen_enable;

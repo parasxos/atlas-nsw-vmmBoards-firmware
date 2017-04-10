@@ -65,9 +65,18 @@ architecture Behavioral of trigger is
     signal tr_out_i_ff_synced   : std_logic := '0';
     signal trext_stage_resynced : std_logic := '0';
     signal trext_ff_resynced    : std_logic := '0';
+    signal tren_buff_stage1     : std_logic := '0';
+    signal tren_buff_ff_synced  : std_logic := '0';
+    signal mode_stage1          : std_logic := '0';
+    signal mode_ff_synced       : std_logic := '0';
+    signal trmode_stage1        : std_logic := '0';
+    signal trmode_ff_synced     : std_logic := '0';
+    signal trint_stage1         : std_logic := '0';
+    signal trint_ff_synced      : std_logic := '0';
+ 
     -- Special Readout Mode
     signal request2ckbc_i    : std_logic := '0';
-    signal trigLatencyCnt    : integer := 0;
+    signal trigLatencyCnt    : integer range 0 to 150 := 0;
     signal trigLatency       : integer := 140;
     
     type stateType is (waitingForTrigger, waitingForLatency, issueRequest);
@@ -89,22 +98,30 @@ architecture Behavioral of trigger is
 --    constant delay : std_logic_vector(31 downto 0) := x"00000002"; -- Number of 200 MHz clock cycles to hold trigger in hex
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
 
+    attribute keep : string;
+    
+    attribute keep of tren      : signal is "true";
+    attribute keep of tren_buff : signal is "true";
+    attribute keep of tr_out_i  : signal is "true";
+    attribute keep of trmode    : signal is "true";
+    attribute keep of trint     : signal is "true";
+    
 -------------------------------------------------------------------
 -- Mark debug signals for ILA
 -------------------------------------------------------------------    
     attribute mark_debug : string;
 
-    attribute mark_debug of event_counter_i     :    signal    is    "true";
-    attribute mark_debug of tr_out_i            :    signal    is    "true";
-    attribute mark_debug of tren                :    signal    is    "true";
-    attribute mark_debug of trmode              :    signal    is    "true";
-    attribute mark_debug of trint               :    signal    is    "true";
-    attribute mark_debug of mode                :    signal    is    "true";
-    attribute mark_debug of trint_pre           :    signal    is    "true";
-    attribute mark_debug of trext_pre           :    signal    is    "true";
-    attribute mark_debug of tr_out_i_ff_synced  :    signal    is    "true";
-    attribute mark_debug of trext               :    signal    is    "true";
-    attribute mark_debug of tren_buff           :    signal    is    "true";
+--    attribute mark_debug of event_counter_i     :    signal    is    "true";
+--    attribute mark_debug of tr_out_i            :    signal    is    "true";
+--    attribute mark_debug of tren                :    signal    is    "true";
+--    attribute mark_debug of trmode              :    signal    is    "true";
+--    attribute mark_debug of trint               :    signal    is    "true";
+--    attribute mark_debug of mode                :    signal    is    "true";
+--    attribute mark_debug of trint_pre           :    signal    is    "true";
+--    attribute mark_debug of trext_pre           :    signal    is    "true";
+--    attribute mark_debug of tr_out_i_ff_synced  :    signal    is    "true";
+--    attribute mark_debug of trext               :    signal    is    "true";
+--    attribute mark_debug of tren_buff           :    signal    is    "true";
     
 -- Components if any
 
@@ -191,7 +208,7 @@ begin
         
             when waitingForTrigger =>
                 request2ckbc_i      <= '0';
-                if  tren_buff = '1' and tr_out_i_ff_synced = '1' and ckbcMode = '1' then
+                if  tren_buff_ff_synced = '1' and tr_out_i = '1' and ckbcMode = '1' then
                     trigLatencyCnt      <= 0;
                     state               <= waitingForLatency;
                 end if;
@@ -213,22 +230,24 @@ begin
                 state               <= waitingForTrigger;
 
         end case;
-        
+
     end if;
 end process;
 
-trenAnd: process(tren, tr_hold)
+trenAnd: process(clk)
 begin
-    if (tren = '1' and tr_hold = '0') then -- No hold command, trigger enabled
-        tren_buff <= '1';
-    else
-        tren_buff <= '0';
+    if rising_edge(clk) then
+        if (tren = '1' and tr_hold = '0') then -- No hold command, trigger enabled
+            tren_buff <= '1';
+        else
+            tren_buff <= '0';
+        end if;
     end if;
 end process;
 
-changeModeCommandProc: process (clk, reset, tren_buff, trmode)
+changeModeCommandProc: process (clk)
     begin
-        if rising_edge(clk) and reset = '0' then
+        if rising_edge(clk) then
             if tren_buff = '1' then
                 if trmode = '0' then                                -- Internal trigger
                     mode <= '0';
@@ -239,23 +258,23 @@ changeModeCommandProc: process (clk, reset, tren_buff, trmode)
         end if;
     end process;
 
-triggerDistrSignalProc: process (reset, mode, trext_ff_synced, trint, tren_buff)
+triggerDistrSignalProc: process (clk_art, reset)
     begin
         if reset = '1' then
             tr_out_i            <= '0';
-        else
-            if mode = '0' then
-                if (tren_buff = '1' and trmode = '0' and trint = '1') then
+        elsif rising_edge(clk_art) then
+            if mode_ff_synced = '0' then
+                if (tren_buff_ff_synced = '1' and trmode_ff_synced = '0' and trint_ff_synced = '1') then
                     tr_out_i            <= '1';
-                elsif (trmode = '0' and trint = '0') then
+                elsif (trmode_ff_synced = '0' and trint_ff_synced = '0') then
                     tr_out_i            <= '0';
                 else
                     tr_out_i            <= '0';
                 end if;
             else
-                if (tren_buff = '1' and trmode = '1' and trext_ff_synced = '1') then
+                if (tren_buff_ff_synced = '1' and trmode_ff_synced = '1' and trext_ff_synced = '1') then
                     tr_out_i            <= '1';
-                elsif (trmode = '1' and trext_ff_synced = '0') then
+                elsif (trmode_ff_synced = '1' and trext_ff_synced = '0') then
                     tr_out_i            <= '0';
                 else
                     tr_out_i            <= '0';
@@ -269,16 +288,24 @@ begin
     if rising_edge(clk) then 
         tr_out_i_stage1     <= tr_out_i;
         tr_out_i_ff_synced  <= tr_out_i_stage1;
-        trext_stage_resynced<=trext_ff_synced;
-        trext_ff_resynced   <=trext_stage_resynced;
+        trext_stage_resynced<= trext_ff_synced;
+        trext_ff_resynced   <= trext_stage_resynced;
     end if;
 end process;
 
 externalTriggerSynchronizer160: process(clk_art)
 begin
     if rising_edge(clk_art) then 
-        trext_stage1    <= trext;
-        trext_ff_synced <= trext_stage1;
+        trext_stage1        <= trext;
+        trext_ff_synced     <= trext_stage1;
+        tren_buff_stage1    <= tren_buff;
+        tren_buff_ff_synced <= tren_buff_stage1;
+        mode_stage1         <= mode;
+        mode_ff_synced      <= mode_stage1;
+        trmode_stage1       <= trmode;
+        trmode_ff_synced    <= trmode_stage1;
+        trint_stage1        <= trint;
+        trint_ff_synced     <= trint_stage1; 
     end if;
 end process;
 
@@ -288,21 +315,21 @@ eventCounterProc: process (clk_art, reset)
             event_counter_i     <= x"00000000";
         else
             if rising_edge(clk_art) then
-                if mode = '0' then
-                    if (tren_buff = '1' and trmode = '0' and trint = '1' and trint_pre = '0') then
+                if mode_ff_synced = '0' then
+                    if (tren_buff_ff_synced = '1' and trmode_ff_synced = '0' and trint_ff_synced = '1' and trint_pre = '0') then
                         event_counter_i     <= event_counter_i + 1;
                         trint_pre           <= '1';
-                    elsif (trmode = '0' and trint = '0') then
+                    elsif (trmode_ff_synced = '0' and trint_ff_synced = '0') then
                         event_counter_i     <= event_counter_i;
                         trint_pre           <= '0';
                     else
                         event_counter_i     <= event_counter_i;
                     end if;
                 else
-                    if (tren_buff = '1' and trmode = '1' and trext = '1' and trext_pre = '0') then
+                    if (tren_buff_ff_synced = '1' and trmode_ff_synced = '1' and trext_ff_synced = '1' and trext_pre = '0') then
                         event_counter_i     <= event_counter_i + 1;
                         trext_pre           <= '1';
-                    elsif (trmode = '1' and trext = '0') then
+                    elsif (trmode_ff_synced = '1' and trext_ff_synced = '0') then
                         event_counter_i     <= event_counter_i;
                         trext_pre           <= '0';
                     else
@@ -322,11 +349,11 @@ trigLatency         <= to_integer(unsigned(latency));
 
 -- Instantiations if any
 
-ilaTRIG: ila_trigger
-port map(
-    clk                     =>  clk_art,
-    probe0                  =>  probe0_out
-    );
+--ilaTRIG: ila_trigger
+--port map(
+--    clk                     =>  clk_art,
+--    probe0                  =>  probe0_out
+--    );
     
     probe0_out(0)               <= tr_out_i_ff_synced;
     probe0_out(1)               <= trext;
@@ -339,7 +366,5 @@ port map(
     probe0_out(8)               <= request2ckbc_i;
     probe0_out(9)               <= trext_ff_synced;
     probe0_out(63 downto 10)    <= (others => '0');
-    --probe0_out(36 downto 5)     <=  event_counter_i;
-    
 
 end Behavioral;

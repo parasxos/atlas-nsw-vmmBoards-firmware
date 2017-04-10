@@ -46,6 +46,26 @@ set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_g
 set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
+
+# Trigger related false paths
+set_false_path -from [get_cells trigger_instance/tr_out_i_reg] -to [get_cells trigger_instance/tr_out_i_stage1_reg]
+set_false_path -from [get_cells trigger_instance/tren_buff_reg] -to [get_cells trigger_instance/tren_buff_stage1_reg]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells trigger_instance/trext_stage1_reg]
+set_false_path -from [get_cells trint_reg] -to [get_cells trigger_instance/trint_stage1_reg]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells trigger_instance/trmode_stage1_reg]
+set_false_path -from [get_cells trigger_instance/mode_reg] -to [get_cells trigger_instance/mode_stage1_reg]
+set_false_path -from [get_cells trigger_instance/trext_ff_synced_reg] -to [get_cells trigger_instance/trext_stage_resynced_reg]
+
+# AXI SPI related false paths
+set_false_path -from [get_cells axi4_spi_instance/CDCC_50to125/data_in_reg_reg[*]] -to [get_cells axi4_spi_instance/CDCC_50to125/data_sync_stage_0_reg[*]]
+set_false_path -from [get_cells axi4_spi_instance/CDCC_125to50/data_in_reg_reg[*]] -to [get_cells axi4_spi_instance/CDCC_125to50/data_sync_stage_0_reg[*]]
+
+# UDP configuration related false paths
+set_false_path -from [get_cells udp_din_conf_block/CDCC_40to125/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_40to125/data_sync_stage_0_reg[*]]
+set_false_path -from [get_cells udp_din_conf_block/CDCC_125to40/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_125to40/data_sync_stage_0_reg[*]]
+
+# MMCM realted false paths
+set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input
@@ -125,12 +145,20 @@ set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_i_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 
-set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
-set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/tr_out_i_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/tr_out_i_ff_synced_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage_resynced_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_resynced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trext_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trext_ff_synced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/tren_buff_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/tren_buff_ff_synced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/mode_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/mode_ff_synced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trmode_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trmode_ff_synced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trint_stage1_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trint_ff_synced_reg]
 
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_i_reg]
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_sync_reg]
@@ -875,7 +903,6 @@ set_property PULLDOWN TRUE           [get_ports MuxAddr3_p]
 #PDO
 set_property PACKAGE_PIN G16         [get_ports Vaux8_v_n]
 set_property PACKAGE_PIN G15         [get_ports Vaux8_v_p]
-
 #TDO
 set_property PACKAGE_PIN H14         [get_ports Vaux1_v_n]
 set_property PACKAGE_PIN J14         [get_ports Vaux1_v_p]
@@ -907,7 +934,6 @@ set_property PULLDOWN TRUE           [get_ports Vaux10_v_p]
 set_property PACKAGE_PIN U18         [get_ports Vaux11_v_n]
 set_property PACKAGE_PIN U17         [get_ports Vaux11_v_p]
 set_property PULLDOWN TRUE           [get_ports Vaux11_v_p]
-
 
 set_property IOSTANDARD LVCMOS25 [get_ports Vaux0_v_p]
 set_property IOSTANDARD LVCMOS25 [get_ports Vaux0_v_n]

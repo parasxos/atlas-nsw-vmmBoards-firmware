@@ -238,6 +238,7 @@ set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_2
 #False paths for skewing pipeline (Caution!! Those lines might not be needed. It should be validated with an oscilloscope) 
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
+set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 
 # PBLOCKS (obsolete)
 #create_pblock pblock_skewing_module

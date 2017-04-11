@@ -200,8 +200,8 @@ architecture RTL of udp_data_in_handler is
     
     ---- Uncomment the following to add signals to ILA debugging core
     -----------------------------------------------------------------
-    --attribute mark_debug : string;
-    --attribute keep       : string;
+    attribute mark_debug : string;
+    attribute keep       : string;
 
     --attribute mark_debug of latency                   : signal is "true";
     --attribute mark_debug of fpga_rst_conf             : signal is "true";

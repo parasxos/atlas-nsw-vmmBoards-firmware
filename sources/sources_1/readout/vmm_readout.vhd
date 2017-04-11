@@ -62,6 +62,8 @@ architecture Behavioral of vmm_readout is
     signal cktkSent_ff_sync         : std_logic := '0';
     signal timeoutCnt               : unsigned(2 downto 0) := b"000";
     signal timeout                  : unsigned(2 downto 0) := b"111";
+    signal daq_enable_stage1_Dt     : std_logic := '0';
+    signal daq_enable_ff_sync_Dt    : std_logic := '0';
 
     -- tokenProc
     signal state_tk             : std_logic_vector( 3 downto 0 )    := x"1";
@@ -70,7 +72,7 @@ architecture Behavioral of vmm_readout is
     signal vmm_wen_i            : std_logic := '0';
     signal vmm_ena_i            : std_logic := '0';
     signal vmm_cktk_i           : std_logic := '0';
-    signal NoFlg_counter        : integer   := 0;   -- Counter of CKTKs
+    signal NoFlg_counter        : unsigned(7 downto 0) := (others => '0');   -- Counter of CKTKs
     signal cktk_max_i           : std_logic_vector(7 downto 0) := x"07";
     signal cktk_max_sync        : std_logic_vector(7 downto 0) := x"07";
     signal vmmEventDone_i       : std_logic := '0';
@@ -113,26 +115,25 @@ architecture Behavioral of vmm_readout is
     -----------------------------------------------------------------
     attribute mark_debug : string;
 
-    attribute mark_debug of NoFlg                       : signal  is  "true";
-    attribute mark_debug of state_tk                    : signal  is  "true";
-    attribute mark_debug of NoFlg_counter               : signal  is  "true";
-    attribute mark_debug of reading_out_word            : signal  is  "true";
-    attribute mark_debug of cktkSent_ff_sync            : signal  is  "true";
-    attribute mark_debug of vmm_ckdt_i                  : signal  is  "true";
-    attribute mark_debug of vmm_cktk_i                  : signal  is  "true";
-    attribute mark_debug of vmm_data0_ff_sync           : signal  is  "true";
-    attribute mark_debug of vmm_data1_ff_sync           : signal  is  "true";
-    attribute mark_debug of dataBitRead                 : signal  is  "true";
-    attribute mark_debug of state_dt                    : signal  is  "true";
-    attribute mark_debug of vmmEventDone_i              : signal  is  "true";
-    attribute mark_debug of hitsLen_cnt                 : signal  is  "true";
-    attribute mark_debug of vmmWordReady_i              : signal  is  "true";
-    attribute mark_debug of vmmWord_i                   : signal  is  "true";
-    attribute mark_debug of trigger_pulse               : signal  is  "true";
-    attribute mark_debug of trigger_pulse_i             : signal  is  "true";
-    attribute mark_debug of reading_out_word_ff_sync    : signal  is  "true";
-    attribute mark_debug of timeoutCnt                  : signal  is  "true";
-
+--    attribute mark_debug of NoFlg                       : signal  is  "true";
+--    attribute mark_debug of state_tk                    : signal  is  "true";
+--    attribute mark_debug of NoFlg_counter               : signal  is  "true";
+--    attribute mark_debug of reading_out_word            : signal  is  "true";
+--    attribute mark_debug of cktkSent_ff_sync            : signal  is  "true";
+--    attribute mark_debug of vmm_ckdt_i                  : signal  is  "true";
+--    attribute mark_debug of vmm_cktk_i                  : signal  is  "true";
+--    attribute mark_debug of vmm_data0_ff_sync           : signal  is  "true";
+--    attribute mark_debug of vmm_data1_ff_sync           : signal  is  "true";
+--    attribute mark_debug of dataBitRead                 : signal  is  "true";
+--    attribute mark_debug of state_dt                    : signal  is  "true";
+--    attribute mark_debug of vmmEventDone_i              : signal  is  "true";
+--    attribute mark_debug of hitsLen_cnt                 : signal  is  "true";
+--    attribute mark_debug of vmmWordReady_i              : signal  is  "true";
+--    attribute mark_debug of vmmWord_i                   : signal  is  "true";
+--    attribute mark_debug of trigger_pulse               : signal  is  "true";
+--    attribute mark_debug of trigger_pulse_i             : signal  is  "true";
+--    attribute mark_debug of reading_out_word_ff_sync    : signal  is  "true";
+--    attribute mark_debug of timeoutCnt                  : signal  is  "true";
 
 component vmmSignalsDemux
 port(
@@ -179,7 +180,7 @@ begin
                             hitsLen_cnt     <= hitsLen_cnt + 1;
                             state_tk        <= x"3";
                         else
-                            NoFlg_counter   <= 0;
+                            NoFlg_counter   <= ( others => '0' );
                             state_tk        <= x"5";
                         end if;
                     when x"3" =>
@@ -188,16 +189,16 @@ begin
                         state_tk            <= x"4";
 
                     when x"4" =>
-                        if (NoFlg_counter = NoFlg) then
+                        if (NoFlg_counter = unsigned(cktk_max_sync)) then
                             cktkSent        <= '0';                 -- cktkSent intentionally stays high for x1.5 of ckdt proc clock + VMM delay + datapath delay
-                            state_tk        <= x"6";                -- If NoFlg = 7 : time to transmit data
+                            state_tk        <= x"6";                -- If NoFlg_counter = 7 : time to transmit data
                         elsif (timeoutCnt = timeout) then           -- No data (wait for reading_out_word signal to pass through the synchronizer)
                             cktkSent        <= '0';                 -- cktkSent intentionally stays high for x1.5 of ckdt proc clock + VMM delay + datapath delay
                             NoFlg_counter   <= NoFlg_counter  + 1;
                             state_tk        <= x"2";
                         elsif (reading_out_word_ff_sync = '1') then -- Data proc started clocking out VMM data. Wait...
                             cktkSent        <= '0';                 -- cktkSent intentionally stays high for x1.5 of ckdt proc clock + VMM delay + datapath delay
-                            NoFlg_counter   <= 0;
+                            NoFlg_counter   <= ( others => '0' );
                             state_tk        <= x"5";
                         else
                             timeoutCnt      <= timeoutCnt + 1;
@@ -214,10 +215,10 @@ begin
                         
                     when x"6" =>                                    -- Start the soft reset sequence, there is still a chance
                         if (reading_out_word_ff_sync = '0') then    -- of getting data at this point so check that before soft reset
-                            NoFlg_counter           <= 0;
+                            NoFlg_counter           <= ( others => '0' );
                             state_tk                <= x"7";
                         else
-                            NoFlg_counter   <= 0;
+                            NoFlg_counter   <= ( others => '0' );
                             state_tk        <= x"5";
                         end if;
 
@@ -228,7 +229,7 @@ begin
                         
                     when others =>
                         hitsLen_cnt             <= 0;
-                        NoFlg_counter           <= 0;
+                        NoFlg_counter           <= ( others => '0' );
                         state_tk                <= x"1";
                 end case;
         else
@@ -237,7 +238,7 @@ begin
             vmm_cktk_i      <= '0';
             timeoutCnt      <= b"000";
             hitsLen_cnt     <= 0;
-            NoFlg_counter   <= 0;
+            NoFlg_counter   <= ( others => '0' );
             cktkSent        <= '0';
             vmm_wen_i       <= '0';
         end if;
@@ -248,7 +249,7 @@ end process;
 readoutProc: process(clkDtProc)
 begin
     if rising_edge(clkDtProc) then
-        if (daq_enable_ff_sync = '1') then
+        if (daq_enable_ff_sync_Dt = '1') then
             case state_dt is
                 when x"0" =>
                     reading_out_word    <= '0';
@@ -334,7 +335,7 @@ begin
     end if;
 end process;
 
-packetFormationSynchronizer: process(clk)
+packetFormationSynchronizer: process(clk) --125
 begin
     if rising_edge(clk) then 
         vmmEventDone_stage1     <= vmmEventDone_i;
@@ -346,7 +347,7 @@ begin
     end if;
 end process;
 
-tokenProcSynchronizer: process(clkTkProc)
+tokenProcSynchronizer: process(clkTkProc) --40
 begin
     if rising_edge (clkTkProc) then
         daq_enable_stage1           <= daq_enable;
@@ -360,9 +361,11 @@ begin
     end if;
 end process;
 
-readoutProcSynchronizer: process(clkDtProc)
+readoutProcSynchronizer: process(clkDtProc) --50
 begin
     if rising_edge(clkDtProc) then
+        daq_enable_stage1_Dt        <= daq_enable;
+        daq_enable_ff_sync_Dt       <= daq_enable_stage1_Dt;
         vmm_data0_stage1            <= vmm_data0;
         vmm_data0_ff_sync           <= vmm_data0_stage1;
         vmm_data1_stage1            <= vmm_data1;
@@ -379,8 +382,8 @@ end process;
     vmmWord             <= vmmWord_ff_sync;
     trigger_pulse_i     <= trigger_pulse;
     
-    dt_state_o          <= dt_state;
-    dt_cntr_st_o        <= dt_cntr_st;
+    dt_state_o          <= state_tk;
+    dt_cntr_st_o        <= state_dt;
 
 VMMdemux: vmmSignalsDemux
 port map(
@@ -397,17 +400,17 @@ port map(
     vmm_cktk_vec    => vmm_cktk_vec
     );
 
-ilaDAQ: ila_readout
-port map
-    (
-        clk                     =>  clk,
-        probe0                  =>  probe0_out
-    );
+--ilaDAQ: ila_readout
+--port map
+--    (
+--        clk                     =>  clk,
+--        probe0                  =>  probe0_out
+--    );
 
     probe0_out(0)               <=  vmm_cktk_i;                                                                     -- OK
     probe0_out(4 downto 1)      <=  state_tk;                                                                       -- OK
     probe0_out(7 downto 5)      <=  (others => '0');
-    probe0_out(10 downto 8)     <=  std_logic_vector(to_unsigned(NoFlg_counter, probe0_out(10 downto 8)'length));   -- OK
+    probe0_out(10 downto 8)     <=  (others => '0');                                                                -- OK
     probe0_out(14 downto 11)    <=  state_dt;                                                                       -- OK
     probe0_out(15)              <=  daq_enable_ff_sync;                                                             -- OK
     probe0_out(16)              <=  reading_out_word;                                                               -- OK

@@ -672,68 +672,68 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Readout Monitoring
     -------------------------------------------------------------------
-    attribute keep of vmm_ena               : signal is "true";
-    attribute dont_touch of vmm_ena         : signal is "true";
-    attribute keep of vmm_wen_vec           : signal is "true";
-    attribute dont_touch of vmm_wen_vec     : signal is "true";
-    attribute keep of cktk_out_vec          : signal is "true";
-    attribute dont_touch of cktk_out_vec    : signal is "true";
-    attribute keep of cktk_out_i            : signal is "true";
-    attribute keep of ckdt_out_vec          : signal is "true";
-    attribute keep of vmm_do_vec_i          : signal is "true";
-    attribute keep of daq_vmm_ena_wen_enable: signal is "true";
-    attribute keep of vmm_id_int            : signal is "true";   
-    attribute keep of data0_in_vec          : signal is "true";
-    attribute dont_touch of data0_in_vec    : signal is "true";
-    attribute keep of ro_cktk_out_vec       : signal is "true";
-    attribute dont_touch of ro_cktk_out_vec : signal is "true";
+--    attribute keep of vmm_ena               : signal is "true";
+--    attribute dont_touch of vmm_ena         : signal is "true";
+--    attribute keep of vmm_wen_vec           : signal is "true";
+--    attribute dont_touch of vmm_wen_vec     : signal is "true";
+--    attribute keep of cktk_out_vec          : signal is "true";
+--    attribute dont_touch of cktk_out_vec    : signal is "true";
+--    attribute keep of cktk_out_i            : signal is "true";
+--    attribute keep of ckdt_out_vec          : signal is "true";
+--    attribute keep of vmm_do_vec_i          : signal is "true";
+--    attribute keep of daq_vmm_ena_wen_enable: signal is "true";
+--    attribute keep of vmm_id_int            : signal is "true";   
+--    attribute keep of data0_in_vec          : signal is "true";
+--    attribute dont_touch of data0_in_vec    : signal is "true";
+--    attribute keep of ro_cktk_out_vec       : signal is "true";
+--    attribute dont_touch of ro_cktk_out_vec : signal is "true";
 
     -------------------------------------------------------------------
     -- Trigger
     -------------------------------------------------------------------
-    attribute keep of trint               : signal is "true";
-    attribute keep of tren                : signal is "true";
-    attribute keep of ext_trigger_in      : signal is "true";
-    attribute keep of trig_mode_int       : signal is "true";
-    attribute keep of tr_hold             : signal is "true";
-    attribute dont_touch of tr_hold       : signal is "true";
-    attribute mark_debug of tr_hold       : signal is "true";
+--    attribute keep of trint               : signal is "true";
+--    attribute keep of tren                : signal is "true";
+--    attribute keep of ext_trigger_in      : signal is "true";
+--    attribute keep of trig_mode_int       : signal is "true";
+--    attribute keep of tr_hold             : signal is "true";
+--    attribute dont_touch of tr_hold       : signal is "true";
+--    attribute mark_debug of tr_hold       : signal is "true";
 
     -------------------------------------------------------------------
     -- Event Timing & Soft Reset
     -------------------------------------------------------------------
-    attribute keep of etr_reset_latched      : signal is "true";
-    attribute keep of rst_vmm                : signal is "true";
-    attribute keep of etr_vmm_ena_vec        : signal is "true";
-    attribute keep of daq_enable_i           : signal is "true";
-    attribute keep of glBCID_i               : signal is "true";
-    attribute dont_touch of glBCID_i         : signal is "true";
-    attribute keep of state_rst_etr_i        : signal is "true";
-    attribute dont_touch of state_rst_etr_i  : signal is "true";
-    attribute keep of rst_etr_i              : signal is "true";
-    attribute dont_touch of rst_etr_i        : signal is "true";
-    attribute keep of rst_done_etr_i         : signal is "true";
-    attribute dont_touch of rst_done_etr_i   : signal is "true";
+--    attribute keep of etr_reset_latched      : signal is "true";
+--    attribute keep of rst_vmm                : signal is "true";
+--    attribute keep of etr_vmm_ena_vec        : signal is "true";
+--    attribute keep of daq_enable_i           : signal is "true";
+--    attribute keep of glBCID_i               : signal is "true";
+--    attribute dont_touch of glBCID_i         : signal is "true";
+--    attribute keep of state_rst_etr_i        : signal is "true";
+--    attribute dont_touch of state_rst_etr_i  : signal is "true";
+--    attribute keep of rst_etr_i              : signal is "true";
+--    attribute dont_touch of rst_etr_i        : signal is "true";
+--    attribute keep of rst_done_etr_i         : signal is "true";
+--    attribute dont_touch of rst_done_etr_i   : signal is "true";
     
     -------------------------------------------------------------------
     -- Packet Formation
     -------------------------------------------------------------------
 --    attribute keep of pf_newCycle           : signal is "true";
-    attribute keep of pfBusy_i              : signal is "true";
-    attribute dont_touch of pfBusy_i        : signal is "true";
+--    attribute keep of pfBusy_i              : signal is "true";
+--    attribute dont_touch of pfBusy_i        : signal is "true";
     
     -------------------------------------------------------------------
     -- Dynamic IP
     -------------------------------------------------------------------   
-    attribute keep of io0_i                         : signal is "TRUE";  
-    attribute keep of io0_o                         : signal is "TRUE";  
-    attribute keep of io0_t                         : signal is "TRUE";  
-    attribute keep of io1_i                         : signal is "TRUE";  
-    attribute keep of io1_o                         : signal is "TRUE";  
-    attribute keep of io1_t                         : signal is "TRUE";  
-    attribute keep of ss_i                          : signal is "TRUE";  
-    attribute keep of ss_o                          : signal is "TRUE";  
-    attribute keep of ss_t                          : signal is "TRUE";  
+--    attribute keep of io0_i                         : signal is "TRUE";  
+--    attribute keep of io0_o                         : signal is "TRUE";  
+--    attribute keep of io0_t                         : signal is "TRUE";  
+--    attribute keep of io1_i                         : signal is "TRUE";  
+--    attribute keep of io1_o                         : signal is "TRUE";  
+--    attribute keep of io1_t                         : signal is "TRUE";  
+--    attribute keep of ss_i                          : signal is "TRUE";  
+--    attribute keep of ss_o                          : signal is "TRUE";  
+--    attribute keep of ss_t                          : signal is "TRUE";  
     
     -------------------------------------------------------------------
     -- Overview
@@ -2487,16 +2487,16 @@ end process;
 --        probe_out5  => cs_vio
 --    );
       
-ila_top: ila_top_level
-    port map (
-        clk     => userclk2,
-        probe0  => vmmSignalsProbe,
-        probe1  => triggerETRProbe,
-        probe2  => configurationProbe,
-        probe3  => readoutProbe,
-        probe4  => dataOutProbe,
-        probe5  => flowProbe
-    );
+--ila_top: ila_top_level
+--    port map (
+--        clk     => userclk2,
+--        probe0  => vmmSignalsProbe,
+--        probe1  => triggerETRProbe,
+--        probe2  => configurationProbe,
+--        probe3  => readoutProbe,
+--        probe4  => dataOutProbe,
+--        probe5  => flowProbe
+--    );
 
 --ila_top: ila_overview
 --    port map (

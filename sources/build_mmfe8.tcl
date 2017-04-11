@@ -182,7 +182,6 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/UDP_TX.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arpv2.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/IPv4.vhd"]"\
- "[file normalize "$origin_dir/sources_1/imports/vmm_global_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/i2c_top.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/temac_10_100_1000_fifo_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/temac_10_100_1000_block.vhd"]"\
@@ -393,11 +392,6 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/imports/IPv4.vhd"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property "file_type" "VHDL" $file_obj
-
-set file "$origin_dir/sources_1/imports/vmm_global_reset.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj

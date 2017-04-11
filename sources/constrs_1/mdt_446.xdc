@@ -64,8 +64,16 @@ set_false_path -from [get_cells axi4_spi_instance/CDCC_125to50/data_in_reg_reg[*
 set_false_path -from [get_cells udp_din_conf_block/CDCC_40to125/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_40to125/data_sync_stage_0_reg[*]]
 set_false_path -from [get_cells udp_din_conf_block/CDCC_125to40/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_125to40/data_sync_stage_0_reg[*]]
 
-# MMCM realted false paths
+# MMCM related false paths
 set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
+
+# Readout related false paths
+set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_reg] -to [get_cells readout_vmm/trigger_pulse_stage1_reg]
+set_false_path -from [get_cells readout_vmm/daq_enable_stage1_Dt_reg] -to [get_cells readout_vmm/daq_enable_ff_sync_Dt_reg]
+set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/daq_enable_stage1_reg]
+set_false_path -from [get_cells readout_vmm/vmmEventDone_i_reg] -to [get_cells readout_vmm/vmmEventDone_stage1_reg]
+set_false_path -from [get_cells readout_vmm/vmmWord_i_reg[*]] -to [get_cells readout_vmm/vmmWord_stage1_reg[*]]
+set_false_path -from [get_cells readout_vmm/vmmWordReady_i_reg] -to [get_cells readout_vmm/vmmWordReady_stage1_reg]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input
@@ -129,18 +137,23 @@ set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_125to40/data_out_
 
 set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/data_sync_stage_0_reg[*]]
 set_property ASYNC_REG true [get_cells udp_din_conf_block/CDCC_40to125/data_out_s_int_reg[*]]
-        
+
 set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWordReady_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWordReady_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_stage1_reg[*]]
-set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_ff_sync_reg[*]]                                                                            
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_ff_sync_reg[*]]
 
 set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_Dt_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_Dt_reg]
+
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
+set_property ASYNC_REG true [get_cells packet_formation_instance/triggerVmmReadout_i_reg]
+        
 set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_i_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/reading_out_word_stage1_reg]
@@ -152,7 +165,13 @@ set_property ASYNC_REG true [get_cells readout_vmm/vmm_data1_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmm_data1_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/cktkSent_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/cktkSent_ff_sync_reg]
-            
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_i_reg[*]]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_stage1_reg[*]]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_i_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_stage1_reg]
+set_property ASYNC_REG true [get_cells daq_enable_i_reg]
+set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
+
 set_property ASYNC_REG true [get_cells trigger_instance/tr_out_i_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/tr_out_i_ff_synced_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trext_stage_resynced_reg]
@@ -215,6 +234,10 @@ set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_2
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_32_reg]
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_34_reg]
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_36_reg]
+
+#False paths for skewing pipeline (Caution!! Those lines might not be needed. It should be validated with an oscilloscope) 
+set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
 
 # PBLOCKS (obsolete)
 #create_pblock pblock_skewing_module

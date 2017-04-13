@@ -33,25 +33,22 @@ set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/
 #=============================== False Paths ==========================
 set_false_path -from [get_ports CH_TRIGGER]
 
-# CKTP registering false paths
-set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg] -to [get_cells CKTP_i_reg]
-set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]    -to [get_cells CKTP_i_reg]
-
 # CKTP/CKBC enabling false path
-set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
 set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
-set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
-set_false_path -from [get_cells state_reg[*]]         -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
+set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
+set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
+set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
+set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_trint_module/cktp_start_s_0_reg]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_trint_module/cktp_start_s_0_reg]
 
 # Trigger related false paths
 set_false_path -from [get_cells trigger_instance/tr_out_i_reg] -to [get_cells trigger_instance/tr_out_i_stage1_reg]
 set_false_path -from [get_cells trigger_instance/tren_buff_reg] -to [get_cells trigger_instance/tren_buff_stage1_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells trigger_instance/trext_stage1_reg]
-set_false_path -from [get_cells trint_reg] -to [get_cells trigger_instance/trint_stage1_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells trigger_instance/trmode_stage1_reg]
 set_false_path -from [get_cells trigger_instance/mode_reg] -to [get_cells trigger_instance/mode_stage1_reg]
 set_false_path -from [get_cells trigger_instance/trext_ff_synced_reg] -to [get_cells trigger_instance/trext_stage_resynced_reg]

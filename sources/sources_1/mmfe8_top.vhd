@@ -491,9 +491,7 @@ architecture Behavioral of mmfe8_top is
     signal vmm_tki          : std_logic := '0';
     signal vmm_cktp         : std_logic := '0';
     signal vmm_cktp_primary : std_logic := '0';
-    signal CKTP_glbl        : std_logic := '0';
-    signal CKTP_i           : std_logic := '0';
-    signal CKTP_glbl_s125   : std_logic := '0';        
+    signal CKTP_glbl        : std_logic := '0';       
     signal vmm_cktp_all     : std_logic := '0';
     signal vmm_ena_all      : std_logic := '1';
     signal vmm_ckbc         : std_logic;
@@ -629,7 +627,6 @@ architecture Behavioral of mmfe8_top is
     signal ckbc_freq        : std_logic_vector(7 downto 0)     := x"28"; --40 Mhz
     signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
     signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
-    signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
     signal ckbcMode         : std_logic := '0';
     
     -------------------------------------------------
@@ -664,8 +661,6 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     attribute ASYNC_REG                         : string;
     attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
-    attribute ASYNC_REG of CKTP_i               : signal is "TRUE";
-    attribute ASYNC_REG of CKTP_glbl_s125       : signal is "TRUE";
   
     -------------------------------------------------------------------
     -- Keep signals for ILA
@@ -1349,8 +1344,10 @@ architecture Behavioral of mmfe8_top is
         ------- General Interface ----------
         clk_500             : in  std_logic;
         clk_160             : in  std_logic;
+        clk_125             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
+        trint               : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -1941,8 +1938,10 @@ ckbc_cktp_generator: clk_gen_wrapper
         ------- General Interface ----------
         clk_500             => clk_500_gen,
         clk_160             => clk_160_gen,
+        clk_125             => userclk2,
         rst                 => rst_gen,
         mmcm_locked         => clk_gen_locked,
+        trint               => trint,
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         => ckbc_enable,
@@ -2135,11 +2134,9 @@ art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
 -------------------------------------------------------------------
 --                        Processes                              --
 -------------------------------------------------------------------
-    -- 1. cktpSync_proc
-    -- 2. internalTrigger_proc
-    -- 3. synced_to_flowFSM
-    -- 4. sel_cs
-    -- 5. flow_fsm
+    -- 1. synced_to_flowFSM
+    -- 2. sel_cs
+    -- 3. flow_fsm
 -------------------------------------------------------------------
 art_process: process(userclk2, art2)
 begin
@@ -2166,37 +2163,6 @@ port map (
     CLR => reset_FF, -- Asynchronous clear input
     D   => '1' -- Data input
 );
-
--- sync CKTP to userclk2
-cktpSync_proc: process(userclk2)
-begin
-    if(rising_edge(userclk2))then
-        CKTP_i          <= CKTP_glbl;
-        CKTP_glbl_s125  <= CKTP_i;
-    end if;
-end process;
-
--- internal trigger process, uses a multiplication factor of 62 and creates an internal
--- trigger pulse of 400 ns width (b'110010' = 50)
-internalTrigger_proc: process(userclk2)
-begin
-    if(rising_edge(userclk2))then
-        if(CKTP_glbl_s125 = '1')then
-            trig_cnt <= trig_cnt + 1;
-        
-            if(trig_cnt < unsigned(cktp_pulse_width)*"111110" - "110010")then
-                trint <= '0';
-            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"111110" - "110010")then
-                trint <= '1';
-            else
-                trint <= '0';
-            end if;
-        else
-            trint       <= '0';
-            trig_cnt    <= (others => '0');
-        end if;
-    end if;
-end process;
 
 sel_cs_proc: process(sel_cs, vmm_cs_i)
 begin

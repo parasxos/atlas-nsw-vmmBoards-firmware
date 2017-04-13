@@ -44,6 +44,7 @@ set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_ckt
 set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
 set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_trint_module/cktp_start_s_0_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_trint_module/cktp_start_s_0_reg]
+set_false_path -from [get_cells ckbc_cktp_generator/cktp_trint_module/trint_i_reg] -to [get_cells ckbc_cktp_generator/cktp_trint_module/trint_s_0_reg]
 
 # Trigger related false paths
 set_false_path -from [get_cells trigger_instance/tr_out_i_reg] -to [get_cells trigger_instance/tr_out_i_stage1_reg]

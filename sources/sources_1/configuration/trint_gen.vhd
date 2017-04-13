@@ -131,9 +131,9 @@ begin
 end process;
 
 -- sync the trint signal
-sync_trint_proc: process(clk_160)
+sync_trint_proc: process(clk_125)
 begin
-    if(rising_edge(clk_160))then
+    if(rising_edge(clk_125))then
          trint_s_0 <= trint_i;
          trint_s   <= trint_s_0;  
     end if;

@@ -35,8 +35,10 @@ entity clk_gen_wrapper is
         ------- General Interface ----------
         clk_500             : in  std_logic;
         clk_160             : in  std_logic;
+        clk_125             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
+        trint               : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -79,6 +81,17 @@ architecture RTL of clk_gen_wrapper is
         cktp_pulse      : in  std_logic;
         cktp_max        : in  std_logic_vector(15 downto 0);
         cktp_inhibit    : out std_logic
+    );
+    end component;
+
+    component trint_gen
+    port(
+        clk_160     : in  std_logic;
+        clk_125     : in  std_logic;
+        cktp_start  : in  std_logic;
+        cktp_pulse  : in  std_logic;
+        cktp_width  : in  std_logic_vector(11 downto 0);
+        trint       : out std_logic
     );
     end component;
 
@@ -145,7 +158,7 @@ cktp_generator: cktp_gen
         clk_160         => clk_160,
         cktp_start      => cktp_gen_start,
         cktp_primary    => cktp_primary,
-        vmm_ckbc        => CKBC_preBuf, -- CKBC_glbl
+        vmm_ckbc        => CKBC_preBuf,
         ckbc_freq       => ckbc_freq,
         skew            => skew_cktp_gen,
         pulse_width     => cktp_width_final,
@@ -157,9 +170,19 @@ cktp_max_module: cktp_counter
     port map(
         clk_160         => clk_160,
         cktp_start      => cktp_start,
-        cktp_pulse      => CKTP_from_orig_gen, -- maybe CKTP_glbl? but needs sync
+        cktp_pulse      => CKTP_from_orig_gen,
         cktp_max        => cktp_max_num,
         cktp_inhibit    => cktp_inhibit
+    );
+
+cktp_trint_module: trint_gen
+    port map(
+        clk_160         => clk_160,
+        clk_125         => clk_125,
+        cktp_start      => cktp_start,
+        cktp_pulse      => CKTP_from_orig_gen,
+        cktp_width      => cktp_width_final,
+        trint           => trint
     );
     
 skewing_module: skew_gen

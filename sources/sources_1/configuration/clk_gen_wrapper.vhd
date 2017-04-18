@@ -36,10 +36,12 @@ entity clk_gen_wrapper is
         ------- General Interface ----------
         clk_500             : in  std_logic;
         clk_160             : in  std_logic;
+        clk_125             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
         rst_enable          : in  std_logic;
         pf_busy             : in  std_logic;
+        trint               : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -97,6 +99,17 @@ architecture RTL of clk_gen_wrapper is
         rst_period      : in  std_logic_vector(21 downto 0);
         rst_before_cktp : in  std_logic_vector(7 downto 0);
         rst_vmm         : out std_logic
+    );
+    end component;
+    
+    component trint_gen
+    port(
+        clk_160     : in  std_logic;
+        clk_125     : in  std_logic;
+        cktp_start  : in  std_logic;
+        cktp_pulse  : in  std_logic;
+        cktp_width  : in  std_logic_vector(11 downto 0);
+        trint       : out std_logic
     );
     end component;
 
@@ -172,6 +185,16 @@ cktp_max_module: cktp_counter
         cktp_pulse      => CKTP_from_orig_gen,
         cktp_max        => cktp_max_num,
         cktp_inhibit    => cktp_inhibit
+    );
+    
+cktp_trint_module: trint_gen
+    port map(
+        clk_160         => clk_160,
+        clk_125         => clk_125,
+        cktp_start      => cktp_start,
+        cktp_pulse      => CKTP_from_orig_gen,
+        cktp_width      => cktp_width_final,
+        trint           => trint
     );
     
 skewing_module: skew_gen

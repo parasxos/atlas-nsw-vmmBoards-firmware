@@ -59,20 +59,11 @@ entity udp_data_in_handler is
     myMAC_set           : out std_logic_vector(47 downto 0);
     destIP_set          : out std_logic_vector(31 downto 0);
     ------------------------------------
-    -------- CKTP/CKBC Interface -------
-    ckbc_freq           : out std_logic_vector(7 downto 0);
-    cktk_max_num        : out std_logic_vector(7 downto 0);
-    cktp_max_num        : out std_logic_vector(15 downto 0);
-    cktp_skew           : out std_logic_vector(7 downto 0);
-    cktp_period         : out std_logic_vector(15 downto 0);
-    cktp_width          : out std_logic_vector(7 downto 0);
-    ------------------------------------
     ------ VMM Config Interface --------
-    vmm_bitmask         : out std_logic_vector(7 downto 0);
+    vmm_bitmask         : out std_logic_vector(7 downto 0);  
     vmmConf_rdy         : out std_logic;
     vmmConf_done        : out std_logic;
-    vmm_sck             : out std_logic;
-    vmm_cs              : out std_logic;
+    vmm_cktk            : out std_logic;
     vmm_cfg_bit         : out std_logic;
     top_rdy             : in  std_logic;
     ------------------------------------
@@ -89,15 +80,12 @@ architecture RTL of udp_data_in_handler is
 
     COMPONENT fpga_config_block
     PORT(
-        -----------------------------------
+        ------------------------------------
         ------- General Interface ----------
         clk_125             : in  std_logic;
         rst                 : in  std_logic;
         cnt_bytes           : in  unsigned(7 downto 0);
         user_din_udp        : in  std_logic_vector(7 downto 0);
-        ------------------------------------
-        -------- UDP Interface -------------
-        udp_rx              : in  udp_rx_type;
         ------------------------------------
         ---------- XADC Interface ----------
         xadc_conf           : in  std_logic;
@@ -106,6 +94,7 @@ architecture RTL of udp_data_in_handler is
         xadc_sample_size    : out std_logic_vector(10 downto 0);
         xadc_delay          : out std_logic_vector(17 downto 0);
         ------------------------------------
+        
         ---------- AXI4SPI Interface -------
         flash_conf          : in  std_logic;
         flashPacket_rdy     : out std_logic;
@@ -113,18 +102,12 @@ architecture RTL of udp_data_in_handler is
         myMAC_set           : out std_logic_vector(47 downto 0);
         destIP_set          : out std_logic_vector(31 downto 0);
         ------------------------------------
-        -------- CKTP/CKBC Interface -------
-        ckbc_freq           : out std_logic_vector(7 downto 0);
-        cktk_max_num        : out std_logic_vector(7 downto 0);
-        cktp_max_num        : out std_logic_vector(15 downto 0);
-        cktp_skew           : out std_logic_vector(7 downto 0);
-        cktp_period         : out std_logic_vector(15 downto 0);
-        cktp_width          : out std_logic_vector(7 downto 0);
-        ------------------------------------
         -------- FPGA Config Interface -----
         fpga_conf           : in  std_logic;
         fpgaPacket_rdy      : out std_logic;
         latency             : out std_logic_vector(15 downto 0);
+        fpga_rst_conf       : out std_logic;
+        daq_off             : out std_logic;
         daq_on              : out std_logic;
         ext_trigger         : out std_logic
     );
@@ -141,15 +124,14 @@ architecture RTL of udp_data_in_handler is
         cnt_bytes           : in  unsigned(7 downto 0);
         ------------------------------------
         --------- FIFO/UDP Interface -------
-        user_din_udp        : in  std_logic_vector(7 downto 0);
-        user_valid_udp      : in  std_logic;
-        user_last_udp       : in  std_logic;
-        ------------------------------------
+        user_din_udp        : in  std_logic_vector(7 downto 0); --prv
+        user_valid_udp      : in  std_logic; --prv
+        user_last_udp       : in  std_logic; --prv
+        ------------------------------------  
         ------ VMM Config Interface --------
         vmmConf_rdy         : out std_logic;
         vmmConf_done        : out std_logic;
-        vmm_sck             : out std_logic;
-        vmm_cs              : out std_logic;
+        vmm_cktk            : out std_logic;
         vmm_cfg_bit         : out std_logic;
         vmm_conf            : in  std_logic;
         top_rdy             : in  std_logic;
@@ -452,9 +434,6 @@ fpga_config_logic: fpga_config_block
         cnt_bytes           => cnt_bytes,
         user_din_udp        => user_data_prv,
         ------------------------------------
-        -------- UDP Interface -------------
-        udp_rx              => udp_rx,
-        ------------------------------------
         ---------- XADC Interface ----------
         xadc_conf           => xadc_conf,
         xadcPacket_rdy      => xadcPacket_rdy,
@@ -469,18 +448,12 @@ fpga_config_logic: fpga_config_block
         myMAC_set           => myMAC_set,
         destIP_set          => destIP_set,
         ------------------------------------
-        -------- CKTP/CKBC Interface -------
-        ckbc_freq           => ckbc_freq,
-        cktk_max_num        => cktk_max_num,
-        cktp_max_num        => cktp_max_num,
-        cktp_skew           => cktp_skew,
-        cktp_period         => cktp_period,
-        cktp_width          => cktp_width,
-        ------------------------------------
         -------- FPGA Config Interface -----
         fpga_conf           => fpga_conf,
         fpgaPacket_rdy      => fpgaPacket_rdy,
         latency             => latency,
+        fpga_rst_conf       => open,
+        daq_off             => open,
         daq_on              => daq_on,
         ext_trigger         => ext_trigger
     );
@@ -503,8 +476,7 @@ vmm_config_logic: vmm_config_block
         ------ VMM Config Interface --------
         vmmConf_rdy         => vmm_conf_rdy,
         vmmConf_done        => vmm_ser_done,
-        vmm_sck             => vmm_sck,
-        vmm_cs              => vmm_cs,
+        vmm_cktk            => vmm_cktk,
         vmm_cfg_bit         => vmm_cfg_bit,
         vmm_conf            => vmm_conf,
         top_rdy             => top_rdy_s40,

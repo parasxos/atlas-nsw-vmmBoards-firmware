@@ -1,4 +1,4 @@
-----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 -- Company: NTU Athens - BNL
 -- Engineer: Christos Bakalis (christos.bakalis@cern.ch) 
 -- 
@@ -8,16 +8,15 @@
 -- Project Name: MMFE8 - NTUA
 -- Target Devices: Artix7 xc7a200t-2fbg484 and xc7a200t-3fbg484
 -- Tool Versions: Vivado 2016.2
--- Description: Module that stores the data coming from the UDP/Ethernet for VMM
--- configuration using a FIFO serializer. It also drives the SCK and CS signals.
+-- Description: Module that samples the data coming from the UDP/Ethernet
+-- to produce the vmm_id signal. It also stores the VMM configuration data
+-- in a FIFO for serialization, and drives the CKTK signal.
 
 -- Dependencies: MMFE8 NTUA Project
 -- 
 -- Changelog:
--- 16.02.2017 Modified the serialization FSM for VMM3 configuration. (Christos Bakalis)
--- 28.03.2017 VMM_ID is now sampled one level above. (Christos Bakalis)
 --
-----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
@@ -40,8 +39,7 @@ entity vmm_config_block is
     ------ VMM Config Interface --------
     vmmConf_rdy         : out std_logic;
     vmmConf_done        : out std_logic;
-    vmm_sck             : out std_logic;
-    vmm_cs              : out std_logic;
+    vmm_cktk            : out std_logic;
     vmm_cfg_bit         : out std_logic;
     vmm_conf            : in  std_logic;
     top_rdy             : in  std_logic;
@@ -69,19 +67,18 @@ architecture RTL of vmm_config_block is
     signal fifo_full        : std_logic := '0';
     signal fifo_empty       : std_logic := '0';
     signal sel_vmm_data     : std_logic := '0';
-    signal wait_cnt         : unsigned(1 downto 0) := (others => '0');
-    signal bit_cnt          : unsigned(6 downto 0) := (others => '0');
+    signal rd_ena_cnt       : unsigned(10 downto 0) := (others => '0');
+    signal wait_cnt         : unsigned(1 downto 0)  := (others => '0');
     signal user_valid_fifo  : std_logic := '0';
-    signal vmm_cs_i         : std_logic := '1';
 
     type confFSM is (ST_IDLE, ST_RD_HIGH, ST_RD_LOW, ST_CKTK_LOW, ST_DONE);
     signal st_conf : confFSM := ST_IDLE;
 
 begin
 
--- sub-process that drives the data into the FIFO used for VMM configuration. 
--- it also detects the 'last' pulse sent from the UDP block to initialize the 
--- VMM config data serialization
+-- sub-process that first samples the vmm_id and then drives the data into
+-- the FIFO used for VMM configuration. it also detects the 'last' pulse 
+-- sent from the UDP block to initialize the VMM config data serialization
 VMM_conf_proc: process(clk_125)
 begin
     if(rising_edge(clk_125))then
@@ -105,10 +102,10 @@ begin
     end if;
 end process;
 
--- FSM that reads the data from the serializing FIFO  and asserts the SCK pulse 
+-- FSM that reads the data from the serializing FIFO  and asserts the CKTK pulse 
 -- after the bit has passed safely into the vmm configuration bus. serialization 
 -- starts only after the assertion of the 'last' signal from the UDP block (see VMM_conf_proc)
-VMM_conf_SCK_FSM: process(clk_40)
+VMM_conf_CKTK_FSM: process(clk_40)
 begin
     if(rising_edge(clk_40))then
         if(rst = '1' or rst_fifo = '1')then
@@ -116,39 +113,29 @@ begin
             vmmConf_done    <= '0';
             rd_ena          <= '0';
             wait_cnt        <= (others => '0');
-            bit_cnt         <= (others => '0');
-            vmm_sck         <= '0';
-            vmm_cs_i        <= '1';
+            rd_ena_cnt      <= (others => '0');
+            vmm_cktk        <= '0';
         else
             case st_conf is
 
             -- wait for flow_fsm and master_conf_FSM
             when ST_IDLE =>
                 vmmConf_done <= '0';
-                vmm_cs_i     <= '1';
 
-                if(top_rdy = '1' and init_ser = '1')then                   
-                    st_conf     <= ST_RD_HIGH;
+                if(top_rdy = '1' and init_ser = '1')then
+                    st_conf <= ST_RD_HIGH;
                 else
-                    st_conf     <= ST_IDLE;
+                    st_conf <= ST_IDLE;
                 end if;
 
-            -- assert the rd_ena signal if there is still data in the buffer. also check for 96-bit counter
+            -- assert the rd_ena signal if there is still data in the buffer or if 1616 bits have not yet been read
             when ST_RD_HIGH =>
-                if(fifo_empty = '0' and bit_cnt /= "1100000")then
-                    rd_ena      <= '1';
-                    bit_cnt     <= bit_cnt + 1;
-                    vmm_cs_i    <= '0';
-                    st_conf     <= ST_RD_LOW;
-                elsif(fifo_empty = '0' and bit_cnt = "1100000")then -- 96 bits sent, pull cs high and return to this state
+                if(fifo_empty = '1' or rd_ena_cnt = "11001010000")then -- 11001010000 = 1616 (448 bits)
                     rd_ena      <= '0';
-                    bit_cnt     <= (others => '0');
-                    vmm_cs_i    <= '1';
-                    st_conf     <= ST_RD_HIGH;
+                    st_conf     <= ST_DONE;
                 else
-                    rd_ena  <= '0';
-                    bit_cnt <= (others => '0');
-                    st_conf <= ST_DONE;
+                    rd_ena      <= '1';
+                    st_conf     <= ST_RD_LOW;
                 end if;
 
             -- wait for the FIFO to pass the bit as there is
@@ -157,24 +144,24 @@ begin
                 rd_ena  <= '0';
                 if(wait_cnt = "11")then
                     wait_cnt    <= (others => '0');
-                    vmm_sck     <= '1';
+                    vmm_cktk    <= '1';
                     st_conf     <= ST_CKTK_LOW;
                 else
                     wait_cnt    <= wait_cnt + 1;
-                    vmm_sck     <= '0';
+                    vmm_cktk    <= '0';
                     st_conf     <= ST_RD_LOW;
                 end if;
 
             -- ground CKTK and then check if there is more data left
             when ST_CKTK_LOW =>
-                vmm_sck     <= '0';
+                vmm_cktk    <= '0';
+                rd_ena_cnt  <= rd_ena_cnt + 1;
                 st_conf     <= ST_RD_HIGH;
 
             -- stay here until reset by master config FSM
             when ST_DONE =>
-                vmmConf_done    <= '1';
-                vmm_cs_i        <= '1';
-                st_conf         <= ST_DONE;   
+                vmmConf_done  <= '1';
+                st_conf       <= ST_DONE;   
 
             when others =>
                 st_conf <= ST_IDLE;
@@ -206,7 +193,5 @@ FIFO_serializer: vmm_conf_buffer
         full    => fifo_full,
         empty   => fifo_empty
       );
-      
-      vmm_cs <= vmm_cs_i;
 
 end RTL;

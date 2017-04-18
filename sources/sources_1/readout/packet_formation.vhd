@@ -47,8 +47,9 @@ entity packet_formation is
         tr_hold     : out std_logic;
         reset       : in std_logic;
         rst_vmm     : out std_logic;
-        --resetting   : in std_logic;
+        resetting   : in std_logic;
         rst_FIFO    : out std_logic;
+        dbg_state_o : out std_logic_vector(4 downto 0);
         
         latency     : in std_logic_vector(15 downto 0)
 
@@ -81,10 +82,17 @@ architecture Behavioral of packet_formation is
     signal packLen_i        : std_logic_vector(11 downto 0) := x"000";
     signal packLen_cnt      : unsigned(11 downto 0) := x"000";
     signal end_packet_int   : std_logic                     := '0';
+    
+    signal resetting_i      : std_logic := '0';
+    signal resetting_s      : std_logic := '0';
+    
+    attribute ASYNC_REG                 : string;
+    attribute ASYNC_REG of resetting_i  : signal is "TRUE";
+    attribute ASYNC_REG of resetting_s  : signal is "TRUE";
 
-    type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
-                       triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, isUDPDone,
-                       isTriggerOff);
+    type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, S2, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
+                       triggerVmmReadout, waitForData, resetVMMs, resetDone, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, isUDPDone,
+                       isTriggerOff, eventDone);
     signal state            : stateType;
 
 --------------------  Debugging ------------------------------
@@ -96,13 +104,13 @@ architecture Behavioral of packet_formation is
 ----------------------  Debugging ------------------------------
 --    attribute mark_debug : string;
 
-----    attribute mark_debug of header                :    signal    is    "true";
-----    attribute mark_debug of globBcid              :    signal    is    "true";
-----    attribute mark_debug of globBcid_i            :    signal    is    "true";
-----    attribute mark_debug of precCnt               :    signal    is    "true";
+--    attribute mark_debug of header                :    signal    is    "true";
+--    attribute mark_debug of globBcid              :    signal    is    "true";
+--    attribute mark_debug of globBcid_i            :    signal    is    "true";
+--    attribute mark_debug of precCnt               :    signal    is    "true";
 --    attribute mark_debug of vmmId_i               :    signal    is    "true";
-----    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
-----    attribute mark_debug of vmmWord_i             :    signal    is    "true";
+--    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
+--    attribute mark_debug of vmmWord_i             :    signal    is    "true";
 --    attribute mark_debug of packLen_i             :    signal    is    "true";
 --    attribute mark_debug of packLen_cnt           :    signal    is    "true";
 --    attribute mark_debug of end_packet_int        :    signal    is    "true";
@@ -153,7 +161,6 @@ begin
                 triggerVmmReadout_i     <= '0';
                 trigLatencyCnt          <= 0;
                 rst_FIFO                <= '0';
-                selectDataInput         <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
                 	daqFIFO_wr_en   <= '0';
@@ -169,19 +176,20 @@ begin
                 
             when waitForLatency =>
                 debug_state <= "00010";
-                --tr_hold         <= '1';                 -- Prevent new triggers
+                tr_hold         <= '1';                 -- Prevent new triggers
                 if trigLatencyCnt > trigLatency then 
-                    state           <= captureEventID;
+                    state           <= S2;
                 else
                     trigLatencyCnt  <= trigLatencyCnt + 1;
                 end if;
 
---            when S2 =>          -- wait for the header elements to be formed
---                debug_state <= "00010";
---                --tr_hold         <= '1';                 -- Prevent new triggers
---                --packLen_cnt     <= x"000";              -- Reset length count
---                --vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
---                state           <= captureEventID;
+            when S2 =>          -- wait for the header elements to be formed
+                debug_state <= "00010";
+                tr_hold         <= '1';                 -- Prevent new triggers
+                selectDataInput <= '0';
+                packLen_cnt     <= x"000";              -- Reset length count
+                vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
+                state           <= captureEventID;
 
             when captureEventID =>      -- Form Header
                 debug_state             <= "00011";
@@ -257,34 +265,33 @@ begin
             when packetDone =>
                 debug_state     <= "01101";
                 end_packet_int  <= '1';
-                state           <= isUDPDone;
+                state           <= eventDone;
 
---            when eventDone =>
---                debug_state <= "01110";
---                if vmmId_cnt >= 0 then
---                    vmmId_cnt   <= 0;
---                    state       <= resetVMMs;
---                else
---                    vmmId_cnt   <= vmmId_cnt + 1;
---                    state       <= S2;
---                end if;
+            when eventDone =>
+                debug_state     <= "01110";
+                end_packet_int  <= '0';
+                if vmmId_cnt >= 7 then
+                    vmmId_cnt   <= 0;
+                    state       <= resetVMMs;
+                else
+                    vmmId_cnt   <= vmmId_cnt + 1;
+                    state       <= S2;
+                end if;
                 
---            when resetVMMs =>
---                debug_state <= "01111";
---                rst_vmm     <= '1';
---                state       <= resetDone;
+            when resetVMMs =>
+                debug_state <= "01111";
+                rst_vmm     <= '1';
+                state       <= resetDone;
                 
---            when resetDone =>
---                debug_state <= "10000";
---                if resetting = '0' then
---                    rst_vmm         <= '0';
---                    state       <= isUDPDone;
---                    rst_vmm     <= '0'; -- Prevent from continuously resetting while waiting for UDP Packet
---                end if;
+            when resetDone =>
+                debug_state <= "10000";
+                if resetting_s = '0' then
+                    state       <= isUDPDone;
+                    rst_vmm     <= '0'; -- Prevent from continuously resetting while waiting for UDP Packet
+                end if;
 
             when isUDPDone =>
                 debug_state 	<= "01110";
-                end_packet_int  <= '0';
                 pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for the UDP packet to be sent
                     state       <= isTriggerOff;
@@ -292,7 +299,7 @@ begin
                 
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
                 debug_state <= "01111";
-                --tr_hold         <= '0';     -- Allow new triggers
+                tr_hold         <= '0';     -- Allow new triggers
                 if newCycle /= '1' then
                     tr_hold         <= '0';
                     state           <= waitingForNewCycle;
@@ -318,6 +325,14 @@ case selectDataInput is
     end case;
 end process;
 
+syncETRsig: process(clk)
+begin
+    if(rising_edge(clk))then
+        resetting_i <= resetting;
+        resetting_s <= resetting_i;
+    end if;
+end process;
+
     globBcid_i      <= globBcid;
     daqFIFO_wr_en_i <= daqFIFO_wr_en;
     vmmWord_i       <= vmmWord;
@@ -327,12 +342,13 @@ end process;
     end_packet      <= end_packet_int;
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
-    trigLatency     <= to_integer(unsigned(latency));
+    trigLatency     <= 140;
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
-    header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";  
+    header(31 downto 0)     <= precCnt & globBcid & b"00000" & vmmId_i;  
                             --    8    &    16    &     5    &   3
+    dbg_state_o     <= debug_state;
 
 --ilaPacketFormation: ila_pf
 --port map(

@@ -42,8 +42,8 @@ use work.arp_types.all;
 entity mmfe8_top is
     port(
         -- Trigger pins
---        EXT_TRIGGER_P       : in std_logic;
---        EXT_TRIGGER_N       : in std_logic;
+        EXT_TRIGGER_P       : in std_logic;
+        EXT_TRIGGER_N       : in std_logic;
 --        EXT_TRIG_IN         : in std_logic;
 
 --        TRIGGER_LOOP_P      : out std_logic;
@@ -54,7 +54,7 @@ entity mmfe8_top is
         X_2V5_DIFF_CLK_P      : IN STD_LOGIC;
         X_2V5_DIFF_CLK_N      : IN STD_LOGIC;
 
-        -- Tranceiver Interface
+        -- Transceiver Interface
         -------------------------------------
         gtrefclk_p            : IN  STD_LOGIC;                     -- Differential +ve of reference clock for tranceiver: 125MHz, very high quality
         gtrefclk_n            : IN  STD_LOGIC;                     -- Differential -ve of reference clock for tranceiver: 125MHz, very high quality
@@ -85,41 +85,23 @@ entity mmfe8_top is
         DATA1_7_P, DATA1_7_N  : IN STD_LOGIC;
         DATA1_8_P, DATA1_8_N  : IN STD_LOGIC;
 
-        SDO_1                 : IN STD_LOGIC;
-        SDO_2                 : IN STD_LOGIC;
-        SDO_3                 : IN STD_LOGIC;
-        SDO_4                 : IN STD_LOGIC;
-        SDO_5                 : IN STD_LOGIC;
-        SDO_6                 : IN STD_LOGIC;
-        SDO_7                 : IN STD_LOGIC;
-        SDO_8                 : IN STD_LOGIC;
+        DI_1_P, DI_1_N        : OUT STD_LOGIC;
+        DI_2_P, DI_2_N        : OUT STD_LOGIC;
+        DI_3_P, DI_3_N        : OUT STD_LOGIC;
+        DI_4_P, DI_4_N        : OUT STD_LOGIC;
+        DI_5_P, DI_5_N        : OUT STD_LOGIC;
+        DI_6_P, DI_6_N        : OUT STD_LOGIC;
+        DI_7_P, DI_7_N        : OUT STD_LOGIC;
+        DI_8_P, DI_8_N        : OUT STD_LOGIC;
 
-        SDI_1                 : OUT STD_LOGIC;
-        SDI_2                 : OUT STD_LOGIC;
-        SDI_3                 : OUT STD_LOGIC;
-        SDI_4                 : OUT STD_LOGIC;
-        SDI_5                 : OUT STD_LOGIC;
-        SDI_6                 : OUT STD_LOGIC;
-        SDI_7                 : OUT STD_LOGIC;
-        SDI_8                 : OUT STD_LOGIC;
-
-        SCK_1                 : OUT STD_LOGIC;
-        SCK_2                 : OUT STD_LOGIC;
-        SCK_3                 : OUT STD_LOGIC;
-        SCK_4                 : OUT STD_LOGIC;
-        SCK_5                 : OUT STD_LOGIC;
-        SCK_6                 : OUT STD_LOGIC;
-        SCK_7                 : OUT STD_LOGIC;
-        SCK_8                 : OUT STD_LOGIC;
-
-        CS_1                  : OUT STD_LOGIC;
-        CS_2                  : OUT STD_LOGIC;
-        CS_3                  : OUT STD_LOGIC;
-        CS_4                  : OUT STD_LOGIC;
-        CS_5                  : OUT STD_LOGIC;
-        CS_6                  : OUT STD_LOGIC;
-        CS_7                  : OUT STD_LOGIC;
-        CS_8                  : OUT STD_LOGIC;
+        DO_1_P, DO_1_N        : IN STD_LOGIC;
+        DO_2_P, DO_2_N        : IN STD_LOGIC;
+        DO_3_P, DO_3_N        : IN STD_LOGIC;
+        DO_4_P, DO_4_N        : IN STD_LOGIC;
+        DO_5_P, DO_5_N        : IN STD_LOGIC;
+        DO_6_P, DO_6_N        : IN STD_LOGIC;
+        DO_7_P, DO_7_N        : IN STD_LOGIC;
+        DO_8_P, DO_8_N        : IN STD_LOGIC;
 
         ENA_1_P, ENA_1_N      : OUT STD_LOGIC;
         ENA_2_P, ENA_2_N      : OUT STD_LOGIC;
@@ -129,6 +111,15 @@ entity mmfe8_top is
         ENA_6_P, ENA_6_N      : OUT STD_LOGIC;
         ENA_7_P, ENA_7_N      : OUT STD_LOGIC;
         ENA_8_P, ENA_8_N      : OUT STD_LOGIC;
+        
+        WEN_1_P, WEN_1_N      : OUT STD_LOGIC;
+        WEN_2_P, WEN_2_N      : OUT STD_LOGIC;
+        WEN_3_P, WEN_3_N      : OUT STD_LOGIC;
+        WEN_4_P, WEN_4_N      : OUT STD_LOGIC;
+        WEN_5_P, WEN_5_N      : OUT STD_LOGIC;
+        WEN_6_P, WEN_6_N      : OUT STD_LOGIC;
+        WEN_7_P, WEN_7_N      : OUT STD_LOGIC;
+        WEN_8_P, WEN_8_N      : OUT STD_LOGIC;
 
         CKTK_1_P, CKTK_1_N    : OUT STD_LOGIC;
         CKTK_2_P, CKTK_2_N    : OUT STD_LOGIC;
@@ -166,9 +157,6 @@ entity mmfe8_top is
         CKDT_7_P, CKDT_7_N    : OUT STD_LOGIC;
         CKDT_8_P, CKDT_8_N    : OUT STD_LOGIC;
 
-        TKI_P,     TKI_N      : OUT STD_LOGIC;
-        TKO_P,     TKO_N      : IN  STD_LOGIC;
-
         CKART_1_P, CKART_1_N  : OUT STD_LOGIC;
         CKART_2_P, CKART_2_N  : OUT STD_LOGIC;
         CKART_3_P, CKART_3_N  : OUT STD_LOGIC;
@@ -180,27 +168,13 @@ entity mmfe8_top is
 
         SETT_P,    SETT_N     : OUT STD_LOGIC; 
         SETB_P,    SETB_N     : OUT STD_LOGIC;
-        CK6B_1_P,  CK6B_1_N   : OUT STD_LOGIC;
-        CK6B_2_P,  CK6B_2_N   : OUT STD_LOGIC;
-        CK6B_3_P,  CK6B_3_N   : OUT STD_LOGIC;
-        CK6B_4_P,  CK6B_4_N   : OUT STD_LOGIC;
-        CK6B_5_P,  CK6B_5_N   : OUT STD_LOGIC;
-        CK6B_6_P,  CK6B_6_N   : OUT STD_LOGIC;
-        CK6B_7_P,  CK6B_7_N   : OUT STD_LOGIC;
-        CK6B_8_P,  CK6B_8_N   : OUT STD_LOGIC;
+        TKI_P,     TKI_N      : OUT STD_LOGIC;
+        TKO_P,     TKO_N      : IN  STD_LOGIC;
 
         -- ADDC ART CLK
         -------------------------------------
         CKART_ADDC_P          : OUT STD_LOGIC;
         CKART_ADDC_N          : OUT STD_LOGIC;
-        
-        -- MDT_446/MDT_MU2E Specific Pins
-        TRIGGER_OUT_P         : OUT STD_LOGIC;
-        TRIGGER_OUT_N         : OUT STD_LOGIC;
-        CH_TRIGGER            : IN  STD_LOGIC;
-        MO                    : OUT STD_LOGIC;
-        ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
-        ART_P, ART_N          : IN  STD_LOGIC;
 
         -- xADC Interface
         -------------------------------------
@@ -239,322 +213,183 @@ end mmfe8_top;
 
 architecture Behavioral of mmfe8_top is
 
-  -- Default IP and MAC address of the board
-  signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-  signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
-  signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
-  
-  -- Set to '1' if MMFE8 VMM3 is used
-  signal is_mmfe8       : std_logic := '0';
+    -- Default IP and MAC address of the board
+    signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+    signal default_MAC    : std_logic_vector(47 downto 0) := x"002320212228";
+    signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
+    
+    -- Set to '1' if MMFE8 VMM3 is used
+    signal is_mmfe8       : std_logic := '0';
+    
+    -- clock generation signals for tranceiver
+    signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.
+    signal txoutclk              : std_logic;                    -- txoutclk from GT transceiver
+    signal resetdone             : std_logic;                    -- To indicate that the GT transceiver has completed its reset cycle
+    signal mmcm_locked           : std_logic;                    -- MMCM locked signal.
+    signal mmcm_reset            : std_logic;                    -- MMCM reset signal.
+    signal clkfbout              : std_logic;                    -- MMCM feedback clock
+    signal userclk               : std_logic;                    -- 62.5MHz clock for GT transceiver Tx/Rx user clocks
+    signal userclk2              : std_logic;                    -- 125MHz clock for core reference clock.
+    -- PMA reset generation signals for tranceiver
+    signal pma_reset_pipe        : std_logic_vector(3 downto 0); -- flip-flop pipeline for reset duration stretch
+    signal pma_reset             : std_logic;                    -- Synchronous transcevier PMA reset
+    -- An independent clock source used as the reference clock for an
+    -- IDELAYCTRL (if present) and for the main GT transceiver reset logic.
+    signal independent_clock_bufg: std_logic;
+    -- clock generation signals for SGMII clock
+    signal sgmii_clk_r           : std_logic;                    -- Clock to client MAC (125MHz, 12.5MHz or 1.25MHz) (to rising edge DDR).
+    signal sgmii_clk_f           : std_logic;                    -- Clock to client MAC (125MHz, 12.5MHz or 1.25MHz) (to falling edge DDR).
+    -- GMII signals
+    signal gmii_isolate          : std_logic;                    -- Internal gmii_isolate signal.
+    signal gmii_txd_int          : std_logic_vector(7 downto 0); -- Internal gmii_txd signal (between core and SGMII adaptation module).
+    signal gmii_tx_en_int        : std_logic;                    -- Internal gmii_tx_en signal (between core and SGMII adaptation module).
+    signal gmii_tx_er_int        : std_logic;                    -- Internal gmii_tx_er signal (between core and SGMII adaptation module).
+    signal gmii_rxd_int          : std_logic_vector(7 downto 0); -- Internal gmii_rxd signal (between core and SGMII adaptation module).
+    signal gmii_rx_dv_int        : std_logic;                    -- Internal gmii_rx_dv signal (between core and SGMII adaptation module).
+    signal gmii_rx_er_int        : std_logic;                    -- Internal gmii_rx_er signal (between core and SGMII adaptation module).
+    
+    -- Extra registers to ease IOB placement
+    signal status_vector_int : std_logic_vector(15 downto 0);
+    
+    ----------------------------panos---------------------------------
+    signal gmii_txd_emac               : std_logic_vector(7 downto 0);
+    signal gmii_tx_en_emac             : std_logic; 
+    signal gmii_tx_er_emac             : std_logic; 
+    signal gmii_rxd_emac               : std_logic_vector(7 downto 0);
+    signal gmii_rx_dv_emac             : std_logic; 
+    signal gmii_rx_er_emac             : std_logic; 
+    signal speed_is_10_100             : std_logic;
+    signal speed_is_100                : std_logic;
+    signal tx_axis_mac_tready_int      : std_logic;
+    signal rx_axis_mac_tuser_int       : std_logic;
+    signal rx_axis_mac_tlast_int       : std_logic;
+    signal rx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);
+    signal rx_axis_mac_tvalid_int      : std_logic;
+    signal local_gtx_reset             : std_logic;
+    signal rx_reset                    : std_logic;
+    signal tx_reset                    : std_logic;
+    signal gtx_pre_resetn              : std_logic := '0';
+    signal tx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);    
+    signal tx_axis_mac_tvalid_int      : std_logic;
+    signal tx_axis_mac_tlast_int       : std_logic;  
+    signal gtx_resetn                  : std_logic;
+    signal glbl_rstn                   : std_logic;
+    signal glbl_rst_i                  : std_logic := '0';
+    signal gtx_clk_reset_int           : std_logic;
+    signal an_restart_config_int       : std_logic;
+    signal rx_axis_mac_tready_int      : std_logic;
+    signal rx_configuration_vector_int : std_logic_vector(79 downto 0);
+    signal tx_configuration_vector_int : std_logic_vector(79 downto 0);
+    signal vector_resetn               : std_logic := '0';
+    signal vector_pre_resetn           : std_logic := '0';
+    signal vector_reset_int            : std_logic;
+    signal clk_enable_int              : std_logic;
+    signal udp_txi_int                 : udp_tx_type;
+    signal control                     : udp_control_type;
+    signal udp_rx_int                  : udp_rx_type;
+    signal ip_rx_hdr_int               : ipv4_rx_header_type;
+    signal udp_tx_data_out_ready_int   : std_logic;
+    signal udp_tx_start_int            : std_logic;
+    signal icmp_rx_start               : std_logic;
+    signal icmp_rxo                    : icmp_rx_type;
+    
+    signal user_data_out_i             : std_logic_vector(63 downto 0); 
+    signal end_packet_i                : std_logic := '0';    
+    signal we_conf_int                 : std_logic := '0';    
+    signal packet_length_int           : std_logic_vector(11 downto 0);
+    signal daq_data_out_i              : std_logic_vector(63 downto 0);
+    signal conf_data_out_i             : std_logic_vector(63 downto 0);
+    signal daq_wr_en_i                 : std_logic := '0';    
+    signal end_packet_daq              : std_logic := '0'; 
+    signal start_conf_proc_int         : std_logic := '0';
+    
+    ------------------------------VMM configuration------------------------------
+    signal vmm_di_vec_obuf              : std_logic_vector(8 downto 1);
+    signal vmm_do_vec_ibuf              : std_logic_vector(8 downto 1);
+    signal vmm_di_all                   : std_logic := '0';
+    signal vmm_bitmask                  : std_logic_vector(7 downto 0) := "11111111";
+    signal vmm_cktk_conf                : std_logic := '0';
+    
+    ------------------------------ Select VMM ------------------------------
+    signal conf_cktk_out_vec_i          : std_logic_vector(8 downto 1);
+    signal conf_vmm_wen_vec             : std_logic_vector(8 downto 1);
+    signal conf_vmm_ena_vec             : std_logic_vector(8 downto 1);
 
-  -- clock generation signals for tranceiver
-  signal gtrefclkp, gtrefclkn  : std_logic;                    -- Route gtrefclk through an IBUFG.
-  signal txoutclk              : std_logic;                    -- txoutclk from GT transceiver
-  signal resetdone             : std_logic;                    -- To indicate that the GT transceiver has completed its reset cycle
-  signal mmcm_locked           : std_logic;                    -- MMCM locked signal.
-  signal mmcm_reset            : std_logic;                    -- MMCM reset signal.
-  signal clkfbout              : std_logic;                    -- MMCM feedback clock
-  signal userclk               : std_logic;                    -- 62.5MHz clock for GT transceiver Tx/Rx user clocks
-  signal userclk2              : std_logic;                    -- 125MHz clock for core reference clock.
-  -- PMA reset generation signals for tranceiver
-  signal pma_reset_pipe        : std_logic_vector(3 downto 0); -- flip-flop pipeline for reset duration stretch
-  signal pma_reset             : std_logic;                    -- Synchronous transcevier PMA reset
-  -- An independent clock source used as the reference clock for an
-  -- IDELAYCTRL (if present) and for the main GT transceiver reset logic.
-  signal independent_clock_bufg: std_logic;
-  -- clock generation signals for SGMII clock
-  signal sgmii_clk_r           : std_logic;                    -- Clock to client MAC (125MHz, 12.5MHz or 1.25MHz) (to rising edge DDR).
-  signal sgmii_clk_f           : std_logic;                    -- Clock to client MAC (125MHz, 12.5MHz or 1.25MHz) (to falling edge DDR).
-  -- GMII signals
-  signal gmii_isolate          : std_logic;                    -- Internal gmii_isolate signal.
-  signal gmii_txd_int          : std_logic_vector(7 downto 0); -- Internal gmii_txd signal (between core and SGMII adaptation module).
-  signal gmii_tx_en_int        : std_logic;                    -- Internal gmii_tx_en signal (between core and SGMII adaptation module).
-  signal gmii_tx_er_int        : std_logic;                    -- Internal gmii_tx_er signal (between core and SGMII adaptation module).
-  signal gmii_rxd_int          : std_logic_vector(7 downto 0); -- Internal gmii_rxd signal (between core and SGMII adaptation module).
-  signal gmii_rx_dv_int        : std_logic;                    -- Internal gmii_rx_dv signal (between core and SGMII adaptation module).
-  signal gmii_rx_er_int        : std_logic;                    -- Internal gmii_rx_er signal (between core and SGMII adaptation module).
-
-  -- Extra registers to ease IOB placement
-  signal status_vector_int : std_logic_vector(15 downto 0);
-  
-  ----------------------------panos---------------------------------
---TODO: Review signals and distribute to appropriate "set" i.e Ethernet/UDP/Config etc (Christos)
-  signal gmii_txd_emac               : std_logic_vector(7 downto 0);
-  signal gmii_tx_en_emac             : std_logic; 
-  signal gmii_tx_er_emac             : std_logic; 
-  signal gmii_rxd_emac               : std_logic_vector(7 downto 0);
-  signal gmii_rx_dv_emac             : std_logic; 
-  signal gmii_rx_er_emac             : std_logic; 
-  signal sgmii_clk_int               : std_logic;
-  signal speed_is_10_100             : std_logic;
-  signal speed_is_100                : std_logic;
-  signal tx_axis_mac_tready_int      : std_logic;
-  signal rx_axis_mac_tuser_int       : std_logic;
-  signal rx_axis_mac_tlast_int       : std_logic;
-  signal rx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);
-  signal rx_axis_mac_tvalid_int      : std_logic;
-  signal local_gtx_reset             : std_logic;
-  signal rx_reset                    : std_logic;
-  signal tx_reset                    : std_logic;
-  signal gtx_pre_resetn              : std_logic := '0';
-  signal tx_axis_mac_tdata_int       : std_logic_vector(7 downto 0);    
-  signal tx_axis_mac_tvalid_int      : std_logic;
-  signal tx_axis_mac_tlast_int       : std_logic;  
-  signal gtx_resetn                  : std_logic;
-  signal glbl_rstn                   : std_logic;
-  signal glbl_rst_i                  : std_logic := '0';
-  signal gtx_clk_reset_int           : std_logic;
-  signal an_restart_config_int       : std_logic;
-  signal rx_axis_mac_tready_int      : std_logic;
-  signal rx_configuration_vector_int : std_logic_vector(79 downto 0);
-  signal tx_configuration_vector_int : std_logic_vector(79 downto 0);
-  signal vector_resetn               : std_logic := '0';
-  signal vector_pre_resetn           : std_logic := '0';
-  signal vector_reset_int            : std_logic;
-  signal independent_clock_int       : std_logic;
-  signal rst_gtclk_int               : std_logic;
-  signal clk_enable_int              : std_logic;
-  signal sgmii_clk_int_oddr          : std_logic;
-  signal udp_txi_int                 : udp_tx_type;
-  signal control                     : udp_control_type;
-  signal udp_rx_int                  : udp_rx_type;
-  signal ip_rx_hdr_int               : ipv4_rx_header_type;
-  signal udp_tx_data_out_ready_int   : std_logic;
-  signal udp_tx_start_int            : std_logic;
-  signal rxp_int                     : std_logic;
-  signal rxn_int                     : std_logic;
-  signal clkfbout2, clkfbout1        : std_logic;
-  signal tx_axis_mac_tuser_int       : std_logic := '1';
-  signal test_data                   : std_logic_vector(7 downto 0); 
-  signal test_valid, test_last       : std_logic;
-  signal icmp_rx_start               : std_logic;
-  signal icmp_rxo                    : icmp_rx_type;
-
-  signal test_data_out                   : std_logic_vector(7 downto 0); 
-  signal test_valid_out, test_last_out       : std_logic;  
-  signal user_data_out_i             : std_logic_vector(63 downto 0);
-  signal sig_out200                  : std_logic_vector(127 downto 0);
-  signal user_conf_i                 : std_logic := '0'; 
-  signal send_error_int              : std_logic := '0';
-  signal resp_data_int               : resp_data;
-  signal user_wr_en_int              : std_logic := '0';
-  signal reset                       : std_logic := '0';
-  signal end_packet_i                : std_logic := '0';    
-  signal conf_done_int_synced        : std_logic := '0';
-  signal we_conf_int                 : std_logic := '0';    
-  signal packet_length_int           : std_logic_vector(11 downto 0);
-  signal daq_data_out_i              : std_logic_vector(63 downto 0);
-  signal conf_data_out_i             : std_logic_vector(63 downto 0);
-  signal daq_wr_en_i                 : std_logic := '0';    
-  signal end_packet_daq              : std_logic := '0'; 
-  signal start_conf_proc_int         : std_logic := '0';
-  signal status_int_old               : std_logic_vector(3 downto 0);
-  
---TODO: Review signals with updated configuration (Christos)
---  signal  VMM_SCK                       :  std_logic;
-  signal  vmm_cs_all                 :  std_logic := '0'; 
-  signal  vmm_cs_fsm                 :  std_logic := '0';
-  signal  vmm_cs_rst_module          :  std_logic := '0';
-  signal  vmm_sck_all                :  std_logic := '0';
-  signal  vmm_sdi_all                :  std_logic := '0';
-  signal  vmm_bitmask                :  std_logic_vector(7 downto 0) := "11111111";
-  signal  sel_cs                     :  std_logic_vector(1 downto 0) := (others => '0');
-  signal  VMM_CS_i                   :  std_logic;
-  signal  VMM_CS_reset               :  std_logic;    
-  ------------------------------VMM configuration------------------------------
-  signal vmm_do_vec_i                 : std_logic_vector(8 downto 1);
-  signal conf_cktk_out_i              : std_logic := '0';
-
-  ------------------------------ Select VMM ------------------------------
-  signal conf_cktk_out_vec_i          : std_logic_vector(8 downto 1);
-  signal conf_vmm_wen_vec             : std_logic_vector(8 downto 1);
-  signal conf_vmm_ena_vec             : std_logic_vector(8 downto 1);
-
-  -------------------------------------------------
-  -- Configuration Signals
-  -------------------------------------------------
---TODO: Review signals with updated configuration (Christos)
-  signal reset_done         : std_logic := '0';
-  signal w                  : integer := 0;
-  signal data_fifo_wr_en    : std_logic;
-  signal data_fifo_wr_en_i  : std_logic;
-  signal data_fifo_din_i    : std_logic_vector(7 DOWNTO 0);
-  signal data_fifo_rd_en    : std_logic;
-  signal data_fifo_rd_en_i  : std_logic;
-  signal data_fifo_empty    : std_logic;
-  signal data_fifo_rd_count : std_logic_vector(14 DOWNTO 0);
-  signal data_fifo_wr_count : std_logic_vector(14 DOWNTO 0);
-  signal vmm_cfg_sel_i      : std_logic_vector(31 downto 0);
-  signal turn_counter_i     : std_logic_vector(15 downto 0);
-  signal conf_data_in_i     : std_logic_vector (7 downto 0);
-  signal vmm_sdo_vec_i      : std_logic_vector(8 downto 1) := (others => '0'); 
-
-  signal vmm_cs_vec_obuf    : std_logic_vector(8 downto 1) := (others => '0');
-  signal vmm_sck_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
-  signal vmm_ena_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
-  signal vmm_sdi_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
-
-  signal udp_response_int   : udp_response; 
-  
-  signal clk_400_noclean  : std_logic;
-  signal clk_400_clean    : std_logic;
-  signal clk_200          : std_logic;
-  signal clk_800          : std_logic;
-  signal clk_10_phase45   : std_logic;
-  signal clk_50           : std_logic;
-  signal clk_40           : std_logic;
-  signal clk_10           : std_logic;
-  signal gbl_rst          : std_logic;    --coming from UDP
-  signal acq_rst          : std_logic;    --coming from UDP
-
-  signal vmm_ena_gbl_rst  : std_logic := '0';
-  signal vmm_wen_gbl_rst  : std_logic := '0';
-  signal vmm_ena_acq_rst  : std_logic := '0';
-  signal vmm_wen_acq_rst  : std_logic := '0';
-  
-  -- vmm signals
-  signal conf_di_i        : std_logic;
-  signal conf_do_i        : std_logic;
-  signal conf_ena_i       : std_logic := '0';
-  signal conf_wen_i       : std_logic;
-  signal dt_cntr_intg0_i    : integer;
-  signal ckdt_cntr, timeout : integer := 0;
-  signal dt_cntr_intg1_i    : integer;
-  signal conf_cnt           : integer := 0;
-  signal cnt_vmm            : integer := 0;
-  signal vmm_2cfg_i         : std_logic_vector( 2 DOWNTO 0);
-  signal mmfeID_i           : std_logic_vector( 3 DOWNTO 0);
-  signal clk_dt_out           : std_logic;
-  signal vmm_ckart          : std_logic;
-  signal clk_tp_out         : std_logic ;
-  signal write_done_i       : std_logic;
-  signal fifo_writing_i     : std_logic;
-  signal global_reset       : std_logic := '0';
-  signal conf_done_i        : std_logic;
-  signal cktp_send          : std_logic := '0';
-  signal conf_wait          : std_logic := '0';  
-  signal udp_tx_start_reply : std_logic := '0';
-  signal udp_tx_start_daq   : std_logic := '0';
-  signal re_out_int         : std_logic := '0';
-  signal fifo_data_out_int  : std_logic_vector(7 downto 0) := x"00";
-  signal fifo_data          : std_logic_vector(7 downto 0) := x"00";
-  signal re_out             : std_logic := '0';
-  signal status_int         : std_logic_vector(3 downto 0) := "0000";
-  signal status_int_synced  : std_logic_vector(3 downto 0) := "0000";
-  signal cnt_reset          : integer := 0;
-  signal set_reset          : std_logic := '0';
-  signal art_in_i           : std_logic := '0';
-  signal clk_160            : std_logic;
-  signal TKI_i              : std_logic := '0';
-  signal first_cktp         : integer := 0;
-  signal first_cktp_ok      : std_logic := '0';
-  signal vmm_ena_conf       : std_logic := '1';
-  signal tko_i              : std_logic;
-  signal probe_out0         : std_logic_vector(0 downto 0);
-  
-  signal MO_i               : std_logic := 'Z';
-  
-  signal conf_done_int      : std_logic := '0';
-  signal cs_int             : std_logic := '1';
-  signal udp_header_int     : std_logic := '0';
-  signal cnt_reply          : integer := 0;
-  
-  signal end_packet_conf_int     : std_logic := '0';
-  signal end_packet_daq_int     : std_logic := '0';
-  signal is_state           : std_logic_vector(3 downto 0)  := "1010";
-  signal latency_conf       : std_logic_vector(15 downto 0) := x"0000";
-  signal test               : std_logic := '0';
-  signal count_test         : integer := 0;
-  signal art_out            : std_logic := '0';
-  signal art_cnt            : integer := 0;
-  signal art_cnt2            : integer := 0;
-  signal art2               : std_logic := '0';
-  signal artall             : std_logic := '0';
-  
-  signal reset_FF           : std_logic := '0';
-  
-  signal wait_cnt           : unsigned(7 downto 0) := (others => '0');
-  signal vmm_id_rdy         : std_logic := '0';
-  signal newIP_rdy          : std_logic := '0';
-  signal xadc_conf_rdy      : std_logic := '0';
-  signal daq_on             : std_logic := '0';
-  signal vmmConf_done       : std_logic := '0';
-  signal fpga_reset_conf    : std_logic := '0';
-  signal flash_busy         : std_logic := '0';
-  signal inhibit_conf       : std_logic := '0';
+    -------------------------------------------------
+    -- MMCM/Configuration Signals
+    -------------------------------------------------
+    
+    signal clk_400_noclean  : std_logic;
+    signal clk_400_clean    : std_logic;
+    signal clk_200          : std_logic;
+    signal clk_160          : std_logic;
+    signal clk_800          : std_logic;
+    signal clk_10_phase45   : std_logic;
+    signal clk_50           : std_logic;
+    signal clk_40           : std_logic;
+    signal clk_10           : std_logic;
+    
+    signal tko_i              : std_logic;
+    signal cnt_reply          : integer := 0;
+    
+    signal end_packet_conf_int: std_logic := '0';
+    signal end_packet_daq_int : std_logic := '0';
+    signal is_state           : std_logic_vector(3 downto 0)  := "1010";
+    signal latency_conf       : std_logic_vector(15 downto 0) := x"0000";
+    
+    signal wait_cnt           : unsigned(7 downto 0) := (others => '0');
+    signal vmm_id_rdy         : std_logic := '0';
+    signal newIP_rdy          : std_logic := '0';
+    signal xadc_conf_rdy      : std_logic := '0';
+    signal daq_on             : std_logic := '0';
+    signal vmmConf_done       : std_logic := '0';
+    signal fpga_reset_conf    : std_logic := '0';
+    signal flash_busy         : std_logic := '0';
+    signal inhibit_conf       : std_logic := '0';
+    
+    signal conf_wen_i         : std_logic := '0';
+    signal conf_ena_i         : std_logic := '0';
+    signal vmm_cktk_vec       : std_logic_vector(8 downto 1) := (others => '0');
+    signal daq_sigs_enable    : std_logic_vector(8 downto 1) := (others => '0');
+    signal conf_cktk_vec      : std_logic_vector(8 downto 1) := (others => '0');
 
     -------------------------------------------------
     -- VMM Signals                   
     -------------------------------------------------
     signal vmm_wen_vec      : std_logic_vector(8 downto 1);
     signal vmm_ena_vec      : std_logic_vector(8 downto 1);
---TODO: Fix with MMFE8 VMM3 (paris)
-    signal vmm_ena          : std_logic;
+
     signal cktk_out_vec     : std_logic_vector(8 downto 1);
     signal ckdt_out_vec     : std_logic_vector(8 downto 1);
     signal data0_in_vec     : std_logic_vector(8 downto 1);
     signal data1_in_vec     : std_logic_vector(8 downto 1);
-    signal vmm_do_vec       : std_logic_vector(8 downto 1);
-    signal vmm_di_vec_i     : std_logic_vector(8 downto 1);
-    signal cktk_out_i       : std_logic;
-    signal vmm_id           : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_int       : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_synced    : std_logic_vector(15 downto 0) := x"0000";
-    signal vmm_id_old       : std_logic_vector(15 downto 0) := x"0000";  
-    signal vmm_do_1         : std_logic;  
-    signal VMM_SDI_i        : std_logic;
-    signal vmm_tki          : std_logic := '0';
-    signal vmm_cktp         : std_logic := '0';
-    signal vmm_cktp_primary : std_logic := '0';
+
     signal CKTP_glbl        : std_logic := '0';
+
     signal CKTP_i           : std_logic := '0';
     signal CKTP_glbl_s125   : std_logic := '0';        
-    signal vmm_cktp_all     : std_logic := '0';
-    signal vmm_ena_all      : std_logic := '1';
-    signal vmm_ena_fsm      : std_logic := '1';
-    signal vmm_ena_rst_module : std_logic := '1';
-    signal tied_to_gnd_i    : std_logic := '0';
-    signal vmm_ckbc         : std_logic;
 
---TODO: Fix with MMFE8 VMM3 (paris)
---    signal vmm_cktp_1       : std_logic;
---    signal vmm_cktp_2       : std_logic;
---    signal vmm_cktp_3       : std_logic;
---    signal vmm_cktp_4       : std_logic;
---    signal vmm_cktp_5       : std_logic;
---    signal vmm_cktp_6       : std_logic;
---    signal vmm_cktp_7       : std_logic;
---    signal vmm_cktp_8       : std_logic;
-    
---    signal vmm_sdo_1         : std_logic;
---    signal vmm_sdo_2         : std_logic;
---    signal vmm_sdo_3         : std_logic;
---    signal vmm_sdo_4         : std_logic;
---    signal vmm_sdo_5         : std_logic;
---    signal vmm_sdo_6         : std_logic;
---    signal vmm_sdo_7         : std_logic;
---    signal vmm_sdo_8         : std_logic;
+    signal tied_to_gnd_i    : std_logic := '0';
+
 
     -------------------------------------------------
     -- Readout Signals
     -------------------------------------------------
     signal daq_enable_i             : std_logic;
-    signal daq_done                 : std_logic;
     signal cktp_state               : integer := 0;
-    signal ro_cktk_out_vec          : std_logic_vector(8 downto 1) := ( others => '0' );
+    signal vmm_cktk_vec_ro          : std_logic_vector(8 downto 1) := ( others => '0' );
     signal daqFIFO_wr_en_i          : std_logic := '0';
     signal daqFIFO_din_i            : std_logic_vector(63 downto 0);
-    signal daqFIFO_dout_i           : std_logic_vector(7 downto 0); 
     signal vmmWordReady_i           : std_logic := '0';
     signal vmmWord_i                : std_logic_vector(63 downto 0);
     signal vmmEventDone_i           : std_logic := '0';
     signal daqFIFO_reset            : std_logic := '0';
-    signal daq_vmm_ena_wen_enable   : std_logic_vector(8 downto 1) := (others => '0');
-    signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
     signal cktp_enable              : std_logic := '0';
-    signal art_out_ff               : std_logic := '0';
+    signal daq_is_on                : std_logic := '0';
+    signal daq_is_on_i              : std_logic := '0';
+    signal daq_is_on_s              : std_logic := '0';
    
     -------------------------------------------------
     -- Trigger Signals
@@ -566,14 +401,11 @@ architecture Behavioral of mmfe8_top is
     signal trint              : std_logic := '0';
     signal tr_reset           : std_logic := '0';
     signal event_counter_i    : std_logic_vector(31 downto 0);
-    signal event_counter_ila  : std_logic_vector(31 downto 0);
     signal tr_out_i           : std_logic;
-    signal trigger_loop       : std_logic;
     signal trig_mode_int      : std_logic := '0';   
-    signal trigger_loop_i     : std_logic;
+    signal trig_mode_int_i    : std_logic := '0';
+    signal trig_mode_int_s    : std_logic := '0';
     signal ext_trigger_i      : std_logic;  
-    signal internalTrigger_state : integer := 0;
-    signal CH_TRIGGER_i       : std_logic := '0';
   
     -------------------------------------------------
     -- Event Timing & Soft Reset
@@ -589,10 +421,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Packet Formation Signals
     -------------------------------------------------
-    signal pf_datain_i  : std_logic_vector(63 downto 0);
     signal pf_newCycle  : std_logic;
-    signal pf_dataout   : std_logic_vector(63 downto 0);
-    signal pf_wren      : std_logic;
     signal pf_packLen   : std_logic_vector(11 downto 0);
     signal pf_trigVmmRo : std_logic := '0';
     signal pf_vmmIdRo   : std_logic_vector(2 downto 0) := b"000";
@@ -646,21 +475,18 @@ architecture Behavioral of mmfe8_top is
     signal clk_500_gen      : std_logic := '0';
     signal clk_gen_locked   : std_logic := '0';
     signal rst_gen          : std_logic := '0';  
-    signal ckbc_ready_vio   : std_logic := '0';
-    signal cktp_enable_vio  : std_logic := '0';
     signal CKBC_glbl        : std_logic := '0';
     signal rst_enable       : std_logic := '0';
     signal rst_enable_conf  : std_logic := '0';
-    signal rst_vmm_gen      : std_logic := '0';
     signal rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
     signal rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
     signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04"; -- 2 us
     signal cktp_period      : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
     signal cktp_skew        : std_logic_vector(7 downto 0)     := (others => '0'); 
-    signal ckbc_freq        : std_logic_vector(7 downto 0)     := x"28"; --40 Mhz
+    signal ckbc_freq        : std_logic_vector(7 downto 0)     := x"0a"; --40 Mhz
     signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
     signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
-    signal trig_cnt         : unsigned(11 downto 0)            := (others => '0');
+
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
@@ -678,13 +504,11 @@ architecture Behavioral of mmfe8_top is
     signal dataOutProbe         : std_logic_vector(63 downto 0);
     signal flowProbe            : std_logic_vector(63 downto 0);
     signal trigger_i            : std_logic;
-    signal ckbc_en_vio          : std_logic_vector(0 downto 0) := "0";
-    signal cktp_vio             : std_logic_vector(0 downto 0) := "0";
-    signal tki_vio              : std_logic_vector(0 downto 0) := "0";
-    signal cktk_vio             : std_logic_vector(0 downto 0) := "0";
-    signal ckdt_vio             : std_logic_vector(0 downto 0) := "0";
-    signal cs_vio               : std_logic_vector(0 downto 0) := "0";
-    signal ena_vio              : std_logic_vector(0 downto 0) := "0";
+    signal conf_counter         : std_logic_vector(7 downto 0) := (others => '0');
+    signal conf_state           : std_logic_vector(2 downto 0) := (others => '0');
+    signal dt_state             : std_logic_vector(3 downto 0) := (others => '0');
+    signal dt_cntr_state        : std_logic_vector(3 downto 0) := (others => '0');
+    signal pf_state             : std_logic_vector(4 downto 0) := (others => '0');
 
     -------------------------------------------------------------------
     -- These attribute will stop timing errors being reported in back
@@ -692,9 +516,11 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     attribute ASYNC_REG                         : string;
     attribute ASYNC_REG of pma_reset_pipe       : signal is "TRUE";
-    attribute ASYNC_REG of CKTP_i               : signal is "TRUE";
-    attribute ASYNC_REG of CKTP_glbl_s125       : signal is "TRUE";
-  
+    attribute ASYNC_REG of trig_mode_int_i      : signal is "TRUE";
+    attribute ASYNC_REG of trig_mode_int_s      : signal is "TRUE";
+    attribute ASYNC_REG of daq_is_on_i          : signal is "TRUE";
+    attribute ASYNC_REG of daq_is_on_s          : signal is "TRUE";
+   
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -------------------------------------------------------------------
@@ -705,21 +531,13 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Readout Monitoring
     -------------------------------------------------------------------
---    attribute keep of vmm_ena               : signal is "true";
---    attribute dont_touch of vmm_ena         : signal is "true";
 --    attribute keep of vmm_wen_vec           : signal is "true";
 --    attribute dont_touch of vmm_wen_vec     : signal is "true";
 --    attribute keep of cktk_out_vec          : signal is "true";
 --    attribute dont_touch of cktk_out_vec    : signal is "true";
---    attribute keep of cktk_out_i            : signal is "true";
---    attribute keep of ckdt_out_vec          : signal is "true";
---    attribute keep of vmm_do_vec_i          : signal is "true";
---    attribute keep of daq_vmm_ena_wen_enable: signal is "true";
---    attribute keep of vmm_id_int            : signal is "true";   
+--    attribute keep of ckdt_out_vec          : signal is "true"; 
 --    attribute keep of data0_in_vec          : signal is "true";
 --    attribute dont_touch of data0_in_vec    : signal is "true";
---    attribute keep of ro_cktk_out_vec       : signal is "true";
---    attribute dont_touch of ro_cktk_out_vec : signal is "true";
 
     -------------------------------------------------------------------
     -- Trigger
@@ -751,7 +569,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Packet Formation
     -------------------------------------------------------------------
---    attribute keep of pf_newCycle           :  signal  is  "true";
+--    attribute keep of pf_newCycle           : signal is "true";
 --    attribute keep of pfBusy_i              : signal is "true";
 --    attribute dont_touch of pfBusy_i        : signal is "true";
     
@@ -771,125 +589,58 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------
---    attribute keep of set_reset                 : signal is "TRUE";
---    attribute dont_touch of set_reset           : signal is "TRUE";
 --    attribute keep of tx_axis_mac_tready_int    : signal is "TRUE";
---    attribute keep of test_data                 : signal is "TRUE";
---    attribute keep of status_int                : signal is "TRUE";
---    attribute keep of status_int_synced         : signal is "TRUE";
 --    attribute keep of user_data_out_i           : signal is "TRUE";
 --    attribute dont_touch of user_data_out_i     : signal is "TRUE";
 --    attribute keep of we_conf_int               : signal is "TRUE";
---    attribute keep of fifo_data_out_int         : signal is "TRUE";
---    attribute keep of re_out_int                : signal is "TRUE";
 --    attribute keep of daqFIFO_wr_en_i           : signal is "TRUE";
 --    attribute keep of daqFIFO_din_i             : signal is "TRUE";
---    attribute keep of user_conf_i               : signal is "TRUE";
---    attribute keep of send_error_int            : signal is "TRUE";
---    attribute keep of test_data_out             : signal is "TRUE";
---    attribute keep of test_valid_out            : signal is "TRUE";
---    attribute keep of test_last_out             : signal is "TRUE";
 --    attribute keep of udp_tx_start_int          : signal is "TRUE";
 --    attribute keep of udp_tx_data_out_ready_int : signal is "TRUE";
---    attribute keep of vmm_id                    : signal is "TRUE";
---    attribute keep of vmm_id_synced             : signal is "TRUE";
---    attribute keep of vmm_id_old                : signal is "TRUE";
---    attribute keep of cnt_vmm                   : signal is "TRUE";
---    attribute keep of conf_done_int             : signal is "TRUE";
---    attribute keep of conf_done_int_synced      : signal is "TRUE";
 --    attribute keep of conf_wen_i                : signal is "TRUE";
 --    attribute dont_touch of conf_wen_i          : signal is "TRUE";
 --    attribute keep of conf_ena_i                : signal is "TRUE";
 --    attribute dont_touch of conf_ena_i          : signal is "TRUE";
---    attribute keep of conf_di_i                 : signal is "TRUE";
---    attribute keep of vmm_di_vec_i              : signal is "TRUE";
---    attribute dont_touch of vmm_di_vec_i        : signal is "TRUE";
 --    attribute keep of start_conf_proc_int       : signal is "TRUE";
 --    attribute keep of cnt_reply                 : signal is "TRUE";
 --    attribute keep of end_packet_conf_int       : signal is "TRUE";
 --    attribute keep of xadc_busy                 : signal is "TRUE";
 --    attribute keep of daqFIFO_reset             : signal is "TRUE";
 --    attribute keep of rstFIFO_top               : signal is "TRUE";
---    attribute keep of pf_rst_FIFO               : signal is "TRUE";
-    
+--    attribute keep of pf_rst_FIFO               : signal is "TRUE";  
 --    attribute keep of trigger_i                 : signal is "TRUE";
---    attribute dont_touch of trigger_i           : signal is "TRUE";
-    
---    attribute keep of VMM_SDI_i                 : signal is "TRUE";
---    attribute dont_touch of VMM_SDI_i           : signal is "TRUE";
-    
---    attribute keep of vmm_cktp                  : signal is "TRUE";
---    attribute dont_touch of vmm_cktp            : signal is "TRUE";
-    
---    attribute keep of test                      : signal is "TRUE";
---    attribute dont_touch of test                : signal is "TRUE";
-    
---    attribute keep of count_test                : signal is "TRUE";
---    attribute dont_touch of count_test          : signal is "TRUE";
-    
---    attribute keep of art_in_i                  : signal is "TRUE";
---    attribute dont_touch of art_in_i            : signal is "TRUE";
-    
---    attribute keep of vmm_ckbc                  : signal is "TRUE";
---    attribute dont_touch of vmm_ckbc            : signal is "TRUE";  
-    
---    attribute keep of first_cktp                : signal is "TRUE";
---    attribute dont_touch of first_cktp          : signal is "TRUE";      
-    
---    attribute keep of first_cktp_ok             : signal is "TRUE";
---    attribute dont_touch of first_cktp_ok       : signal is "TRUE";
-    
---    attribute keep of vmm_cs_all                : signal is "TRUE";
---    attribute dont_touch of vmm_cs_all          : signal is "TRUE";   
-        
+--    attribute dont_touch of trigger_i           : signal is "TRUE";        
 --    attribute keep of vmm_ena_vec               : signal is "TRUE";
---    attribute dont_touch of vmm_ena_vec         : signal is "TRUE";   
-        
---    attribute keep of vmm_cktp_all              : signal is "TRUE";
---    attribute dont_touch of vmm_cktp_all        : signal is "TRUE";   
-        
---    attribute keep of vmm_ena_all               : signal is "TRUE";
---    attribute dont_touch of vmm_ena_all         : signal is "TRUE";     
-
+--    attribute dont_touch of vmm_ena_vec         : signal is "TRUE";           
 --    attribute keep of tko_i                     : signal is "TRUE";
---    attribute dont_touch of tko_i               : signal is "TRUE";    
-          
---    attribute keep of cktp_vio                  : signal is "TRUE";
---    attribute dont_touch of cktp_vio            : signal is "TRUE";    
-
---    attribute keep of art_out                   : signal is "TRUE";
---    attribute dont_touch of art_out             : signal is "TRUE";    
-
---    attribute keep of art2                      : signal is "TRUE";
---    attribute dont_touch of art2                : signal is "TRUE"; 
+--    attribute dont_touch of tko_i               : signal is "TRUE";   
+--    attribute keep of default_IP                : signal is "TRUE";
+--    attribute dont_touch of default_IP          : signal is "TRUE";    
+--    attribute keep of default_MAC               : signal is "TRUE";
+--    attribute dont_touch of default_MAC         : signal is "TRUE";
     
---    attribute keep of artall                    : signal is "TRUE";
---    attribute dont_touch of artall              : signal is "TRUE";     
-    
---    attribute keep of reset_FF                  : signal is "TRUE";
---    attribute dont_touch of reset_FF            : signal is "TRUE";         
-
---    attribute keep of art_out_ff                : signal is "TRUE";
---    attribute dont_touch of art_out_ff          : signal is "TRUE";  
-
---    attribute keep of CH_TRIGGER_i              : signal is "TRUE";
---    attribute dont_touch of CH_TRIGGER_i        : signal is "TRUE";  
-    
---    attribute keep of default_IP            : signal is "TRUE";
---    attribute dont_touch of default_IP      : signal is "TRUE";
-          
---    attribute keep of default_MAC            : signal is "TRUE";
---    attribute dont_touch of default_MAC      : signal is "TRUE";
-
-     attribute keep of rst_enable_conf          : signal is "TRUE";
-     attribute dont_touch of rst_enable_conf    : signal is "TRUE";
-     
-     attribute keep of rst_period               : signal is "TRUE";
-     attribute dont_touch of rst_period         : signal is "TRUE";
-     
-     attribute keep of rst_before_cktp          : signal is "TRUE";
-     attribute dont_touch of rst_before_cktp    : signal is "TRUE";
-    
+    -------------------------------------------------------------------
+    -- VIO
+    -------------------------------------------------------------------
+    attribute keep of rst_enable_conf           : signal is "TRUE";
+    --attribute dont_touch of rst_enable_conf     : signal is "TRUE";
+    attribute keep of rst_period                : signal is "TRUE";
+    --attribute dont_touch of rst_period          : signal is "TRUE";
+    attribute keep of rst_before_cktp           : signal is "TRUE";
+    --attribute dont_touch of rst_before_cktp     : signal is "TRUE";
+    attribute keep of cktp_pulse_width          : signal is "TRUE";
+    --attribute dont_touch of cktp_pulse_width    : signal is "TRUE";
+    attribute keep of cktp_period               : signal is "TRUE";
+    --attribute dont_touch of cktp_period         : signal is "TRUE";
+    attribute keep of cktp_skew                 : signal is "TRUE";
+    --attribute dont_touch of cktp_skew           : signal is "TRUE";
+    attribute keep of ckbc_freq                 : signal is "TRUE";
+    --attribute dont_touch of ckbc_freq           : signal is "TRUE";
+    attribute keep of cktp_max_num              : signal is "TRUE";
+    --attribute dont_touch of cktp_max_num        : signal is "TRUE";
+    attribute keep of cktk_max_num              : signal is "TRUE";
+    --attribute dont_touch of cktk_max_num        : signal is "TRUE";
+               
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
     -------------------------------------------------------------------
@@ -913,10 +664,9 @@ architecture Behavioral of mmfe8_top is
     -- 18. ila_top_level
     -- 19. xadc
     -- 20. AXI4_SPI
-    -- 21. vio
-    -- 22. CDCC
-    -- 23. VIO_IP
-    -- 24. clk_gen_wrapper
+    -- 21. CDCC
+    -- 22. VIO_2
+    -- 23. clk_gen_wrapper
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -984,8 +734,8 @@ architecture Behavioral of mmfe8_top is
     -- 6
     component vmm_readout is
         port ( 
-            clk_10_phase45          : in std_logic;     -- Used to clock checking for data process
-            clk_50                  : in std_logic;     -- Used to clock word readout process
+            clkTkProc               : in std_logic;     -- Used to clock checking for data process
+            clkDtProc               : in std_logic;     -- Used to clock word readout process
             clk                     : in std_logic;     -- Used for fast switching between processes
 
             vmm_data0_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data0 from VMM
@@ -999,6 +749,9 @@ architecture Behavioral of mmfe8_top is
             vmmId                   : in std_logic_vector(2 downto 0);  -- VMM to be readout
             ethernet_fifo_wr_en     : out std_logic;                    -- To be used for reading out seperate FIFOs in VMMx8 parallel readout
             vmm_data_buf            : buffer std_logic_vector(37 downto 0);
+    
+            dt_state_o              : out std_logic_vector(3 downto 0);
+            dt_cntr_st_o            : out std_logic_vector(3 downto 0);
             
             vmmWordReady            : out std_logic;
             vmmWord                 : out std_logic_vector(63 downto 0);
@@ -1070,8 +823,9 @@ architecture Behavioral of mmfe8_top is
             tr_hold     : out std_logic;
             reset       : in std_logic;
             rst_vmm     : out std_logic;
-            --resetting   : in std_logic;
+            resetting   : in std_logic;
             rst_FIFO    : out std_logic;
+            dbg_state_o : out std_logic_vector(4 downto 0);
             
             latency     : in std_logic_vector(15 downto 0)
             
@@ -1286,20 +1040,11 @@ architecture Behavioral of mmfe8_top is
     myMAC_set           : out std_logic_vector(47 downto 0);
     destIP_set          : out std_logic_vector(31 downto 0);
     ------------------------------------
-    -------- CKTP/CKBC Interface -------
-    ckbc_freq           : out std_logic_vector(7 downto 0);
-    cktk_max_num        : out std_logic_vector(7 downto 0);
-    cktp_max_num        : out std_logic_vector(15 downto 0);
-    cktp_skew           : out std_logic_vector(7 downto 0);
-    cktp_period         : out std_logic_vector(15 downto 0);
-    cktp_width          : out std_logic_vector(7 downto 0);
-    ------------------------------------
     ------ VMM Config Interface --------
-    vmm_bitmask         : out std_logic_vector(7 downto 0);
+    vmm_bitmask         : out std_logic_vector(7 downto 0);  
     vmmConf_rdy         : out std_logic;
     vmmConf_done        : out std_logic;
-    vmm_sck             : out std_logic;
-    vmm_cs              : out std_logic;
+    vmm_cktk            : out std_logic;
     vmm_cfg_bit         : out std_logic;
     top_rdy             : in  std_logic;
     ------------------------------------
@@ -1426,18 +1171,6 @@ architecture Behavioral of mmfe8_top is
     );
     end component;
     -- 21
-    component vio_1
-    port (
-        clk         : in  std_logic;
-        probe_out0  : out std_logic_vector(0 downto 0);
-        probe_out1  : out std_logic_vector(0 downto 0);
-        probe_out2  : out std_logic_vector(0 downto 0);
-        probe_out3  : out std_logic_vector(0 downto 0);
-        probe_out4  : out std_logic_vector(0 downto 0);
-        probe_out5  : out std_logic_vector(0 downto 0)
-        );
-    end component;
-    -- 22
     component CDCC
     generic(
         NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
@@ -1448,26 +1181,34 @@ architecture Behavioral of mmfe8_top is
         data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
     );
     end component;
-    -- 23
-    COMPONENT vio_ip
-      PORT (
+    -- 22
+    component vio_2
+      port(
         clk        : IN STD_LOGIC;
         probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
         probe_out1 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out2 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        probe_out2 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        probe_out3 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        probe_out4 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe_out5 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        probe_out6 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        probe_out7 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        probe_out8 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
       );
-    END COMPONENT;
-    -- 24
+    end component;
+    -- 23
     component clk_gen_wrapper
     Port(
         ------------------------------------
         ------- General Interface ----------
         clk_500             : in  std_logic;
         clk_160             : in  std_logic;
+        clk_125             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
         rst_enable          : in  std_logic;
         pf_busy             : in  std_logic;
+        trint               : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -1513,16 +1254,16 @@ gen_vector_reset: process (userclk2)
    -----------------------------------------------------------------------------
    
    -- Create a reset pulse of a decent length
-   process(glbl_rst_i, clk_200)
-   begin
-     if (glbl_rst_i = '1') then
-       pma_reset_pipe <= "1111";
-     elsif clk_200'event and clk_200 = '1' then
-       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
-     end if;
-   end process;
+--   process(glbl_rst_i, clk_200)
+--   begin
+--     if (glbl_rst_i = '1') then
+--       pma_reset_pipe <= "1111";
+--     elsif clk_200'event and clk_200 = '1' then
+--       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
+--     end if;
+--   end process;
 
-   pma_reset <= pma_reset_pipe(3);
+--   pma_reset <= pma_reset_pipe(3);
 
 core_wrapper: gig_ethernet_pcs_pma_0
     port map (
@@ -1701,7 +1442,7 @@ UDP_ICMP_block: UDP_ICMP_Complete_nomac
             udp_txi                     => udp_txi_int, 
             udp_tx_result               => open,
             udp_tx_data_out_ready       => udp_tx_data_out_ready_int, 
-            udp_rx_start                => udp_header_int,                                  -- indicates receipt of udp header
+            udp_rx_start                => open,
             udp_rxo                     => udp_rx_int,
             icmp_rx_start               => icmp_rx_start,
             icmp_rxo                    => icmp_rxo,
@@ -1753,22 +1494,13 @@ udp_din_conf_block: udp_data_in_handler
         myMAC_set           => myMAC_set,
         destIP_set          => destIP_set,
         ------------------------------------
-        -------- CKTP/CKBC Interface -------
-        ckbc_freq           => ckbc_freq,
-        cktk_max_num        => cktk_max_num,
-        cktp_max_num        => cktp_max_num,
-        cktp_skew           => cktp_skew,
-        cktp_period         => cktp_period,
-        cktp_width          => cktp_pulse_width,
-        ------------------------------------
         ------ VMM Config Interface --------
         vmm_bitmask         => open,
         vmmConf_rdy         => vmm_id_rdy,
         vmmConf_done        => vmmConf_done,
-        vmm_sck             => vmm_sck_all,
-        vmm_cs              => VMM_CS_i,
-        vmm_cfg_bit         => vmm_sdi_all,
-        top_rdy             => conf_wen_i,
+        vmm_cktk            => vmm_cktk_conf,
+        vmm_cfg_bit         => vmm_di_all,
+        top_rdy             => start_conf_proc_int,
         ------------------------------------
         ---------- XADC Interface ----------
         xadc_busy           => xadc_busy,
@@ -1808,7 +1540,7 @@ mmcm_ckbc_cktp: clk_wiz_gen
     port map ( 
         clk_in_400  => clk_400_clean,
         clk_out_160 => clk_160_gen,
-        clk_out_500 => clk_500_gen,              
+        clk_out_500 => clk_500_gen,
         reset       => '0',
         gen_locked  => clk_gen_locked            
     );
@@ -1818,7 +1550,7 @@ event_timing_reset_instance: event_timing_reset
         hp_clk          => clk_800,
         clk             => userclk2,
         clk_10_phase45  => clk_10_phase45,
-        bc_clk          => clk_10,
+        bc_clk          => CKBC_glbl,
 
         daqEnable       => daq_enable_i,
         pfBusy          => pfBusy_i,
@@ -1838,21 +1570,24 @@ event_timing_reset_instance: event_timing_reset
 
 readout_vmm: vmm_readout
     port map(
-        clk_10_phase45          => clk_10_phase45,
-        clk_50                  => clk_50,
+        clkTkProc               => clk_10_phase45,
+        clkDtProc               => clk_50,
         clk                     => userclk2,
         
         vmm_data0_vec           => data0_in_vec,
         vmm_data1_vec           => data1_in_vec,
         vmm_ckdt_vec            => ckdt_out_vec,
-        vmm_cktk_vec            => cktk_out_vec,
+        vmm_cktk_vec            => vmm_cktk_vec_ro,
+        cktk_max                => cktk_max_num,
 
         daq_enable              => daq_enable_i,
         trigger_pulse           => pf_trigVmmRo,
-        cktk_max                => cktk_max_num,
         vmmId                   => pf_vmmIdRo,
         ethernet_fifo_wr_en     => open,
         vmm_data_buf            => open,
+        
+        dt_state_o              => dt_state,
+        dt_cntr_st_o            => dt_cntr_state,
         
         vmmWordReady            => vmmWordReady_i,
         vmmWord                 => vmmWord_i,
@@ -1866,7 +1601,7 @@ trigger_instance: trigger
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
-        trext           => CH_TRIGGER,          -- External trigger is to be driven to this port(TEMPORARILY GROUNDED)
+        trext           => ext_trigger_i,       -- External trigger is to be driven to this port
         trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
         reset           => tr_reset,
@@ -1880,12 +1615,12 @@ FIFO2UDP_instance: FIFO2UDP
         clk_125                     => userclk2,
         destinationIP               => destIP,
         daq_data_in                 => daqFIFO_din_i,
-        fifo_data_out               => fifo_data_out_int,
+        fifo_data_out               => open,
         udp_txi                     => udp_txi_int,    
         udp_tx_start                => udp_tx_start_int,
         control                     => control.ip_controls.arp_controls.clear_cache,
         UDPDone                     => UDPDone,   
-        re_out                      => re_out_int,    
+        re_out                      => open,    
         udp_tx_data_out_ready       => udp_tx_data_out_ready_int,
         wr_en                       => daqFIFO_wr_en_i,
         end_packet                  => end_packet_i,
@@ -1922,8 +1657,9 @@ packet_formation_instance: packet_formation
         tr_hold         => tr_hold,
         reset           => pf_reset,
         rst_vmm         => rst_vmm,
-        --resetting       => etr_reset_latched,
+        resetting       => etr_reset_latched,
         rst_FIFO        => pf_rst_FIFO,
+        dbg_state_o     => pf_state,
 
         latency         => latency_conf
         
@@ -2037,15 +1773,17 @@ ckbc_cktp_generator: clk_gen_wrapper
         ------- General Interface ----------
         clk_500             => clk_500_gen,
         clk_160             => clk_160_gen,
+        clk_125             => userclk2,    
         rst                 => rst_gen,
         mmcm_locked         => clk_gen_locked,
         rst_enable          => rst_enable,
         pf_busy             => pfBusy_i,
+        trint               => trint,
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         => ckbc_enable,
         cktp_enable         => cktp_enable,
-        cktp_primary        => vmm_cktp_primary, -- from flow_fsm
+        cktp_primary        => '0',
         cktp_pulse_width    => cktp_pulse_width(4 downto 0),
         cktp_max_num        => cktp_max_num,
         cktp_period         => cktp_period,
@@ -2057,7 +1795,7 @@ ckbc_cktp_generator: clk_gen_wrapper
         ---------- VMM Interface -----------
         CKTP                => CKTP_glbl,
         CKBC                => CKBC_glbl,
-        RST_VMM             => rst_vmm_gen
+        RST_VMM             => open
     );
 
 QSPI_IO0_0: IOBUF    
@@ -2084,80 +1822,65 @@ QSPI_SS_0: IOBUF
       T  => ss_t
    );
 
-----------------------------------------------------CS-------------------------------------------------------------
-cs_obuf_1:  OBUF  port map  (O => CS_1, I => vmm_cs_vec_obuf(1));
-cs_obuf_2:  OBUF  port map  (O => CS_2, I => vmm_cs_vec_obuf(2));
-cs_obuf_3:  OBUF  port map  (O => CS_3, I => vmm_cs_vec_obuf(3));
-cs_obuf_4:  OBUF  port map  (O => CS_4, I => vmm_cs_vec_obuf(4));
-cs_obuf_5:  OBUF  port map  (O => CS_5, I => vmm_cs_vec_obuf(5));
-cs_obuf_6:  OBUF  port map  (O => CS_6, I => vmm_cs_vec_obuf(6));
-cs_obuf_7:  OBUF  port map  (O => CS_7, I => vmm_cs_vec_obuf(7));
-cs_obuf_8:  OBUF  port map  (O => CS_8, I => vmm_cs_vec_obuf(8));
 
-----------------------------------------------------SCK-------------------------------------------------------------
-sck_obuf_1:  OBUF  port map  (O => SCK_1, I => vmm_sck_vec_obuf(1));
-sck_obuf_2:  OBUF  port map  (O => SCK_2, I => vmm_sck_vec_obuf(2));
-sck_obuf_3:  OBUF  port map  (O => SCK_3, I => vmm_sck_vec_obuf(3));
-sck_obuf_4:  OBUF  port map  (O => SCK_4, I => vmm_sck_vec_obuf(4));
-sck_obuf_5:  OBUF  port map  (O => SCK_5, I => vmm_sck_vec_obuf(5));
-sck_obuf_6:  OBUF  port map  (O => SCK_6, I => vmm_sck_vec_obuf(6));
-sck_obuf_7:  OBUF  port map  (O => SCK_7, I => vmm_sck_vec_obuf(7));
-sck_obuf_8:  OBUF  port map  (O => SCK_8, I => vmm_sck_vec_obuf(8));
+----------------------------------------------------DI-------------------------------------------------------------
+sdi_obufds_1:  OBUFDS  port map  (O =>  DI_1_P, OB => DI_1_N, I => vmm_di_vec_obuf(1));
+sdi_obufds_2:  OBUFDS  port map  (O =>  DI_2_P, OB => DI_2_N, I => vmm_di_vec_obuf(2));
+sdi_obufds_3:  OBUFDS  port map  (O =>  DI_3_P, OB => DI_3_N, I => vmm_di_vec_obuf(3));
+sdi_obufds_4:  OBUFDS  port map  (O =>  DI_4_P, OB => DI_4_N, I => vmm_di_vec_obuf(4));
+sdi_obufds_5:  OBUFDS  port map  (O =>  DI_5_P, OB => DI_5_N, I => vmm_di_vec_obuf(5));
+sdi_obufds_6:  OBUFDS  port map  (O =>  DI_6_P, OB => DI_6_N, I => vmm_di_vec_obuf(6));
+sdi_obufds_7:  OBUFDS  port map  (O =>  DI_7_P, OB => DI_7_N, I => vmm_di_vec_obuf(7));
+sdi_obufds_8:  OBUFDS  port map  (O =>  DI_8_P, OB => DI_8_N, I => vmm_di_vec_obuf(8));
 
-----------------------------------------------------SDI-------------------------------------------------------------
-sdi_obuf_1:  OBUF  port map  (O => SDI_1, I => vmm_sdi_vec_obuf(1));
-sdi_obuf_2:  OBUF  port map  (O => SDI_2, I => vmm_sdi_vec_obuf(2));
-sdi_obuf_3:  OBUF  port map  (O => SDI_3, I => vmm_sdi_vec_obuf(3));
-sdi_obuf_4:  OBUF  port map  (O => SDI_4, I => vmm_sdi_vec_obuf(4));
-sdi_obuf_5:  OBUF  port map  (O => SDI_5, I => vmm_sdi_vec_obuf(5));
-sdi_obuf_6:  OBUF  port map  (O => SDI_6, I => vmm_sdi_vec_obuf(6));
-sdi_obuf_7:  OBUF  port map  (O => SDI_7, I => vmm_sdi_vec_obuf(7));
-sdi_obuf_8:  OBUF  port map  (O => SDI_8, I => vmm_sdi_vec_obuf(8));
+----------------------------------------------------DO-------------------------------------------------------------
+sdo_diff_1: IBUFDS port map (O => vmm_do_vec_ibuf(1), I => DO_1_P, IB => DO_1_N);
+sdo_diff_2: IBUFDS port map (O => vmm_do_vec_ibuf(2), I => DO_2_P, IB => DO_2_N);
+sdo_diff_3: IBUFDS port map (O => vmm_do_vec_ibuf(3), I => DO_3_P, IB => DO_3_N);
+sdo_diff_4: IBUFDS port map (O => vmm_do_vec_ibuf(4), I => DO_4_P, IB => DO_4_N);
+sdo_diff_5: IBUFDS port map (O => vmm_do_vec_ibuf(5), I => DO_5_P, IB => DO_5_N);
+sdo_diff_6: IBUFDS port map (O => vmm_do_vec_ibuf(6), I => DO_6_P, IB => DO_6_N);
+sdo_diff_7: IBUFDS port map (O => vmm_do_vec_ibuf(7), I => DO_7_P, IB => DO_7_N);
+sdo_diff_8: IBUFDS port map (O => vmm_do_vec_ibuf(8), I => DO_8_P, IB => DO_8_N);
 
----------------------------------------------------SETT/SETB/CK6B---------------------------------------------------
+---------------------------------------------------SETT/SETB/TKI/TKO---------------------------------------------------
 sett_obuf:   OBUFDS port map (O => SETT_P,   OB => SETT_N,   I => tied_to_gnd_i);    
 setb_obuf:   OBUFDS port map (O => SETB_P,   OB => SETB_N,   I => tied_to_gnd_i);
-ck6b_obuf_1: OBUFDS port map (O => CK6B_1_P, OB => CK6B_1_N, I => tied_to_gnd_i);
-ck6b_obuf_2: OBUFDS port map (O => CK6B_2_P, OB => CK6B_2_N, I => tied_to_gnd_i);
-ck6b_obuf_3: OBUFDS port map (O => CK6B_3_P, OB => CK6B_3_N, I => tied_to_gnd_i);
-ck6b_obuf_4: OBUFDS port map (O => CK6B_4_P, OB => CK6B_4_N, I => tied_to_gnd_i);
-ck6b_obuf_5: OBUFDS port map (O => CK6B_5_P, OB => CK6B_5_N, I => tied_to_gnd_i);
-ck6b_obuf_6: OBUFDS port map (O => CK6B_6_P, OB => CK6B_6_N, I => tied_to_gnd_i);
-ck6b_obuf_7: OBUFDS port map (O => CK6B_7_P, OB => CK6B_7_N, I => tied_to_gnd_i);
-ck6b_obuf_8: OBUFDS port map (O => CK6B_8_P, OB => CK6B_8_N, I => tied_to_gnd_i);
-
-----------------------------------------------------SDO-------------------------------------------------------------
-sdo_ibuf_1: IBUF port map ( O =>  vmm_sdo_vec_i(1), I =>  SDO_1);
-sdo_ibuf_2: IBUF port map ( O =>  vmm_sdo_vec_i(2), I =>  SDO_2);
-sdo_ibuf_3: IBUF port map ( O =>  vmm_sdo_vec_i(3), I =>  SDO_3);
-sdo_ibuf_4: IBUF port map ( O =>  vmm_sdo_vec_i(4), I =>  SDO_4);
-sdo_ibuf_5: IBUF port map ( O =>  vmm_sdo_vec_i(5), I =>  SDO_5);
-sdo_ibuf_6: IBUF port map ( O =>  vmm_sdo_vec_i(6), I =>  SDO_6);
-sdo_ibuf_7: IBUF port map ( O =>  vmm_sdo_vec_i(7), I =>  SDO_7);
-sdo_ibuf_8: IBUF port map ( O =>  vmm_sdo_vec_i(8), I =>  SDO_8);
+TKI_diff_1:  OBUFDS port map (O =>  TKI_P,   OB => TKI_N,    I => tied_to_gnd_i);
+TKO_diff_1:  IBUFDS port map (O =>  tko_i,   I => TKO_P, IB => TKO_N);
 
 ----------------------------------------------------ENA------------------------------------------------------------
-ena_diff_1: OBUFDS port map ( O =>  ENA_1_P, OB => ENA_1_N, I => vmm_ena_vec_obuf(1));    
-ena_diff_2: OBUFDS port map ( O =>  ENA_2_P, OB => ENA_2_N, I => vmm_ena_vec_obuf(2));
-ena_diff_3: OBUFDS port map ( O =>  ENA_3_P, OB => ENA_3_N, I => vmm_ena_vec_obuf(3));
-ena_diff_4: OBUFDS port map ( O =>  ENA_4_P, OB => ENA_4_N, I => vmm_ena_vec_obuf(4));
-ena_diff_5: OBUFDS port map ( O =>  ENA_5_P, OB => ENA_5_N, I => vmm_ena_vec_obuf(5));
-ena_diff_6: OBUFDS port map ( O =>  ENA_6_P, OB => ENA_6_N, I => vmm_ena_vec_obuf(6));
-ena_diff_7: OBUFDS port map ( O =>  ENA_7_P, OB => ENA_7_N, I => vmm_ena_vec_obuf(7));
-ena_diff_8: OBUFDS port map ( O =>  ENA_8_P, OB => ENA_8_N, I => vmm_ena_vec_obuf(8));
+ena_diff_1: OBUFDS port map ( O =>  ENA_1_P, OB => ENA_1_N, I => vmm_ena_vec(1));    
+ena_diff_2: OBUFDS port map ( O =>  ENA_2_P, OB => ENA_2_N, I => vmm_ena_vec(2));
+ena_diff_3: OBUFDS port map ( O =>  ENA_3_P, OB => ENA_3_N, I => vmm_ena_vec(3));
+ena_diff_4: OBUFDS port map ( O =>  ENA_4_P, OB => ENA_4_N, I => vmm_ena_vec(4));
+ena_diff_5: OBUFDS port map ( O =>  ENA_5_P, OB => ENA_5_N, I => vmm_ena_vec(5));
+ena_diff_6: OBUFDS port map ( O =>  ENA_6_P, OB => ENA_6_N, I => vmm_ena_vec(6));
+ena_diff_7: OBUFDS port map ( O =>  ENA_7_P, OB => ENA_7_N, I => vmm_ena_vec(7));
+ena_diff_8: OBUFDS port map ( O =>  ENA_8_P, OB => ENA_8_N, I => vmm_ena_vec(8));
+
+----------------------------------------------------WEN------------------------------------------------------------
+wen_diff_1: OBUFDS port map ( O =>  WEN_1_P, OB => WEN_1_N, I => vmm_wen_vec(1));    
+wen_diff_2: OBUFDS port map ( O =>  WEN_2_P, OB => WEN_2_N, I => vmm_wen_vec(2));
+wen_diff_3: OBUFDS port map ( O =>  WEN_3_P, OB => WEN_3_N, I => vmm_wen_vec(3));
+wen_diff_4: OBUFDS port map ( O =>  WEN_4_P, OB => WEN_4_N, I => vmm_wen_vec(4));
+wen_diff_5: OBUFDS port map ( O =>  WEN_5_P, OB => WEN_5_N, I => vmm_wen_vec(5));
+wen_diff_6: OBUFDS port map ( O =>  WEN_6_P, OB => WEN_6_N, I => vmm_wen_vec(6));
+wen_diff_7: OBUFDS port map ( O =>  WEN_7_P, OB => WEN_7_N, I => vmm_wen_vec(7));
+wen_diff_8: OBUFDS port map ( O =>  WEN_8_P, OB => WEN_8_N, I => vmm_wen_vec(8));
 
 ----------------------------------------------------CKBC--------------------------------------------------------------
-ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I =>  CKBC_glbl);
-ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I =>  CKBC_glbl);
-ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I =>  CKBC_glbl);
-ckbc_diff_4: OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I =>  CKBC_glbl);
-ckbc_diff_5: OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I =>  CKBC_glbl);
-ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I =>  CKBC_glbl);
-ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I =>  CKBC_glbl);
-ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I =>  CKBC_glbl);
+ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I => CKBC_glbl); -- CKBC_glbl
+ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I => CKBC_glbl);
+ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I => CKBC_glbl);
+ckbc_diff_4: OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I => CKBC_glbl);
+ckbc_diff_5: OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I => CKBC_glbl);
+ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I => CKBC_glbl);
+ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I => CKBC_glbl);
+ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I => CKBC_glbl);
 
 ----------------------------------------------------CKTP--------------------------------------------------------------  
-cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => CKTP_glbl);  
+cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => CKTP_glbl); -- CKTP_glbl  
 cktp_diff_2: OBUFDS port map ( O =>  CKTP_2_P, OB => CKTP_2_N, I => CKTP_glbl);
 cktp_diff_3: OBUFDS port map ( O =>  CKTP_3_P, OB => CKTP_3_N, I => CKTP_glbl);
 cktp_diff_4: OBUFDS port map ( O =>  CKTP_4_P, OB => CKTP_4_N, I => CKTP_glbl);
@@ -2167,14 +1890,14 @@ cktp_diff_7: OBUFDS port map ( O =>  CKTP_7_P, OB => CKTP_7_N, I => CKTP_glbl);
 cktp_diff_8: OBUFDS port map ( O =>  CKTP_8_P, OB => CKTP_8_N, I => CKTP_glbl);
 
 ----------------------------------------------------CKTK--------------------------------------------------------------
-cktk_diff_1: OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I => cktk_out_vec(1));
-cktk_diff_2: OBUFDS port map ( O =>  CKTK_2_P, OB => CKTK_2_N, I => cktk_out_vec(2));
-cktk_diff_3: OBUFDS port map ( O =>  CKTK_3_P, OB => CKTK_3_N, I => cktk_out_vec(3));
-cktk_diff_4: OBUFDS port map ( O =>  CKTK_4_P, OB => CKTK_4_N, I => cktk_out_vec(4));
-cktk_diff_5: OBUFDS port map ( O =>  CKTK_5_P, OB => CKTK_5_N, I => cktk_out_vec(5));
-cktk_diff_6: OBUFDS port map ( O =>  CKTK_6_P, OB => CKTK_6_N, I => cktk_out_vec(6));
-cktk_diff_7: OBUFDS port map ( O =>  CKTK_7_P, OB => CKTK_7_N, I => cktk_out_vec(7));
-cktk_diff_8: OBUFDS port map ( O =>  CKTK_8_P, OB => CKTK_8_N, I => cktk_out_vec(8));
+cktk_diff_1: OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I => vmm_cktk_vec(1));
+cktk_diff_2: OBUFDS port map ( O =>  CKTK_2_P, OB => CKTK_2_N, I => vmm_cktk_vec(2));
+cktk_diff_3: OBUFDS port map ( O =>  CKTK_3_P, OB => CKTK_3_N, I => vmm_cktk_vec(3));
+cktk_diff_4: OBUFDS port map ( O =>  CKTK_4_P, OB => CKTK_4_N, I => vmm_cktk_vec(4));
+cktk_diff_5: OBUFDS port map ( O =>  CKTK_5_P, OB => CKTK_5_N, I => vmm_cktk_vec(5));
+cktk_diff_6: OBUFDS port map ( O =>  CKTK_6_P, OB => CKTK_6_N, I => vmm_cktk_vec(6));
+cktk_diff_7: OBUFDS port map ( O =>  CKTK_7_P, OB => CKTK_7_N, I => vmm_cktk_vec(7));
+cktk_diff_8: OBUFDS port map ( O =>  CKTK_8_P, OB => CKTK_8_N, I => vmm_cktk_vec(8));
     
 ----------------------------------------------------CKDT--------------------------------------------------------------
 ckdt_diff_1: OBUFDS port map ( O => ckdt_1_P, OB => ckdt_1_N, I => ckdt_out_vec(1));
@@ -2206,10 +1929,6 @@ data1_diff_6: IBUFDS port map ( O => data1_in_vec(6), I => DATA1_6_P, IB => DATA
 data1_diff_7: IBUFDS port map ( O => data1_in_vec(7), I => DATA1_7_P, IB => DATA1_7_N);
 data1_diff_8: IBUFDS port map ( O => data1_in_vec(8), I => DATA1_8_P, IB => DATA1_8_N);
 
-----------------------------------------------------TKI/TKO--------------------------------------------------------------      
-TKI_diff_1: OBUFDS port map ( O =>  TKI_P, OB => TKI_N, I => vmm_tki);
-TKO_diff_1: IBUFDS port map ( O =>  tko_i, I => TKO_P, IB => TKO_N);
-
 ---------------------------------------------------CKART-----------------------------------------------------------------
 ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => clk_160);
 ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => clk_160);
@@ -2228,8 +1947,8 @@ xadc_mux1_obuf:   OBUF   port map  (O => MuxAddr1, I => MuxAddr1_i);
 xadc_mux2_obuf:   OBUF   port map  (O => MuxAddr2, I => MuxAddr2_i);
 xadc_mux3_obufds: OBUFDS port map  (O => MuxAddr3_p, OB => MuxAddr3_n, I => MuxAddr3_p_i);
 
-art_in_diff_1:    IBUFDS port map (O =>  art_in_i, I => ART_P, IB => ART_N);
-art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
+----------------------------------------------------TRIGGER--------------------------------------------------------------
+ext_trg_diff_1:  IBUFDS port map (O =>  ext_trigger_i,   I => EXT_TRIGGER_P, IB => EXT_TRIGGER_N);
  
 -------------------------------------------------------------------
 --                        Processes                              --
@@ -2240,106 +1959,95 @@ art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
     -- 4. sel_cs
     -- 5. flow_fsm
 -------------------------------------------------------------------
-art_process: process(userclk2, art2)
-begin
-    if rising_edge(userclk2) then  
-        if art_cnt2 < 125 and art2 = '1' then 
-            art_out_ff     <= '1';
-            art_cnt2     <= art_cnt2 + 1;
-        elsif art_cnt2 = 125 then
-            reset_FF    <= '1';
-            art_cnt2     <= art_cnt2 + 1;
-        else
-            art_cnt2     <= 0;
-            reset_FF    <= '0';
-        end if;
-    end if;
-end process;    
 
-FDCE_inst: FDCE
-generic map (INIT => '0') -- Initial value of register ('0' or '1')
-port map (
-    Q   => art2, -- Data output
-    C   => art_in_i, -- Clock input
-    CE  => '1', -- Clock enable input
-    CLR => reset_ff, -- Asynchronous clear input
-    D   => '1' -- Data input
-);
+--###################### OLD CKTP ##################################
+--syncingProc: process(clk_10_phase45)
+--begin
+--    if(rising_edge(clk_10_phase45))then
+--        trig_mode_int_i <= trig_mode_int;
+--        trig_mode_int_s <= trig_mode_int_i;
+--        daq_is_on_i     <= daq_is_on;
+--        daq_is_on_s     <= daq_is_on_i;
+--    end if;    
+--end process;
+
+--internalTrigger_proc: process(clk_10_phase45) -- 10MHz/#states.
+--    begin
+--        if rising_edge(clk_10_phase45) then            
+--            if daq_is_on_s = '1' and trig_mode_int_s = '0' then
+--                case internalTrigger_state is
+--                    when 0 to 9979 =>
+--                        internalTrigger_state <= internalTrigger_state + 1;
+--                        trint           <= '0';
+--                    when 9980 to 10000 =>
+--                        internalTrigger_state <= internalTrigger_state + 1;
+--                        trint           <= '1';        
+--                    when others =>
+--                        internalTrigger_state <= 0;
+--                end case;
+--            else
+--                trint           <= '0';
+--                internalTrigger_state   <= 0;
+--            end if;
+--        end if;
+--end process;
+
+--testPulse_proc: process(clk_10_phase45) -- 10MHz/#states.
+--    begin
+--        if rising_edge(clk_10_phase45) then            
+--            if daq_is_on_s = '1' and trig_mode_int_s = '0' then
+--                case cktp_state is
+--                    when 0 to 9979 =>
+--                        cktp_state <= cktp_state + 1;
+--                        vmm_cktp      <= '0';
+--                    when 9980 to 10000 =>
+--                        cktp_state <= cktp_state + 1;
+--                        vmm_cktp   <= '1';
+--                    when others =>
+--                        cktp_state <= 0;
+--                end case;
+--            else
+--                vmm_cktp      <= '0';
+--                cktp_state    <= 0;
+--            end if;
+--        end if;
+--end process;
+
+--###############################################
 
 -- sync CKTP to userclk2
-cktpSync_proc: process(userclk2)
-begin
-    if(rising_edge(userclk2))then
-        CKTP_i          <= CKTP_glbl;
-        CKTP_glbl_s125  <= CKTP_i;
-    end if;
-end process;
+--cktpSync_proc: process(userclk2)
+--begin
+--    if(rising_edge(userclk2))then
+--        CKTP_i          <= CKTP_glbl;
+--        CKTP_glbl_s125  <= CKTP_i;
+--    end if;
+--end process;
 
--- internal trigger process, uses a multiplication factor of 62 and creates an internal
--- trigger pulse of 400 ns width (b'110010' = 50)
-internalTrigger_proc: process(userclk2)
-begin
-    if(rising_edge(userclk2))then
-        if(CKTP_glbl_s125 = '1')then
-            trig_cnt <= trig_cnt + 1;
+---- internal trigger process, uses a multiplication factor of 62 and creates an internal
+---- trigger pulse of 400 ns width (b'110010' = 50)
+--internalTrigger_proc: process(userclk2)
+--begin
+--    if(rising_edge(userclk2))then
+--        if(CKTP_glbl_s125 = '1')then
+--            trig_cnt <= trig_cnt + 1;
         
-            if(trig_cnt < unsigned(cktp_pulse_width)*"111110" - "110010")then
-                trint <= '0';
-            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"111110" - "110010")then
-                trint <= '1';
-            else
-                trint <= '0';
-            end if;
-        else
-            trint       <= '0';
-            trig_cnt    <= (others => '0');
-        end if;
-    end if;
-end process;
+--            if(trig_cnt < unsigned(cktp_pulse_width)*"111110" - "110010")then
+--                trint <= '0';
+--            elsif(trig_cnt >= unsigned(cktp_pulse_width)*"111110" - "110010")then
+--                trint <= '1';
+--            else
+--                trint <= '0';
+--            end if;
+--        else
+--            trint       <= '0';
+--            trig_cnt    <= (others => '0');
+--        end if;
+--    end if;
+--end process;
 
-synced_to_flowFSM: process(userclk2)
-    begin
-    if rising_edge(userclk2) then
-        status_int_old          <= status_int;
-        if status_int_old = status_int then
-            status_int_synced   <= status_int_old;
-        end if;
-
-        vmm_id_old              <= vmm_id;
-        if vmm_id_old = vmm_id then
-            vmm_id_synced       <= vmm_id_old;
-        end if;
-        conf_done_int_synced    <= conf_done_int;
-    end if;
-end process;
-
-sel_cs_proc: process(sel_cs, vmm_cs_i)
-begin
-    case sel_cs is
-    when "00"   => vmm_cs_fsm <= '0';
-    when "01"   => vmm_cs_fsm <= vmm_cs_i;
-    when "10"   => vmm_cs_fsm <= vmm_cs_i;
-    when "11"   => vmm_cs_fsm <= '1'; 
-    when others => vmm_cs_fsm <= '0';
-    end case;   
-end process;
-
-sel_cs_ena_final_proc: process(rst_enable, vmm_cs_fsm, vmm_ena_fsm, vmm_cs_rst_module, vmm_ena_rst_module)
-begin
-    case rst_enable is
-    when '0'    => 
-        vmm_cs_all  <= vmm_cs_fsm;
-        vmm_ena_all <= vmm_ena_fsm;
-    when '1'    =>
-        vmm_cs_all  <= vmm_cs_rst_module;
-        vmm_ena_all <= vmm_ena_rst_module;
-    when others =>
-        vmm_cs_all  <= vmm_cs_fsm;
-        vmm_ena_all <= vmm_ena_fsm;
-    end case;
-end process;
-
-flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_done_i, conf_done_i)
+-- master FSM
+flow_fsm: process(userclk2)
     begin
     if rising_edge(userclk2) then
         if glbl_rst_i = '1' then
@@ -2353,23 +2061,18 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                     is_state                <= "1111";
                     
                     conf_wen_i              <= '0';
-                    conf_ena_i              <= '0';     
+                    conf_ena_i              <= '0';
+                    daq_sigs_enable         <= x"00";
                     we_conf_int             <= '0';
                     end_packet_conf_int     <= '0';
                     start_conf_proc_int     <= '0';
-                    cnt_vmm                 <= 1;
+                    cnt_reply               <= 0;
                     
                     daq_enable_i            <= '0';
                     pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
-                    vmm_ena_fsm             <= '0';
-                    vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
-                    vmm_cktp_primary        <= '0';
-                    daq_vmm_ena_wen_enable  <= x"00";
-                    daq_cktk_out_enable     <= x"00";
-                    sel_cs                  <= "11";    -- drive CS high
 
                     if(vmm_id_rdy = '1')then
                         if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
@@ -2410,107 +2113,73 @@ flow_fsm: process(userclk2, status_int, status_int_synced, state, vmm_id, write_
                         wait_cnt    <= (others => '0');
                     end if;
 
-               when    CONFIGURE    =>        
+               when CONFIGURE =>        
                     is_state        <= "0001";
-                    sel_cs          <= "01"; -- select CS from config
                     if(vmmConf_done = '1')then 
                         state   <= CONF_DONE;
                     else
                         state   <= CONFIGURE;
                     end if;
 
-                    conf_wen_i          <= '1'; 
                     start_conf_proc_int <= '1';
+                    conf_wen_i          <= '1';
 
-                when    CONF_DONE    =>
-                 --   sel_cs          <= "10"; -- select CS from config
-                    vmm_ena_fsm       <= '1';
-                    is_state        <= "0010";
-                    if w = 40 then
-                        cnt_vmm     <= cnt_vmm - 1;
-                        if cnt_vmm = 1 then --VMM conf done
-                            state           <= SEND_CONF_REPLY;
-                            we_conf_int     <= '1';
-                        else
-                            state       <= CONFIGURE_DELAY;
-                        end if;
-                        w   <= 0;
+                when CONF_DONE =>
+                    is_state        <= "0010";             
+                    if(wait_cnt = "00000111")then -- wait before replying
+                        wait_cnt    <= (others => '0');
+                        state       <= SEND_CONF_REPLY;
+                        we_conf_int <= '1';
                     else
-                        w <= w + 1;
+                        wait_cnt    <= wait_cnt + 1;
+                        state       <= CONF_DONE;
                     end if;
                     
                     conf_wen_i      <= '0';
 
-                when CONFIGURE_DELAY => -- Waits 100 ns to move to next configuration
-                    is_state        <= "1011";
-                    if (w >= 19) then
-                        w           <= 0;
-                        vmm_ena_fsm       <= '0';
-                        sel_cs          <= "00"; -- drive CS to gnd
-                        state           <= CONFIGURE;
-                    else
-                        w <= w + 1;
-                    end if;
-
-                when    SEND_CONF_REPLY    =>
-                    is_state            <= "1010";
-                    sel_cs          <= "00"; -- drive CS to gnd
-                    vmm_ena_fsm     <= '0';                     
+                when SEND_CONF_REPLY =>
+                    is_state            <= "1010";                    
                     if cnt_reply = 0 then
-                        user_data_out_i <= conf_data_out_i;
-                        cnt_reply   <= cnt_reply + 1;
+                        user_data_out_i     <= conf_data_out_i;
+                        cnt_reply           <= cnt_reply + 1;
                     elsif cnt_reply = 1 then
-                        user_data_out_i <= (others => '0');
-                        cnt_reply   <= cnt_reply + 1;
+                        user_data_out_i     <= (others => '0');
+                        cnt_reply           <= cnt_reply + 1;
                         end_packet_conf_int <= '1';
-                        we_conf_int     <= '0';
+                        we_conf_int         <= '0';
                     elsif cnt_reply > 1 and cnt_reply < 100 then
-                        cnt_reply   <= cnt_reply + 1;
+                        cnt_reply           <= cnt_reply + 1;
+                        end_packet_conf_int <= '0';
                     else
                         cnt_reply           <= 0;
                         state               <= IDLE;
-                        end_packet_conf_int <= '1';
                     end if;
 
                 when DAQ_INIT =>
                     is_state                <= "0011";
-                    for I in 1 to 100 loop
-                        vmm_cktp_primary    <= '1';
-                    end loop;
-                    sel_cs                  <= "11"; -- drive CS high
-                    vmm_ena_fsm             <= '1';
                     tren                    <= '0';
-                    daq_vmm_ena_wen_enable  <= x"ff";
-                    daq_cktk_out_enable     <= x"ff";
+                    daq_sigs_enable         <= x"ff";
                     daq_enable_i            <= '1';
                     rstFIFO_top             <= '1';
                     pf_reset                <= '1';
-                    
-                    if(daq_on = '0')then    -- Reset came
-                        daq_vmm_ena_wen_enable  <= x"00";
-                        daq_cktk_out_enable     <= x"00";
-                        daq_enable_i            <= '0';
-                        pf_reset                <= '0';
-                        state                   <= IDLE;
-                    else
-                        state   <= TRIG;
-                    end if;
+                    state                   <= TRIG;
                     
                 when TRIG =>
                     is_state            <= "0100";
-                    vmm_tki             <= '1';
-                    vmm_cktp_primary    <= '0';
                     rstFIFO_top         <= '0';
                     pf_reset            <= '0';
                     tren                <= '1';
                     state               <= DAQ;
       
                 when DAQ =>
-                    is_state            <= "0101";
-                    ckbc_enable         <= '1';
+                    is_state    <= "0101";
+                    ckbc_enable <= '1';
                     if(daq_on = '0')then  -- Reset came
-                        daq_enable_i    <= '0';
-                        state           <= DAQ_INIT;
+                        daq_enable_i            <= '0';
+                        daq_sigs_enable         <= x"00";
+                        state                   <= IDLE;
+                    else
+                        state                   <= DAQ;
                     end if;
                     
                 when XADC_init =>
@@ -2556,76 +2225,99 @@ end process;
 
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     rst_enable              <= '1' when (state = DAQ and rst_enable_conf = '1') else '0';
+    daq_is_on               <= '1' when state = DAQ else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
     vmm_bitmask             <= "11111111";
-    vmm_cs_rst_module       <= not rst_vmm_gen;
-    vmm_ena_rst_module      <= not rst_vmm_gen;
     
     pf_newCycle             <= tr_out_i;
-    CH_TRIGGER_i            <= CH_TRIGGER;
-    TRIGGER_OUT_P           <= art2;
-    TRIGGER_OUT_N           <= not art2;
-    MO                      <= MO_i;  
-
-    test_data               <= udp_rx_int.data.data_in;
-    test_valid              <= udp_rx_int.data.data_in_valid;
-    test_last               <= udp_rx_int.data.data_in_last;
-    test_data_out           <= udp_txi_int.data.data_out;
-    test_valid_out          <= udp_txi_int.data.data_out_valid;
-    test_last_out           <= udp_txi_int.data.data_out_last;
     
-    fifo_data               <= fifo_data_out_int;
-    re_out                  <= re_out_int;
+    vmm_cktk_vec    <= conf_cktk_vec    or (vmm_cktk_vec_ro and daq_sigs_enable);
+    vmm_ena_vec     <= conf_vmm_ena_vec or (etr_vmm_ena_vec and daq_sigs_enable);
+    vmm_wen_vec     <= conf_vmm_wen_vec or (etr_vmm_wen_vec and daq_sigs_enable);
 
-    -- configuration assertion
-    vmm_cs_vec_obuf(1)  <= vmm_cs_all and vmm_bitmask(0);
-    vmm_cs_vec_obuf(2)  <= vmm_cs_all and vmm_bitmask(1);
-    vmm_cs_vec_obuf(3)  <= vmm_cs_all and vmm_bitmask(2);
-    vmm_cs_vec_obuf(4)  <= vmm_cs_all and vmm_bitmask(3);
-    vmm_cs_vec_obuf(5)  <= vmm_cs_all and vmm_bitmask(4);
-    vmm_cs_vec_obuf(6)  <= vmm_cs_all and vmm_bitmask(5);
-    vmm_cs_vec_obuf(7)  <= vmm_cs_all and vmm_bitmask(6);
-    vmm_cs_vec_obuf(8)  <= vmm_cs_all and vmm_bitmask(7);
+    -- configuration assertion   
+    vmm_di_vec_obuf(1) <= vmm_di_all and vmm_bitmask(0);
+    vmm_di_vec_obuf(2) <= vmm_di_all and vmm_bitmask(1);
+    vmm_di_vec_obuf(3) <= vmm_di_all and vmm_bitmask(2);
+    vmm_di_vec_obuf(4) <= vmm_di_all and vmm_bitmask(3);
+    vmm_di_vec_obuf(5) <= vmm_di_all and vmm_bitmask(4);
+    vmm_di_vec_obuf(6) <= vmm_di_all and vmm_bitmask(5);
+    vmm_di_vec_obuf(7) <= vmm_di_all and vmm_bitmask(6);
+    vmm_di_vec_obuf(8) <= vmm_di_all and vmm_bitmask(7);
     
-    vmm_sck_vec_obuf(1) <= vmm_sck_all and vmm_bitmask(0);
-    vmm_sck_vec_obuf(2) <= vmm_sck_all and vmm_bitmask(1);
-    vmm_sck_vec_obuf(3) <= vmm_sck_all and vmm_bitmask(2);
-    vmm_sck_vec_obuf(4) <= vmm_sck_all and vmm_bitmask(3);
-    vmm_sck_vec_obuf(5) <= vmm_sck_all and vmm_bitmask(4);
-    vmm_sck_vec_obuf(6) <= vmm_sck_all and vmm_bitmask(5);
-    vmm_sck_vec_obuf(7) <= vmm_sck_all and vmm_bitmask(6);
-    vmm_sck_vec_obuf(8) <= vmm_sck_all and vmm_bitmask(7);
+    conf_vmm_ena_vec(1) <= conf_ena_i and vmm_bitmask(0);
+    conf_vmm_ena_vec(2) <= conf_ena_i and vmm_bitmask(1);
+    conf_vmm_ena_vec(3) <= conf_ena_i and vmm_bitmask(2);
+    conf_vmm_ena_vec(4) <= conf_ena_i and vmm_bitmask(3);
+    conf_vmm_ena_vec(5) <= conf_ena_i and vmm_bitmask(4);
+    conf_vmm_ena_vec(6) <= conf_ena_i and vmm_bitmask(5);
+    conf_vmm_ena_vec(7) <= conf_ena_i and vmm_bitmask(6);
+    conf_vmm_ena_vec(8) <= conf_ena_i and vmm_bitmask(7);
     
-    vmm_sdi_vec_obuf(1) <= vmm_sdi_all and vmm_bitmask(0);
-    vmm_sdi_vec_obuf(2) <= vmm_sdi_all and vmm_bitmask(1);
-    vmm_sdi_vec_obuf(3) <= vmm_sdi_all and vmm_bitmask(2);
-    vmm_sdi_vec_obuf(4) <= vmm_sdi_all and vmm_bitmask(3);
-    vmm_sdi_vec_obuf(5) <= vmm_sdi_all and vmm_bitmask(4);
-    vmm_sdi_vec_obuf(6) <= vmm_sdi_all and vmm_bitmask(5);
-    vmm_sdi_vec_obuf(7) <= vmm_sdi_all and vmm_bitmask(6);
-    vmm_sdi_vec_obuf(8) <= vmm_sdi_all and vmm_bitmask(7);
+    conf_vmm_wen_vec(1) <= conf_wen_i and vmm_bitmask(0);
+    conf_vmm_wen_vec(2) <= conf_wen_i and vmm_bitmask(1);
+    conf_vmm_wen_vec(3) <= conf_wen_i and vmm_bitmask(2);
+    conf_vmm_wen_vec(4) <= conf_wen_i and vmm_bitmask(3);
+    conf_vmm_wen_vec(5) <= conf_wen_i and vmm_bitmask(4);
+    conf_vmm_wen_vec(6) <= conf_wen_i and vmm_bitmask(5);
+    conf_vmm_wen_vec(7) <= conf_wen_i and vmm_bitmask(6);
+    conf_vmm_wen_vec(8) <= conf_wen_i and vmm_bitmask(7);
     
-    vmm_ena_vec_obuf(1) <= vmm_ena_all and vmm_bitmask(0);
-    vmm_ena_vec_obuf(2) <= vmm_ena_all and vmm_bitmask(1);
-    vmm_ena_vec_obuf(3) <= vmm_ena_all and vmm_bitmask(2);
-    vmm_ena_vec_obuf(4) <= vmm_ena_all and vmm_bitmask(3);
-    vmm_ena_vec_obuf(5) <= vmm_ena_all and vmm_bitmask(4);
-    vmm_ena_vec_obuf(6) <= vmm_ena_all and vmm_bitmask(5);
-    vmm_ena_vec_obuf(7) <= vmm_ena_all and vmm_bitmask(6);
-    vmm_ena_vec_obuf(8) <= vmm_ena_all and vmm_bitmask(7);
+    conf_cktk_vec(1) <= vmm_cktk_conf and vmm_bitmask(0);
+    conf_cktk_vec(2) <= vmm_cktk_conf and vmm_bitmask(1);
+    conf_cktk_vec(3) <= vmm_cktk_conf and vmm_bitmask(2);
+    conf_cktk_vec(4) <= vmm_cktk_conf and vmm_bitmask(3);
+    conf_cktk_vec(5) <= vmm_cktk_conf and vmm_bitmask(4);
+    conf_cktk_vec(6) <= vmm_cktk_conf and vmm_bitmask(5);
+    conf_cktk_vec(7) <= vmm_cktk_conf and vmm_bitmask(6);
+    conf_cktk_vec(8) <= vmm_cktk_conf and vmm_bitmask(7);
 
-    tied_to_gnd_i       <= '0'; -- ground CK6B/SETT/SETB (unused)
-
---VIO_inst: vio_1
---    port map(
---        clk         => userclk2,
---        probe_out0  => ckbc_en_vio,
---        probe_out1  => cktp_vio,
---        probe_out2  => tki_vio,
---        probe_out3  => cktk_vio,
---        probe_out4  => ckdt_vio,
---        probe_out5  => cs_vio
---    );
+    tied_to_gnd_i    <= '0'; -- ground CK6B/SETT/SETB (unused)    
+    
+vio_ckbc_cktp: vio_2
+      PORT MAP (
+        clk => clk_160_gen,
+        probe_out0(0) => rst_enable_conf,
+        probe_out1 => rst_period,
+        probe_out2 => rst_before_cktp,
+        probe_out3 => cktp_pulse_width,
+        probe_out4 => cktp_period,
+        probe_out5 => cktp_skew,
+        probe_out6 => ckbc_freq,
+        probe_out7 => cktp_max_num,
+        probe_out8 => cktk_max_num
+      );
+      
+      
+--ila_top: ila_overview
+--      PORT MAP (
+--          clk                   => userclk2,
+--          probe0(7 downto 0)    => conf_counter,
+--          probe0(10 downto 8)   => conf_state,
+--          probe0(14 downto 11)  => dt_state,
+--          probe0(18 downto 15)  => dt_cntr_state,
+--          probe0(23 downto 19)  => pf_state,
+--          probe0(27 downto 24)  => is_state,
+--          probe0(28)            => vmm_sdi_all,
+--          probe0(29)            => conf_ena_i,
+--          probe0(30)            => conf_wen_i,
+--          probe0(31)            => vmm_cktk_conf,
+--          probe0(32)            => vmm_cktk_vec_ro(1),
+--          probe0(33)            => data0_in_vec(1),
+--          probe0(34)            => data1_in_vec(1),
+--          probe0(35)            => ckdt_out_vec(1),
+--          probe0(36)            => vmm_cktk_vec_ro(2),
+--          probe0(37)            => data0_in_vec(2),
+--          probe0(38)            => data1_in_vec(2),
+--          probe0(39)            => ckdt_out_vec(2),
+--          probe0(40)            => CKTP_glbl_dbg,
+--          probe0(41)            => CKBC_glbl_dbg,
+--          probe0(42)            => conf_fifo_empty,
+--          probe0(43)            => rd_conf_fifo,
+--          probe0(44)            => sel_vmm_data,
+--          probe0(63 downto 45)  => (others => '0')
+                  
+--      );
       
 --ila_top: ila_top_level
 --    port map (
@@ -2637,37 +2329,24 @@ end process;
 --        probe4  => dataOutProbe,
 --        probe5  => flowProbe
 --    );
-    
-VIO_CLK_GEN: vio_ip
-      PORT MAP (
-        clk                         => clk_160_gen,
-        probe_out0(0)               => rst_enable_conf,
-        probe_out1(15 downto 0)     => rst_period,
-        probe_out2(7 downto 0)      => rst_before_cktp
-      );
-      
-      
---          signal   : std_logic := '0';
---      signal rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
---      signal rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;
     vmmSignalsProbe(23 downto 16)      <= ckdt_out_vec;
     vmmSignalsProbe(31 downto 24)      <= data0_in_vec;
-    vmmSignalsProbe(32)                <= vmm_cktp;
+    vmmSignalsProbe(32)                <= '0';
     vmmSignalsProbe(33)                <= ckdt_out_vec(1);
     vmmSignalsProbe(34)                <= data0_in_vec(1);
     vmmSignalsProbe(35)                <= data1_in_vec(1);
-    vmmSignalsProbe(36)                <= vmm_cs_all;
-    vmmSignalsProbe(37)                <= vmm_cktp_all;
-    vmmSignalsProbe(38)                <= vmm_ena_all;
-    vmmSignalsProbe(39)                <= vmm_ena;
+    vmmSignalsProbe(36)                <= '0';
+    vmmSignalsProbe(37)                <= '0';
+    vmmSignalsProbe(38)                <= '0';
+    vmmSignalsProbe(39)                <= '0';
     vmmSignalsProbe(40)                <= tko_i;
-    vmmSignalsProbe(41)                <= vmm_ena_all;
-    vmmSignalsProbe(42)                <= art2;
-    vmmSignalsProbe(43)                <= cktk_out_i;
-    vmmSignalsProbe(44)                <= art_in_i;
+    vmmSignalsProbe(41)                <= '0';
+    vmmSignalsProbe(42)                <= '0';
+    vmmSignalsProbe(43)                <= '0';
+    vmmSignalsProbe(44)                <= '0';
     vmmSignalsProbe(63 downto 45)      <= (others => '0'); 
 
     triggerETRProbe(0)                <= trint;
@@ -2677,19 +2356,19 @@ VIO_CLK_GEN: vio_ip
     triggerETRProbe(4)                <= trig_mode_int;
     triggerETRProbe(7 downto 5)       <= state_rst_etr_i;
     triggerETRProbe(15 downto 8)      <= etr_vmm_ena_vec;
-    triggerETRProbe(23 downto 16)     <= std_logic_vector(to_unsigned(internalTrigger_state, triggerETRProbe(23 downto 16)'length));
+    triggerETRProbe(23 downto 16)     <= (others => '0');
     triggerETRProbe(24)               <= rst_etr_i;
     triggerETRProbe(25)               <= etr_reset_latched;
     triggerETRProbe(26)               <= trigger_i;
     triggerETRProbe(38 downto 27)     <= glBCID_i;
-    triggerETRProbe(39)               <= CH_TRIGGER_i;
-    triggerETRProbe(40)               <= reset_FF;
+    triggerETRProbe(39)               <= '0';
+    triggerETRProbe(40)               <= '0';
     triggerETRProbe(63 downto 41)     <= (others => '0'); 
 
     configurationProbe(0)                <= start_conf_proc_int;
-    configurationProbe(1)                <= conf_wen_i;
-    configurationProbe(2)                <= conf_di_i;
-    configurationProbe(18 downto 3)      <= vmm_id_int;
+    configurationProbe(1)                <= '0';
+    configurationProbe(2)                <= '0';
+    configurationProbe(18 downto 3)      <= (others => '0');
     configurationProbe(50 downto 19)     <= myIP;
     configurationProbe(63 downto 51)     <= (others => '0');
 
@@ -2705,11 +2384,11 @@ VIO_CLK_GEN: vio_ip
     dataOutProbe(63 downto 0)      <= daq_data_out_i;
 
     flowProbe(3 downto 0)       <= is_state;
-    flowProbe(7 downto 4)       <= status_int;
-    flowProbe(11 downto 8)      <= status_int_synced;
+    flowProbe(7 downto 4)       <= (others => '0');
+    flowProbe(11 downto 8)      <= (others => '0');
     flowProbe(12)               <= daq_enable_i;
     flowProbe(13)               <= xadc_busy;
-    flowProbe(21 downto 14)     <= daq_vmm_ena_wen_enable;
+    flowProbe(21 downto 14)     <= (others => '0');
     flowProbe(22)               <= daqFIFO_reset;
     flowProbe(23)               <= rstFIFO_top;
     flowProbe(24)               <= ckbc_enable;

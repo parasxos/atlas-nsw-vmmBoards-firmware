@@ -13,6 +13,7 @@
 -- 09.09.2016 Added a glBCID counter for periodic soft reset of VMMs which takes place
 -- every 102us if DAQ is on and if not in the middle of read-out. (Christos Bakalis)
 -- 15.09.2016 Optimized the periodic soft reset process. (Paris Moschovakos)
+-- 19.04.2017 Added synchronizers and an extra state at the soft reset process. (CB)
 --
 ----------------------------------------------------------------------------------------
 
@@ -67,11 +68,15 @@ architecture Behavioral of event_timing_reset is
     signal state_rst                : std_logic_vector(2 downto 0) := "000";
     signal reset_latched_i          : std_logic;
     signal reset_latched_s_0        : std_logic;
-    signal reset_latched_s          : std_logic;
+    signal reset_latched_s_1        : std_logic;
+    signal reset_latched_s_2        : std_logic;
+    signal reset_latched_s_3        : std_logic;
     signal rst_done                 : std_logic;
     signal rst_done_i               : std_logic;
     signal rst_done_s               : std_logic;
     signal rst_done_pre             : std_logic:='0';
+    signal rst_done_pre_i           : std_logic;
+    signal rst_done_pre_s           : std_logic;
     signal vmm_ena_vec_i            : std_logic_vector(8 downto 1)  := ( others => '0' );
     signal vmm_wen_vec_i            : std_logic_vector(8 downto 1)  := ( others => '0' );
     signal rst_i                    : std_logic := '0';                                     -- Internal reset related to glBCID counter
@@ -89,7 +94,9 @@ architecture Behavioral of event_timing_reset is
     attribute ASYNC_REG of rst_done_i           : signal is "TRUE";
     attribute ASYNC_REG of rst_done_s           : signal is "TRUE";
     attribute ASYNC_REG of reset_latched_s_0    : signal is "TRUE";
-    attribute ASYNC_REG of reset_latched_s      : signal is "TRUE";
+    attribute ASYNC_REG of reset_latched_s_1    : signal is "TRUE";
+    attribute ASYNC_REG of reset_latched_s_2    : signal is "TRUE";
+    attribute ASYNC_REG of reset_latched_s_3    : signal is "TRUE";
     
     -- Components if any
     
@@ -104,25 +111,29 @@ begin
         daqEnable_s <= daqEnable_i;
         pfBusy_i    <= pfBusy;
         pfBusy_s    <= pfBusy_i;
-        reset_latched_s_0 <= reset_latched_i;
-        reset_latched_s   <= reset_latched_s_0;      
+        reset_latched_s_0 <= reset_latched_i; -- delay the reset_latched pulse
+        reset_latched_s_1 <= reset_latched_s_0;
+        reset_latched_s_2 <= reset_latched_s_1;
+        reset_latched_s_3 <= reset_latched_s_2;      
     end if;
 end process;
 
 syncSigs_125: process(clk)
 begin
     if(rising_edge(clk))then
-        rst_s_0     <= rst_i;
-        rst_s       <= rst_s_0;
-        rst_done_i  <= rst_done;
-        rst_done_s  <= rst_done_i;    
+        rst_s_0         <= rst_i;
+        rst_s           <= rst_s_0;
+        rst_done_i      <= rst_done;
+        rst_done_s      <= rst_done_i;
+        rst_done_pre_i  <= rst_done_pre;    
+        rst_done_pre_s  <= rst_done_pre_i;
     end if;
 end process;
 
 synchronousSoftReset: process (bc_clk)
 begin
     if rising_edge (bc_clk) then
-        if reset_latched_s = '1' then
+        if reset_latched_s_3 = '1' then
             case state_rst is
                 when "000" => -- reset step 1
                     vmm_ena_vec_i   <= x"00";
@@ -141,17 +152,25 @@ begin
                 when "011" => -- reset step 4
                     vmm_ena_vec_i   <= x"00";
                     vmm_wen_vec_i   <= x"00";
+                    state_rst       <= "100";
                     rst_done        <= '1';
-                    state_rst       <= "000";
+                when "100" => -- reset step 5 (stay here to prevent a double reset)
+                    vmm_ena_vec_i   <= x"00";
+                    vmm_wen_vec_i   <= x"00";
+                    rst_done        <= '0';
                 when others =>
                     state_rst       <= "000";
             end case;
         elsif daqEnable_s = '1' then
             vmm_ena_vec_i   <= x"FF";
             vmm_wen_vec_i   <= x"00";
+            state_rst       <= "000";
+            rst_done        <= '0';
         else
             vmm_ena_vec_i   <= x"00";
             vmm_wen_vec_i   <= x"00";
+            state_rst       <= "000";
+            rst_done        <= '0';
         end if;
     end if;
 end process;
@@ -159,7 +178,7 @@ end process;
 latchResetProc: process (clk)
 begin
     if rising_edge(clk) then
-        if rst_done_s = '0' and rst_done_pre = '1' then
+        if rst_done_s = '0' and rst_done_pre_s = '1' then
             reset_latched_i <= '0';
         elsif reset = '1' then
             reset_latched_i <= '1';
@@ -172,7 +191,7 @@ end process;
 latchResetProcAuxiliary: process (clk)
 begin
     if rising_edge(clk) then
-        rst_done_pre    <= rst_done_s;
+        rst_done_pre <= rst_done_s;
     end if;
 end process;
 

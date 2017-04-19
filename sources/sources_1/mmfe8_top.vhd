@@ -371,7 +371,6 @@ architecture Behavioral of mmfe8_top is
 
     signal tied_to_gnd_i    : std_logic := '0';
 
-
     -------------------------------------------------
     -- Readout Signals
     -------------------------------------------------
@@ -385,7 +384,7 @@ architecture Behavioral of mmfe8_top is
     signal vmmEventDone_i           : std_logic := '0';
     signal daqFIFO_reset            : std_logic := '0';
     signal UDPDone                  : std_logic;
-    signal ckbc_enable              : std_logic := '0';
+    signal ckbc_enable              : std_logic := '1';
     signal cktp_enable              : std_logic := '0';
     signal daq_is_on                : std_logic := '0';
     signal daq_is_on_i              : std_logic := '0';
@@ -480,8 +479,8 @@ architecture Behavioral of mmfe8_top is
     signal rst_enable_conf  : std_logic := '0';
     signal rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
     signal rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
-    signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04"; -- 2 us
-    signal cktp_period      : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
+    signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04";
+    signal cktp_period      : std_logic_vector(15 downto 0)    := x"4000";
     signal cktp_skew        : std_logic_vector(7 downto 0)     := (others => '0'); 
     signal ckbc_freq        : std_logic_vector(7 downto 0)     := x"0a"; --40 Mhz
     signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
@@ -623,21 +622,13 @@ architecture Behavioral of mmfe8_top is
     -- VIO
     -------------------------------------------------------------------
     attribute keep of rst_enable_conf           : signal is "TRUE";
-    --attribute dont_touch of rst_enable_conf     : signal is "TRUE";
     attribute keep of rst_period                : signal is "TRUE";
-    --attribute dont_touch of rst_period          : signal is "TRUE";
     attribute keep of rst_before_cktp           : signal is "TRUE";
-    --attribute dont_touch of rst_before_cktp     : signal is "TRUE";
     attribute keep of cktp_pulse_width          : signal is "TRUE";
-    --attribute dont_touch of cktp_pulse_width    : signal is "TRUE";
     attribute keep of cktp_period               : signal is "TRUE";
-    --attribute dont_touch of cktp_period         : signal is "TRUE";
     attribute keep of cktp_skew                 : signal is "TRUE";
-    --attribute dont_touch of cktp_skew           : signal is "TRUE";
     attribute keep of ckbc_freq                 : signal is "TRUE";
-    --attribute dont_touch of ckbc_freq           : signal is "TRUE";
     attribute keep of cktp_max_num              : signal is "TRUE";
-    --attribute dont_touch of cktp_max_num        : signal is "TRUE";
     attribute keep of cktk_max_num              : signal is "TRUE";
     --attribute dont_touch of cktk_max_num        : signal is "TRUE";
                
@@ -2072,7 +2063,6 @@ flow_fsm: process(userclk2)
                     pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
-                    ckbc_enable             <= '0';
 
                     if(vmm_id_rdy = '1')then
                         if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
@@ -2173,7 +2163,6 @@ flow_fsm: process(userclk2)
       
                 when DAQ =>
                     is_state    <= "0101";
-                    ckbc_enable <= '1';
                     if(daq_on = '0')then  -- Reset came
                         daq_enable_i            <= '0';
                         daq_sigs_enable         <= x"00";
@@ -2228,6 +2217,7 @@ end process;
     daq_is_on               <= '1' when state = DAQ else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
     vmm_bitmask             <= "11111111";
+    ckbc_enable             <= '1';
     
     pf_newCycle             <= tr_out_i;
     

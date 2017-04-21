@@ -53,7 +53,7 @@ entity packet_formation is
         
         latency         : in std_logic_vector(15 downto 0);
         dbg_st_o        : out std_logic_vector(4 downto 0);
-        trext_synced125 : in std_logic
+        trraw_synced125 : in std_logic
     );
 end packet_formation;
 
@@ -291,7 +291,7 @@ begin
                 
             when isTriggerOff =>            -- Wait for whatever ongoing trigger pulse to go to 0
                 debug_state <= "01111";
-                if trext_synced125 /= '1' then
+                if trraw_synced125 /= '1' then
                     tr_hold                 <= '0'; -- Allow new triggers
                     state           <= waitingForNewCycle;
                 end if;

@@ -540,7 +540,7 @@ architecture Behavioral of mmfe8_top is
     signal internalTrigger_state : integer := 0;
     signal CH_TRIGGER_i       : std_logic := '0';
     signal request2ckbc       : std_logic := '0';
-    signal trext_synced125_i  : std_logic := '0';
+    signal trraw_synced125_i  : std_logic := '0';
   
     -------------------------------------------------
     -- Event Timing & Soft Reset
@@ -923,7 +923,7 @@ architecture Behavioral of mmfe8_top is
           
           event_counter   : out std_logic_vector(31 DOWNTO 0);
           tr_out          : out std_logic;
-          trext_synced125 : out std_logic;
+          trraw_synced125 : out std_logic;
           latency         : in std_logic_vector(15 DOWNTO 0)
       );
     end component;
@@ -958,7 +958,7 @@ architecture Behavioral of mmfe8_top is
             latency         : in std_logic_vector(15 downto 0);
             dbg_st_o        : out std_logic_vector(4 downto 0);
             
-            trext_synced125 : in std_logic
+            trraw_synced125 : in std_logic
     );
     end component;
     -- 10
@@ -1773,7 +1773,7 @@ trigger_instance: trigger
 
         event_counter   => event_counter_i,
         tr_out          => tr_out_i,
-        trext_synced125 => trext_synced125_i,
+        trraw_synced125 => trraw_synced125_i,
         latency         => latency_conf
     );
 
@@ -1831,7 +1831,7 @@ packet_formation_instance: packet_formation
 
         latency         => latency_conf,
         dbg_st_o        => pf_dbg_st,
-        trext_synced125 => trext_synced125_i
+        trraw_synced125 => trraw_synced125_i
     );   
         
 data_selection:  select_data

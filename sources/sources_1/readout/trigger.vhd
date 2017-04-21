@@ -44,7 +44,7 @@ entity trigger is
 
             event_counter   : out STD_LOGIC_VECTOR(31 DOWNTO 0);
             tr_out          : out STD_LOGIC;
-            trext_synced125 : out STD_LOGIC;
+            trraw_synced125 : out STD_LOGIC;
             latency         : in STD_LOGIC_VECTOR(15 DOWNTO 0)
             );
 end trigger;
@@ -73,6 +73,10 @@ architecture Behavioral of trigger is
     signal trmode_ff_synced     : std_logic := '0';
     signal trint_stage1         : std_logic := '0';
     signal trint_ff_synced      : std_logic := '0';
+    signal trraw_synced125_i    : std_logic := '0';
+    signal trint_stage_synced   : std_logic := '0';
+    signal trint_stage_synced125: std_logic := '0';
+    signal trint_ff_synced125   : std_logic := '0';
  
     -- Special Readout Mode
     signal request2ckbc_i    : std_logic := '0';
@@ -286,10 +290,12 @@ triggerDistrSignalProc: process (clk_art, reset)
 troutSyncToFpgaLogic: process(clk)
 begin
     if rising_edge(clk) then 
-        tr_out_i_stage1     <= tr_out_i;
-        tr_out_i_ff_synced  <= tr_out_i_stage1;
-        trext_stage_resynced<= trext_ff_synced;
-        trext_ff_resynced   <= trext_stage_resynced;
+        tr_out_i_stage1         <= tr_out_i;
+        tr_out_i_ff_synced      <= tr_out_i_stage1;
+        trext_stage_resynced    <= trext_ff_synced;
+        trext_ff_resynced       <= trext_stage_resynced;
+        trint_stage_synced125   <= trint;
+        trint_ff_synced125      <= trint_stage_synced125;
     end if;
 end process;
 
@@ -340,11 +346,24 @@ eventCounterProc: process (clk_art, reset)
         end if;
     end process;
     
+triggerRawMux:process (trext_ff_resynced, trint_ff_synced125, trmode, reset)
+begin
+    if reset = '1' then
+        trraw_synced125_i   <= '0';
+    else
+        if trmode = '1' then
+            trraw_synced125_i   <= trext_ff_resynced;
+        elsif trmode = '0' then
+            trraw_synced125_i   <= trint_ff_synced125;
+        end if;
+    end if;
+end process;
+    
 -- Signal assignments
 event_counter       <= event_counter_i;
 tr_out              <= tr_out_i_ff_synced;
 request2ckbc        <= request2ckbc_i;
-trext_synced125     <= trext_ff_resynced;
+trraw_synced125     <= trraw_synced125_i;
 trigLatency         <= to_integer(unsigned(latency));
 
 -- Instantiations if any

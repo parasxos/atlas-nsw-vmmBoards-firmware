@@ -55,6 +55,7 @@ set_false_path -from [get_cells trint_reg] -to [get_cells trigger_instance/trint
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells trigger_instance/trmode_stage1_reg]
 set_false_path -from [get_cells trigger_instance/mode_reg] -to [get_cells trigger_instance/mode_stage1_reg]
 set_false_path -from [get_cells trigger_instance/trext_ff_synced_reg] -to [get_cells trigger_instance/trext_stage_resynced_reg]
+set_false_path -from [get_cells trigger_instance/trint_reg] -to [get_cells trigger_instance/trint_stage_synced125_reg]
 
 # AXI SPI related false paths
 set_false_path -from [get_cells axi4_spi_instance/CDCC_50to125/data_in_reg_reg[*]] -to [get_cells axi4_spi_instance/CDCC_50to125/data_sync_stage_0_reg[*]]
@@ -186,6 +187,8 @@ set_property ASYNC_REG true [get_cells trigger_instance/trmode_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trmode_ff_synced_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trint_stage1_reg]
 set_property ASYNC_REG true [get_cells trigger_instance/trint_ff_synced_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trint_stage_synced125_reg]
+set_property ASYNC_REG true [get_cells trigger_instance/trint_ff_synced125_reg]
 
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_i_reg]
 set_property ASYNC_REG true [get_cells udp_din_conf_block/fpga_config_logic/daq_on_sync_reg]

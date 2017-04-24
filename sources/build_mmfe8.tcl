@@ -193,6 +193,9 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_reset_sync.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_sync_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/CDCC.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/Code8b10bPkg.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/Decoder8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/imports/StdRtlPkg.vhd"]"\
  "[file normalize "$origin_dir/sources_1/ip/clk_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_0_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_user_FIFO.xcix"]"\
@@ -206,6 +209,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_top_level.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/ila_l0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_overview.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
@@ -222,6 +226,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/readout/trigger.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmm_readout.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/readout/L0_wrapper.vhd"]"\
 ]
 
 add_files -norecurse -fileset $obj $files
@@ -452,6 +457,21 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
+set file "$origin_dir/sources_1/imports/Code8b10bPkg.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/Decoder8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/imports/StdRtlPkg.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
 set file "$origin_dir/sources_1/readout/event_timing_reset.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -488,6 +508,11 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/readout/packet_formation.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/readout/L0_wrapper.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj

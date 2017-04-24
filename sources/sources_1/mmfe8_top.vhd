@@ -238,8 +238,8 @@ architecture Behavioral of mmfe8_top is
     -- Global Settings
     ------------------------------------------------------------------- 
     -- Default IP and MAC address of the board
-    signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-    signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123222";
+    signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
+    signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123223";
     signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
     -- Set to '1' if MMFE8 VMM3 is used
     signal is_mmfe8       : std_logic := '0';

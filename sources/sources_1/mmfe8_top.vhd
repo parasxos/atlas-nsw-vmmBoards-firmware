@@ -616,6 +616,7 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------------------------------------ 
     signal clk_160_gen      : std_logic := '0';
     signal clk_500_gen      : std_logic := '0';
+    signal clk_320_gen      : std_logic := '0';
     signal clk_gen_locked   : std_logic := '0';
     signal rst_gen          : std_logic := '0';  
     signal ckbc_ready_vio   : std_logic := '0';
@@ -818,6 +819,7 @@ architecture Behavioral of mmfe8_top is
         clk_in_400  : in     std_logic;
         clk_out_160 : out    std_logic;
         clk_out_500 : out    std_logic;
+        clk_out_320 : out    std_logic;
         reset       : in     std_logic;
         gen_locked  : out    std_logic
     );
@@ -1373,6 +1375,24 @@ architecture Behavioral of mmfe8_top is
         probe0  : in std_logic_vector(63 downto 0)
     );
     end component;
+    
+    --26
+    component L0_wrapper
+    Port(
+        ------------------------------------
+        ------- General Interface ----------
+        clk_ckdt    : in  std_logic; -- will be forwarded to the VMM
+        clk_des     : in  std_logic; -- must be twice the frequency of CKDT
+        level_0     : in  std_logic; -- level-0 signal
+        rst         : in  std_logic;
+        ------------------------------------
+        ---------- VMM Interface -----------
+        VMM_CKDT    : out std_logic;
+        VMM_CKTK    : out std_logic;
+        VMM_DATA0   : in  std_logic;
+        VMM_DATA1   : in  std_logic
+    );
+    end component;
 
 begin
 
@@ -1697,7 +1717,8 @@ mmcm_ckbc_cktp: clk_wiz_gen
     port map ( 
         clk_in_400  => clk_400_clean,
         clk_out_160 => clk_160_gen,
-        clk_out_500 => clk_500_gen,              
+        clk_out_500 => clk_500_gen,
+        clk_out_320 => clk_320_gen,
         reset       => '0',
         gen_locked  => clk_gen_locked            
     );
@@ -1733,8 +1754,8 @@ readout_vmm: vmm_readout
         
         vmm_data0_vec           => data0_in_vec,
         vmm_data1_vec           => data1_in_vec,
-        vmm_ckdt_vec            => ckdt_out_vec,
-        vmm_cktk_vec            => cktk_out_vec,
+        vmm_ckdt_vec            => open, --ckdt_out_vec
+        vmm_cktk_vec            => open, --cktk_out_vec
 
         daq_enable              => daq_enable_i,
         trigger_pulse           => pf_trigVmmRo,
@@ -1958,6 +1979,23 @@ ckbc_cktp_generator: clk_gen_wrapper
         ---------- VMM Interface -----------
         CKTP                => CKTP_glbl,
         CKBC                => CKBC_glbl
+    );
+
+-- TO DO: Add level_0 signal assertion from trigger module    
+level0_readout: L0_wrapper
+   port map(
+        ------------------------------------
+        ------- General Interface ----------
+        clk_ckdt    => clk_160_gen,
+        clk_des     => clk_320_gen,
+        level_0     => '0',           -- TO BE ADDED
+        rst         => '0',
+        ------------------------------------
+        ---------- VMM Interface -----------
+        VMM_CKDT    => ckdt_out_vec(1),
+        VMM_CKTK    => cktk_out_vec(1),
+        VMM_DATA0   => data0_in_vec(1),
+        VMM_DATA1   => data1_in_vec(1)
     );
 
 QSPI_IO0_0: IOBUF    
@@ -2334,7 +2372,7 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                     
                 when TRIG =>
                     is_state            <= "0100";
-                    vmm_tki             <= '1';
+                    --vmm_tki             <= '1';
                     vmm_cktp_primary    <= '0';
                     rstFIFO_top         <= '0';
                     pf_reset            <= '0';

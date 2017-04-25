@@ -71,7 +71,6 @@ set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_re
 set_false_path -from [get_cells readout_vmm/daq_enable_stage1_Dt_reg] -to [get_cells readout_vmm/daq_enable_ff_sync_Dt_reg]
 set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/daq_enable_stage1_reg]
 set_false_path -from [get_cells readout_vmm/vmmEventDone_i_reg] -to [get_cells readout_vmm/vmmEventDone_stage1_reg]
-set_false_path -from [get_cells readout_vmm/vmmWord_i_reg[*]] -to [get_cells readout_vmm/vmmWord_stage1_reg[*]]
 set_false_path -from [get_cells readout_vmm/vmmWordReady_i_reg] -to [get_cells readout_vmm/vmmWordReady_stage1_reg]
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
@@ -164,8 +163,8 @@ set_property ASYNC_REG true [get_cells readout_vmm/vmm_data1_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmm_data1_ff_sync_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/cktkSent_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/cktkSent_ff_sync_reg]
-set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_i_reg[*]]
-set_property ASYNC_REG true [get_cells readout_vmm/vmmWord_stage1_reg[*]]
+set_property ASYNC_REG true [get_cells readout_vmm/driverBusy_stage1_reg[*]]
+set_property ASYNC_REG true [get_cells readout_vmm/driverBusy_ff_sync_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_i_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/vmmEventDone_stage1_reg]
 set_property ASYNC_REG true [get_cells daq_enable_i_reg]

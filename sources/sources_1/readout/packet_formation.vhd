@@ -14,7 +14,8 @@
 -- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
 -- 06.04.2017 Hard setting latency to 300ns as configurable latency was moved to trigger module (Paris)
--- 
+-- 25.04.2017 Added vmm_driver module. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -50,6 +51,7 @@ entity packet_formation is
         
         rd_ena_l0_buff  : out std_logic;
         l0_buff_empty   : in  std_logic;
+        driver_busy     : out std_logic;
         sel_data_vmm    : out std_logic_vector(1 downto 0);
         
         tr_hold         : out std_logic;
@@ -84,7 +86,7 @@ architecture Behavioral of packet_formation is
     signal drv_done             : std_logic                     := '0';
     signal daqFIFO_wr_en_i      : std_logic                     := '0';
     signal daqFIFO_wr_en_drv    : std_logic                     := '0';
-    signal daqFIFO_din          : std_logic_vector(63 downto 0) := ( others => '0' );
+    signal daqFIFO_din          : std_logic_vector(15 downto 0) := ( others => '0' );
     signal triggerVmmReadout_i  : std_logic := '0';
     signal selectDataInput      : std_logic_vector(2 downto 0) := (others => '0');
     signal sel_cnt              : integer range 0 to 7  := 0;
@@ -389,6 +391,7 @@ vmm_driver_inst: vmm_driver
     );
 
     globBcid_i      <= globBcid;
+    driver_busy     <= drv_enable;
     daqFIFO_wr_en_i <= daqFIFO_wr_en;
     vmmWord_i       <= vmmWord;
     dataout         <= daqFIFO_din;

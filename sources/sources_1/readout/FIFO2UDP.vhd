@@ -76,7 +76,6 @@ architecture Behavioral of FIFO2UDP is
     signal data_out                    : std_logic_vector(7 downto 0) := x"00";
     signal data_out_valid              : std_logic := '0';
     signal packet_length               : unsigned(15 downto 0) := x"0000";
-    signal daq_data_in_int             : std_logic_vector(63 downto 0);
     signal data_out_last               : std_logic := '0';
     signal end_packet_synced           : std_logic := '0';
     signal udp_tx_start_int            : std_logic := '0';
@@ -394,7 +393,6 @@ udp_txi.data.data_out_last  <= data_out_last;
 udp_txi.data.data_out_valid <= data_out_valid ;
 udp_txi.data.data_out       <= data_out;
 
-daq_data_in_int             <= daq_data_in;
 wr_en_int                   <= wr_en;
 end_packet_synced           <= end_packet;
 
@@ -421,12 +419,12 @@ daq_out(38 downto 17)   <= (others => '0');
 daq_out(39)             <= udp_tx_start_int;
 daq_out(40)             <= '0'; --udp_tx_data_out_ready;
 daq_out(48 downto 41)   <= daq_data_out;
-daq_out(112 downto 49)  <= daq_data_in;
+daq_out(112 downto 49)  <= (others => '0');
 daq_out(113)            <= '0';
 daq_out(129 downto 114) <= std_logic_vector(packet_length);
 daq_out(145 downto 130) <= std_logic_vector(count_length);     
 daq_out(157 downto 146) <= packet_len_r;
-daq_out(221 downto 158) <= daq_data_in_int;
+daq_out(221 downto 158) <= (others => '0');
 daq_out(222)            <= wr_en_int;
 daq_out(223)            <= wr_en;
 daq_out(235 downto 224) <= packet_length_in;

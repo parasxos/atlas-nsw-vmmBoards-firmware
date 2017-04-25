@@ -241,8 +241,9 @@ architecture Behavioral of mmfe8_top is
     signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
     signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123223";
     signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
-    -- Set to '1' if MMFE8 VMM3 is used
-    signal is_mmfe8       : std_logic := '0';
+    -- Set to '1' if MMFE8 VMM3, or if level-0 mode is used
+    constant is_mmfe8       : std_logic := '0';
+    constant l0_enabled     : std_logic := '0';
 
     -------------------------------------------------------------------
     -- Signals Declaration
@@ -341,7 +342,7 @@ architecture Behavioral of mmfe8_top is
   signal end_packet_i                : std_logic := '0';    
   signal we_conf_int                 : std_logic := '0';    
   signal packet_length_int           : std_logic_vector(11 downto 0);
-  signal daq_data_out_i              : std_logic_vector(63 downto 0);
+  signal daq_data_out_i              : std_logic_vector(31 downto 0);
   signal conf_data_out_i             : std_logic_vector(63 downto 0);
   signal daq_wr_en_i                 : std_logic := '0';    
   signal end_packet_daq              : std_logic := '0'; 
@@ -511,7 +512,7 @@ architecture Behavioral of mmfe8_top is
     signal daqFIFO_din_i            : std_logic_vector(15 downto 0);
     signal daqFIFO_dout_i           : std_logic_vector(7 downto 0); 
     signal vmmWordReady_i           : std_logic := '0';
-    signal vmmWord_i                : std_logic_vector(63 downto 0);
+    signal vmmWord_i                : std_logic_vector(15 downto 0);
     signal vmmEventDone_i           : std_logic := '0';
     signal daqFIFO_reset            : std_logic := '0';
     signal daq_vmm_ena_wen_enable   : std_logic_vector(8 downto 1) := (others => '0');
@@ -873,7 +874,7 @@ architecture Behavioral of mmfe8_top is
             vmm_data_buf            : buffer std_logic_vector(37 downto 0);
             
             vmmWordReady            : out std_logic;
-            vmmWord                 : out std_logic_vector(63 downto 0);
+            vmmWord                 : out std_logic_vector(15 downto 0);
             vmmEventDone            : out std_logic;
             
             dt_state_o              : out std_logic_vector(3 downto 0);
@@ -931,6 +932,8 @@ architecture Behavioral of mmfe8_top is
     end component;
     -- 9
     component packet_formation is
+    generic(is_mmfe8    : std_logic := '0';
+            l0_enabled  : std_logic := '0');
     port (
             clk             : in std_logic;
     
@@ -938,7 +941,7 @@ architecture Behavioral of mmfe8_top is
             
             trigVmmRo       : out std_logic;
             vmmId           : out std_logic_vector(2 downto 0);
-            vmmWord         : in std_logic_vector(63 downto 0);
+            vmmWord         : in std_logic_vector(15 downto 0);
             vmmWordReady    : in std_logic;
             vmmEventDone    : in std_logic;
         
@@ -947,9 +950,13 @@ architecture Behavioral of mmfe8_top is
             glBCID          : in std_logic_vector(11 downto 0);
 
             packLen         : out std_logic_vector(11 downto 0);
-            dataout         : out std_logic_vector(63 downto 0);
+            dataout         : out std_logic_vector(15 downto 0);
             wrenable        : out std_logic;
             end_packet      : out std_logic;
+            
+            rd_ena_l0_buff  : out std_logic;
+            l0_buff_empty   : in  std_logic;
+            sel_data_vmm    : out std_logic_vector(1 downto 0);
             
             tr_hold         : out std_logic;
             reset           : in std_logic;
@@ -1793,8 +1800,8 @@ readout_vmm: vmm_readout
         
         vmm_data0_vec           => data0_in_vec,
         vmm_data1_vec           => data1_in_vec,
-        vmm_ckdt_vec            => open, --ckdt_out_vec
-        vmm_cktk_vec            => open, --cktk_out_vec
+        vmm_ckdt_vec            => ckdt_out_vec, --ckdt_out_vec
+        vmm_cktk_vec            => cktk_out_vec, --cktk_out_vec
 
         daq_enable              => daq_enable_i,
         trigger_pulse           => pf_trigVmmRo,
@@ -1860,6 +1867,8 @@ FIFO2UDP_instance: FIFO2UDP
     );       
 
 packet_formation_instance: packet_formation
+    generic map(is_mmfe8    => is_mmfe8,
+                l0_enabled  => l0_enabled)
     port map(
         clk             => userclk2,
         
@@ -1879,6 +1888,10 @@ packet_formation_instance: packet_formation
         dataout         => daq_data_out_i,
         wrenable        => daq_wr_en_i,
         end_packet      => end_packet_daq_int,
+        
+        rd_ena_l0_buff  => open,
+        l0_buff_empty   => '1',
+        sel_data_vmm    => open,
         
         tr_hold         => tr_hold,
         reset           => pf_reset,
@@ -2020,7 +2033,7 @@ ckbc_cktp_generator: clk_gen_wrapper
         CKTP                => CKTP_glbl,
         CKBC                => CKBC_glbl
     );
-
+l0_readout_case: if l0_enabled = '1' generate
 -- TO DO: Add level_0 signal assertion from trigger module    
 level0_readout: L0_wrapper
    port map(
@@ -2037,6 +2050,7 @@ level0_readout: L0_wrapper
         VMM_DATA0   => data0_in_vec(1),
         VMM_DATA1   => data1_in_vec(1)
     );
+end generate l0_readout_case;
 
 QSPI_IO0_0: IOBUF    
    port map (

@@ -585,7 +585,7 @@ architecture Behavioral of mmfe8_top is
     signal xadc_sample_size     : std_logic_vector (10 downto 0) := "01111111111"; -- 1023 packets
     signal xadc_delay           : std_logic_vector (17 downto 0) := "011111111111111111"; -- 1023 samples over ~0.7 seconds
     signal xadc_end_of_data     : std_logic;
-    signal xadc_fifo_bus        : std_logic_vector (63 downto 0);
+    signal xadc_fifo_bus        : std_logic_vector (15 downto 0);
     signal xadc_fifo_enable     : std_logic;
     signal xadc_packet_len      : std_logic_vector (11 downto 0);
     signal xadc_busy            : std_logic;
@@ -1292,7 +1292,7 @@ architecture Behavioral of mmfe8_top is
         MuxAddr3_p          : out std_logic;
         MuxAddr3_n          : out std_logic;
         end_of_data         : out std_logic;
-        fifo_bus            : out std_logic_vector(63 downto 0);
+        fifo_bus            : out std_logic_vector(15 downto 0);
         data_fifo_enable    : out std_logic;
         packet_len          : out std_logic_vector(11 downto 0);
         xadc_busy           : out std_logic

@@ -12,7 +12,8 @@
 -- Changelog:
 -- 22.08.2016 Changed state_dt (integer) to state_dt (4 bit vector) (Reid Pinkham)
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
--- 
+-- 25.04.2016 Added vmm_driver interfacing. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -43,8 +44,11 @@ entity vmm_readout is
             vmm_data_buf            : buffer std_logic_vector(37 downto 0);
 
             vmmWordReady            : out std_logic;
-            vmmWord                 : out std_logic_vector(63 downto 0);
+            vmmWord                 : out std_logic_vector(15 downto 0);
             vmmEventDone            : out std_logic;
+
+            sel_data                : in  std_logic_vector(1 downto 0);
+            driverBusy              : in  std_logic;
             
             dt_state_o              : out std_logic_vector(3 downto 0);
             dt_cntr_st_o            : out std_logic_vector(3 downto 0)
@@ -94,15 +98,15 @@ architecture Behavioral of vmm_readout is
     signal vmmWordReady_i       : std_logic := '0';
     signal vmmWordReady_stage1  : std_logic := '0';
     signal vmmWordReady_ff_sync : std_logic := '0';
-    signal vmmWord_i            : std_logic_vector(63 downto 0);
-    signal vmmWord_ff_sync      : std_logic_vector(63 downto 0);
-    signal vmmWord_stage1       : std_logic_vector(63 downto 0);    
+    signal vmmWord_i            : std_logic_vector(63 downto 0);    
     signal vmm_data0            : std_logic := '0';
     signal vmm_data0_stage1     : std_logic := '0';
     signal vmm_data0_ff_sync    : std_logic := '0';
-    signal vmm_data1            : std_logic := '0';
     signal vmm_data1_stage1     : std_logic := '0';
     signal vmm_data1_ff_sync    : std_logic := '0';
+    signal vmm_data1            : std_logic := '0';
+    signal driverBusy_stage1    : std_logic := '0';
+    signal driverBusy_ff_sync   : std_logic := '0';
     signal vmm_ckdt             : std_logic := '0';     -- Strobe to VMM CKDT
     signal vmm_cktk             : std_logic := '0';     -- Strobe to VMM CKTK
     signal vmm_ckdt_i           : std_logic := '0';
@@ -315,8 +319,20 @@ begin
                 when x"5" =>                    -- Word read
                     dt_cntr_intg0   <= 0;
                     dt_cntr_intg1   <= 1;
-                    state_dt        <= x"0";
                     vmmWordReady_i  <= '0';
+
+                    if(driverBusy_ff_sync = '1')then
+                        state_dt        <= x"6"; -- go to state that waits for driver
+                    else
+                        state_dt        <= x"5";
+                    end if;
+
+                when x"6" =>
+                    if(driverBusy_ff_sync = '0')then
+                        state_dt        <= x"0"; -- driver is done, go to idle
+                    else
+                        state_dt        <= x"6";
+                    end if;
 
                 when others =>
                     dt_cntr_intg0   <= 0;
@@ -342,8 +358,6 @@ begin
         vmmEventDone_ff_sync    <= vmmEventDone_stage1;
         vmmWordReady_stage1     <= vmmWordReady_i;
         vmmWordReady_ff_sync    <= vmmWordReady_stage1;
-        vmmWord_stage1          <= vmmWord_i;
-        vmmWord_ff_sync         <= vmmWord_stage1;
     end if;
 end process;
 
@@ -372,14 +386,27 @@ begin
         vmm_data1_ff_sync           <= vmm_data1_stage1;
         cktkSent_stage1             <= cktkSent;
         cktkSent_ff_sync            <= cktkSent_stage1;
+        driverBusy_stage1           <= driverBusy;
+        driverBusy_ff_sync          <= driverBusy_stage1;
     end if;
+end process;
+
+-- mux that selects vmm data depending on the sel_data from vmm_driver
+dout_mux: process(sel_data, vmmWord_i)
+begin
+    case sel_data is
+    when "00"   => vmmWord <= vmmWord_i(63 downto 48);
+    when "01"   => vmmWord <= vmmWord_i(47 downto 32);
+    when "10"   => vmmWord <= vmmWord_i(31 downto 16);
+    when "11"   => vmmWord <= vmmWord_i(15 downto 0);
+    when others => vmmWord <= (others => '0');
+    end case;
 end process;
 
     vmm_cktk            <= vmm_cktk_i;
     vmm_ckdt            <= vmm_ckdt_i;
     vmmEventDone        <= vmmEventDone_ff_sync;
     vmmWordReady        <= vmmWordReady_ff_sync;
-    vmmWord             <= vmmWord_ff_sync;
     trigger_pulse_i     <= trigger_pulse;
     
     dt_state_o          <= state_tk;

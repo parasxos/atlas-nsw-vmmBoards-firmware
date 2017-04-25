@@ -342,7 +342,7 @@ architecture Behavioral of mmfe8_top is
   signal end_packet_i                : std_logic := '0';    
   signal we_conf_int                 : std_logic := '0';    
   signal packet_length_int           : std_logic_vector(11 downto 0);
-  signal daq_data_out_i              : std_logic_vector(31 downto 0);
+  signal daq_data_out_i              : std_logic_vector(15 downto 0);
   signal conf_data_out_i             : std_logic_vector(63 downto 0);
   signal daq_wr_en_i                 : std_logic := '0';    
   signal end_packet_daq              : std_logic := '0'; 
@@ -566,6 +566,8 @@ architecture Behavioral of mmfe8_top is
     signal pf_packLen   : std_logic_vector(11 downto 0);
     signal pf_trigVmmRo : std_logic := '0';
     signal pf_vmmIdRo   : std_logic_vector(2 downto 0) := b"000";
+    signal sel_data_vmm : std_logic_vector(1 downto 0) := b"00";
+    signal driver_busy  : std_logic := '0';
     signal pf_reset     : std_logic := '0';
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
@@ -877,6 +879,9 @@ architecture Behavioral of mmfe8_top is
             vmmWord                 : out std_logic_vector(15 downto 0);
             vmmEventDone            : out std_logic;
             
+            sel_data                : in  std_logic_vector(1 downto 0);
+            driverBusy              : in  std_logic;
+            
             dt_state_o              : out std_logic_vector(3 downto 0);
             dt_cntr_st_o            : out std_logic_vector(3 downto 0)
         );
@@ -957,6 +962,7 @@ architecture Behavioral of mmfe8_top is
             rd_ena_l0_buff  : out std_logic;
             l0_buff_empty   : in  std_logic;
             sel_data_vmm    : out std_logic_vector(1 downto 0);
+            driver_busy     : out std_logic;
             
             tr_hold         : out std_logic;
             reset           : in std_logic;
@@ -1810,6 +1816,9 @@ readout_vmm: vmm_readout
         ethernet_fifo_wr_en     => open,
         vmm_data_buf            => open,
         
+        sel_data                => sel_data_vmm,
+        driverBusy              => driver_busy,
+        
         vmmWordReady            => vmmWordReady_i,
         vmmWord                 => vmmWord_i,
         vmmEventDone            => vmmEventDone_i,
@@ -1891,7 +1900,8 @@ packet_formation_instance: packet_formation
         
         rd_ena_l0_buff  => open,
         l0_buff_empty   => '1',
-        sel_data_vmm    => open,
+        sel_data_vmm    => sel_data_vmm,
+        driver_busy     => driver_busy,
         
         tr_hold         => tr_hold,
         reset           => pf_reset,
@@ -2623,9 +2633,12 @@ end process;
     readoutProbe(6)                <= rst_vmm;
     readoutProbe(7)                <= daqFIFO_wr_en_i;
     readoutProbe(8)                <= daq_wr_en_i;
-    readoutProbe(63 downto 9)      <= (others => '0');
+    readoutProbe(24 downto 9)      <= vmmWord_i;
+    readoutProbe(40 downto 25)     <= daqFIFO_din_i; 
+    readoutProbe(63 downto 41)     <= (others => '0');
 
-    dataOutProbe(63 downto 0)      <= daq_data_out_i;
+    dataOutProbe(15 downto 0)      <= daq_data_out_i;
+    dataOutProbe(63 downto 16)     <= (others => '0');
 
     flowProbe(3 downto 0)       <= is_state;
     flowProbe(7 downto 4)       <= (others => '0');

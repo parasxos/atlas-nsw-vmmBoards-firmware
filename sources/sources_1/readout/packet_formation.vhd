@@ -25,6 +25,9 @@ use IEEE.NUMERIC_STD.ALL;
 use UNISIM.VComponents.all;
 
 entity packet_formation is
+    Generic(is_mmfe8    : std_logic := '0';
+            l0_enabled  : std_logic := '0'
+    );
     Port(
         clk             : in std_logic;
 
@@ -32,7 +35,7 @@ entity packet_formation is
         
         trigVmmRo       : out std_logic;
         vmmId           : out std_logic_vector(2 downto 0);
-        vmmWord         : in std_logic_vector(63 downto 0);
+        vmmWord         : in std_logic_vector(15 downto 0);
         vmmWordReady    : in std_logic;
         vmmEventDone    : in std_logic;
 
@@ -41,9 +44,13 @@ entity packet_formation is
         glBCID          : in std_logic_vector(11 downto 0);		-- glBCID counter from ETR
 
         packLen         : out std_logic_vector(11 downto 0);
-        dataout         : out std_logic_vector(63 downto 0);
+        dataout         : out std_logic_vector(15 downto 0);
         wrenable        : out std_logic;
         end_packet      : out std_logic;
+        
+        rd_ena_l0_buff  : out std_logic;
+        l0_buff_empty   : in  std_logic;
+        sel_data_vmm    : out std_logic_vector(1 downto 0);
         
         tr_hold         : out std_logic;
         reset           : in std_logic;
@@ -73,19 +80,25 @@ architecture Behavioral of packet_formation is
     signal pfBusy_i         : std_logic	:= '0';               -- control signal to be sent to ETR
 
     signal daqFIFO_wr_en        : std_logic                     := '0';
+    signal drv_enable           : std_logic                     := '0';
+    signal drv_done             : std_logic                     := '0';
     signal daqFIFO_wr_en_i      : std_logic                     := '0';
+    signal daqFIFO_wr_en_drv    : std_logic                     := '0';
     signal daqFIFO_din          : std_logic_vector(63 downto 0) := ( others => '0' );
     signal triggerVmmReadout_i  : std_logic := '0';
-    signal selectDataInput      : std_logic := '0';
+    signal selectDataInput      : std_logic_vector(2 downto 0) := (others => '0');
+    signal sel_cnt              : integer range 0 to 7  := 0;
 
-    signal vmmWord_i        : std_logic_vector(63 downto 0) := ( others => '0' );
+    signal vmmWord_i        : std_logic_vector(15 downto 0) := ( others => '0' );
     signal packLen_i        : std_logic_vector(11 downto 0) := x"000";
+    signal packLen_pf2drv   : std_logic_vector(11 downto 0) := x"000";
+    signal packLen_drv2pf   : std_logic_vector(11 downto 0) := x"000";
     signal packLen_cnt      : unsigned(11 downto 0) := x"000";
     signal end_packet_int   : std_logic                     := '0';
 
     type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
-                       triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, isUDPDone,
-                       isTriggerOff);
+                       sendHeaderStep3, triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, 
+                       isUDPDone, isTriggerOff);
     signal state            : stateType;
 
 --------------------  Debugging ------------------------------
@@ -125,6 +138,25 @@ architecture Behavioral of packet_formation is
     );
     end component;
 
+    component vmm_driver
+    generic(l0_enabled : std_logic := '0');
+    port(
+        ------------------------------------
+        ------ General/PF Interface --------
+        clk             : in  std_logic;
+        drv_enable      : in  std_logic;
+        drv_done        : out std_logic;
+        pack_len_pf     : in  std_logic_vector(11 downto 0);
+        pack_len_drv    : out std_logic_vector(11 downto 0);
+        ------------------------------------
+        ----- VMM_RO/FIFO2UDP Interface ----
+        wr_en_fifo2udp  : out std_logic;
+        rd_en_l0_buff   : out std_logic;
+        l0_buff_empty   : in  std_logic;
+        sel_data        : out std_logic_vector(1 downto 0)
+    );
+    end component;
+
 -----------------------------------------------------------------
 
 begin
@@ -143,9 +175,10 @@ begin
             daqFIFO_wr_en           <= '0';
             packLen_cnt             <= x"000";
             wait_Cnt                <= 0;
+            sel_cnt                 <= 0;
+            drv_enable              <= '0';
             triggerVmmReadout_i     <= '0';
             end_packet_int          <= '0';
-            selectDataInput         <= '0';
             state                   <= waitingForNewCycle;
         else
         case state is
@@ -153,9 +186,10 @@ begin
                 debug_state             <= "00000";
                 pfBusy_i                <= '0';
                 triggerVmmReadout_i     <= '0';
+                drv_enable              <= '0';
                 trigLatencyCnt          <= 0;
+                sel_cnt                 <= 0;
                 rst_FIFO                <= '0';
-                selectDataInput         <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
                 	state           <= increaseCounter;
@@ -202,11 +236,21 @@ begin
             when sendHeaderStep2 =>
                 debug_state     <= "00110";
                 daqFIFO_wr_en   <= '0';
-                state           <= triggerVmmReadout;
+                state           <= sendHeaderStep3;
+
+            when sendHeaderStep3 =>
+                if(sel_cnt < 3)then -- incr the counter to select the other parts of the header
+                    sel_cnt <= sel_cnt + 1;   
+                    state   <= sendHeaderStep1;
+                else -- the whole header has been sent
+                     -- fix the counter to 4 to select the VMM data for the next steps
+                    sel_cnt <= 4;
+                    state   <= triggerVmmReadout;
+                end if;
 
             when triggerVmmReadout =>   -- Creates an 136ns pulse to trigger the readout
                 debug_state                 <= "00111";
-                selectDataInput <= '1';
+                packLen_pf2drv              <= std_logic_vector(packLen_cnt);
                 if wait_Cnt < 30 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
@@ -219,7 +263,7 @@ begin
             when waitForData =>
                 debug_state <= "01000";
                 if (vmmWordReady = '1') then
-                    daqFIFO_wr_en   <= '0';
+                    daqFIFO_wr_en   <= daqFIFO_wr_en_drv; -- grant control to driver
                     state           <= sendVmmDataStep1;
                 elsif (vmmEventDone = '1') then
                     daqFIFO_wr_en   <= '0';
@@ -228,19 +272,24 @@ begin
 
             when sendVmmDataStep1 =>
                 debug_state     <= "01001";
-                daqFIFO_wr_en   <= '1';
-                packLen_cnt     <= packLen_cnt + 1;
+                drv_enable      <= '1';
                 state           <= sendVmmDataStep2;
 
             when sendVmmDataStep2 =>
                 debug_state     <= "01010";
-                daqFIFO_wr_en   <= '0';
-                state           <= formTrailer;
+
+                if(drv_done = '1')then
+                    packLen_i <= packLen_drv2pf; -- update the packet length
+                    state     <= formTrailer;
+                else    
+                    state     <= sendVmmDataStep2;
+                end if;
 
             when formTrailer =>
                 debug_state         <= "01011";
+                packLen_pf2drv      <= packLen_i; -- loop back the packet length
+                drv_enable          <= '0';
                 if (vmmEventDone = '1') then
-                    daqFIFO_wr_en   <= '0';
                     state           <= sendTrailer;
                 elsif (vmmEventDone = '0' and vmmWordReady = '0') then  
                     state           <= waitForData;
@@ -250,7 +299,6 @@ begin
 
             when sendTrailer =>
                 debug_state     <= "01100";
-                packLen_i       <= std_logic_vector(packLen_cnt);
                 state           <= packetDone;
 
             when packetDone =>
@@ -307,14 +355,38 @@ end process;
 muxFIFOData: process(selectDataInput, header, vmmWord_i)
 begin
 case selectDataInput is
-    when '0' =>
-        daqFIFO_din     <= header;
-    when '1' =>
+    when "000" =>
+        daqFIFO_din     <= header(63 downto 48);
+    when "001" =>
+        daqFIFO_din     <= header(47 downto 32);
+    when "010" =>
+        daqFIFO_din     <= header(31 downto 16);
+    when "011" =>
+        daqFIFO_din     <= header(15 downto 0);
+    when "100" =>
         daqFIFO_din     <= vmmWord_i;
     when others =>
-        daqFIFO_din     <= header;
+        daqFIFO_din     <= (others => '0');
     end case;
 end process;
+
+vmm_driver_inst: vmm_driver
+    generic map(l0_enabled => l0_enabled)
+    port map(
+        ------------------------------------
+        ------ General/PF Interface --------
+        clk             => clk,
+        drv_enable      => drv_enable,
+        drv_done        => drv_done,
+        pack_len_pf     => packLen_pf2drv,
+        pack_len_drv    => packLen_drv2pf,
+        ------------------------------------
+        ----- VMM_RO/FIFO2UDP Interface ----
+        wr_en_fifo2udp  => daqFIFO_wr_en_drv,
+        rd_en_l0_buff   => rd_ena_l0_buff,
+        l0_buff_empty   => l0_buff_empty,
+        sel_data        => sel_data_vmm
+    );
 
     globBcid_i      <= globBcid;
     daqFIFO_wr_en_i <= daqFIFO_wr_en;
@@ -328,6 +400,7 @@ end process;
     trigLatency     <= 37 + to_integer(unsigned(latency)); --(hard set to 300ns )--to_integer(unsigned(latency));
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
+    selectDataInput <= std_logic_vector(to_unsigned(sel_cnt, 3));
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";  
                             --    8    &    16    &     5    &   3

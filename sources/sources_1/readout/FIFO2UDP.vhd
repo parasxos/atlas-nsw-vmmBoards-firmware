@@ -41,7 +41,7 @@ entity FIFO2UDP is
     Port ( 
         clk_125                     : in std_logic;
         destinationIP               : in std_logic_vector(31 downto 0);
-        daq_data_in                 : in  std_logic_vector(63 downto 0);
+        daq_data_in                 : in  std_logic_vector(15 downto 0);
         fifo_data_out               : out std_logic_vector (7 downto 0);
         udp_txi		                : out udp_tx_type;	
         udp_tx_start                : out std_logic;
@@ -140,7 +140,7 @@ component readout_fifo is
 port(
     clk     : in std_logic;
     srst    : in std_logic;
-    din     : in std_logic_vector(63 downto 0);
+    din     : in std_logic_vector(15 downto 0);
     wr_en   : in std_logic;
     rd_en   : in std_logic;
     dout    : out std_logic_vector(7 downto 0);
@@ -272,8 +272,8 @@ begin
                     fifo_len_rd_en  <= '0';
 
                 when x"2" =>
-                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 8 + 4, 16);
-                    count_length    <= resize(unsigned("0000" & packet_len_r) * 8, 16);
+                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 2 + 4, 16);
+                    count_length    <= resize(unsigned("0000" & packet_len_r) * 2, 16);
                     fifo_len_rd_en  <= '0';
                     count <= x"3";
 

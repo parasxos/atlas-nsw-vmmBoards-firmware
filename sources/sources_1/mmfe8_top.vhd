@@ -331,7 +331,7 @@ architecture Behavioral of mmfe8_top is
   signal icmp_rxo                    : icmp_rx_type;
   signal test_data_out               : std_logic_vector(7 downto 0); 
   signal test_valid_out, test_last_out  : std_logic;  
-  signal user_data_out_i             : std_logic_vector(63 downto 0);
+  signal user_data_out_i             : std_logic_vector(15 downto 0);
   signal sig_out200                  : std_logic_vector(127 downto 0);
   signal user_conf_i                 : std_logic := '0'; 
   signal send_error_int              : std_logic := '0';
@@ -380,6 +380,7 @@ architecture Behavioral of mmfe8_top is
     signal data_fifo_rd_count : std_logic_vector(14 DOWNTO 0);
     signal data_fifo_wr_count : std_logic_vector(14 DOWNTO 0);
     signal vmm_cfg_sel_i      : std_logic_vector(31 downto 0);
+    signal serial_number      : std_logic_vector(31 downto 0) := (others => '0');  
     signal turn_counter_i     : std_logic_vector(15 downto 0);
     signal conf_data_in_i     : std_logic_vector (7 downto 0);
     signal vmm_sdo_vec_i      : std_logic_vector(8 downto 1) := (others => '0'); 
@@ -408,6 +409,9 @@ architecture Behavioral of mmfe8_top is
     signal mmfeID_i           : std_logic_vector( 3 DOWNTO 0);
     signal clk_dt_out           : std_logic;
     signal vmm_ckart          : std_logic;
+    signal reply_enable       : std_logic := '0';
+    signal reply_done         : std_logic := '0';
+    signal packet_len_conf    : std_logic_vector(11 downto 0) := (others => '0');
     signal clk_tp_out         : std_logic ;
     signal write_done_i       : std_logic;
     signal fifo_writing_i     : std_logic;
@@ -774,15 +778,16 @@ architecture Behavioral of mmfe8_top is
     -- 14. temac_10_100_1000_config_vector_sm
     -- 15. i2c_top
     -- 16. udp_data_in_handler
-    -- 17. select_data
-    -- 18. ila_top_level
-    -- 19. xadc
-    -- 20. AXI4_SPI
-    -- 21. vio
-    -- 22. CDCC
-    -- 23. VIO_IP
-    -- 24. clk_gen_wrapper
-    -- 25. ila_overview
+    -- 17. udp_reply_handler
+    -- 18. select_data
+    -- 19. ila_top_level
+    -- 20. xadc
+    -- 21. AXI4_SPI
+    -- 22. vio
+    -- 23. CDCC
+    -- 24. VIO_IP
+    -- 25. clk_gen_wrapper
+    -- 26. ila_overview
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -1143,58 +1148,75 @@ architecture Behavioral of mmfe8_top is
     -- 16
     component udp_data_in_handler
     port(
-    ------------------------------------
-    ------- General Interface ----------
-    clk_125             : in  std_logic;
-    clk_40              : in  std_logic;
-    inhibit_conf        : in  std_logic;
-    rst                 : in  std_logic;
-    state_o             : out std_logic_vector(2 downto 0);
-    valid_o             : out std_logic;
-    ------------------------------------
-    -------- FPGA Config Interface -----
-    latency             : out std_logic_vector(15 downto 0);
-    serial_number       : out std_logic_vector(31 downto 0);
-    daq_on              : out std_logic;
-    ext_trigger         : out std_logic;
-    ckbcMode            : out std_logic;
-    ------------------------------------
-    -------- UDP Interface -------------
-    udp_rx              : in  udp_rx_type;
-    ------------------------------------
-    ---------- AXI4SPI Interface -------
-    flash_busy          : in  std_logic;
-    newIP_rdy           : out std_logic;
-    myIP_set            : out std_logic_vector(31 downto 0);
-    myMAC_set           : out std_logic_vector(47 downto 0);
-    destIP_set          : out std_logic_vector(31 downto 0);
-    ------------------------------------
-    -------- CKTP/CKBC Interface -------
-    ckbc_freq           : out std_logic_vector(7 downto 0);
-    cktk_max_num        : out std_logic_vector(7 downto 0);
-    cktp_max_num        : out std_logic_vector(15 downto 0);
-    cktp_skew           : out std_logic_vector(7 downto 0);
-    cktp_period         : out std_logic_vector(15 downto 0);
-    cktp_width          : out std_logic_vector(7 downto 0);
-    ------------------------------------
-    ------ VMM Config Interface --------
-    vmm_bitmask         : out std_logic_vector(7 downto 0);
-    vmmConf_rdy         : out std_logic;
-    vmmConf_done        : out std_logic;
-    vmm_sck             : out std_logic;
-    vmm_cs              : out std_logic;
-    vmm_cfg_bit         : out std_logic;
-    top_rdy             : in  std_logic;
-    ------------------------------------
-    ---------- XADC Interface ----------
-    xadc_busy           : in  std_logic;
-    xadc_rdy            : out std_logic;
-    vmm_id_xadc         : out std_logic_vector(15 downto 0);
-    xadc_sample_size    : out std_logic_vector(10 downto 0);
-    xadc_delay          : out std_logic_vector(17 downto 0)
+        ------------------------------------
+        ------- General Interface ----------
+        clk_125             : in  std_logic;
+        clk_40              : in  std_logic;
+        inhibit_conf        : in  std_logic;
+        rst                 : in  std_logic;
+        state_o             : out std_logic_vector(2 downto 0);
+        valid_o             : out std_logic;
+        ------------------------------------
+        -------- FPGA Config Interface -----
+        latency             : out std_logic_vector(15 downto 0);
+        serial_number       : out std_logic_vector(31 downto 0);
+        daq_on              : out std_logic;
+        ext_trigger         : out std_logic;
+        ckbcMode            : out std_logic;
+        ------------------------------------
+        -------- UDP Interface -------------
+        udp_rx              : in  udp_rx_type;
+        ------------------------------------
+        ---------- AXI4SPI Interface -------
+        flash_busy          : in  std_logic;
+        newIP_rdy           : out std_logic;
+        myIP_set            : out std_logic_vector(31 downto 0);
+        myMAC_set           : out std_logic_vector(47 downto 0);
+        destIP_set          : out std_logic_vector(31 downto 0);
+        ------------------------------------
+        -------- CKTP/CKBC Interface -------
+        ckbc_freq           : out std_logic_vector(7 downto 0);
+        cktk_max_num        : out std_logic_vector(7 downto 0);
+        cktp_max_num        : out std_logic_vector(15 downto 0);
+        cktp_skew           : out std_logic_vector(7 downto 0);
+        cktp_period         : out std_logic_vector(15 downto 0);
+        cktp_width          : out std_logic_vector(7 downto 0);
+        ------------------------------------
+        ------ VMM Config Interface --------
+        vmm_bitmask         : out std_logic_vector(7 downto 0);
+        vmmConf_rdy         : out std_logic;
+        vmmConf_done        : out std_logic;
+        vmm_sck             : out std_logic;
+        vmm_cs              : out std_logic;
+        vmm_cfg_bit         : out std_logic;
+        top_rdy             : in  std_logic;
+        ------------------------------------
+        ---------- XADC Interface ----------
+        xadc_busy           : in  std_logic;
+        xadc_rdy            : out std_logic;
+        vmm_id_xadc         : out std_logic_vector(15 downto 0);
+        xadc_sample_size    : out std_logic_vector(10 downto 0);
+        xadc_delay          : out std_logic_vector(17 downto 0)
     );
     end component;
     -- 17
+    component udp_reply_handler
+    port(
+        ------------------------------------
+        ------- General Interface ----------
+        clk             : in  std_logic;
+        enable          : in  std_logic;
+        serial_number   : in  std_logic_vector(31 downto 0);
+        reply_done      : out std_logic;
+        ------------------------------------
+        ---- FIFO Data Select Interface ----
+        wr_en_conf      : out std_logic;
+        dout_conf       : out std_logic_vector(15 downto 0);
+        packet_len_conf : out std_logic_vector(11 downto 0);
+        end_conf        : out std_logic       
+    );
+    end component;
+    -- 18
     component select_data
     port(
         configuring                 : in  std_logic;
@@ -1222,7 +1244,7 @@ architecture Behavioral of mmfe8_top is
         fifo_rst                    : out std_logic
     );
     end component;
-    -- 18
+    -- 19
     component ila_top_level
         PORT (  clk     : in std_logic;
                 probe0  : in std_logic_vector(63 DOWNTO 0);
@@ -1233,7 +1255,7 @@ architecture Behavioral of mmfe8_top is
                 probe5  : in std_logic_vector(63 DOWNTO 0)
                 );
     end component;
-    -- 19
+    -- 20
     component xadc
     port(
         clk125              : in std_logic;
@@ -1275,7 +1297,7 @@ architecture Behavioral of mmfe8_top is
         xadc_busy           : out std_logic
     );
     end component;
-    -- 20
+    -- 21
     component AXI4_SPI
     port(
         clk_200                 : in  std_logic;
@@ -1308,7 +1330,7 @@ architecture Behavioral of mmfe8_top is
         ss_t : OUT STD_LOGIC
     );
     end component;
-    -- 21
+    -- 22
     component vio_1
     port (
         clk         : in  std_logic;
@@ -1320,7 +1342,7 @@ architecture Behavioral of mmfe8_top is
         probe_out5  : out std_logic_vector(0 downto 0)
         );
     end component;
-    -- 22
+    -- 23
     component CDCC
     generic(
         NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
@@ -1331,7 +1353,7 @@ architecture Behavioral of mmfe8_top is
         data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
     );
     end component;
-    -- 23
+    -- 24
     COMPONENT vio_ip
       PORT (
         clk        : IN STD_LOGIC;
@@ -1339,7 +1361,7 @@ architecture Behavioral of mmfe8_top is
         probe_out1 : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
       );
     END COMPONENT;
-    -- 24
+    -- 25
     component clk_gen_wrapper
     Port(
         ------------------------------------
@@ -1368,7 +1390,7 @@ architecture Behavioral of mmfe8_top is
         CKBC                : out std_logic
     );
     end component;
-    -- 25
+    -- 26
     component ila_overview
     Port(
         clk     : in std_logic;
@@ -1376,7 +1398,7 @@ architecture Behavioral of mmfe8_top is
     );
     end component;
     
-    --26
+    --27
     component L0_wrapper
     Port(
         ------------------------------------
@@ -1647,7 +1669,7 @@ udp_din_conf_block: udp_data_in_handler
         ------------------------------------
         -------- FPGA Config Interface -----
         latency             => latency_conf,
-        serial_number       => open,
+        serial_number       => serial_number,
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
         ckbcMode            => ckbcMode,
@@ -1685,6 +1707,22 @@ udp_din_conf_block: udp_data_in_handler
         vmm_id_xadc         => vmm_id_xadc,
         xadc_sample_size    => xadc_sample_size,
         xadc_delay          => xadc_delay
+    );
+
+udp_reply_instance: udp_reply_handler
+    port map(
+        ------------------------------------
+        ------- General Interface ----------
+        clk             => userclk2,
+        enable          => reply_enable,
+        serial_number   => serial_number,
+        reply_done      => reply_done,
+        ------------------------------------
+        ---- FIFO Data Select Interface ----
+        wr_en_conf      => we_conf_int,
+        dout_conf       => user_data_out_i,
+        packet_len_conf => packet_len_conf,
+        end_conf        => end_packet_conf_int
     );
 
 clk_200_to_400_inst: clk_wiz_200_to_400
@@ -2228,9 +2266,8 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                     
                     conf_wen_i              <= '0';
                     conf_ena_i              <= '0';     
-                    we_conf_int             <= '0';
-                    end_packet_conf_int     <= '0';
                     start_conf_proc_int     <= '0';
+                    reply_enable            <= '0';
                     cnt_vmm                 <= 1;
                     
                     daq_enable_i            <= '0';
@@ -2304,7 +2341,6 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                         cnt_vmm     <= cnt_vmm - 1;
                         if cnt_vmm = 1 then --VMM conf done
                             state           <= SEND_CONF_REPLY;
-                            we_conf_int     <= '1';
                         else
                             state       <= CONFIGURE_DELAY;
                         end if;
@@ -2327,23 +2363,12 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                     end if;
 
                 when    SEND_CONF_REPLY    =>
-                    is_state            <= "1010";
-                    sel_cs          <= "00"; -- drive CS to gnd
-                    vmm_ena_all     <= '0';                     
-                    if cnt_reply = 0 then
-                        user_data_out_i <= conf_data_out_i;
-                        cnt_reply   <= cnt_reply + 1;
-                    elsif cnt_reply = 1 then
-                        user_data_out_i <= (others => '0');
-                        cnt_reply   <= cnt_reply + 1;
-                        end_packet_conf_int <= '1';
-                        we_conf_int     <= '0';
-                    elsif cnt_reply > 1 and cnt_reply < 100 then
-                        cnt_reply   <= cnt_reply + 1;
+                    reply_enable    <= '1';
+
+                    if(reply_done = '0')then
+                        state        <= SEND_CONF_REPLY;
                     else
-                        cnt_reply           <= 0;
-                        state               <= IDLE;
-                        end_packet_conf_int <= '1';
+                        state        <= IDLE;
                     end if;
 
                 when DAQ_INIT =>

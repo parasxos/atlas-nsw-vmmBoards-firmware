@@ -508,7 +508,7 @@ architecture Behavioral of mmfe8_top is
     signal cktp_state               : integer := 0;
     signal ro_cktk_out_vec          : std_logic_vector(8 downto 1) := ( others => '0' );
     signal daqFIFO_wr_en_i          : std_logic := '0';
-    signal daqFIFO_din_i            : std_logic_vector(63 downto 0);
+    signal daqFIFO_din_i            : std_logic_vector(15 downto 0);
     signal daqFIFO_dout_i           : std_logic_vector(7 downto 0); 
     signal vmmWordReady_i           : std_logic := '0';
     signal vmmWord_i                : std_logic_vector(63 downto 0);
@@ -885,7 +885,7 @@ architecture Behavioral of mmfe8_top is
         port ( 
             clk_125                     : in std_logic;
             destinationIP               : in std_logic_vector(31 downto 0);
-            daq_data_in                 : in  std_logic_vector(63 downto 0);
+            daq_data_in                 : in  std_logic_vector(15 downto 0);
             fifo_data_out               : out std_logic_vector (7 downto 0);
             udp_txi                     : out udp_tx_type;    
             udp_tx_start                : out std_logic;
@@ -1225,11 +1225,12 @@ architecture Behavioral of mmfe8_top is
         we_data                     : in  std_logic;
         we_conf                     : in  std_logic;
         we_xadc                     : in  std_logic;
-        daq_data_in                 : in  std_logic_vector(63 downto 0);
-        conf_data_in                : in  std_logic_vector(63 downto 0);
-        xadc_data_in                : in  std_logic_vector(63 downto 0);
+        daq_data_in                 : in  std_logic_vector(15 downto 0);
+        conf_data_in                : in  std_logic_vector(15 downto 0);
+        xadc_data_in                : in  std_logic_vector(15 downto 0);
         data_packet_length          : in  std_logic_vector(11 downto 0);
         xadc_packet_length          : in  std_logic_vector(11 downto 0);
+        conf_packet_length          : in  std_logic_vector(11 downto 0);
         end_packet_conf             : in  std_logic;
         end_packet_daq              : in  std_logic;
         end_packet_xadc             : in  std_logic;
@@ -1237,7 +1238,7 @@ architecture Behavioral of mmfe8_top is
         fifo_rst_xadc               : in  std_logic;
         rstFIFO_top                 : in std_logic;
     
-        data_out                    : out std_logic_vector(63 downto 0);
+        data_out                    : out std_logic_vector(15 downto 0);
         packet_length               : out std_logic_vector(11 downto 0);
         we                          : out std_logic;
         end_packet                  : out std_logic;
@@ -1903,6 +1904,7 @@ data_selection:  select_data
         xadc_data_in                => xadc_fifo_bus,
         data_packet_length          => pf_packLen,
         xadc_packet_length          => xadc_packet_len,
+        conf_packet_length          => packet_len_conf,
         end_packet_conf             => end_packet_conf_int,
         end_packet_daq              => end_packet_daq_int,
         end_packet_xadc             => xadc_end_of_data,

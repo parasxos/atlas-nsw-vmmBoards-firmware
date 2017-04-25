@@ -22,7 +22,7 @@
 
 module xadc #
 (
-    parameter   max_packet_size	= 9'b10010110 // Max of 150 packets per UDP frame
+    parameter   max_packet_size	= 10'b1001011000 // Max of 600 16-bit packets per UDP frame
 //    parameter   sample_size	= 11'b1111111111, // 1023 packets
 //    parameter   delay_in = 18'b11111111111111111 // Delay 131072 clock cycles to spread 1023 samples over ~0.7 seconds
 )
@@ -60,7 +60,7 @@ module xadc #
     output          MuxAddr3_p,
     output          MuxAddr3_n,
     output          end_of_data,
-    output [63:0]   fifo_bus,
+    output [15:0]   fifo_bus,
     output          data_fifo_enable,
     output [11:0]   packet_len,
     output          xadc_busy
@@ -105,7 +105,7 @@ reg [3:0]       st_type;
 reg [3:0]       st_pkt;
 reg             write_start;
 reg [3:0]       st_wr;
-reg [63:0]      fifo_bus_r;
+reg [15:0]      fifo_bus_r;
 reg             data_fifo_enable_r;
 reg [2:0]       cnt_fifo;
 reg [4:0]       cnt_delay;
@@ -121,7 +121,7 @@ reg             chan_done_r;
 reg             init_chan_r;
 reg             type_done_r;
 reg [63:0]      packet; // Putting 5 12-bit words in each packet
-reg [8:0]       pkt_cnt;
+reg [9:0]       pkt_cnt;
 reg [2:0]       read_cnt;
 reg [15:0]      vmm_id_r;
 reg [2:0]       vmm_id_sel;
@@ -440,7 +440,7 @@ begin
                         end
                     else if (read_cnt == 3'b000) // Packet has data, increment packet count on first write
                         begin
-                            pkt_cnt <= pkt_cnt + 1'b1; // Increment the packet count
+                            pkt_cnt <= pkt_cnt + 3'b100; // Increment the packet count by 4 for 16 bit
                             read_cnt <= read_cnt + 1'b1;
                         end
                     else
@@ -469,60 +469,80 @@ always @(posedge clk125)
 begin
     if (rst)
         begin
-            st_wr <= idle;
-            cnt_fifo <= 3'b0;
-            rst_pkt_r <= 1'b1; // Ties rst_pkt to global reset
+            st_wr       <= idle;
+            cnt_fifo    <= 3'b0;
+            rst_pkt_r   <= 1'b1; // Ties rst_pkt to global reset
         end
     else
         begin
         case (st_wr)
             idle :
                 begin
-                    data_fifo_enable_r <= 1'b0; // Hold it low
-                    rst_pkt_r <= 1'b0;
+                    data_fifo_enable_r  <= 1'b0; // Hold it low
+                    rst_pkt_r           <= 1'b0;
                     if (full_pkt == 1'b1 || write_start == 1'b1) // send one packet
                         begin
-                            st_wr <= st1;
-                            packet_len_r <= {3'b0, pkt_cnt};
+                            st_wr           <= st1;
+                            packet_len_r    <= {3'b0, pkt_cnt};
                         end
                     else
                         st_wr <= idle;
                 end
 
-            st1 : // loop state for writing
+            st1 : // loop state for writing first part of packet
                 begin
                     data_fifo_enable_r <= 1'b1;
-                    st_wr <= st2;
-                    fifo_bus_r <= packet;
+                    st_wr              <= st2;
+                    fifo_bus_r         <= packet[63:48];
+                end
+
+            st2 : // loop state for writing second part of packet
+                begin
+                    data_fifo_enable_r <= 1'b1;
+                    st_wr              <= st3;
+                    fifo_bus_r         <= packet[47:32];
+                end
+
+            st3 : // loop state for writing third part of packet
+                begin
+                    data_fifo_enable_r <= 1'b1;
+                    st_wr              <= st4;
+                    fifo_bus_r         <= packet[31:16];
+                end
+
+            st4 : // loop state for writing last part of packet
+                begin
+                    data_fifo_enable_r <= 1'b1;
+                    st_wr              <= st5;
+                    fifo_bus_r         <= packet[15:0];
 
                     if (pkt_cnt == max_packet_size || write_start == 1'b1) // If maximum packets or finished with data
                         begin
-                            end_of_data_r <= 1'b1;
-                            fifo_done_r <= 1'b1;
-                            rst_pkt2_r <= 1'b1; // reset the packet count
+                            end_of_data_r   <= 1'b1;
+                            fifo_done_r     <= 1'b1;
+                            rst_pkt2_r      <= 1'b1; // reset the packet count
                         end
                 end
 
-        st2 : // Reset packet contents
-            begin
-                rst_pkt2_r <= 1'b0;
-                fifo_done_r <= 1'b0;
-                data_fifo_enable_r <= 1'b0;
-                rst_pkt_r <= 1'b1;
-                end_of_data_r <= end_of_data_r; // Ensure the 125 MHz clock can recieve the signal
-                st_wr <= st3;
-            end
+            st5 : // Reset packet contents
+                begin
+                    rst_pkt2_r          <= 1'b0;
+                    fifo_done_r         <= 1'b0;
+                    data_fifo_enable_r  <= 1'b0;
+                    rst_pkt_r           <= 1'b1;
+                    end_of_data_r       <= 1'b0;
+                    st_wr               <= st6;
+                end
 
-        st3 : // Wait state
-            begin
+            st6 : // Wait state
+                begin
+                    st_wr           <= idle;
+                end
+
+            default :
                 st_wr <= idle;
-                end_of_data_r <= 1'b0;
-            end
-
-        default :
-            st_wr <= idle;
         endcase
-        end
+    end
 end
 
 

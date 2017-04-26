@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module xadc #
+module xadcModule #
 (
     parameter   max_packet_size	= 10'b1001011000 // Max of 600 16-bit packets per UDP frame
 //    parameter   sample_size	= 11'b1111111111, // 1023 packets

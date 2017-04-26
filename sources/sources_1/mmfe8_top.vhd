@@ -1273,7 +1273,7 @@ architecture Behavioral of mmfe8_top is
                 );
     end component;
     -- 20
-    component xadc
+    component xadcModule
     port(
         clk125              : in std_logic;
         rst                 : in std_logic;
@@ -1945,7 +1945,7 @@ data_selection:  select_data
         fifo_rst                    => daqFIFO_reset
     );
 
-xadc_instance: xadc
+xadc_instance: xadcModule
     port map(
         clk125                      => userclk2,
         rst                         => '0', -- change this plz

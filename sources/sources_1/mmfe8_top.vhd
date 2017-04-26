@@ -746,18 +746,21 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Overview
     -------------------------------------------------------------------
---    attribute keep of is_state                  : signal is "TRUE";
---    attribute keep of pf_dbg_st                 : signal is "TRUE";
---    attribute keep of dt_state                  : signal is "TRUE";
---    attribute keep of dt_cntr_st                : signal is "TRUE";
---    attribute keep of FIFO2UDP_state            : signal is "TRUE";
---    attribute keep of faifouki                  : signal is "TRUE";
---    attribute keep of UDPDone                   : signal is "TRUE";
---    attribute keep of CKBC_glbl                 : signal is "TRUE";
---    attribute keep of tr_out_i                  : signal is "TRUE";
---    attribute keep of conf_state                : signal is "TRUE";
---    attribute keep of din_valid                 : signal is "TRUE";
-
+    attribute mark_debug of is_state                  : signal is "TRUE";
+    attribute mark_debug of pf_dbg_st                 : signal is "TRUE";
+    attribute mark_debug of dt_state                  : signal is "TRUE";
+    attribute mark_debug of dt_cntr_st                : signal is "TRUE";
+    attribute mark_debug of FIFO2UDP_state            : signal is "TRUE";
+    attribute mark_debug of faifouki                  : signal is "TRUE";
+    attribute mark_debug of UDPDone                   : signal is "TRUE";
+    attribute mark_debug of CKBC_glbl                 : signal is "TRUE";
+    attribute mark_debug of tr_out_i                  : signal is "TRUE";
+    attribute mark_debug of conf_state                : signal is "TRUE";
+    attribute mark_debug of din_valid                 : signal is "TRUE";
+    attribute mark_debug of sel_data_vmm              : signal is "TRUE";
+    attribute mark_debug of driver_busy               : signal is "TRUE";
+    attribute mark_debug of vmmWord_i                 : signal is "TRUE";
+    
     -------------------------------------------------------------------
     -- Other
     -------------------------------------------------------------------   
@@ -2558,11 +2561,11 @@ end process;
 --        probe5  => flowProbe
 --    );
 
---ila_top: ila_overview
---    port map (
---        clk     => userclk2,
---        probe0  => overviewProbe
---    );
+ila_top: ila_overview
+    port map (
+        clk     => userclk2,
+        probe0  => overviewProbe
+    );
     
 --VIO_DEFAULT_IP: vio_ip
 --      PORT MAP (
@@ -2582,7 +2585,11 @@ end process;
     overviewProbe(24)                  <= tr_out_i;
     overviewProbe(25)                  <= din_valid;
     overviewProbe(28 downto 26)        <= conf_state;
-    overviewProbe(63 downto 29)        <= (others => '0');
+    overviewProbe(30 downto 29)        <= sel_data_vmm;
+    overviewProbe(31)                  <= driver_busy;
+    overviewProbe(47 downto 32)        <= vmmWord_i;
+    overviewProbe(63 downto 48)        <= (others => '0');
+
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;

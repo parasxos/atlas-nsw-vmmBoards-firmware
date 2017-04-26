@@ -112,13 +112,13 @@ architecture Behavioral of packet_formation is
 ----------------------  Debugging ------------------------------
 --    attribute mark_debug : string;
 
-----    attribute mark_debug of header                :    signal    is    "true";
-----    attribute mark_debug of globBcid              :    signal    is    "true";
-----    attribute mark_debug of globBcid_i            :    signal    is    "true";
-----    attribute mark_debug of precCnt               :    signal    is    "true";
+--    attribute mark_debug of header                :    signal    is    "true";
+--    attribute mark_debug of globBcid              :    signal    is    "true";
+--    attribute mark_debug of globBcid_i            :    signal    is    "true";
+--    attribute mark_debug of precCnt               :    signal    is    "true";
 --    attribute mark_debug of vmmId_i               :    signal    is    "true";
-----    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
-----    attribute mark_debug of vmmWord_i             :    signal    is    "true";
+--    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
+--    attribute mark_debug of vmmWord_i             :    signal    is    "true";
 --    attribute mark_debug of packLen_i             :    signal    is    "true";
 --    attribute mark_debug of packLen_cnt           :    signal    is    "true";
 --    attribute mark_debug of end_packet_int        :    signal    is    "true";
@@ -206,17 +206,18 @@ begin
                 debug_state <= "00010";
                 tr_hold             <= '1'; -- Prevent new triggers
                 if trigLatencyCnt > trigLatency then 
-                    state           <= captureEventID;
+                    state           <= S2;
                 else
                     trigLatencyCnt  <= trigLatencyCnt + 1;
                 end if;
 
---            when S2 =>          -- wait for the header elements to be formed
---                debug_state <= "00010";
+            when S2 =>          -- wait for the header elements to be formed
+                debug_state <= "00010";
 --                --tr_hold         <= '1';                 -- Prevent new triggers
---                --packLen_cnt     <= x"000";              -- Reset length count
---                --vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
---                state           <= captureEventID;
+                selectDataInput <= '0';
+                packLen_cnt     <= x"000";              -- Reset length count
+                vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
+                state           <= captureEventID;
 
             when captureEventID =>      -- Form Header
                 debug_state             <= "00011";
@@ -308,17 +309,18 @@ begin
             when packetDone =>
                 debug_state     <= "01101";
                 end_packet_int  <= '1';
-                state           <= isUDPDone;
+                state           <= eventDone;
 
---            when eventDone =>
---                debug_state <= "01110";
---                if vmmId_cnt >= 0 then
---                    vmmId_cnt   <= 0;
---                    state       <= resetVMMs;
---                else
---                    vmmId_cnt   <= vmmId_cnt + 1;
---                    state       <= S2;
---                end if;
+            when eventDone =>
+                debug_state     <= "01110";
+                end_packet_int  <= '0';
+                if vmmId_cnt >= 7 then
+                    vmmId_cnt   <= 0;
+                    state       <= isUDPDone;
+                else
+                    vmmId_cnt   <= vmmId_cnt + 1;
+                    state       <= S2;
+                end if;
                 
 --            when resetVMMs =>
 --                debug_state <= "01111";
@@ -335,7 +337,6 @@ begin
 
             when isUDPDone =>
                 debug_state 	<= "01110";
-                end_packet_int  <= '0';
                 pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for the UDP packet to be sent
                     state       <= isTriggerOff;
@@ -407,7 +408,7 @@ vmm_driver_inst: vmm_driver
     globBCID_etr	<= glBCID;
     selectDataInput <= std_logic_vector(to_unsigned(sel_cnt, 3));
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
-    header(31 downto 0)     <= precCnt & globBcid & b"00000" & b"000";  
+    header(31 downto 0)     <= precCnt & globBcid & b"00000" & vmmId_i;  
                             --    8    &    16    &     5    &   3
     dbg_st_o        <= debug_state;
 

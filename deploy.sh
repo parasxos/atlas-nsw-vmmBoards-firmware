@@ -23,7 +23,7 @@ then
 	projectDir="MDT_MU2E/"
 	projectXpr="MDT_MU2E.xpr"
 else
-	tclArg="mmfe_vmm3"
+	tclArg="mmfe8_vmm3"
 	echo "Building project for:" $tclArg	
 fi
 

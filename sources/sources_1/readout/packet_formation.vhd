@@ -100,7 +100,7 @@ architecture Behavioral of packet_formation is
 
     type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
                        sendHeaderStep3, triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, 
-                       isUDPDone, isTriggerOff);
+                       isUDPDone, isTriggerOff, S2, eventDone);
     signal state            : stateType;
 
 --------------------  Debugging ------------------------------
@@ -214,7 +214,6 @@ begin
             when S2 =>          -- wait for the header elements to be formed
                 debug_state <= "00010";
 --                --tr_hold         <= '1';                 -- Prevent new triggers
-                selectDataInput <= '0';
                 packLen_cnt     <= x"000";              -- Reset length count
                 vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
                 state           <= captureEventID;

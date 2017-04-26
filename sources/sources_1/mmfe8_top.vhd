@@ -392,14 +392,6 @@ architecture Behavioral of mmfe8_top is
 
   signal udp_response_int   : udp_response; 
   
-  signal clk_400_noclean  : std_logic;
-  signal clk_400_clean    : std_logic;
-  signal clk_200          : std_logic;
-  signal clk_800          : std_logic;
-  signal clk_10_phase45   : std_logic;
-  signal clk_50           : std_logic;
-  signal clk_40           : std_logic;
-  signal clk_10           : std_logic;
   signal gbl_rst          : std_logic;    --coming from UDP
   signal acq_rst          : std_logic;    --coming from UDP
 
@@ -478,7 +470,13 @@ architecture Behavioral of mmfe8_top is
   signal fpga_reset_conf    : std_logic := '0';
   signal flash_busy         : std_logic := '0';
   signal inhibit_conf       : std_logic := '0';
-
+  signal conf_state         : std_logic_vector(2 downto 0) := b"000";
+  signal din_valid          : std_logic := '0';
+  signal serial_number      : std_logic_vector(31 downto 0) := x"00000000";
+  signal packet_len_conf    : std_logic_vector(11 downto 0) := x"000";
+  signal reply_done         : std_logic := '0';
+  signal reply_enable       : std_logic := '0';
+  
     -------------------------------------------------
     -- MMCM Signals                   
     -------------------------------------------------
@@ -770,8 +768,8 @@ architecture Behavioral of mmfe8_top is
     attribute mark_debug of UDPDone                   : signal is "TRUE";
     attribute mark_debug of CKBC_glbl                 : signal is "TRUE";
     attribute mark_debug of tr_out_i                  : signal is "TRUE";
-    attribute mark_debug of conf_state                : signal is "TRUE";
-    attribute mark_debug of din_valid                 : signal is "TRUE";
+--    attribute mark_debug of conf_state                : signal is "TRUE";
+--    attribute mark_debug of din_valid                 : signal is "TRUE";
     attribute mark_debug of sel_data_vmm              : signal is "TRUE";
     attribute mark_debug of driver_busy               : signal is "TRUE";
     attribute mark_debug of vmmWord_i                 : signal is "TRUE";

@@ -48,7 +48,7 @@ architecture RTL of vmm_driver is
     type stateType_l0 is (ST_IDLE, ST_CHECK_FIFO, ST_RD_LOW, ST_WR_LOW, ST_DONE);
     signal state_l0 : stateType_l0 := ST_IDLE;
 
-    type stateType_cont is (ST_IDLE, ST_WR_HIGH, ST_WR_LOW, ST_COUNT_AND_DRIVE, ST_DONE);
+    type stateType_cont is (ST_IDLE, ST_WAIT, ST_WR_HIGH, ST_WR_LOW, ST_COUNT_AND_DRIVE, ST_DONE);
     signal state_cont : stateType_cont := ST_IDLE;
 
 begin
@@ -143,7 +143,11 @@ begin
             -- sample the packet length
             when ST_IDLE =>
                 packLen_i   <= unsigned(pack_len_pf);
-                state_cont  <= ST_WR_HIGH;
+                state_cont  <= ST_WAIT;
+            
+            -- intermediate state for data bus stabilization    
+            when ST_WAIT =>
+                state_cont <= ST_WR_HIGH;   
 
             -- wr_en FIFO2UDP high
             when ST_WR_HIGH =>
@@ -160,7 +164,7 @@ begin
             when ST_COUNT_AND_DRIVE =>
                 if(cnt_chunk < 3)then
                     cnt_chunk       <= cnt_chunk + 1;
-                    state_cont      <= ST_WR_HIGH;
+                    state_cont      <= ST_WAIT;
                 else
                     pack_len_drv    <= std_logic_vector(packLen_i);
                     state_cont      <= ST_DONE;

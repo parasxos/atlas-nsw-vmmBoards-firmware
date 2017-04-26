@@ -29,7 +29,13 @@ entity L0_wrapper is
         clk_ckdt    : in  std_logic; -- will be forwarded to the VMM
         clk_des     : in  std_logic; -- must be twice the frequency of CKDT
         level_0     : in  std_logic; -- level-0 signal
-        rst         : in  std_logic;
+        rst         : in  std_logic; -- logic reset
+        ------------------------------------
+        ---- Packet Formation Interface ----
+        rst_buff    : in  std_logic; -- reset the buffer
+        empty_buff  : out std_logic; -- buffer is empty
+        dout_buff   : out std_logic_vector(15 downto 0); -- data bus
+        rd_ena_buff : in  std_logic;
         ------------------------------------
         ---------- VMM Interface -----------
         VMM_CKDT    : out std_logic;

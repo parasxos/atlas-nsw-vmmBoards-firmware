@@ -281,10 +281,11 @@ begin
                 debug_state     <= "01010";
 
                 if(drv_done = '1')then
-                    packLen_i <= packLen_drv2pf; -- update the packet length
-                    state     <= formTrailer;
+                    packLen_i   <= packLen_drv2pf; -- update the packet length
+                    packLen_cnt <= packLen_cnt + 4;
+                    state       <= formTrailer;
                 else    
-                    state     <= sendVmmDataStep2;
+                    state       <= sendVmmDataStep2;
                 end if;
 
             when formTrailer =>
@@ -301,6 +302,7 @@ begin
 
             when sendTrailer =>
                 debug_state     <= "01100";
+                packLen_i       <= std_logic_vector(packLen_cnt);
                 state           <= packetDone;
 
             when packetDone =>

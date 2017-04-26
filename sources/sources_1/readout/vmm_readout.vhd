@@ -98,7 +98,8 @@ architecture Behavioral of vmm_readout is
     signal vmmWordReady_i       : std_logic := '0';
     signal vmmWordReady_stage1  : std_logic := '0';
     signal vmmWordReady_ff_sync : std_logic := '0';
-    signal vmmWord_i            : std_logic_vector(63 downto 0);    
+    signal vmmWord_i            : std_logic_vector(63 downto 0);  
+    signal vmm_data1            : std_logic := '0';
     signal vmm_data0            : std_logic := '0';
     signal vmm_data0_stage1     : std_logic := '0';
     signal vmm_data0_ff_sync    : std_logic := '0';

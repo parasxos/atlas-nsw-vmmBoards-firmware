@@ -940,8 +940,8 @@ architecture Behavioral of mmfe8_top is
     end component;
     -- 9
     component packet_formation is
-    generic(is_mmfe8    : std_logic := '0';
-            l0_enabled  : std_logic := '0');
+    generic(is_mmfe8    : std_logic;
+            l0_enabled  : std_logic);
     port (
             clk             : in std_logic;
     

@@ -26,8 +26,8 @@ use IEEE.NUMERIC_STD.ALL;
 use UNISIM.VComponents.all;
 
 entity packet_formation is
-    Generic(is_mmfe8    : std_logic := '0';
-            l0_enabled  : std_logic := '0'
+    Generic(is_mmfe8    : std_logic;
+            l0_enabled  : std_logic
     );
     Port(
         clk             : in std_logic;
@@ -141,7 +141,7 @@ architecture Behavioral of packet_formation is
     end component;
 
     component vmm_driver
-    generic(l0_enabled : std_logic := '0');
+    generic(l0_enabled : std_logic);
     port(
         ------------------------------------
         ------ General/PF Interface --------

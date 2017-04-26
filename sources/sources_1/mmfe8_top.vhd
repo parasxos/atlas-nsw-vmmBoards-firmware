@@ -2426,7 +2426,7 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                     
                 when TRIG =>
                     is_state            <= "0100";
-                    vmm_tki             <= '1';
+                    --vmm_tki             <= '1';
                     vmm_cktp_primary    <= '0';
                     rstFIFO_top         <= '0';
                     pf_reset            <= '0';

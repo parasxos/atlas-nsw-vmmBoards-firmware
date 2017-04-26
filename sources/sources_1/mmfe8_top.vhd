@@ -760,6 +760,7 @@ architecture Behavioral of mmfe8_top is
     attribute mark_debug of sel_data_vmm              : signal is "TRUE";
     attribute mark_debug of driver_busy               : signal is "TRUE";
     attribute mark_debug of vmmWord_i                 : signal is "TRUE";
+    attribute mark_debug of CKTP_glbl                 : signal is "TRUE";
     
     -------------------------------------------------------------------
     -- Other
@@ -2058,10 +2059,10 @@ level0_readout: L0_wrapper
         rst         => '0',
         ------------------------------------
         ---------- VMM Interface -----------
-        VMM_CKDT    => ckdt_out_vec(1),
-        VMM_CKTK    => cktk_out_vec(1),
-        VMM_DATA0   => data0_in_vec(1),
-        VMM_DATA1   => data1_in_vec(1)
+        VMM_CKDT    => open,
+        VMM_CKTK    => open,
+        VMM_DATA0   => '0',
+        VMM_DATA1   => '0'
     );
 end generate l0_readout_case;
 
@@ -2393,7 +2394,8 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
 
                 when    SEND_CONF_REPLY    =>
                     reply_enable    <= '1';
-
+                    sel_cs          <= "00"; -- drive CS to gnd
+                    vmm_ena_all     <= '0'; 
                     if(reply_done = '0')then
                         state        <= SEND_CONF_REPLY;
                     else
@@ -2402,9 +2404,9 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
 
                 when DAQ_INIT =>
                     is_state                <= "0011";
-                    for I in 1 to 100 loop
+                    --for I in 1 to 100 loop
                         vmm_cktp_primary    <= '1';
-                    end loop;
+                    --end loop;
                     sel_cs                  <= "11"; -- drive CS high
                     vmm_ena_all             <= '1';
                     tren                    <= '0';
@@ -2420,8 +2422,12 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                         daq_enable_i            <= '0';
                         pf_reset                <= '0';
                         state                   <= IDLE;
-                    else
-                        state   <= TRIG;
+                    elsif(wait_cnt < "01100100")then
+                        wait_cnt    <= wait_cnt + 1;
+                        state       <= DAQ_INIT;
+                    elsif(wait_cnt = "01100100")then
+                        wait_cnt    <= (others => '0');
+                        state       <= TRIG;   
                     end if;
                     
                 when TRIG =>
@@ -2588,7 +2594,8 @@ ila_top: ila_overview
     overviewProbe(30 downto 29)        <= sel_data_vmm;
     overviewProbe(31)                  <= driver_busy;
     overviewProbe(47 downto 32)        <= vmmWord_i;
-    overviewProbe(63 downto 48)        <= (others => '0');
+    overviewProbe(48)                  <= CKTP_glbl;
+    overviewProbe(63 downto 49)        <= (others => '0');
 
 
     vmmSignalsProbe(7 downto 0)        <= vmm_ena_vec;

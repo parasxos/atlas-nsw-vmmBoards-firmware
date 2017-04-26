@@ -102,9 +102,9 @@ architecture Behavioral of vmm_readout is
     signal vmm_data0            : std_logic := '0';
     signal vmm_data0_stage1     : std_logic := '0';
     signal vmm_data0_ff_sync    : std_logic := '0';
+    signal vmm_data1            : std_logic := '0';
     signal vmm_data1_stage1     : std_logic := '0';
     signal vmm_data1_ff_sync    : std_logic := '0';
-    signal vmm_data1            : std_logic := '0';
     signal driverBusy_stage1    : std_logic := '0';
     signal driverBusy_ff_sync   : std_logic := '0';
     signal vmm_ckdt             : std_logic := '0';     -- Strobe to VMM CKDT

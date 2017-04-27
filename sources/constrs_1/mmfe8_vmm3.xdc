@@ -81,6 +81,15 @@ set tclk_trace_delay_min 0.2
 ### End of user provided delay numbers
 ## SPI FLASH END ##
 
+#============================= Disable Timing =========================
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets gtx_clk]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_pins FDCE_inst/C] 
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_P]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_N]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {CLK_40_IBUF}]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
+#======================================================================
+
 #====================== PHYSICAL CONSTRAINTS SECTION ==================
 #====================== ASYNC_REG for synchronizers ===================
 set_property ASYNC_REG true [get_cells axi4_spi_instance/CDCC_50to125/data_sync_stage_0_reg[*]]

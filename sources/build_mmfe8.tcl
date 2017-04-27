@@ -612,6 +612,14 @@ if {$argv == "mdt_mu2e"} {
     set_property "file_type" "XDC" $file_obj
     } else { puts "ERROR!"} 
 
+# General constraints add
+set file "[file normalize "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"]"
+set file_added [add_files -norecurse -fileset $obj $file]
+set file "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+set_property "file_type" "XDC" $file_obj
+
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
 

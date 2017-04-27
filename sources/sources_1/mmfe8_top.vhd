@@ -190,12 +190,12 @@ entity mmfe8_top is
         CKART_ADDC_N          : OUT STD_LOGIC;
         
         -- MDT_446/MDT_MU2E Specific Pins
-        --TRIGGER_OUT_P         : OUT STD_LOGIC;
-        --TRIGGER_OUT_N         : OUT STD_LOGIC;
-        --CH_TRIGGER            : IN  STD_LOGIC;
-        --MO                    : OUT STD_LOGIC;
-        --ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
-        --ART_P, ART_N          : IN  STD_LOGIC;
+        TRIGGER_OUT_P         : OUT STD_LOGIC;
+        TRIGGER_OUT_N         : OUT STD_LOGIC;
+        CH_TRIGGER            : IN  STD_LOGIC;
+        MO                    : OUT STD_LOGIC;
+        ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
+        ART_P, ART_N          : IN  STD_LOGIC;
 
         -- xADC Interface
         -------------------------------------
@@ -2247,8 +2247,8 @@ xadc_mux1_obuf:   OBUF   port map  (O => MuxAddr1, I => MuxAddr1_i);
 xadc_mux2_obuf:   OBUF   port map  (O => MuxAddr2, I => MuxAddr2_i);
 xadc_mux3_obufds: OBUFDS port map  (O => MuxAddr3_p, OB => MuxAddr3_n, I => MuxAddr3_p_i);
 
---art_in_diff_1:    IBUFDS port map (O =>  art_in_i, I => ART_P, IB => ART_N);
---art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
+art_in_diff_1:    IBUFDS port map (O =>  art_in_i, I => ART_P, IB => ART_N);
+art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
  
 -------------------------------------------------------------------
 --                        Processes                              --
@@ -2506,10 +2506,10 @@ end process;
     vmm_bitmask             <= "11111111";
     
     pf_newCycle             <= tr_out_i;
-    --CH_TRIGGER_i            <= not CH_TRIGGER;
-    --TRIGGER_OUT_P           <= art2;
-    --TRIGGER_OUT_N           <= not art2;
-    --MO                      <= MO_i;  
+    CH_TRIGGER_i            <= not CH_TRIGGER;
+    TRIGGER_OUT_P           <= art2;
+    TRIGGER_OUT_N           <= not art2;
+    MO                      <= MO_i;  
 
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;

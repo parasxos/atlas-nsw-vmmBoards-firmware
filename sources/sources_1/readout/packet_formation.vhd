@@ -81,15 +81,15 @@ architecture Behavioral of packet_formation is
     signal trigLatency      : integer := 140; -- 700ns (140x5ns)
     signal pfBusy_i         : std_logic	:= '0';               -- control signal to be sent to ETR
 
-    signal daqFIFO_wr_en        : std_logic                     := '0';
+    signal daqFIFO_wr_en_hdr    : std_logic                     := '0';
+    signal daqFIFO_wr_en_drv    : std_logic                     := '0';
+    signal sel_wrenable         : std_logic                     := '0';
     signal drv_enable           : std_logic                     := '0';
     signal drv_done             : std_logic                     := '0';
-    signal daqFIFO_wr_en_i      : std_logic                     := '0';
-    signal daqFIFO_wr_en_drv    : std_logic                     := '0';
     signal daqFIFO_din          : std_logic_vector(15 downto 0) := ( others => '0' );
     signal triggerVmmReadout_i  : std_logic := '0';
     signal selectDataInput      : std_logic_vector(2 downto 0) := (others => '0');
-    signal sel_cnt              : integer range 0 to 7  := 0;
+    signal sel_cnt              : unsigned(2 downto 0)         := (others => '0');
 
     signal vmmWord_i        : std_logic_vector(15 downto 0) := ( others => '0' );
     signal packLen_i        : std_logic_vector(11 downto 0) := x"000";
@@ -173,11 +173,12 @@ begin
             tr_hold                 <= '0';
             pfBusy_i		        <= '0';
             triggerVmmReadout_i     <= '0';
+            sel_wrenable            <= '0';
             rst_FIFO                <= '1';
-            daqFIFO_wr_en           <= '0';
+            daqFIFO_wr_en_hdr       <= '0';
             packLen_cnt             <= x"000";
             wait_Cnt                <= 0;
-            sel_cnt                 <= 0;
+            sel_cnt                 <= (others => '0');
             drv_enable              <= '0';
             triggerVmmReadout_i     <= '0';
             end_packet_int          <= '0';
@@ -188,9 +189,10 @@ begin
                 debug_state             <= "00000";
                 pfBusy_i                <= '0';
                 triggerVmmReadout_i     <= '0';
+                sel_wrenable            <= '0';
                 drv_enable              <= '0';
                 trigLatencyCnt          <= 0;
-                sel_cnt                 <= 0;
+                sel_cnt                 <= (others => '0');
                 rst_FIFO                <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
@@ -205,8 +207,10 @@ begin
             when waitForLatency =>
                 debug_state <= "00010";
                 tr_hold             <= '1'; -- Prevent new triggers
-                if trigLatencyCnt > trigLatency then 
+                if(trigLatencyCnt > trigLatency and is_mmfe8 = '1')then 
                     state           <= S2;
+                elsif(trigLatencyCnt > trigLatency and is_mmfe8 = '0')then
+                    state           <= captureEventID;
                 else
                     trigLatencyCnt  <= trigLatencyCnt + 1;
                 end if;
@@ -219,40 +223,41 @@ begin
                 state           <= captureEventID;
 
             when captureEventID =>      -- Form Header
-                debug_state             <= "00011";
-                packLen_cnt             <= x"000";
-                state                   <= setEventID;
+                debug_state         <= "00011";
+                packLen_cnt         <= x"000";
+                state               <= setEventID;
                 
             when setEventID =>
-                debug_state             <= "00100";
-                rst_FIFO                <= '0';
-                daqFIFO_wr_en           <= '0';
-                state                   <= sendHeaderStep1;
+                debug_state         <= "00100";
+                rst_FIFO            <= '0';
+                daqFIFO_wr_en_hdr   <= '0';
+                state               <= sendHeaderStep1;
 
             when sendHeaderStep1 =>
-                debug_state     <= "00101";
-                daqFIFO_wr_en   <= '1';
-                packLen_cnt     <= packLen_cnt + 1;
-                state           <= sendHeaderStep2;
+                debug_state         <= "00101";
+                daqFIFO_wr_en_hdr   <= '1';
+                packLen_cnt         <= packLen_cnt + 1;
+                state               <= sendHeaderStep2;
 
             when sendHeaderStep2 =>
-                debug_state     <= "00110";
-                daqFIFO_wr_en   <= '0';
-                state           <= sendHeaderStep3;
+                debug_state         <= "00110";
+                daqFIFO_wr_en_hdr   <= '0';
+                state               <= sendHeaderStep3;
 
             when sendHeaderStep3 =>
                 if(sel_cnt < 3)then -- incr the counter to select the other parts of the header
                     sel_cnt <= sel_cnt + 1;   
                     state   <= sendHeaderStep1;
                 else -- the whole header has been sent
-                     -- fix the counter to 4 to select the VMM data for the next steps
-                    sel_cnt <= 4;
                     state   <= triggerVmmReadout;
                 end if;
 
             when triggerVmmReadout =>   -- Creates an 136ns pulse to trigger the readout
+                                        
                 debug_state                 <= "00111";
-                packLen_pf2drv              <= std_logic_vector(packLen_cnt);
+                sel_cnt                     <= "100"; -- fix the counter to 4 to select the VMM data for the next steps
+                sel_wrenable                <= '1';   -- grant control to driver
+                --packLen_pf2drv              <= std_logic_vector(packLen_cnt);
                 if wait_Cnt < 30 then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
@@ -265,10 +270,8 @@ begin
             when waitForData =>
                 debug_state <= "01000";
                 if (vmmWordReady = '1') then
-                    daqFIFO_wr_en   <= daqFIFO_wr_en_drv; -- grant control to driver
                     state           <= sendVmmDataStep1;
                 elsif (vmmEventDone = '1') then
-                    daqFIFO_wr_en   <= '0';
                     state           <= sendTrailer; 
                 end if;
 
@@ -281,7 +284,7 @@ begin
                 debug_state     <= "01010";
 
                 if(drv_done = '1')then
-                    packLen_i   <= packLen_drv2pf; -- update the packet length
+                   -- packLen_i   <= packLen_drv2pf; -- update the packet length
                     packLen_cnt <= packLen_cnt + 4;
                     state       <= formTrailer;
                 else    
@@ -290,7 +293,7 @@ begin
 
             when formTrailer =>
                 debug_state         <= "01011";
-                packLen_pf2drv      <= packLen_i; -- loop back the packet length
+                --packLen_pf2drv      <= packLen_i; -- loop back the packet length
                 drv_enable          <= '0';
                 if (vmmEventDone = '1') then
                     state           <= sendTrailer;
@@ -302,13 +305,17 @@ begin
 
             when sendTrailer =>
                 debug_state     <= "01100";
-                packLen_i       <= std_logic_vector(packLen_cnt);
+                --packLen_i       <= std_logic_vector(packLen_cnt);
                 state           <= packetDone;
 
             when packetDone =>
                 debug_state     <= "01101";
                 end_packet_int  <= '1';
-                state           <= eventDone;
+                if(is_mmfe8 = '1')then
+                    state       <= eventDone;
+                else
+                    state       <= isUDPDone;
+                end if;
 
             when eventDone =>
                 debug_state     <= "01110";
@@ -336,6 +343,7 @@ begin
 
             when isUDPDone =>
                 debug_state 	<= "01110";
+                end_packet_int  <= '0';
                 pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for the UDP packet to be sent
                     state       <= isTriggerOff;
@@ -356,21 +364,24 @@ begin
 end if;
 end process;
 
-muxFIFOData: process(selectDataInput, header, vmmWord_i)
+muxFIFOData: process(sel_cnt, header, vmmWord)
 begin
-case selectDataInput is
-    when "000" =>
-        daqFIFO_din     <= header(63 downto 48);
-    when "001" =>
-        daqFIFO_din     <= header(47 downto 32);
-    when "010" =>
-        daqFIFO_din     <= header(31 downto 16);
-    when "011" =>
-        daqFIFO_din     <= header(15 downto 0);
-    when "100" =>
-        daqFIFO_din     <= vmmWord_i;
-    when others =>
-        daqFIFO_din     <= (others => '0');
+    case sel_cnt is
+    when "000"  => daqFIFO_din     <= header(63 downto 48);
+    when "001"  => daqFIFO_din     <= header(47 downto 32);
+    when "010"  => daqFIFO_din     <= header(31 downto 16);
+    when "011"  => daqFIFO_din     <= header(15 downto 0);
+    when "100"  => daqFIFO_din     <= vmmWord;
+    when others => daqFIFO_din     <= (others => '0');
+    end case;
+end process;
+
+muxWrEn: process(sel_wrenable, daqFIFO_wr_en_hdr, daqFIFO_wr_en_drv)
+begin
+    case sel_wrenable is
+    when '0'    => wrenable <= daqFIFO_wr_en_hdr;
+    when '1'    => wrenable <= daqFIFO_wr_en_drv;
+    when others => wrenable <= '0';
     end case;
 end process;
 
@@ -382,8 +393,8 @@ vmm_driver_inst: vmm_driver
         clk             => clk,
         drv_enable      => drv_enable,
         drv_done        => drv_done,
-        pack_len_pf     => packLen_pf2drv,
-        pack_len_drv    => packLen_drv2pf,
+        pack_len_pf     => (others => '0'),
+        pack_len_drv    => open,
         ------------------------------------
         ----- VMM_RO/FIFO2UDP Interface ----
         wr_en_fifo2udp  => daqFIFO_wr_en_drv,
@@ -394,18 +405,16 @@ vmm_driver_inst: vmm_driver
 
     globBcid_i      <= globBcid;
     driver_busy     <= drv_enable;
-    daqFIFO_wr_en_i <= daqFIFO_wr_en;
     vmmWord_i       <= vmmWord;
     dataout         <= daqFIFO_din;
-    wrenable        <= daqFIFO_wr_en_i;
-    packLen         <= packLen_i;
+    packLen         <= std_logic_vector(packLen_cnt);
     end_packet      <= end_packet_int;
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
     trigLatency     <= 37 + to_integer(unsigned(latency)); --(hard set to 300ns )--to_integer(unsigned(latency));
+    packLen_i       <= std_logic_vector(packLen_cnt);
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
-    selectDataInput <= std_logic_vector(to_unsigned(sel_cnt, 3));
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & vmmId_i;  
                             --    8    &    16    &     5    &   3
@@ -427,7 +436,7 @@ vmm_driver_inst: vmm_driver
     probe1_out(63 downto 0)             <= (others => '0');--daqFIFO_din;        -- OK
     probe1_out(64)                      <= vmmWordReady;       -- OK
     probe1_out(65)                      <= vmmEventDone;       -- OK
-    probe1_out(66)                      <= daqFIFO_wr_en_i;    -- OK
+    probe1_out(66)                      <= '0';    -- OK
     probe1_out(67)                      <= newCycle;           -- OK
     probe1_out(79 downto 68)            <= packLen_i;
     probe1_out(91 downto 80)            <= std_logic_vector(packLen_cnt);

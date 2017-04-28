@@ -282,6 +282,7 @@ begin
             fpga_conf   <= '0';
             flash_conf  <= '0';
             xadc_conf   <= '0';
+            sample_hdr  <= '0';
             init_ser    <= '0';
             rst_fifo    <= '1';
             st_master   <= ST_IDLE;
@@ -299,13 +300,16 @@ begin
 
                 if(udp_rx.data.data_in_valid = '1' and inhibit_conf = '0')then
                     cnt_bytes   <= cnt_bytes + 1;
+                    sample_hdr  <= '1';
                     st_master   <= ST_CHK_PORT;
                 elsif(udp_rx.data.data_in_valid = '1' and inhibit_conf = '1' and 
                      (udp_rx.hdr.dst_port = x"1777" or udp_rx.hdr.dst_port = x"19C8"))then
                     cnt_bytes   <= cnt_bytes + 1;
+                    sample_hdr  <= '1';
                     st_master   <= ST_CHK_PORT;
                 else
                     cnt_bytes   <= (others => '0');
+                    sample_hdr  <= '0';
                     st_master   <= ST_IDLE;
                 end if;
 
@@ -520,7 +524,6 @@ vmm_config_logic: vmm_config_block
     newIP_rdy       <= flashPacket_rdy;
     vmmConf_rdy     <= init_ser;
     vmmConf_done    <= vmmSer_done_s125;
-    sample_hdr      <= '0' when st_master = ST_IDLE else '1';
     state_o         <= std_logic_vector(conf_state);
     valid_o         <= user_valid_prv;
 

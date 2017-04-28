@@ -98,7 +98,9 @@ architecture Behavioral of vmm_readout is
     signal vmmWordReady_i       : std_logic := '0';
     signal vmmWordReady_stage1  : std_logic := '0';
     signal vmmWordReady_ff_sync : std_logic := '0';
-    signal vmmWord_i            : std_logic_vector(63 downto 0);  
+    signal vmmWord_i            : std_logic_vector(63 downto 0);
+    signal vmmWord_stage1       : std_logic_vector(63 downto 0);  
+    signal vmmWord_ff_sync      : std_logic_vector(15 downto 0);
     signal vmm_data1            : std_logic := '0';
     signal vmm_data0            : std_logic := '0';
     signal vmm_data0_stage1     : std_logic := '0';
@@ -358,6 +360,7 @@ begin
         vmmEventDone_ff_sync    <= vmmEventDone_stage1;
         vmmWordReady_stage1     <= vmmWordReady_i;
         vmmWordReady_ff_sync    <= vmmWordReady_stage1;
+        vmmWord_stage1          <= vmmWord_i;
     end if;
 end process;
 
@@ -392,15 +395,17 @@ begin
 end process;
 
 -- mux that selects vmm data depending on the sel_data from vmm_driver
-dout_mux: process(sel_data, vmmWord_i)
+dout_mux: process(clk)
 begin
-    case sel_data is
-    when "00"   => vmmWord <= vmmWord_i(63 downto 48);
-    when "01"   => vmmWord <= vmmWord_i(47 downto 32);
-    when "10"   => vmmWord <= vmmWord_i(31 downto 16);
-    when "11"   => vmmWord <= vmmWord_i(15 downto 0);
-    when others => vmmWord <= (others => '0');
-    end case;
+    if(rising_edge(clk))then
+        case sel_data is
+        when "00"   => vmmWord_ff_sync <= vmmWord_stage1(63 downto 48);
+        when "01"   => vmmWord_ff_sync <= vmmWord_stage1(47 downto 32);
+        when "10"   => vmmWord_ff_sync <= vmmWord_stage1(31 downto 16);
+        when "11"   => vmmWord_ff_sync <= vmmWord_stage1(15 downto 0);
+        when others => vmmWord_ff_sync <= (others => '0');
+        end case;
+    end if;
 end process;
 
     vmm_cktk            <= vmm_cktk_i;
@@ -408,7 +413,7 @@ end process;
     vmmEventDone        <= vmmEventDone_ff_sync;
     vmmWordReady        <= vmmWordReady_ff_sync;
     trigger_pulse_i     <= trigger_pulse;
-    
+    vmmWord             <= vmmWord_ff_sync;
     dt_state_o          <= state_tk;
     dt_cntr_st_o        <= state_dt;
 

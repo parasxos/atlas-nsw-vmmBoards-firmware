@@ -40,10 +40,10 @@ end udp_reply_handler;
 architecture RTL of udp_reply_handler is
 
     signal sn_i         : std_logic_vector(31 downto 0) := (others => '0');
-    signal sel_dout     : std_logic_vector(1 downto 0)  := (others => '0');
-    signal cnt_packet   : integer range 0 to 7 := 0;
+    signal cnt_packet   : unsigned(11 downto 0)         := (others => '0');
+    signal cnt_len      : unsigned(11 downto 0)         := (others => '0');
 
-    type stateType is (ST_IDLE, ST_WR_HIGH, ST_WR_LOW, ST_COUNT_AND_DRIVE, ST_DONE);
+    type stateType is (ST_IDLE, ST_WAIT_0, ST_WR_HIGH, ST_WR_LOW, ST_WAIT_1, ST_COUNT_AND_DRIVE, ST_DONE);
     signal state : stateType := ST_IDLE;
 
 begin
@@ -55,8 +55,9 @@ begin
     if(rising_edge(clk))then
         if(enable = '0')then
             sn_i        <= (others => '0');
+            cnt_len     <= (others => '0');
             wr_en_conf  <= '0';
-            cnt_packet  <=  0;
+            cnt_packet  <= (others => '0');
             end_conf    <= '0';
             reply_done  <= '0';
             state       <= ST_IDLE;
@@ -66,7 +67,11 @@ begin
             -- sample the serial number and start writing data
             when ST_IDLE =>
                 sn_i     <= serial_number;
-                state    <= ST_WR_HIGH;
+                state    <= ST_WAIT_0;
+            
+            -- a wait state   
+            when ST_WAIT_0 =>
+                state <= ST_WR_HIGH;  
 
             -- wr_en FIFO high
             when ST_WR_HIGH =>
@@ -76,13 +81,18 @@ begin
             -- wr_en FIFO low
             when ST_WR_LOW =>
                 wr_en_conf <= '0';
-                state      <= ST_COUNT_AND_DRIVE;
+                cnt_len    <= cnt_len + 1;
+                state      <= ST_WAIT_1;
+                
+            -- a wait state
+            when ST_WAIT_1 =>
+                state <= ST_COUNT_AND_DRIVE; 
 
             -- increment the counter to select a different dout
             when ST_COUNT_AND_DRIVE =>
                 if(cnt_packet < 3)then
                     cnt_packet  <= cnt_packet + 1;
-                    state       <= ST_WR_HIGH;
+                    state       <= ST_WAIT_0;
                 else
                     end_conf    <= '1';
                     state       <= ST_DONE;
@@ -96,7 +106,8 @@ begin
             when others =>
                 sn_i        <= (others => '0');
                 wr_en_conf  <= '0';
-                cnt_packet  <=  0;
+                cnt_packet  <= (others => '0');
+                cnt_len     <= (others => '0');
                 end_conf    <= '0';
                 reply_done  <= '0';
                 state       <= ST_IDLE;
@@ -106,18 +117,17 @@ begin
 end process;
 
 -- MUX that drives the apporpiate data to the UDP FIFO
-dout_conf_MUX: process(sel_dout, sn_i)
+dout_conf_MUX: process(cnt_packet, sn_i)
 begin
-    case sel_dout is
+    case cnt_packet is
     when "00"   => dout_conf <= sn_i(31 downto 16);
     when "01"   => dout_conf <= sn_i(15 downto 0);
-    when "10"   => dout_conf <= x"FFFF";
-    when "11"   => dout_conf <= x"FFFF";
+    when "10"   => dout_conf <= x"C0CA";
+    when "11"   => dout_conf <= x"C01A";
     when others => dout_conf <= (others => '0');
     end case;
 end process;
 
-    packet_len_conf <= std_logic_vector(to_unsigned(cnt_packet, 12));
-    sel_dout        <= std_logic_vector(to_unsigned(cnt_packet, 2));
+    packet_len_conf <= std_logic_vector(cnt_len);    
 
 end RTL;

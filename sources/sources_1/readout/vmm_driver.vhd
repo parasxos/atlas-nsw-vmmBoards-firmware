@@ -41,14 +41,15 @@ end vmm_driver;
 
 architecture RTL of vmm_driver is
 
-    signal cnt_chunk : integer range 0 to 7 := 0;
-    signal wait_cnt  : integer range 0 to 7 := 0;
-    signal packLen_i : unsigned(11 downto 0) := (others => '0');
+    signal cnt_chunk        : unsigned(1 downto 0) := (others => '0');
+    signal wait_cnt_l0      : integer range 0 to 15 := 0;
+    signal wait_cnt_cont    : integer range 0 to 15 := 0;
+    signal packLen_i        : unsigned(11 downto 0) := (others => '0');
 
     type stateType_l0 is (ST_IDLE, ST_CHECK_FIFO, ST_RD_LOW, ST_WR_LOW, ST_DONE);
     signal state_l0 : stateType_l0 := ST_IDLE;
 
-    type stateType_cont is (ST_IDLE, ST_WAIT, ST_WR_HIGH, ST_WR_LOW, ST_COUNT_AND_DRIVE, ST_DONE);
+    type stateType_cont is (ST_IDLE, ST_WAIT_0, ST_WR_HIGH, ST_WR_LOW, ST_WAIT_1, ST_COUNT_AND_DRIVE, ST_DONE);
     signal state_cont : stateType_cont := ST_IDLE;
 
 begin
@@ -63,6 +64,7 @@ begin
     if(rising_edge(clk))then
         if(drv_enable = '0')then
             drv_done        <= '0';
+            wait_cnt_l0     <=  0;
             rd_en_l0_buff   <= '0';
             wr_en_fifo2udp  <= '0';
             packLen_i       <= (others => '0');
@@ -90,12 +92,12 @@ begin
             when ST_RD_LOW =>
                 rd_en_l0_buff <= '0';
 
-                if(wait_cnt < 2)then
-                    wait_cnt        <= wait_cnt + 1;
+                if(wait_cnt_l0 < 2)then
+                    wait_cnt_l0     <= wait_cnt_l0 + 1;
                     wr_en_fifo2udp  <= '0';
                     state_l0        <= ST_RD_LOW;
                 else
-                    wait_cnt        <= 0;
+                    wait_cnt_l0     <= 0;
                     wr_en_fifo2udp  <= '1';
                     state_l0        <= ST_WR_LOW;
                 end if;
@@ -112,6 +114,7 @@ begin
 
             when others => 
                 drv_done        <= '0';
+                wait_cnt_l0     <=  0;
                 rd_en_l0_buff   <= '0';
                 wr_en_fifo2udp  <= '0';
                 packLen_i       <= (others => '0');
@@ -133,9 +136,10 @@ begin
     if(rising_edge(clk))then
         if(drv_enable = '0')then
             packLen_i       <= (others => '0');
+            wait_cnt_cont   <= 0;
             wr_en_fifo2udp  <= '0';
             drv_done        <= '0';
-            cnt_chunk       <=  0;
+            cnt_chunk       <= (others => '0');
             state_cont      <= ST_IDLE;
         else
             case state_cont is
@@ -143,11 +147,17 @@ begin
             -- sample the packet length
             when ST_IDLE =>
                 packLen_i   <= unsigned(pack_len_pf);
-                state_cont  <= ST_WAIT;
+                state_cont  <= ST_WAIT_0;
             
             -- intermediate state for data bus stabilization    
-            when ST_WAIT =>
-                state_cont <= ST_WR_HIGH;   
+            when ST_WAIT_0 =>
+                if(wait_cnt_cont < 10)then
+                    wait_cnt_cont   <= wait_cnt_cont + 1;
+                    state_cont      <= ST_WAIT_0;
+                else
+                    wait_cnt_cont   <= 0;
+                    state_cont      <= ST_WR_HIGH;
+                end if;
 
             -- wr_en FIFO2UDP high
             when ST_WR_HIGH =>
@@ -158,13 +168,23 @@ begin
             when ST_WR_LOW =>
                 wr_en_fifo2udp  <= '0';
                 packLen_i       <= packLen_i + 1;
-                state_cont      <= ST_COUNT_AND_DRIVE;
-
+                state_cont      <= ST_WAIT_1;
+            
+            -- wait before changing the mux select signal @ vmm_ro    
+            when ST_WAIT_1 =>
+                if(wait_cnt_cont < 10)then
+                    wait_cnt_cont   <= wait_cnt_cont + 1;
+                    state_cont      <= ST_WAIT_1;
+                else
+                    wait_cnt_cont   <= 0;
+                    state_cont      <= ST_COUNT_AND_DRIVE;
+                end if;
+                
             -- increment the counter to select a different chunk of the vmm word
             when ST_COUNT_AND_DRIVE =>
                 if(cnt_chunk < 3)then
                     cnt_chunk       <= cnt_chunk + 1;
-                    state_cont      <= ST_WAIT;
+                    state_cont      <= ST_WAIT_0;
                 else
                     pack_len_drv    <= std_logic_vector(packLen_i);
                     state_cont      <= ST_DONE;
@@ -176,16 +196,17 @@ begin
 
             when others =>
                 packLen_i       <= (others => '0');
+                wait_cnt_cont   <= 0;
                 wr_en_fifo2udp  <= '0';
                 drv_done        <= '0';
-                cnt_chunk       <=  0;
+                cnt_chunk       <= (others => '0');
                 state_cont      <= ST_IDLE;
             end case;
         end if;
     end if;
 end process;
 
-    sel_data <= std_logic_vector(to_unsigned(cnt_chunk, 2));
+    sel_data <= std_logic_vector(cnt_chunk);
 
 end generate continuous_case;
 

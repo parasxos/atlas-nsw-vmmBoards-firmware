@@ -551,7 +551,6 @@ architecture Behavioral of mmfe8_top is
     signal tr_hold            : std_logic := '0';
     signal trmode             : std_logic := '0';
     signal ext_trigger_in     : std_logic := '0';
-    signal trint              : std_logic := '0';
     signal tr_reset           : std_logic := '0';
     signal event_counter_i    : std_logic_vector(31 downto 0);
     signal event_counter_ila  : std_logic_vector(31 downto 0);
@@ -656,6 +655,7 @@ architecture Behavioral of mmfe8_top is
     signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
     signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
     signal ckbcMode         : std_logic := '0';
+    signal CKTP_raw         : std_logic := '0';
     
     -------------------------------------------------
     -- Flow FSM signals
@@ -719,7 +719,6 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Trigger
     -------------------------------------------------------------------
---    attribute keep of trint               : signal is "true";
 --    attribute keep of tren                : signal is "true";
 --    attribute keep of ext_trigger_in      : signal is "true";
 --    attribute keep of trig_mode_int       : signal is "true";
@@ -959,13 +958,15 @@ architecture Behavioral of mmfe8_top is
           clk_art         : in std_logic;
           
           ckbcMode        : in std_logic;
+          cktp_enable     : in std_logic;
+          cktp_pulse_width: in std_logic_vector(4 downto 0);
+          CKTP_raw        : in std_logic;
           request2ckbc    : out std_logic;
           
           tren            : in std_logic;
           tr_hold         : in std_logic;
           trmode          : in std_logic;
           trext           : in std_logic;
-          trint           : in std_logic;
           reset           : in std_logic;
           
           event_counter   : out std_logic_vector(31 DOWNTO 0);
@@ -1424,7 +1425,7 @@ architecture Behavioral of mmfe8_top is
         clk_125             : in  std_logic;
         rst                 : in  std_logic;
         mmcm_locked         : in  std_logic;
-        trint               : out std_logic;
+        CKTP_raw            : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         : in  std_logic;
@@ -1448,24 +1449,6 @@ architecture Behavioral of mmfe8_top is
     Port(
         clk     : in std_logic;
         probe0  : in std_logic_vector(63 downto 0)
-    );
-    end component;
-    
-    --27
-    component L0_wrapper
-    Port(
-        ------------------------------------
-        ------- General Interface ----------
-        clk_ckdt    : in  std_logic; -- will be forwarded to the VMM
-        clk_des     : in  std_logic; -- must be twice the frequency of CKDT
-        level_0     : in  std_logic; -- level-0 signal
-        rst         : in  std_logic;
-        ------------------------------------
-        ---------- VMM Interface -----------
-        VMM_CKDT    : out std_logic;
-        VMM_CKTK    : out std_logic;
-        VMM_DATA0   : in  std_logic;
-        VMM_DATA1   : in  std_logic
     );
     end component;
 
@@ -1888,12 +1871,14 @@ trigger_instance: trigger
         
         ckbcMode        => ckbcMode,
         request2ckbc    => request2ckbc,
+        cktp_enable     => cktp_enable,
+        CKTP_raw        => CKTP_raw,
+        cktp_pulse_width=> cktp_pulse_width,
         
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
         trext           => CH_TRIGGER_i,        -- External trigger is to be driven to this port
-        trint           => trint,               -- Internal trigger is to be driven to this port (CKTP)
 
         reset           => tr_reset,
 
@@ -2078,7 +2063,7 @@ ckbc_cktp_generator: clk_gen_wrapper
         clk_125             => userclk2,
         rst                 => rst_gen,
         mmcm_locked         => clk_gen_locked,
-        trint               => trint,
+        CKTP_raw            => CKTP_raw,
         ------------------------------------
         ----- Configuration Interface ------
         ckbc_enable         => ckbc_enable,
@@ -2096,24 +2081,6 @@ ckbc_cktp_generator: clk_gen_wrapper
         CKTP                => CKTP_glbl,
         CKBC                => CKBC_glbl
     );
-l0_readout_case: if l0_enabled = '1' generate
--- TO DO: Add level_0 signal assertion from trigger module    
-level0_readout: L0_wrapper
-   port map(
-        ------------------------------------
-        ------- General Interface ----------
-        clk_ckdt    => clk_160_gen,
-        clk_des     => clk_320_gen,
-        level_0     => '0',           -- TO BE ADDED
-        rst         => '0',
-        ------------------------------------
-        ---------- VMM Interface -----------
-        VMM_CKDT    => open,
-        VMM_CKTK    => open,
-        VMM_DATA0   => '0',
-        VMM_DATA1   => '0'
-    );
-end generate l0_readout_case;
 
 QSPI_IO0_0: IOBUF    
    port map (
@@ -2666,7 +2633,7 @@ ila_top: ila_overview
     vmmSignalsProbe(44)                <= art_in_i;
     vmmSignalsProbe(63 downto 45)      <= (others => '0'); 
 
-    triggerETRProbe(0)                <= trint;
+    triggerETRProbe(0)                <= '0';
     triggerETRProbe(1)                <= tren;
     triggerETRProbe(2)                <= tr_hold;
     triggerETRProbe(3)                <= ext_trigger_in;

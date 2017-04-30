@@ -40,8 +40,8 @@ architecture RTL of trint_gen is
     signal cktp_start_s     : std_logic := '0';
     
     signal trint_i          : std_logic := '0'; -- synced @ 160
-    signal trint_s_0        : std_logic := '0';
-    signal trint_s          : std_logic := '0'; -- synced @ 125
+--    signal trint_s_0        : std_logic := '0';
+--    signal trint_s          : std_logic := '0'; -- synced @ 125
 
     type trint_state_type is (ST_IDLE, ST_WAIT, ST_TRINT);
     signal state : trint_state_type := ST_IDLE;
@@ -49,8 +49,8 @@ architecture RTL of trint_gen is
     attribute ASYNC_REG : string;
     attribute ASYNC_REG of cktp_start_s_0  : signal is "TRUE";
     attribute ASYNC_REG of cktp_start_s    : signal is "TRUE";
-    attribute ASYNC_REG of trint_s_0       : signal is "TRUE";
-    attribute ASYNC_REG of trint_s         : signal is "TRUE";
+--    attribute ASYNC_REG of trint_s_0       : signal is "TRUE";
+--    attribute ASYNC_REG of trint_s         : signal is "TRUE";
 
 begin
 
@@ -130,15 +130,15 @@ begin
     end if;
 end process;
 
--- sync the trint signal
-sync_trint_proc: process(clk_125)
-begin
-    if(rising_edge(clk_125))then
-         trint_s_0 <= trint_i;
-         trint_s   <= trint_s_0;  
-    end if;
-end process;
+-- sync the trint signal (Obsolete as the signal is synced one level-up)
+--sync_trint_proc: process(clk_125)
+--begin
+--    if(rising_edge(clk_125))then
+--         trint_s_0 <= trint_i;
+--         trint_s   <= trint_s_0;  
+--    end if;
+--end process;
 
-    trint <= trint_s; -- synced to 125 Mhz
+    trint <= trint_i; -- synced to 160 Mhz
 
 end RTL;

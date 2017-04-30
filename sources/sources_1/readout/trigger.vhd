@@ -33,12 +33,14 @@ entity trigger is
             
             ckbcMode        : in STD_LOGIC;
             request2ckbc    : out STD_LOGIC;
+            cktp_enable     : in std_logic;
+            cktp_pulse_width: in STD_LOGIC_VECTOR(4 downto 0);
+            CKTP_raw        : in STD_LOGIC;
             
             tren            : in STD_LOGIC;
             tr_hold         : in STD_LOGIC;
             trmode          : in STD_LOGIC;
             trext           : in STD_LOGIC;
-            trint           : in STD_LOGIC;
 
             reset           : in STD_LOGIC;
 
@@ -71,12 +73,12 @@ architecture Behavioral of trigger is
     signal mode_ff_synced       : std_logic := '0';
     signal trmode_stage1        : std_logic := '0';
     signal trmode_ff_synced     : std_logic := '0';
-    signal trint_stage1         : std_logic := '0';
-    signal trint_ff_synced      : std_logic := '0';
     signal trraw_synced125_i    : std_logic := '0';
     signal trint_stage_synced   : std_logic := '0';
     signal trint_stage_synced125: std_logic := '0';
     signal trint_ff_synced125   : std_logic := '0';
+    signal cktp_width_final     : std_logic_vector(11 downto 0) := "000101000000";           --4 * 80 = 320
+    signal trint                : std_logic := '0';
  
     -- Special Readout Mode
     signal request2ckbc_i    : std_logic := '0';
@@ -133,6 +135,17 @@ architecture Behavioral of trigger is
     port(
         clk     : in std_logic;
         probe0  : in std_logic_vector(63 downto 0)
+    );
+    end component;
+    
+    component trint_gen
+    port(
+        clk_160     : in  std_logic;
+        clk_125     : in  std_logic;
+        cktp_start  : in  std_logic;
+        cktp_pulse  : in  std_logic;
+        cktp_width  : in  std_logic_vector(11 downto 0);
+        trint       : out std_logic
     );
     end component;
 
@@ -268,9 +281,9 @@ triggerDistrSignalProc: process (clk_art, reset)
             tr_out_i            <= '0';
         elsif rising_edge(clk_art) then
             if mode_ff_synced = '0' then
-                if (tren_buff_ff_synced = '1' and trmode_ff_synced = '0' and trint_ff_synced = '1') then
+                if (tren_buff_ff_synced = '1' and trmode_ff_synced = '0' and trint = '1') then
                     tr_out_i            <= '1';
-                elsif (trmode_ff_synced = '0' and trint_ff_synced = '0') then
+                elsif (trmode_ff_synced = '0' and trint = '0') then
                     tr_out_i            <= '0';
                 else
                     tr_out_i            <= '0';
@@ -310,8 +323,6 @@ begin
         mode_ff_synced      <= mode_stage1;
         trmode_stage1       <= trmode;
         trmode_ff_synced    <= trmode_stage1;
-        trint_stage1        <= trint;
-        trint_ff_synced     <= trint_stage1; 
     end if;
 end process;
 
@@ -322,10 +333,10 @@ eventCounterProc: process (clk_art, reset)
         else
             if rising_edge(clk_art) then
                 if mode_ff_synced = '0' then
-                    if (tren_buff_ff_synced = '1' and trmode_ff_synced = '0' and trint_ff_synced = '1' and trint_pre = '0') then
+                    if (tren_buff_ff_synced = '1' and trmode_ff_synced = '0' and trint = '1' and trint_pre = '0') then
                         event_counter_i     <= event_counter_i + 1;
                         trint_pre           <= '1';
-                    elsif (trmode_ff_synced = '0' and trint_ff_synced = '0') then
+                    elsif (trmode_ff_synced = '0' and trint = '0') then
                         event_counter_i     <= event_counter_i;
                         trint_pre           <= '0';
                     else
@@ -365,6 +376,19 @@ tr_out              <= tr_out_i_ff_synced;
 request2ckbc        <= request2ckbc_i;
 trraw_synced125     <= trraw_synced125_i;
 trigLatency         <= to_integer(unsigned(latency));
+
+
+cktp_trint_module: trint_gen
+    port map(
+        clk_160         => clk_art,
+        clk_125         => clk,
+        cktp_start      => cktp_enable,
+        cktp_pulse      => CKTP_raw,
+        cktp_width      => cktp_width_final,
+        trint           => trint
+    );
+    
+    cktp_width_final <= std_logic_vector(unsigned(cktp_pulse_width)*"1010000");  -- input x 80
 
 -- Instantiations if any
 

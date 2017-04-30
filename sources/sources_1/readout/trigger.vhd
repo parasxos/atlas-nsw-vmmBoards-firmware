@@ -26,6 +26,7 @@ use IEEE.NUMERIC_STD.ALL;
 use UNISIM.VComponents.all;
 
 entity trigger is
+    Generic ( l0_enabled : STD_LOGIC);
     Port (
             clk             : in STD_LOGIC;
             ckbc            : in STD_LOGIC;
@@ -41,6 +42,7 @@ entity trigger is
             tr_hold         : in STD_LOGIC;
             trmode          : in STD_LOGIC;
             trext           : in STD_LOGIC;
+            level_0         : out STD_LOGIC;
 
             reset           : in STD_LOGIC;
 
@@ -82,11 +84,12 @@ architecture Behavioral of trigger is
  
     -- Special Readout Mode
     signal request2ckbc_i    : std_logic := '0';
-    signal trigLatencyCnt    : integer range 0 to 150 := 0;
+    signal trigLatencyCnt    : integer range 0 to 255 := 0;
     signal trigLatency       : integer := 140;
     
-    type stateType is (waitingForTrigger, waitingForLatency, issueRequest);
-    signal state            : stateType;
+    type stateType is (waitingForTrigger, waitingForLatency, issueRequest, checkTrigger);
+    signal state            : stateType := waitingForTrigger;
+    signal state_l0         : stateType := waitingForTrigger;
     
 ---------------------------------------------------------------------------------------------- Uncomment for hold window Start
 --    signal hold_state       : std_logic_vector(3 downto 0);
@@ -216,6 +219,7 @@ begin
 --    end if;
 --end process;
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
+generate_2ckbc: if (l0_enabled = '0') generate
 
 trReadoutMode2CkbcDelayedRequest: process(clk_art)
 begin
@@ -250,6 +254,62 @@ begin
 
     end if;
 end process;
+
+end generate generate_2ckbc;
+
+generate_level0: if (l0_enabled = '1') generate
+
+-- asserts level0 accept signal at the VMMs with a maximum of ~1.6 us latency
+level0Asserter: process(clk_art)
+begin
+    if(rising_edge(clk_art))then
+        case state_l0 is
+
+        when waitingForTrigger =>
+            level_0         <= '0';
+            trigLatencyCnt  <= 0;
+
+            if((trext_ff_synced = '1' and trmode_ff_synced = '1') or
+                (CKTP_raw = '1' and trmode_ff_synced = '0'))then
+                state_l0 <= waitingForLatency;
+            else
+                state_l0 <= waitingForTrigger;
+            end if;
+
+        when waitingForLatency =>
+            if trigLatencyCnt < trigLatency then
+                trigLatencyCnt  <= trigLatencyCnt + 1;
+                state_l0        <= waitingForLatency;
+            else
+                trigLatencyCnt  <= 0;
+                level_0         <= '1';
+                state_l0        <= issueRequest;
+            end if;
+
+        when issueRequest =>
+            level_0     <= '1'; -- level_0 has a width of 12.5 ns
+            state_l0    <= checkTrigger;
+
+        when checkTrigger =>
+            level_0     <= '0';
+
+            if((trext_ff_synced = '0' and trmode_ff_synced = '1') or
+                (CKTP_raw = '0' and trmode_ff_synced = '0'))then
+                state_l0 <= waitingForTrigger;
+            else
+                state_l0 <= checkTrigger;
+            end if;
+
+        when others =>
+            level_0         <= '0';
+            trigLatencyCnt  <= 0;
+            state_l0        <= waitingForTrigger;
+        end case;
+        
+    end if;
+end process;
+
+end generate generate_level0; 
 
 trenAnd: process(clk)
 begin
@@ -385,7 +445,7 @@ cktp_trint_module: trint_gen
         cktp_start      => cktp_enable,
         cktp_pulse      => CKTP_raw,
         cktp_width      => cktp_width_final,
-        trint           => trint
+        trint           => trint -- synced to 160 Mhz
     );
     
     cktp_width_final <= std_logic_vector(unsigned(cktp_pulse_width)*"1010000");  -- input x 80

@@ -952,6 +952,7 @@ architecture Behavioral of mmfe8_top is
     end component;
     -- 8
     component trigger is
+      generic (l0_enabled : std_logic);
       port (
           clk             : in std_logic;
           ckbc            : in std_logic;
@@ -968,6 +969,7 @@ architecture Behavioral of mmfe8_top is
           trmode          : in std_logic;
           trext           : in std_logic;
           reset           : in std_logic;
+          level_0         : out std_logic;
           
           event_counter   : out std_logic_vector(31 DOWNTO 0);
           tr_out          : out std_logic;
@@ -1864,6 +1866,7 @@ readout_vmm: vmm_readout_wrapper
     );
 
 trigger_instance: trigger
+    generic map(l0_enabled => l0_enabled)
     port map(
         clk             => userclk2,
         ckbc            => clk_40,
@@ -1879,6 +1882,7 @@ trigger_instance: trigger
         tr_hold         => tr_hold,             -- Prevents trigger while high
         trmode          => trig_mode_int,       -- Mode 0: internal / Mode 1: external
         trext           => CH_TRIGGER_i,        -- External trigger is to be driven to this port
+        level_0         => level_0,              -- Level-0 accept signal
 
         reset           => tr_reset,
 

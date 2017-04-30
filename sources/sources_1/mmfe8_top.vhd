@@ -240,8 +240,8 @@ architecture Behavioral of mmfe8_top is
     -- Global Settings
     ------------------------------------------------------------------- 
     -- Default IP and MAC address of the board
-    signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80003";
-    signal default_MAC    : std_logic_vector(47 downto 0) := x"002320123223";
+    signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
+    signal default_MAC    : std_logic_vector(47 downto 0) := x"002320189223";
     signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
     -- Set to '1' if MMFE8 VMM3, or if level-0 mode is used
     constant is_mmfe8       : std_logic := '0';
@@ -540,7 +540,8 @@ architecture Behavioral of mmfe8_top is
     signal dt_cntr_st               : std_logic_vector(3 downto 0) := b"0000";
     signal rst_l0_glbl              : std_logic := '0';
     signal rst_l0_buff              : std_logic := '0';
-    signal rst_l0_intf              : std_logic := '0';
+    signal rst_l0_buff_flow         : std_logic := '1';
+    signal rst_l0_pf                : std_logic := '0';
     signal level_0                  : std_logic := '0';
     signal rd_ena_l0_buff           : std_logic := '0';
 
@@ -1002,7 +1003,7 @@ architecture Behavioral of mmfe8_top is
             end_packet      : out std_logic;
             
             rd_ena_l0_buff  : out std_logic;
-            l0_buff_empty   : in  std_logic;
+            rst_l0          : out std_logic;
             sel_data_vmm    : out std_logic_vector(1 downto 0);
             driver_busy     : out std_logic;
             
@@ -1846,7 +1847,7 @@ readout_vmm: vmm_readout_wrapper
         clk_des         => clk_320_gen,
         rst             => rst_l0_glbl,
         rst_buff        => rst_l0_buff,
-        rst_intf_proc   => rst_l0_intf,
+        rst_intf_proc   => rst_l0_pf,
         --
         level_0         => level_0,
         --
@@ -1876,7 +1877,7 @@ trigger_instance: trigger
         request2ckbc    => request2ckbc,
         cktp_enable     => cktp_enable,
         CKTP_raw        => CKTP_raw,
-        cktp_pulse_width=> cktp_pulse_width,
+        cktp_pulse_width=> cktp_pulse_width(4 downto 0),
         
         tren            => tren,                -- Trigger module enabled
         tr_hold         => tr_hold,             -- Prevents trigger while high
@@ -1940,8 +1941,8 @@ packet_formation_instance: packet_formation
         wrenable        => daq_wr_en_i,
         end_packet      => end_packet_daq_int,
         
-        rd_ena_l0_buff  => open,
-        l0_buff_empty   => '1',
+        rd_ena_l0_buff  => rd_ena_l0_buff,
+        rst_l0          => rst_l0_pf,
         sel_data_vmm    => sel_data_vmm,
         driver_busy     => driver_busy,
         
@@ -2321,6 +2322,7 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                     cnt_vmm                 <= 1;
                     
                     daq_enable_i            <= '0';
+                    rst_l0_buff_flow        <= '1';
                     pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
@@ -2429,6 +2431,7 @@ flow_fsm: process(userclk2, state, vmm_id, write_done_i, conf_done_i)
                     --end loop;
                     sel_cs                  <= "11"; -- drive CS high
                     vmm_ena_all             <= '1';
+                    rst_l0_buff_flow        <= '0';
                     tren                    <= '0';
                     daq_vmm_ena_wen_enable  <= x"ff";
                     daq_cktk_out_enable     <= x"ff";
@@ -2516,7 +2519,9 @@ end process;
     CH_TRIGGER_i            <= not CH_TRIGGER;
     TRIGGER_OUT_P           <= art2;
     TRIGGER_OUT_N           <= not art2;
-    MO                      <= MO_i;  
+    MO                      <= MO_i;
+    rst_l0_glbl             <= '0'; -- unused for the time being
+    rst_l0_buff             <= rst_l0_buff_flow or rst_l0_pf;
 
     test_data               <= udp_rx_int.data.data_in;
     test_valid              <= udp_rx_int.data.data_in_valid;

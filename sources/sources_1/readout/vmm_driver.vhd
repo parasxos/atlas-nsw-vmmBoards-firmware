@@ -28,7 +28,7 @@ entity vmm_driver is
         clk             : in  std_logic;
         drv_enable      : in  std_logic;
         drv_done        : out std_logic;
-        pack_len_drv    : out std_logic_vector(11 downto 0);
+        pack_len_drv    : out unsigned(11 downto 0);
         ------------------------------------
         ----- VMM_RO/FIFO2UDP Interface ----
         wr_en_fifo2udp  : out std_logic;
@@ -93,7 +93,7 @@ begin
                     state_l0        <= ST_RD_LOW;    
                 else
                     rd_en_l0_buff   <= '0';
-                    pack_len_drv    <= std_logic_vector(packLen_i);
+                    pack_len_drv    <= packLen_i;
                     state_l0        <= ST_DONE;           
                 end if;
 

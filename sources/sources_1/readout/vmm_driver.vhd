@@ -21,20 +21,19 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.all;
 
 entity vmm_driver is
-    generic(l0_enabled : std_logic := '0');
+    generic(l0_enabled : std_logic);
     port(
         ------------------------------------
         ------ General/PF Interface --------
         clk             : in  std_logic;
         drv_enable      : in  std_logic;
         drv_done        : out std_logic;
-        pack_len_pf     : in  std_logic_vector(11 downto 0);
         pack_len_drv    : out std_logic_vector(11 downto 0);
         ------------------------------------
         ----- VMM_RO/FIFO2UDP Interface ----
         wr_en_fifo2udp  : out std_logic;
         rd_en_l0_buff   : out std_logic;
-        l0_buff_empty   : in  std_logic;
+        vmmWordReady    : in  std_logic;
         sel_data        : out std_logic_vector(1 downto 0)
     );
 end vmm_driver;
@@ -46,7 +45,7 @@ architecture RTL of vmm_driver is
     signal wait_cnt_cont    : integer range 0 to 15 := 0;
     signal packLen_i        : unsigned(11 downto 0) := (others => '0');
 
-    type stateType_l0 is (ST_IDLE, ST_CHECK_FIFO, ST_RD_LOW, ST_WR_LOW, ST_DONE);
+    type stateType_l0 is (ST_IDLE, ST_WAIT, ST_CHECK_FIFO, ST_RD_LOW, ST_WR_LOW, ST_DONE);
     signal state_l0 : stateType_l0 := ST_IDLE;
 
     type stateType_cont is (ST_IDLE, ST_WAIT_0, ST_WR_HIGH, ST_WR_LOW, ST_WAIT_1, ST_COUNT_AND_DRIVE, ST_DONE);
@@ -72,14 +71,24 @@ begin
         else
             case state_l0 is
 
-            -- sample the packet length
+            -- reset the counter and begin the process
             when ST_IDLE =>
-                packLen_i   <= unsigned(pack_len_pf);
-                state_l0    <= ST_CHECK_FIFO;
-
+                packLen_i   <= (others => '0');
+                state_l0    <= ST_WAIT;
+            
+            -- intermediate state for data bus stabilization    
+            when ST_WAIT =>
+                if(wait_cnt_l0 < 15)then
+                    wait_cnt_l0 <= wait_cnt_l0 + 1;
+                    state_l0    <= ST_WAIT;
+                else
+                    wait_cnt_l0 <= 0;
+                    state_l0    <= ST_CHECK_FIFO;
+                end if;
+               
             -- read the vmm buffer if there is still data
             when ST_CHECK_FIFO =>
-                if(l0_buff_empty = '0')then
+                if(vmmWordReady = '1')then
                     rd_en_l0_buff   <= '1';
                     state_l0        <= ST_RD_LOW;    
                 else
@@ -88,11 +97,11 @@ begin
                     state_l0        <= ST_DONE;           
                 end if;
 
-            -- stay here for 3 cycles (vmm buffer has embedded registers)
+            -- stay here for 15 cycles for data bus stabilization
             when ST_RD_LOW =>
                 rd_en_l0_buff <= '0';
 
-                if(wait_cnt_l0 < 2)then
+                if(wait_cnt_l0 < 15)then
                     wait_cnt_l0     <= wait_cnt_l0 + 1;
                     wr_en_fifo2udp  <= '0';
                     state_l0        <= ST_RD_LOW;
@@ -106,7 +115,7 @@ begin
             when ST_WR_LOW =>
                 wr_en_fifo2udp <= '0';
                 packLen_i      <= packLen_i + 1;
-                state_l0       <= ST_CHECK_FIFO;
+                state_l0       <= ST_WAIT;
 
             -- stay here until reset by pf
             when ST_DONE =>
@@ -135,7 +144,6 @@ cont_FSM_drv: process(clk)
 begin
     if(rising_edge(clk))then
         if(drv_enable = '0')then
-            packLen_i       <= (others => '0');
             wait_cnt_cont   <= 0;
             wr_en_fifo2udp  <= '0';
             drv_done        <= '0';
@@ -144,9 +152,8 @@ begin
         else
             case state_cont is
 
-            -- sample the packet length
+            -- begin the process
             when ST_IDLE =>
-                packLen_i   <= unsigned(pack_len_pf);
                 state_cont  <= ST_WAIT_0;
             
             -- intermediate state for data bus stabilization    
@@ -167,7 +174,6 @@ begin
             -- wr_en FIFO2UDP low
             when ST_WR_LOW =>
                 wr_en_fifo2udp  <= '0';
-                packLen_i       <= packLen_i + 1;
                 state_cont      <= ST_WAIT_1;
             
             -- wait before changing the mux select signal @ vmm_ro    
@@ -186,7 +192,6 @@ begin
                     cnt_chunk       <= cnt_chunk + 1;
                     state_cont      <= ST_WAIT_0;
                 else
-                    pack_len_drv    <= std_logic_vector(packLen_i);
                     state_cont      <= ST_DONE;
                 end if;
 
@@ -195,7 +200,6 @@ begin
                 drv_done <= '1';
 
             when others =>
-                packLen_i       <= (others => '0');
                 wait_cnt_cont   <= 0;
                 wr_en_fifo2udp  <= '0';
                 drv_done        <= '0';

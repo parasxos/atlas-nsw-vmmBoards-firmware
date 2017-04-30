@@ -22,6 +22,8 @@
 -- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
 -- 28.03.2017 Changes to accomodate to MMFE8 VMM3. (Christos Bakalis)
 -- 31.03.2017 Adding 2 CKBC readout mode (Paris)
+-- 30.04.2017 Added vmm_readout_wrapper that contains level-0 readout mode besides
+-- the pre-existing continuous mode. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -243,7 +245,7 @@ architecture Behavioral of mmfe8_top is
     signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
     -- Set to '1' if MMFE8 VMM3, or if level-0 mode is used
     constant is_mmfe8       : std_logic := '0';
-    constant l0_enabled     : std_logic := '0';
+    constant l0_enabled     : std_logic := '1';
 
     -------------------------------------------------------------------
     -- Signals Declaration
@@ -536,7 +538,12 @@ architecture Behavioral of mmfe8_top is
     signal art_out_ff               : std_logic := '0';
     signal dt_state                 : std_logic_vector(3 downto 0) := b"0000";
     signal dt_cntr_st               : std_logic_vector(3 downto 0) := b"0000";
-   
+    signal rst_l0_glbl              : std_logic := '0';
+    signal rst_l0_buff              : std_logic := '0';
+    signal rst_l0_intf              : std_logic := '0';
+    signal level_0                  : std_logic := '0';
+    signal rd_ena_l0_buff           : std_logic := '0';
+
     -------------------------------------------------
     -- Trigger Signals
     -------------------------------------------------
@@ -787,7 +794,7 @@ architecture Behavioral of mmfe8_top is
     -- 3.  clk_wiz_0
     -- 4.  clk_wiz_gen
     -- 5.  event_timing_reset
-    -- 6.  vmm_readout
+    -- 6.  vmm_readout_wrapper
     -- 7.  FIFO2UDP
     -- 8.  trigger
     -- 9.  packet_formation
@@ -874,33 +881,48 @@ architecture Behavioral of mmfe8_top is
       );
     end component;    
     -- 6
-    component vmm_readout is
+    component vmm_readout_wrapper is
+        generic(is_mmfe8    : std_logic;
+                l0_enabled  : std_logic);
         port ( 
-            clkTkProc               : in std_logic;     -- Used to clock checking for data process
-            clkDtProc               : in std_logic;     -- Used to clock word readout process
-            clk                     : in std_logic;     -- Used for fast switching between processes
-
-            vmm_data0_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data0 from VMM
-            vmm_data1_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data1 from VMM
-            vmm_ckdt_vec            : out std_logic_vector(8 downto 1);     -- Strobe to VMM CKDT
-            vmm_cktk_vec            : out std_logic_vector(8 downto 1);     -- Strobe to VMM CKTK
-
-            daq_enable              : in std_logic;
-            trigger_pulse           : in std_logic;                     -- Trigger
-            cktk_max                : in std_logic_vector(7 downto 0);
-            vmmId                   : in std_logic_vector(2 downto 0);  -- VMM to be readout
-            ethernet_fifo_wr_en     : out std_logic;                    -- To be used for reading out seperate FIFOs in VMMx8 parallel readout
-            vmm_data_buf            : buffer std_logic_vector(37 downto 0);
-            
-            vmmWordReady            : out std_logic;
-            vmmWord                 : out std_logic_vector(15 downto 0);
-            vmmEventDone            : out std_logic;
-            
-            sel_data                : in  std_logic_vector(1 downto 0);
-            driverBusy              : in  std_logic;
-            
-            dt_state_o              : out std_logic_vector(3 downto 0);
-            dt_cntr_st_o            : out std_logic_vector(3 downto 0)
+            ------------------------------------
+            --- Continuous Readout Interface ---
+            clkTkProc       : in  std_logic;                    -- Used to clock checking for data process
+            clkDtProc       : in  std_logic;                    -- Used to clock word readout process
+            clk             : in  std_logic;                    -- Main clock
+            --
+            daq_enable      : in  std_logic;
+            trigger_pulse   : in  std_logic;                     -- Trigger
+            cktk_max        : in  std_logic_vector(7 downto 0);  -- Max number of CKTKs
+            --
+            sel_data        : in  std_logic_vector(1 downto 0); -- select vmmWord chunk
+            driverBusy      : in  std_logic;
+            --
+            dt_state_o      : out std_logic_vector(3 downto 0); -- for debugging
+            dt_cntr_st_o    : out std_logic_vector(3 downto 0); -- for debugging
+            ------------------------------------
+            ---- Level-0 Readout Interface -----
+            clk_ckdt        : in  std_logic;                    -- will be forwarded to the VMM
+            clk_des         : in  std_logic;                    -- must be twice the frequency of CKDT
+            rst             : in  std_logic;                    -- logic reset
+            rst_buff        : in  std_logic;                    -- reset the level-0 buffer
+            rst_intf_proc   : in  std_logic;                    -- reset the pf interface
+            --
+            level_0         : in  std_logic;                    -- level-0 signal
+            --
+            rd_ena_buff     : in  std_logic;                    -- read the level-0 buffer
+            ------------------------------------
+            ---- Packet Formation Interface ----
+            vmmWordReady    : out std_logic;
+            vmmWord         : out std_logic_vector(15 downto 0);
+            vmmEventDone    : out std_logic;
+            vmmId           : in  std_logic_vector(2 downto 0);  -- VMM to be readout
+            ------------------------------------
+            ---------- VMM3 Interface ----------
+            vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
+            vmm_data1_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data1 from VMM
+            vmm_ckdt_vec    : out std_logic_vector(8 downto 1);  -- Strobe to VMM CKDT
+            vmm_cktk_vec    : out std_logic_vector(8 downto 1)   -- Strobe to VMM CKTK
         );
     end component;
     -- 7
@@ -1815,33 +1837,47 @@ event_timing_reset_instance: event_timing_reset
         reset_latched   => etr_reset_latched
     );
 
-readout_vmm: vmm_readout
+readout_vmm: vmm_readout_wrapper
+    generic map(is_mmfe8 => is_mmfe8, l0_enabled => l0_enabled)
     port map(
-        clkTkProc               => clk_40,
-        clkDtProc               => clk_50,
-        clk                     => userclk2,
-        
-        vmm_data0_vec           => data0_in_vec,
-        vmm_data1_vec           => data1_in_vec,
-        vmm_ckdt_vec            => ckdt_out_vec, --ckdt_out_vec
-        vmm_cktk_vec            => cktk_out_vec, --cktk_out_vec
-
-        daq_enable              => daq_enable_i,
-        trigger_pulse           => pf_trigVmmRo,
-        cktk_max                => cktk_max_num,
-        vmmId                   => pf_vmmIdRo,
-        ethernet_fifo_wr_en     => open,
-        vmm_data_buf            => open,
-        
-        sel_data                => sel_data_vmm,
-        driverBusy              => driver_busy,
-        
-        vmmWordReady            => vmmWordReady_i,
-        vmmWord                 => vmmWord_i,
-        vmmEventDone            => vmmEventDone_i,
-        
-        dt_state_o              => dt_state,
-        dt_cntr_st_o            => dt_cntr_st
+        ------------------------------------
+        --- Continuous Readout Interface ---
+        clkTkProc       => clk_40,
+        clkDtProc       => clk_50,
+        clk             => userclk2,
+        --
+        daq_enable      => daq_enable_i,
+        trigger_pulse   => pf_trigVmmRo,
+        cktk_max        => cktk_max_num,
+        --
+        sel_data        => sel_data_vmm,
+        driverBusy      => driver_busy,
+        --
+        dt_state_o      => dt_state,
+        dt_cntr_st_o    => dt_cntr_st,
+        ------------------------------------
+        ---- Level-0 Readout Interface -----
+        clk_ckdt        => clk_160_gen,
+        clk_des         => clk_320_gen,
+        rst             => rst_l0_glbl,
+        rst_buff        => rst_l0_buff,
+        rst_intf_proc   => rst_l0_intf,
+        --
+        level_0         => level_0,
+        --
+        rd_ena_buff     => rd_ena_l0_buff,
+        ------------------------------------
+        ---- Packet Formation Interface ----
+        vmmWordReady    => vmmWordReady_i,
+        vmmWord         => vmmWord_i,
+        vmmEventDone    => vmmEventDone_i,
+        vmmId           => pf_vmmIdRo,
+        ------------------------------------
+        ---------- VMM3 Interface ----------
+        vmm_data0_vec   => data0_in_vec,
+        vmm_data1_vec   => data1_in_vec,
+        vmm_ckdt_vec    => ckdt_out_vec,
+        vmm_cktk_vec    => cktk_out_vec
     );
 
 trigger_instance: trigger

@@ -219,6 +219,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/level0_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
@@ -228,7 +229,11 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/readout/vmm_readout.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmm_driver.vhd"]"\
- "[file normalize "$origin_dir/sources_1/readout/L0_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/readout/vmm_readout_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/readout/level0_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/readout/l0_rst.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/readout/l0_buffer_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/readout/l0_deserializer_decoder.vhd"]"\
 ]
 
 add_files -norecurse -fileset $obj $files
@@ -519,12 +524,27 @@ set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/readout/packet_formation.vhd"
+set file "$origin_dir/sources_1/readout/vmm_readout_wrapper.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
-set file "$origin_dir/sources_1/readout/L0_wrapper.vhd"
+set file "$origin_dir/sources_1/readout/level0_wrapper.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/readout/l0_buffer_wrapper.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/readout/l0_deserializer_decoder.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/readout/l0_rst.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj

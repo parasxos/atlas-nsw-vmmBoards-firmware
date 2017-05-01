@@ -44,7 +44,6 @@ entity vmm_readout_wrapper is
     ---- Level-0 Readout Interface -----
     clk_ckdt        : in  std_logic;                    -- will be forwarded to the VMM
     clk_des         : in  std_logic;                    -- must be twice the frequency of CKDT
-    rst             : in  std_logic;                    -- logic reset
     rst_buff        : in  std_logic;                    -- reset the level-0 buffer
     rst_intf_proc   : in  std_logic;                    -- reset the pf interface
     --
@@ -107,7 +106,6 @@ architecture RTL of vmm_readout_wrapper is
         clk_ckdt        : in  std_logic; -- will be forwarded to the VMM
         clk_des         : in  std_logic; -- must be twice the frequency of CKDT
         clk             : in  std_logic; -- buffer read domain
-        rst             : in  std_logic; -- logic reset
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
         ------------------------------------
@@ -186,7 +184,6 @@ readout_vmm_l0: level0_wrapper
         clk_ckdt        => clk_ckdt,
         clk_des         => clk_des,
         clk             => clk,
-        rst             => rst,
         rst_buff        => rst_buff,
         level_0         => level_0,
         ------------------------------------

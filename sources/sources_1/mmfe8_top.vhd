@@ -538,7 +538,6 @@ architecture Behavioral of mmfe8_top is
     signal art_out_ff               : std_logic := '0';
     signal dt_state                 : std_logic_vector(3 downto 0) := b"0000";
     signal dt_cntr_st               : std_logic_vector(3 downto 0) := b"0000";
-    signal rst_l0_glbl              : std_logic := '0';
     signal rst_l0_buff              : std_logic := '0';
     signal rst_l0_buff_flow         : std_logic := '1';
     signal rst_l0_pf                : std_logic := '0';
@@ -766,21 +765,21 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- Overview
     -------------------------------------------------------------------
-    attribute mark_debug of is_state                  : signal is "TRUE";
-    attribute mark_debug of pf_dbg_st                 : signal is "TRUE";
-    attribute mark_debug of dt_state                  : signal is "TRUE";
-    attribute mark_debug of dt_cntr_st                : signal is "TRUE";
-    attribute mark_debug of FIFO2UDP_state            : signal is "TRUE";
-    attribute mark_debug of faifouki                  : signal is "TRUE";
-    attribute mark_debug of UDPDone                   : signal is "TRUE";
-    attribute mark_debug of CKBC_glbl                 : signal is "TRUE";
-    attribute mark_debug of tr_out_i                  : signal is "TRUE";
+    --attribute mark_debug of is_state                  : signal is "TRUE";
+    --attribute mark_debug of pf_dbg_st                 : signal is "TRUE";
+    --attribute mark_debug of dt_state                  : signal is "TRUE";
+    --attribute mark_debug of dt_cntr_st                : signal is "TRUE";
+    --attribute mark_debug of FIFO2UDP_state            : signal is "TRUE";
+    --attribute mark_debug of faifouki                  : signal is "TRUE";
+    --attribute mark_debug of UDPDone                   : signal is "TRUE";
+    --attribute mark_debug of CKBC_glbl                 : signal is "TRUE";
+    --attribute mark_debug of tr_out_i                  : signal is "TRUE";
 --    attribute mark_debug of conf_state                : signal is "TRUE";
 --    attribute mark_debug of din_valid                 : signal is "TRUE";
-    attribute mark_debug of sel_data_vmm              : signal is "TRUE";
-    attribute mark_debug of driver_busy               : signal is "TRUE";
-    attribute mark_debug of vmmWord_i                 : signal is "TRUE";
-    attribute mark_debug of CKTP_glbl                 : signal is "TRUE";
+    --attribute mark_debug of sel_data_vmm              : signal is "TRUE";
+    --attribute mark_debug of driver_busy               : signal is "TRUE";
+    --attribute mark_debug of vmmWord_i                 : signal is "TRUE";
+    --attribute mark_debug of CKTP_glbl                 : signal is "TRUE";
     
     -------------------------------------------------------------------
     -- Other
@@ -904,7 +903,6 @@ architecture Behavioral of mmfe8_top is
             ---- Level-0 Readout Interface -----
             clk_ckdt        : in  std_logic;                    -- will be forwarded to the VMM
             clk_des         : in  std_logic;                    -- must be twice the frequency of CKDT
-            rst             : in  std_logic;                    -- logic reset
             rst_buff        : in  std_logic;                    -- reset the level-0 buffer
             rst_intf_proc   : in  std_logic;                    -- reset the pf interface
             --
@@ -1845,7 +1843,6 @@ readout_vmm: vmm_readout_wrapper
         ---- Level-0 Readout Interface -----
         clk_ckdt        => clk_160_gen,
         clk_des         => clk_320_gen,
-        rst             => rst_l0_glbl,
         rst_buff        => rst_l0_buff,
         rst_intf_proc   => rst_l0_pf,
         --
@@ -2520,7 +2517,6 @@ end process;
     TRIGGER_OUT_P           <= art2;
     TRIGGER_OUT_N           <= not art2;
     MO                      <= MO_i;
-    rst_l0_glbl             <= '0'; -- unused for the time being
     rst_l0_buff             <= rst_l0_buff_flow or rst_l0_pf;
 
     test_data               <= udp_rx_int.data.data_in;
@@ -2592,11 +2588,11 @@ end process;
 --        probe5  => flowProbe
 --    );
 
-ila_top: ila_overview
-    port map (
-        clk     => userclk2,
-        probe0  => overviewProbe
-    );
+--ila_top: ila_overview
+--    port map (
+--        clk     => userclk2,
+--        probe0  => overviewProbe
+--    );
     
 --VIO_DEFAULT_IP: vio_ip
 --      PORT MAP (

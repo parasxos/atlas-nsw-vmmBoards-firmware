@@ -42,6 +42,10 @@ architecture RTL of CDCC is
     signal data_sync_stage_0    : std_logic_vector(NUMBER_OF_BITS - 1 downto 0) := (others => '0');
     signal data_out_s_int       : std_logic_vector(NUMBER_OF_BITS - 1 downto 0) := (others => '0');
 
+    attribute ASYNC_REG : string;
+    attribute ASYNC_REG of data_sync_stage_0    : signal is "TRUE";
+    attribute ASYNC_REG of data_out_s_int       : signal is "TRUE";
+
 begin
 
 -------------------------------------------------------
@@ -53,7 +57,6 @@ begin
         data_in_reg <= data_in;
     end if;
 end process;
-
 
 -------------------------------------------------------
 -- Double synchronization

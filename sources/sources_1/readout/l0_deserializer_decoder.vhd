@@ -14,7 +14,9 @@
 -- Dependencies: 
 -- 
 -- Changelog: 
--- 
+-- 30.04.2017: Changed the way wr_en is asserted to comply with the halved wr_clk
+-- of the vmm level-0 data buffer. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
@@ -29,10 +31,11 @@ entity l0_deserializer_decoder is
         clk_ckdt    : in  std_logic; -- will be forwarded to the VMM
         clk_des     : in  std_logic; -- must be twice the frequency of CKDT
         level_0     : in  std_logic; -- level-0 signal
-        rst         : in  std_logic; -- logic reset
         ------------------------------------
         -------- Buffer Interface ----------
+        inhib_wr    : in  std_logic;
         dout_dec    : out std_logic_vector(7 downto 0);
+        commas_true : out std_logic;
         wr_en       : out std_logic;
         ------------------------------------
         ---------- VMM Interface -----------
@@ -75,6 +78,7 @@ architecture RTL of l0_deserializer_decoder is
     signal align_sreg   : std_logic_vector(4 downto 0) := (others => '0');
     signal L0_8B_data   : std_logic_vector(7 downto 0) := (others => '0');
     signal L0_8B_data_i : std_logic_vector(7 downto 0) := (others => '0');
+    signal L0_8B_data_s : std_logic_vector(7 downto 0) := (others => '0');
     signal L0_8B_K      : std_logic_vector(0 downto 0) := (others => '0');
     signal din_dec      : std_logic_vector(9 downto 0) := (others => '0');
 
@@ -88,6 +92,15 @@ architecture RTL of l0_deserializer_decoder is
     signal comma_valid  : std_logic := '0';
     signal word10b_rdy  : std_logic := '0';
     signal dec_en       : std_logic := '0';
+
+    signal rdy_str      : std_logic := '0';
+    signal rdt_str_s    : std_logic := '0';
+    signal flag_0       : std_logic := '0';
+    signal flag_1       : std_logic := '0';
+    signal wr_en_i      : std_logic := '0';
+
+    signal cnt_commas       : unsigned(4 downto 0) := (others => '0');
+    constant cnt_thr        : unsigned(4 downto 0) := "11111"; -- 6 consecutive commas       
     
     type stateType is (ST_IDLE, ST_COUNT, ST_HOLD, ST_CHECK_CKTP);
     signal state : stateType := ST_IDLE;
@@ -97,6 +110,9 @@ architecture RTL of l0_deserializer_decoder is
     attribute ASYNC_REG of data_1_i     : signal is "TRUE";
     attribute ASYNC_REG of data_0       : signal is "TRUE";
     attribute ASYNC_REG of data_1       : signal is "TRUE";
+    attribute ASYNC_REG of L0_8B_data_s : signal is "TRUE";
+    attribute ASYNC_REG of dout_dec     : signal is "TRUE";
+    attribute ASYNC_REG of rdt_str_s    : signal is "TRUE";
 
 --    attribute mark_debug : string;
 --    attribute mark_debug of level_0     : signal is "TRUE";
@@ -118,11 +134,9 @@ begin
 end process;
 
 -- raw, encoded data shift register
-sreg_proc: process(clk_des, rst)
+sreg_proc: process(clk_des)
 begin
-    if(rst = '1')then
-        L0_10B_sreg <= (others => '0');
-    elsif(rising_edge(clk_des))then
+    if(rising_edge(clk_des))then
         L0_10B_sreg <= din_buff & L0_10B_sreg(9 downto 2);
         L0_10B_prev <= L0_10B_sreg;
     end if;
@@ -139,11 +153,9 @@ begin
 end process;
 
 -- alignment shift register
-align_sreg_proc: process(rst, clk_des)
+align_sreg_proc: process(clk_des)
 begin
-    if(rst = '1')then
-        align_sreg <= "00000";
-    elsif(rising_edge(clk_des))then
+    if(rising_edge(clk_des))then
         if comma_valid = '1' then
             align_sreg <= "10000"; 
         else
@@ -161,19 +173,79 @@ begin
     end if;
 end process;
 
--- write_enable asserter / data pipeline
-wr_ena_proc: process(clk_des)
+-- process that counts commas
+cnt_commas_proc: process(clk_des)
 begin
     if(rising_edge(clk_des))then
-        if(L0_8B_data = x"BC")then -- only write non-comma characters
-            wr_en <= '0';    
+        if(L0_8B_data_i /= x"BC")then
+            cnt_commas  <= (others => '0');
+            commas_true <= '0';
         else
-            wr_en <= word10b_rdy;
+            if(cnt_commas = cnt_thr)then
+                commas_true <= '1';
+            else
+                commas_true <= '0';
+                cnt_commas  <= cnt_commas + 1;
+            end if;
+        end if;
+    end if;
+end process;
+
+------------ OLD ----------------
+-- write_enable asserter / data pipeline
+--wr_ena_proc: process(clk_des)
+--begin
+--    if(rising_edge(clk_des))then
+--        if(L0_8B_data = x"BC")then -- only write non-comma characters
+--            wr_en_i <= '0';    
+--        else
+--            wr_en_i <= word10b_rdy;
+--        end if;
+--        -- data pipeline
+--        L0_8B_data_i    <= L0_8B_data;
+--        dout_dec        <= L0_8B_data_i;
+--    end if;
+--end process;
+-----------------------------------
+
+-- process that stretches the ready signal, to be latched by the slower clock domain
+-- if VMM data have been decoded
+rdy_stretcher: process(clk_des)
+begin
+    if(rising_edge(clk_des))then
+        if(flag_1 = '1')then -- last step
+            flag_1 <= '0';
+        elsif(flag_0 = '1')then -- second step
+            flag_0 <= '0';
+            flag_1 <= '1';
+        elsif(word10b_rdy = '1' and L0_8B_data /= X"BC")then -- first step
+            rdy_str <= '1';
+            flag_0  <= '1';
+        else
+            rdy_str <= '0';
+            flag_0  <= '0';
+            flag_1  <= '0';
         end if;
         -- data pipeline
-        L0_8B_data_i    <= L0_8B_data;
-        dout_dec        <= L0_8B_data_i;
-        
+        L0_8B_data_i <= L0_8B_data;
+    end if;
+end process;
+
+-- process that detects the stretched ready signal to assert the FIFO wr_en
+wr_ena_proc: process(clk_ckdt)
+begin
+    if(rising_edge(clk_ckdt))then
+        if(wr_en_i = '1')then
+            wr_en_i <= '0';
+        elsif(rdt_str_s = '1' and inhib_wr = '0')then -- resync rdy_str @ 160?
+            wr_en_i <= '1';
+        else
+            wr_en_i <= '0';
+        end if;
+        -- stretched pulse synchronizer and data pipeline    
+        L0_8B_data_s    <= L0_8B_data_i;
+        dout_dec        <= L0_8B_data_s;
+        rdt_str_s       <= rdy_str;
     end if;
 end process;
 
@@ -186,7 +258,7 @@ Decoder8b10b_inst: Decoder8b10b
    port map(
       clk           => clk_des,
       clkEn         => dec_en,
-      rst           => rst,
+      rst           => '0',
       dataIn        => din_dec,
       dataOut       => L0_8B_data,
       dataKOut      => L0_8B_K,
@@ -207,5 +279,6 @@ Decoder8b10b_inst: Decoder8b10b
   vmm_ckdt      <= clk_ckdt;
   word10b_rdy   <= align_sreg(4);
   din_buff      <= data_0 & data_1;
+  wr_en         <= wr_en_i;
   
 end RTL;

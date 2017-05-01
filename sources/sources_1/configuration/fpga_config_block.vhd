@@ -96,6 +96,14 @@ architecture RTL of fpga_config_block is
     signal ext_trg_i        : std_logic := '0';
     signal ext_trg_sync     : std_logic := '0';
 
+    -- async_regs
+    attribute ASYNC_REG : string;
+    
+    attribute ASYNC_REG of daq_on_i     : signal is "true";
+    attribute ASYNC_REG of daq_on_sync  : signal is "true";
+    attribute ASYNC_REG of ext_trg_i    : signal is "true";
+    attribute ASYNC_REG of ext_trg_sync : signal is "true";
+
 begin
     
 -- register the valid signal

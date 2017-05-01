@@ -131,6 +131,24 @@ architecture Behavioral of trigger is
 --    attribute mark_debug of tr_out_i_ff_synced  :    signal    is    "true";
 --    attribute mark_debug of trext               :    signal    is    "true";
 --    attribute mark_debug of tren_buff           :    signal    is    "true";
+
+-------------------------------------------------------------------
+-- Async Regs
+-------------------------------------------------------------------
+    attribute ASYNC_REG : string;
+    
+    attribute ASYNC_REG of tr_out_i_stage1      : signal is "true";
+    attribute ASYNC_REG of tr_out_i_ff_synced   : signal is "true";
+    attribute ASYNC_REG of trext_stage_resynced : signal is "true";
+    attribute ASYNC_REG of trext_ff_resynced    : signal is "true";
+    attribute ASYNC_REG of trext_stage1         : signal is "true";
+    attribute ASYNC_REG of trext_ff_synced      : signal is "true";
+    attribute ASYNC_REG of tren_buff_stage1     : signal is "true";
+    attribute ASYNC_REG of tren_buff_ff_synced  : signal is "true";
+    attribute ASYNC_REG of mode_stage1          : signal is "true";
+    attribute ASYNC_REG of mode_ff_synced       : signal is "true";
+    attribute ASYNC_REG of trmode_stage1        : signal is "true";
+    attribute ASYNC_REG of trmode_ff_synced     : signal is "true";
     
 -- Components if any
 

@@ -31,7 +31,6 @@ entity level0_wrapper is
         clk_ckdt        : in  std_logic; -- will be forwarded to the VMM
         clk_des         : in  std_logic; -- must be twice the frequency of CKDT
         clk             : in  std_logic; -- buffer read domain
-        rst             : in  std_logic; -- logic reset
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
         ------------------------------------
@@ -60,9 +59,10 @@ component l0_deserializer_decoder
         clk_ckdt    : in  std_logic; -- will be forwarded to the VMM
         clk_des     : in  std_logic; -- must be twice the frequency of CKDT
         level_0     : in  std_logic; -- level-0 signal
-        rst         : in  std_logic; -- logic reset
         ------------------------------------
         -------- Buffer Interface ----------
+        inhib_wr    : in  std_logic;
+        commas_true : out std_logic;
         dout_dec    : out std_logic_vector(7 downto 0);
         wr_en       : out std_logic;
         ------------------------------------
@@ -78,13 +78,15 @@ component l0_buffer_wrapper is
         ------------------------------------
         ------- General Interface ----------
         clk_des         : in  std_logic;
+        clk_ckdt        : in  std_logic;
         clk             : in  std_logic;
-        rst             : in  std_logic;
         rst_buff        : in  std_logic;
         ------------------------------------
         --- Deserializer Interface ---------
-        dout_dec        : in std_logic_vector(7 downto 0);
-        wr_en           : in std_logic;
+        inhib_wr        : out std_logic;
+        commas_true     : in  std_logic;
+        dout_dec        : in  std_logic_vector(7 downto 0);
+        wr_en           : in  std_logic;
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     : in  std_logic;
@@ -112,21 +114,30 @@ end component;
     signal rd_ena_buff_i    : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWordReady_i   : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmEventDone_i   : std_logic_vector(8 downto 1)  := (others => '0');
+    signal inhib_wr_i       : std_logic_vector(8 downto 1)  := (others => '0');
+    signal commas_true_i    : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWord_i        : vmmWord_array;
     signal dout_dec         : dout_dec_array;
 
-    signal rst_l0_logic     : std_logic := '0';
     signal rst_l0_buffers   : std_logic := '0';
     signal level_0_bufg     : std_logic := '0';
+    
+-- function to convert std_logic to integer for instance generation
+function sl2int (x: std_logic) return integer is
+begin
+    if(x='1')then 
+        return 8; 
+    else 
+        return 1; 
+    end if;
+end;
 
 begin
   
 ---------------------------------------------
------------- One VMM Case -------------------
+------- Add VMM Readout Instances -----------
 ---------------------------------------------
-one_vmm_case: if is_mmfe8 = '0' generate
-
- add_instances: for I in 1 to 1 generate 
+readout_instances: for I in 1 to sl2int(is_mmfe8) generate 
 
 des_dec_inst: l0_deserializer_decoder
     Port Map(
@@ -135,9 +146,10 @@ des_dec_inst: l0_deserializer_decoder
         clk_ckdt    => clk_ckdt,
         clk_des     => clk_des,
         level_0     => level_0,
-        rst         => rst_l0_logic,
         ------------------------------------
         -------- Buffer Interface ----------
+        inhib_wr    => inhib_wr_i(I),
+        commas_true => commas_true_i(I),
         dout_dec    => dout_dec(I),
         wr_en       => wr_en(I),
         ------------------------------------
@@ -152,11 +164,13 @@ l0_buf_wr_inst: l0_buffer_wrapper
         ------------------------------------
         ------- General Interface ----------
         clk_des         => clk_des,
+        clk_ckdt        => clk_ckdt,
         clk             => clk,
-        rst             => rst_l0_logic,
         rst_buff        => rst_l0_buffers,
         ------------------------------------
         --- Deserializer Interface ---------
+        inhib_wr        => inhib_wr_i(I),
+        commas_true     => commas_true_i(I),
         dout_dec        => dout_dec(I),
         wr_en           => wr_en(I),
         ------------------------------------
@@ -168,69 +182,15 @@ l0_buf_wr_inst: l0_buffer_wrapper
         vmmEventDone    => vmmEventDone_i(I)
     );
     
- end generate add_instances;
-
-end generate one_vmm_case;
-
----------------------------------------------
------------- Multiple VMMs Case -------------
----------------------------------------------
-
-eight_vmm_case: if is_mmfe8 = '1' generate
-
- add_instances: for I in 1 to 8 generate 
-
-l0_deserializer_decoder_inst: l0_deserializer_decoder
-    Port Map(
-        ------------------------------------
-        ------- General Interface ----------
-        clk_ckdt    => clk_ckdt,
-        clk_des     => clk_des,
-        level_0     => level_0,
-        rst         => rst_l0_logic,
-        ------------------------------------
-        -------- Buffer Interface ----------
-        dout_dec    => dout_dec(I),
-        wr_en       => wr_en(I),
-        ------------------------------------
-        ---------- VMM Interface -----------
-        vmm_ckdt    => vmm_ckdt_vec(I),
-        vmm_data0   => vmm_data0_vec(I),
-        vmm_data1   => vmm_data1_vec(I)
-    );
-    
-l0_buffer_wrapper_inst: l0_buffer_wrapper
-    Port Map(
-        ------------------------------------
-        ------- General Interface ----------
-        clk_des         => clk_des,
-        clk             => clk,
-        rst             => rst_l0_logic,
-        rst_buff        => rst_l0_buffers,
-        ------------------------------------
-        --- Deserializer Interface ---------
-        dout_dec        => dout_dec(I),
-        wr_en           => wr_en(I),
-        ------------------------------------
-        ---- Packet Formation Interface ----
-        rd_ena_buff     => rd_ena_buff_i(I),
-        rst_intf_proc   => rst_intf_proc,
-        vmmWordReady    => vmmWordReady_i(I),
-        vmmWord         => vmmWord_i(I),
-        vmmEventDone    => vmmEventDone_i(I)
-    );
-    
- end generate add_instances;
- 
-end generate eight_vmm_case;
+end generate readout_instances;
 
 -- reset asserter 
 l0_rst_inst: l0_rst
     Port Map(
         clk         => clk,
-        rst         => rst,
+        rst         => '0',
         rst_buff    => rst_buff,
-        rst_l0      => rst_l0_logic,
+        rst_l0      => open,
         rst_l0_buff => rst_l0_buffers
     );
 

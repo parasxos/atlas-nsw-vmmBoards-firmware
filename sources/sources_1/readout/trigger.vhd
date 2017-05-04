@@ -37,12 +37,14 @@ entity trigger is
             cktp_enable     : in std_logic;
             cktp_pulse_width: in STD_LOGIC_VECTOR(4 downto 0);
             CKTP_raw        : in STD_LOGIC;
+            pfBusy          : in STD_LOGIC;
             
             tren            : in STD_LOGIC;
             tr_hold         : in STD_LOGIC;
             trmode          : in STD_LOGIC;
             trext           : in STD_LOGIC;
             level_0         : out STD_LOGIC;
+            accept_wr       : out STD_LOGIC;
 
             reset           : in STD_LOGIC;
 
@@ -75,19 +77,32 @@ architecture Behavioral of trigger is
     signal mode_ff_synced       : std_logic := '0';
     signal trmode_stage1        : std_logic := '0';
     signal trmode_ff_synced     : std_logic := '0';
+    signal accept_wr_i          : std_logic := '0';
+    signal accept_wr_i_stage1   : std_logic := '0';
+    signal accept_wr_synced125  : std_logic := '0';
     signal trraw_synced125_i    : std_logic := '0';
+    signal pfBusy_stage1        : std_logic := '0';
+    signal pfBusy_stage_synced  : std_logic := '0';
     signal trint_stage_synced   : std_logic := '0';
     signal trint_stage_synced125: std_logic := '0';
     signal trint_ff_synced125   : std_logic := '0';
+    signal flag_sent_stage1     : std_logic := '0';
+    signal flag_sent_synced     : std_logic := '0';
     signal cktp_width_final     : std_logic_vector(11 downto 0) := "000101000000";           --4 * 80 = 320
     signal trint                : std_logic := '0';
+    signal cnt                  : integer range 0 to 7 := 0;
+    signal level_0_int          : std_logic := '0';
+    signal level_0_i            : std_logic := '0';
+    signal level_0_s            : std_logic := '0';
+    signal level_0_25ns         : std_logic := '0';
+    signal flag_sent            : std_logic := '0';
  
     -- Special Readout Mode
     signal request2ckbc_i    : std_logic := '0';
     signal trigLatencyCnt    : integer range 0 to 255 := 0;
     signal trigLatency       : integer := 140;
     
-    type stateType is (waitingForTrigger, waitingForLatency, issueRequest, checkTrigger);
+    type stateType is (waitingForTrigger, waitingForLatency, waitingForLatency_1, waitingForLatency_2, issueRequest, checkTrigger);
     signal state            : stateType := waitingForTrigger;
     signal state_l0         : stateType := waitingForTrigger;
     
@@ -149,6 +164,14 @@ architecture Behavioral of trigger is
     attribute ASYNC_REG of mode_ff_synced       : signal is "true";
     attribute ASYNC_REG of trmode_stage1        : signal is "true";
     attribute ASYNC_REG of trmode_ff_synced     : signal is "true";
+    attribute ASYNC_REG of accept_wr_i_stage1   : signal is "true";
+    attribute ASYNC_REG of accept_wr_synced125  : signal is "true";
+    attribute ASYNC_REG of pfBusy_stage1        : signal is "true";
+    attribute ASYNC_REG of pfBusy_stage_synced  : signal is "true";
+    attribute ASYNC_REG of flag_sent_stage1     : signal is "true";
+    attribute ASYNC_REG of flag_sent_synced     : signal is "true";
+    attribute ASYNC_REG of level_0_i            : signal is "TRUE";
+    attribute ASYNC_REG of level_0_s            : signal is "TRUE";
     
 -- Components if any
 
@@ -160,6 +183,7 @@ architecture Behavioral of trigger is
     end component;
     
     component trint_gen
+    generic(l0_enabled : std_logic);
     port(
         clk_160     : in  std_logic;
         clk_125     : in  std_logic;
@@ -284,47 +308,95 @@ begin
         case state_l0 is
 
         when waitingForTrigger =>
-            level_0         <= '0';
+            level_0_int     <= '0';
+            accept_wr_i     <= '0';
             trigLatencyCnt  <= 0;
 
-            if((trext_ff_synced = '1' and trmode_ff_synced = '1') or
-                (CKTP_raw = '1' and trmode_ff_synced = '0'))then
-                state_l0 <= waitingForLatency;
+            -- proceed only if pf is @ idle
+            if((trext_ff_synced = '1' and trmode_ff_synced = '1' and pfBusy_stage_synced = '0') or
+                (trint = '1' and trmode_ff_synced = '0' and pfBusy_stage_synced = '0'))then
+                state_l0 <= waitingForLatency_1;
             else
                 state_l0 <= waitingForTrigger;
             end if;
 
-        when waitingForLatency =>
-            if trigLatencyCnt < trigLatency then
+        when waitingForLatency_1 => -- open the acceptance window for the level-0 buffer
+            if trigLatencyCnt < trigLatency - 30 then
                 trigLatencyCnt  <= trigLatencyCnt + 1;
-                state_l0        <= waitingForLatency;
+                state_l0        <= waitingForLatency_1;
             else
-                trigLatencyCnt  <= 0;
-                level_0         <= '1';
-                state_l0        <= issueRequest;
+                accept_wr_i     <= '1';
+                state_l0        <= waitingForLatency_2;
             end if;
 
+        when waitingForLatency_2 =>
+            if trigLatencyCnt < trigLatency then
+                trigLatencyCnt  <= trigLatencyCnt + 1;
+                state_l0        <= waitingForLatency_2;
+            else
+                trigLatencyCnt  <= 0;
+                state_l0        <= issueRequest;
+            end if;
+            
         when issueRequest =>
-            level_0     <= '1'; -- level_0 has a width of 12.5 ns
-            state_l0    <= checkTrigger;
+            level_0_int <= '1';
+            accept_wr_i <= '0';
+            if(flag_sent_synced = '1')then
+                state_l0 <= checkTrigger;
+            else
+                state_l0 <= issueRequest;
+            end if;
+            
+--        when issueRequest =>
+--            level_0_int <= '1'; -- level_0 has a width of 18.75 ns
+--            accept_wr_i <= '0';
+--            if(cnt = 5)then
+--                cnt         <= 0;
+--                state_l0    <= checkTrigger;
+--            else
+--                cnt         <= cnt + 1;
+--                state_l0    <= issueRequest;
+--            end if;
 
         when checkTrigger =>
-            level_0     <= '0';
+            level_0_int     <= '0';
 
             if((trext_ff_synced = '0' and trmode_ff_synced = '1') or
-                (CKTP_raw = '0' and trmode_ff_synced = '0'))then
+                (trint = '0' and trmode_ff_synced = '0'))then
                 state_l0 <= waitingForTrigger;
             else
                 state_l0 <= checkTrigger;
             end if;
 
         when others =>
-            level_0         <= '0';
+            level_0_int     <= '0';
             trigLatencyCnt  <= 0;
+            accept_wr_i     <= '0';
             state_l0        <= waitingForTrigger;
         end case;
         
     end if;
+end process;
+
+level0_40_proc: process(ckbc)
+begin
+    if(rising_edge(ckbc))then
+        if(flag_sent = '1' and level_0_s = '1')then null; -- wait
+        elsif(flag_sent = '1' and level_0_s = '0')then -- reset everything
+            level_0_25ns <= '0';
+            flag_sent    <= '0';
+        elsif(level_0_25ns = '1')then -- level_0 to VMMs has a width of 25ns
+            level_0_25ns <= '0';
+            flag_sent    <= '1';
+        elsif(level_0_s = '1')then -- level_0 latched from level0Asserter
+            level_0_25ns <= '1';
+        else
+            level_0_25ns <= '0';
+            flag_sent    <= '0';
+        end if;
+    end if;
+        level_0_i <= level_0_int;
+        level_0_s <= level_0_i;
 end process;
 
 end generate generate_level0; 
@@ -387,6 +459,8 @@ begin
         trext_ff_resynced       <= trext_stage_resynced;
         trint_stage_synced125   <= trint;
         trint_ff_synced125      <= trint_stage_synced125;
+        accept_wr_i_stage1      <= accept_wr_i;
+        accept_wr_synced125     <= accept_wr_i_stage1;
     end if;
 end process;
 
@@ -401,6 +475,10 @@ begin
         mode_ff_synced      <= mode_stage1;
         trmode_stage1       <= trmode;
         trmode_ff_synced    <= trmode_stage1;
+        pfBusy_stage1       <= pfBusy;
+        pfBusy_stage_synced <= pfBusy_stage1;
+        flag_sent_stage1    <= flag_sent;
+        flag_sent_synced    <= flag_sent_stage1;
     end if;
 end process;
 
@@ -454,9 +532,12 @@ tr_out              <= tr_out_i_ff_synced;
 request2ckbc        <= request2ckbc_i;
 trraw_synced125     <= trraw_synced125_i;
 trigLatency         <= to_integer(unsigned(latency));
+accept_wr           <= accept_wr_synced125;
+level_0             <= level_0_25ns;
 
 
 cktp_trint_module: trint_gen
+    generic map(l0_enabled => l0_enabled)
     port map(
         clk_160         => clk_art,
         clk_125         => clk,

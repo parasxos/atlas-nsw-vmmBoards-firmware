@@ -48,8 +48,10 @@ entity vmm_readout_wrapper is
     rst_intf_proc   : in  std_logic;                    -- reset the pf interface
     --
     level_0         : in  std_logic;                    -- level-0 signal
+    wr_accept       : in  std_logic;                    -- buffer acceptance window
     --
     rd_ena_buff     : in  std_logic;                    -- read the level-0 buffer
+    commas_true     : out std_logic_vector(8 downto 1); -- for debugging
     ------------------------------------
     ---- Packet Formation Interface ----
     vmmWordReady    : out std_logic;
@@ -108,6 +110,8 @@ architecture RTL of vmm_readout_wrapper is
         clk             : in  std_logic; -- buffer read domain
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
+        wr_accept       : in  std_logic; -- buffer acceptance window
+        commas_true     : out std_logic_vector(8 downto 1); -- for debugging
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     : in  std_logic;
@@ -186,6 +190,8 @@ readout_vmm_l0: level0_wrapper
         clk             => clk,
         rst_buff        => rst_buff,
         level_0         => level_0,
+        wr_accept       => wr_accept,
+        commas_true     => commas_true,
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     => rd_ena_buff,

@@ -22,6 +22,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 
 entity trint_gen is
+Generic(l0_enabled : std_logic);
 Port(
     clk_160     : in  std_logic;
     clk_125     : in  std_logic;
@@ -38,13 +39,15 @@ architecture RTL of trint_gen is
     signal cktp_start_i     : std_logic := '0';
     signal cktp_start_s_0   : std_logic := '0';
     signal cktp_start_s     : std_logic := '0';
+    signal cktp_start_final : std_logic := '0';
+    signal cnt_delay        : unsigned(3 downto 0) := (others => '0');
     
     signal trint_i          : std_logic := '0'; -- synced @ 160
 --    signal trint_s_0        : std_logic := '0';
 --    signal trint_s          : std_logic := '0'; -- synced @ 125
 
-    type trint_state_type is (ST_IDLE, ST_WAIT, ST_TRINT);
-    signal state : trint_state_type := ST_IDLE;
+    type trint_state_type is (ST_INIT, ST_IDLE, ST_WAIT, ST_TRINT);
+    signal state : trint_state_type := ST_INIT;
 
     attribute ASYNC_REG : string;
     attribute ASYNC_REG of cktp_start_s_0  : signal is "TRUE";
@@ -78,20 +81,48 @@ begin
     end if;
 end process;
 
+-- delay assertion of cktp start
+cktp_enable_delayer_trint: process(clk_160)
+begin
+    if(rising_edge(clk_160))then
+        if(cktp_start_s = '1')then
+            if(cnt_delay < "1110")then
+                cnt_delay           <= cnt_delay + 1;
+                cktp_start_final    <= '0';
+            else
+                cktp_start_final    <= '1';
+            end if;
+        else
+            cnt_delay           <= (others => '0');
+            cktp_start_final    <= '0';
+        end if;
+    end if;
+end process;
+
 -- internal trigger FSM
 trint_fsm: process(clk_160)
 begin
     if(rising_edge(clk_160))then
-        if(cktp_start_s = '1')then
+        if(cktp_start_final = '1')then
             case state is
+            
+             -- only proceed if cktp is low
+            when ST_INIT =>
+                if(cktp_pulse = '0')then
+                    state <= ST_IDLE;
+                else
+                    state <= ST_INIT;
+                end if;
 
             -- wait for CKTP pulse
             when ST_IDLE =>
                 trint_i     <= '0';
                 trint_cnt   <= (others => '0');
 
-                if(cktp_pulse = '1')then
+                if(cktp_pulse = '1' and l0_enabled = '0')then
                     state <= ST_WAIT;
+                elsif(cktp_pulse = '1' and l0_enabled = '1')then
+                    state <= ST_TRINT;
                 else
                     state <= ST_IDLE;
                 end if;
@@ -110,7 +141,7 @@ begin
                     state <= ST_IDLE;
                 end if;
 
-            -- assert the internal trigger pulse (expected width ~ 400ns)
+            -- assert the internal trigger pulse (expected width ~ 400ns if continuous mode)
             when ST_TRINT =>
                 trint_i <= '1';
 
@@ -120,12 +151,12 @@ begin
                     state <= ST_IDLE;
                 end if;
 
-            when others => state <= ST_IDLE;
+            when others => state <= ST_INIT;
             end case;
         else
            trint_i      <= '0';
            trint_cnt    <= (others => '0');
-           state        <= ST_IDLE;
+           state        <= ST_INIT;
         end if;
     end if;
 end process;

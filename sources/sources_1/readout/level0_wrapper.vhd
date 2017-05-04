@@ -33,6 +33,8 @@ entity level0_wrapper is
         clk             : in  std_logic; -- buffer read domain
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
+        wr_accept       : in  std_logic; -- buffer acceptance window
+        commas_true     : out std_logic_vector(8 downto 1); -- for debugging
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     : in  std_logic;
@@ -81,6 +83,8 @@ component l0_buffer_wrapper is
         clk_ckdt        : in  std_logic;
         clk             : in  std_logic;
         rst_buff        : in  std_logic;
+        wr_accept       : in  std_logic;
+        level_0         : in  std_logic;
         ------------------------------------
         --- Deserializer Interface ---------
         inhib_wr        : out std_logic;
@@ -167,6 +171,8 @@ l0_buf_wr_inst: l0_buffer_wrapper
         clk_ckdt        => clk_ckdt,
         clk             => clk,
         rst_buff        => rst_l0_buffers,
+        wr_accept       => wr_accept,
+        level_0         => level_0,
         ------------------------------------
         --- Deserializer Interface ---------
         inhib_wr        => inhib_wr_i(I),
@@ -244,8 +250,8 @@ begin
         vmmWord                     <= vmmWord_i(7);
         vmmEventDone                <= vmmEventDone_i(7);
         rd_ena_buff_i(7)            <= rd_ena_buff;
-        rd_ena_buff_i(8 downto 2)   <= (others => '0');
         rd_ena_buff_i(6 downto 1)   <= (others => '0');
+        rd_ena_buff_i(8)            <= '0';
     when "111"  =>
         vmmWordReady                <= vmmWordReady_i(8);
         vmmWord                     <= vmmWord_i(8);
@@ -270,5 +276,7 @@ LEVEL0_BUFG: BUFG port map(O => level_0_bufg, I => level_0);
     vmm_cktk_vec(6) <= level_0_bufg;
     vmm_cktk_vec(7) <= level_0_bufg;
     vmm_cktk_vec(8) <= level_0_bufg;
+    
+    commas_true     <= commas_true_i;
     
 end RTL;

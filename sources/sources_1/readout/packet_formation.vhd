@@ -75,8 +75,8 @@ architecture Behavioral of packet_formation is
     signal globBcid_i       : std_logic_vector(15 downto 0);
     signal globBCID_etr		: std_logic_vector(11 downto 0) := (others => '0'); --globBCID counter as it is coming from ETR
     signal eventCounter_i   : unsigned(31 downto 0) := to_unsigned(0, 32);
-    signal wait_Cnt         : integer := 0;
-    signal vmmId_cnt        : integer := 0;
+    signal wait_Cnt         : integer range 0 to 31 := 0;
+    signal vmmId_cnt        : integer range 0 to 7 := 0;
     signal trigLatencyCnt   : integer := 0;
     signal trigLatency      : integer := 140; -- 700ns (140x5ns)
     signal pfBusy_i         : std_logic	:= '0';               -- control signal to be sent to ETR
@@ -227,6 +227,7 @@ begin
                 debug_state <= "00010";
 --                --tr_hold         <= '1';                 -- Prevent new triggers
                 packLen_cnt     <= x"000";              -- Reset length count
+                sel_wrenable    <= '0';
                 vmmId_i         <= std_logic_vector(to_unsigned(vmmId_cnt, 3));
                 state           <= captureEventID;
 
@@ -239,7 +240,13 @@ begin
                 debug_state         <= "00100";
                 rst_FIFO            <= '0';
                 daqFIFO_wr_en_hdr   <= '0';
-                state               <= sendHeaderStep1;
+                if(wait_Cnt < 3)then
+                    wait_Cnt <= wait_Cnt + 1;
+                    state    <= setEventID;
+                else
+                    wait_Cnt <= 0;
+                    state    <= sendHeaderStep1;
+                end if;
 
             when sendHeaderStep1 =>
                 debug_state         <= "00101";
@@ -250,15 +257,21 @@ begin
             when sendHeaderStep2 =>
                 debug_state         <= "00110";
                 daqFIFO_wr_en_hdr   <= '0';
-                state               <= sendHeaderStep3;
+                if(wait_Cnt < 3)then
+                    wait_Cnt <= wait_Cnt + 1;
+                    state    <= sendHeaderStep2;
+                else
+                    wait_Cnt <= 0;
+                    state    <= sendHeaderStep3;
+                end if;
 
             when sendHeaderStep3 =>
                 if(sel_cnt < 3 and l0_enabled = '0')then -- incr the counter to select the other parts of the header
                     sel_cnt <= sel_cnt + 1;   
-                    state   <= sendHeaderStep1;
+                    state   <= setEventID;
                 elsif(sel_cnt < 1 and l0_enabled = '1')then
                     sel_cnt <= sel_cnt + 1;   
-                    state   <= sendHeaderStep1;
+                    state   <= setEventID;
                 else -- the whole header has been sent
                     state   <= triggerVmmReadout;
                 end if;
@@ -315,9 +328,12 @@ begin
 
             when sendTrailer =>
                 debug_state     <= "01100";
-                drv_enable      <= '0';
-                if(l0_enabled = '0')then packLen_i <= packLen_cnt; else null; end if;
-                state           <= packetDone;
+                if(l0_enabled = '0')then
+                    packLen_i <= packLen_cnt;
+                else
+                    packLen_i <= packLen_cnt + packLen_drv2pf; 
+                end if;
+                state         <= packetDone;
 
             when packetDone =>
                 debug_state     <= "01101";
@@ -331,12 +347,15 @@ begin
             when eventDone =>
                 debug_state     <= "01110";
                 end_packet_int  <= '0';
-                if vmmId_cnt >= 7 then
+                drv_enable      <= '0';
+                if vmmId_cnt = 7 then
                     vmmId_cnt   <= 0;
                     state       <= isUDPDone;
                 else
-                    vmmId_cnt   <= vmmId_cnt + 1;
-                    state       <= S2;
+                    vmmId_cnt    <= vmmId_cnt + 1;
+                    sel_cnt      <= "000";
+                    sel_wrenable <= '0';
+                    state        <= S2;
                 end if;
                 
 --            when resetVMMs =>
@@ -354,9 +373,10 @@ begin
 
             when isUDPDone =>
                 debug_state 	<= "01110";
+                drv_enable      <= '0';
                 end_packet_int  <= '0';
                 rst_l0          <= '1'; -- reset the level0 buffers and the interface with packet_formation
-                pfBusy_i        <= '0';
+               -- pfBusy_i        <= '0';
                 if (UDPDone = '1') then -- Wait for the UDP packet to be sent
                     state       <= isTriggerOff;
                 end if;
@@ -426,14 +446,16 @@ vmm_driver_inst: vmm_driver
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
 
-    header_l0(31 downto 16) <= vmmId_i & b"00000" & std_logic_vector(eventCounter_i(23 downto 16));
-    --                            3    &     5    &         8
+  ------------------------  
+    header_l0(31 downto 16) <=  b"00000" & vmmId_i  & std_logic_vector(eventCounter_i(23 downto 16));
+  --                              5      &     3    &               8
     header_l0(15 downto 0)  <= std_logic_vector(eventCounter_i(15 downto 0));
+  --                                        16
 
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & vmmId_i;  
                             --    8    &    16    &     5    &   3
-    dbg_st_o        <= debug_state;
+    dbg_st_o                <= debug_state;
 
 --ilaPacketFormation: ila_pf
 --port map(

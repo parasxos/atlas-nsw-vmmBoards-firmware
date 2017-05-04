@@ -113,6 +113,34 @@ architecture Behavioral of vmm_readout is
     signal vmm_cktk             : std_logic := '0';     -- Strobe to VMM CKTK
     signal vmm_ckdt_i           : std_logic := '0';
 
+    -- ASYNC_REG attributes
+    attribute ASYNC_REG : string;
+
+    attribute ASYNC_REG of vmmEventDone_stage1      : signal is "TRUE";
+    attribute ASYNC_REG of vmmEventDone_ff_sync     : signal is "TRUE";
+    attribute ASYNC_REG of vmmWordReady_stage1      : signal is "TRUE";
+    attribute ASYNC_REG of vmmWordReady_ff_sync     : signal is "TRUE";
+    attribute ASYNC_REG of vmmWord_stage1           : signal is "TRUE";
+    attribute ASYNC_REG of vmmWord_ff_sync          : signal is "TRUE";
+    attribute ASYNC_REG of daq_enable_stage1        : signal is "TRUE";
+    attribute ASYNC_REG of daq_enable_ff_sync       : signal is "TRUE";
+    attribute ASYNC_REG of daq_enable_stage1_Dt     : signal is "TRUE";
+    attribute ASYNC_REG of daq_enable_ff_sync_Dt    : signal is "TRUE";
+    attribute ASYNC_REG of trigger_pulse_stage1     : signal is "TRUE";
+    attribute ASYNC_REG of trigger_pulse_ff_sync    : signal is "TRUE";
+    attribute ASYNC_REG of cktk_max_i               : signal is "TRUE";
+    attribute ASYNC_REG of cktk_max_sync            : signal is "TRUE";
+    attribute ASYNC_REG of reading_out_word_stage1  : signal is "TRUE";
+    attribute ASYNC_REG of reading_out_word_ff_sync : signal is "TRUE";
+    attribute ASYNC_REG of vmm_data0_stage1         : signal is "TRUE";
+    attribute ASYNC_REG of vmm_data0_ff_sync        : signal is "TRUE";
+    attribute ASYNC_REG of vmm_data1_stage1         : signal is "TRUE";
+    attribute ASYNC_REG of vmm_data1_ff_sync        : signal is "TRUE";
+    attribute ASYNC_REG of cktkSent_stage1          : signal is "TRUE";
+    attribute ASYNC_REG of cktkSent_ff_sync         : signal is "TRUE";
+    attribute ASYNC_REG of driverBusy_stage1        : signal is "TRUE";
+    attribute ASYNC_REG of driverBusy_ff_sync       : signal is "TRUE";
+
     -- Debugging
     signal probe0_out           : std_logic_vector(127 downto 0);
 

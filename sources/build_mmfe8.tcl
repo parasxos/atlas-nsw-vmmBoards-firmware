@@ -213,7 +213,6 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_l0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_overview.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_0.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/vio_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_ip.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/clk_wiz_gen.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\

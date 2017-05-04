@@ -25,6 +25,50 @@ set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 ## SPI FLASH END ##
 
 set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
+# Data Lines input delays (TO-DO: Perform measurements for input delays)
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_2_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_2_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_2_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_2_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_3_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_3_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_3_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_3_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_4_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_4_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_4_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_4_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_5_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_5_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_5_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_5_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_6_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_6_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_6_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_6_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_7_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_7_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_7_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_7_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_8_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_8_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_8_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_8_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+
+#mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1
 #============================= Primary Clocks =========================
 #======================================================================
 
@@ -39,10 +83,10 @@ set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_g
 set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
-set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
-set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
-set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
-set_false_path -from [get_cells FSM_onehot_state_reg[*]] -to [get_cells trigger_instance/cktp_trint_module/cktp_start_s_0_reg]
+set_false_path -from [get_cells FSM_sequential_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
+set_false_path -from [get_cells FSM_sequential_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
+set_false_path -from [get_cells FSM_sequential_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
+set_false_path -from [get_cells FSM_sequential_state_reg[*]] -to [get_cells trigger_instance/cktp_trint_module/cktp_start_s_0_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells trigger_instance/cktp_trint_module/cktp_start_s_0_reg]
 #set_false_path -from [get_cells ckbc_cktp_generator/cktp_trint_module/trint_i_reg] -to [get_cells ckbc_cktp_generator/cktp_trint_module/trint_s_0_reg]
 
@@ -68,16 +112,18 @@ set_false_path -from [get_cells udp_din_conf_block/CDCC_125to40/data_in_reg_reg[
 set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
 
 # Continuous Readout related false paths
-set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_reg] -to [get_cells readout_vmm/readout_vmm_cont/trigger_pulse_stage1_reg]
-set_false_path -from [get_cells readout_vmm/readout_vmm_cont/daq_enable_stage1_Dt_reg] -to [get_cells readout_vmm/readout_vmm_cont/daq_enable_ff_sync_Dt_reg]
-set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/readout_vmm_cont/daq_enable_stage1_reg]
-set_false_path -from [get_cells readout_vmm/readout_vmm_cont/vmmEventDone_i_reg] -to [get_cells readout_vmm/readout_vmm_cont/vmmEventDone_stage1_reg]
-set_false_path -from [get_cells readout_vmm/readout_vmm_cont/vmmWord_i_reg[*]] -to [get_cells readout_vmm/readout_vmm_cont/vmmWord_stage1_reg[*]]
-set_false_path -from [get_cells readout_vmm/readout_vmm_cont/vmmWordReady_i_reg] -to [get_cells readout_vmm/readout_vmm_cont/vmmWordReady_stage1_reg]
+set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/trigger_pulse_stage1_reg]
+set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/daq_enable_stage1_Dt_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/daq_enable_ff_sync_Dt_reg]
+set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/daq_enable_stage1_reg]
+set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmEventDone_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmEventDone_stage1_reg]
+set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWord_i_reg[*]] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWord_stage1_reg[*]]
+set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWordReady_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWordReady_stage1_reg]
 
 # Level-0 Readout related false paths
 set_false_path -from [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].l0_buf_wr_inst/inhibit_write_reg] -to [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].l0_buf_wr_inst/inhib_wr_i_reg]
 set_false_path -from [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].des_dec_inst/commas_true_reg] -to [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].l0_buf_wr_inst/commas_true_i_reg]
+set_false_path -from [get_cells trigger_instance/generate_level0.accept_wr_i_reg] -to [get_cells trigger_instance/accept_wr_i_stage1_reg]
+set_false_path -from [get_cells packet_formation_instance/pfBusy_i_reg] -to [get_cells trigger_instance/pfBusy_stage1_reg]
 
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input

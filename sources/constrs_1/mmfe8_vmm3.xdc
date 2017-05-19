@@ -680,6 +680,6 @@ set_property OFFCHIP_TERM NONE [get_ports IO1_IO]
 set_property OFFCHIP_TERM NONE [get_ports SS_IO]
 
 ################# GENERAL CONSTRAINTS ########################
-set_property CONFIG_MODE SPIx4 [current_design]
-set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+set_property CONFIG_MODE SPIx1 [current_design]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 1 [current_design]
 set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]

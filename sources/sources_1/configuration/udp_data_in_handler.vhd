@@ -72,6 +72,7 @@ entity udp_data_in_handler is
     ------------------------------------
     ------ VMM Config Interface --------
     vmm_bitmask         : out std_logic_vector(7 downto 0);
+    vmmConf_came        : out std_logic;
     vmmConf_rdy         : out std_logic;
     vmmConf_done        : out std_logic;
     vmm_sck             : out std_logic;
@@ -526,6 +527,7 @@ vmm_config_logic: vmm_config_block
     vmmConf_done    <= vmmSer_done_s125;
     state_o         <= std_logic_vector(conf_state);
     valid_o         <= user_valid_prv;
+    vmmConf_came    <= vmm_conf;
 
 ---------------------------------------------------------
 --------- Clock Domain Crossing Sync Block --------------

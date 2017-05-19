@@ -4,6 +4,49 @@
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
 
+# Data Lines input delays (TO-DO: Perform measurements for input delays)
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_2_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_2_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_2_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_2_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_3_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_3_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_3_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_3_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_4_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_4_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_4_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_4_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_5_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_5_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_5_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_5_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_6_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_6_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_6_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_6_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_7_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_7_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_7_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_7_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_8_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_8_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_8_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_8_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+
 #====================== I/O Placement - IOSTANDARDS ===================
 ############################# MMFE8 #############################
 set_property PACKAGE_PIN W19     [get_ports X_2V5_DIFF_CLK_P]

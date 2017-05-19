@@ -361,6 +361,7 @@ architecture Behavioral of mmfe8_top is
     signal reset_FF           : std_logic := '0';
     signal wait_cnt           : unsigned(7 downto 0) := (others => '0');
     signal vmm_id_rdy         : std_logic := '0';
+    signal vmm_conf           : std_logic := '0';
     signal newIP_rdy          : std_logic := '0';
     signal xadc_conf_rdy      : std_logic := '0';
     signal daq_on             : std_logic := '0';
@@ -527,7 +528,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Flow FSM signals
     -------------------------------------------------
-    type state_t is (IDLE, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, FIRST_RESET, TRIG, DAQ, XADC_init, XADC_wait, FLASH_init, FLASH_wait);
+    type state_t is (IDLE, WAIT_FOR_CONF, CONFIGURE, CONF_DONE, CONFIGURE_DELAY, SEND_CONF_REPLY, DAQ_INIT, FIRST_RESET, TRIG, DAQ, XADC_init, XADC_wait, FLASH_init, FLASH_wait);
     signal state        : state_t := IDLE;
     signal rstFIFO_top  : std_logic := '0';
 
@@ -1101,6 +1102,7 @@ architecture Behavioral of mmfe8_top is
         ------------------------------------
         ------ VMM Config Interface --------
         vmm_bitmask         : out std_logic_vector(7 downto 0);
+        vmmConf_came        : out std_logic;
         vmmConf_rdy         : out std_logic;
         vmmConf_done        : out std_logic;
         vmm_sck             : out std_logic;
@@ -1570,7 +1572,8 @@ udp_din_conf_block: udp_data_in_handler
         cktp_width          => cktp_pulse_width,
         ------------------------------------
         ------ VMM Config Interface --------
-        vmm_bitmask         => open,
+        vmm_bitmask         => vmm_bitmask,
+        vmmConf_came        => vmm_conf,
         vmmConf_rdy         => vmm_id_rdy,
         vmmConf_done        => vmmConf_done,
         vmm_sck             => vmm_sck_all,
@@ -2167,7 +2170,7 @@ flow_fsm: process(userclk2)
                     pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
-                    vmm_ena_all             <= '0';
+                    vmm_ena_all             <= '1';
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
                     vmm_cktp_primary        <= '0';
@@ -2175,14 +2178,8 @@ flow_fsm: process(userclk2)
                     daq_cktk_out_enable     <= x"00";
                     sel_cs                  <= "11";    -- drive CS high
 
-                    if(vmm_id_rdy = '1')then
-                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
-                            wait_cnt    <= (others => '0');
-                            state       <= CONFIGURE;
-                        else
-                            wait_cnt    <= wait_cnt + 1;
-                            state       <= IDLE;
-                        end if;
+                    if(vmm_conf = '1')then
+                        state <= WAIT_FOR_CONF;
 
                     elsif(newIP_rdy = '1')then -- start new IP setup
                         if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
@@ -2213,6 +2210,21 @@ flow_fsm: process(userclk2)
                         state       <= IDLE;
                         wait_cnt    <= (others => '0');
                     end if;
+                    
+               when WAIT_FOR_CONF =>
+                   vmm_ena_all <= '0'; 
+                   if(vmm_id_rdy = '1')then
+                       if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
+                           wait_cnt    <= (others => '0');
+                           state       <= CONFIGURE;
+                       else
+                           wait_cnt    <= wait_cnt + 1;
+                           state       <= WAIT_FOR_CONF;
+                       end if;
+                   else
+                       wait_cnt    <= (others => '0'); 
+                       state       <= WAIT_FOR_CONF;
+                   end if;
 
                when    CONFIGURE    =>        
                     is_state        <= "0001";
@@ -2358,7 +2370,6 @@ end process;
 
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
-    vmm_bitmask             <= "11111111";
     
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= not CH_TRIGGER;
@@ -2369,14 +2380,14 @@ end process;
     
 
     -- configuration assertion
-    vmm_cs_vec_obuf(1)  <= vmm_cs_all and vmm_bitmask(0);
-    vmm_cs_vec_obuf(2)  <= vmm_cs_all and vmm_bitmask(1);
-    vmm_cs_vec_obuf(3)  <= vmm_cs_all and vmm_bitmask(2);
-    vmm_cs_vec_obuf(4)  <= vmm_cs_all and vmm_bitmask(3);
-    vmm_cs_vec_obuf(5)  <= vmm_cs_all and vmm_bitmask(4);
-    vmm_cs_vec_obuf(6)  <= vmm_cs_all and vmm_bitmask(5);
-    vmm_cs_vec_obuf(7)  <= vmm_cs_all and vmm_bitmask(6);
-    vmm_cs_vec_obuf(8)  <= vmm_cs_all and vmm_bitmask(7);
+    vmm_cs_vec_obuf(1)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(2)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(3)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(4)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(5)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(6)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(7)  <= vmm_cs_all;
+    vmm_cs_vec_obuf(8)  <= vmm_cs_all;
     
     vmm_sck_vec_obuf(1) <= vmm_sck_all and vmm_bitmask(0);
     vmm_sck_vec_obuf(2) <= vmm_sck_all and vmm_bitmask(1);
@@ -2396,14 +2407,14 @@ end process;
     vmm_sdi_vec_obuf(7) <= vmm_sdi_all and vmm_bitmask(6);
     vmm_sdi_vec_obuf(8) <= vmm_sdi_all and vmm_bitmask(7);
     
-    vmm_ena_vec_obuf(1) <= vmm_ena_all and vmm_bitmask(0);
-    vmm_ena_vec_obuf(2) <= vmm_ena_all and vmm_bitmask(1);
-    vmm_ena_vec_obuf(3) <= vmm_ena_all and vmm_bitmask(2);
-    vmm_ena_vec_obuf(4) <= vmm_ena_all and vmm_bitmask(3);
-    vmm_ena_vec_obuf(5) <= vmm_ena_all and vmm_bitmask(4);
-    vmm_ena_vec_obuf(6) <= vmm_ena_all and vmm_bitmask(5);
-    vmm_ena_vec_obuf(7) <= vmm_ena_all and vmm_bitmask(6);
-    vmm_ena_vec_obuf(8) <= vmm_ena_all and vmm_bitmask(7);
+    vmm_ena_vec_obuf(1) <= vmm_ena_all;
+    vmm_ena_vec_obuf(2) <= vmm_ena_all;
+    vmm_ena_vec_obuf(3) <= vmm_ena_all;
+    vmm_ena_vec_obuf(4) <= vmm_ena_all;
+    vmm_ena_vec_obuf(5) <= vmm_ena_all;
+    vmm_ena_vec_obuf(6) <= vmm_ena_all;
+    vmm_ena_vec_obuf(7) <= vmm_ena_all;
+    vmm_ena_vec_obuf(8) <= vmm_ena_all;
 
       
 --ila_top: ila_top_level

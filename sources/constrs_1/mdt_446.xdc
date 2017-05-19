@@ -4,6 +4,14 @@
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
 
+# Data Lines input delays (TO-DO: Perform measurements for input delays)
+#-----------------------------------------------------------------------------------------------------------------------------
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+
 #====================== I/O Placement - IOSTANDARDS ===================
 ############################# MDT #############################
 set_property PACKAGE_PIN V4      [get_ports X_2V5_DIFF_CLK_P]

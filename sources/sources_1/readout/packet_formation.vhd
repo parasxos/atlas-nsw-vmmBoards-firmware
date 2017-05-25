@@ -68,7 +68,7 @@ end packet_formation;
 architecture Behavioral of packet_formation is
 
     signal header           : std_logic_vector(63 downto 0) := ( others => '0' );
-    signal header_l0        : std_logic_vector(31 downto 0) := ( others => '0' );
+    signal header_l0        : std_logic_vector(47 downto 0) := ( others => '0' );
     signal vmmId_i          : std_logic_vector(2 downto 0)  := b"000";
     signal globBcid         : std_logic_vector(15 downto 0) := x"FFFF"; --( others => '0' );
     signal precCnt          : std_logic_vector(7 downto 0)  := x"00"; --( others => '0' );
@@ -196,20 +196,12 @@ begin
                 rst_FIFO                <= '0';
                 if newCycle = '1' then
                     pfBusy_i        <= '1';
-                	state           <= increaseCounter;
+                    state           <= increaseCounter;
                 end if;
                 
             when increaseCounter =>
                 debug_state     <= "00001";
-
-                if(l0_enabled = '0')then
-                    eventCounter_i  <= eventCounter_i + 1;
-                elsif(l0_enabled = '1' and eventCounter_i(23 downto 0) = x"FFFFFF")then -- counter of level-0 maxed out
-                    eventCounter_i  <= to_unsigned(1, 32);
-                else
-                    eventCounter_i  <= eventCounter_i + 1;
-                end if;
-
+                eventCounter_i  <= eventCounter_i + 1;
                 state           <= waitForLatency;
                 
             when waitForLatency =>
@@ -269,7 +261,7 @@ begin
                 if(sel_cnt < 3 and l0_enabled = '0')then -- incr the counter to select the other parts of the header
                     sel_cnt <= sel_cnt + 1;   
                     state   <= setEventID;
-                elsif(sel_cnt < 1 and l0_enabled = '1')then
+                elsif(sel_cnt < 2 and l0_enabled = '1')then
                     sel_cnt <= sel_cnt + 1;   
                     state   <= setEventID;
                 else -- the whole header has been sent
@@ -399,9 +391,9 @@ end process;
 muxFIFOData: process(sel_cnt, header, header_l0, vmmWord)
 begin
     case sel_cnt is
-    when "000"  => if(l0_enabled = '0')then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(31 downto 16); end if;
-    when "001"  => if(l0_enabled = '0')then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(15 downto 0);  end if;
-    when "010"  => daqFIFO_din     <= header(31 downto 16);
+    when "000"  => if(l0_enabled = '0')then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
+    when "001"  => if(l0_enabled = '0')then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
+    when "010"  => if(l0_enabled = '0')then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
     when "011"  => daqFIFO_din     <= header(15 downto 0);
     when "100"  => daqFIFO_din     <= vmmWord;
     when others => daqFIFO_din     <= (others => '0');
@@ -446,11 +438,12 @@ vmm_driver_inst: vmm_driver
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
 
-  ------------------------  
-    header_l0(31 downto 16) <=  b"00000" & vmmId_i  & std_logic_vector(eventCounter_i(23 downto 16));
-  --                              5      &     3    &               8
-    header_l0(15 downto 0)  <= std_logic_vector(eventCounter_i(15 downto 0));
-  --                                        16
+  ------------------------ 
+  
+    -- header of level 0 has three 16-bit words from FPGA + one 16-bit word from VMM
+    header_l0(47 downto 16) <= std_logic_vector(eventCounter_i);
+    header_l0(15 downto 0)  <=  b"00000" & vmmId_i & b"00000000";
+    --                              5    &   3     &       8    ; 
 
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & vmmId_i;  

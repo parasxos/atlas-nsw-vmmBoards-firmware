@@ -12,7 +12,6 @@
 -- Changelog:
 -- 22.08.2016 Changed state_dt (integer) to state_dt (4 bit vector) (Reid Pinkham)
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
--- 25.04.2016 Added vmm_driver interfacing. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 

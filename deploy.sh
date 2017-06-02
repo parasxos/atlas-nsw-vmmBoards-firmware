@@ -1,9 +1,9 @@
 #!/bin/sh
 echo "Cleaning up the build directory..."
 cd sources
-rm -Rf MDT_446 2>&1 >/dev/null
-rm -Rf MDT_MU2E 2>&1 >/dev/null
-rm -Rf MMMFE8_VMM3 2>&1 >/dev/null
+rm -Rf sources/MDT_446 2>&1 >/dev/null
+rm -Rf sources/MDT_MU2E 2>&1 >/dev/null
+rm -Rf sources/ MMFE8_VMM3 2>&1 >/dev/null
 
 tclArg=$1
 projectDir="MMFE8_VMM3/"

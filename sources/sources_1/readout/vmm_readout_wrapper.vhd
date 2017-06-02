@@ -22,8 +22,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.all;
 
 entity vmm_readout_wrapper is
-    generic(is_mmfe8    : std_logic;
-            l0_enabled  : std_logic);
+    generic(is_mmfe8        : std_logic;
+            vmmReadoutMode  : std_logic);
     Port(
     ------------------------------------
     --- Continuous Readout Interface ---
@@ -100,8 +100,8 @@ architecture RTL of vmm_readout_wrapper is
     end component;
 
     component level0_wrapper is
-    Generic(is_mmfe8    : std_logic;
-            l0_enabled  : std_logic);
+    Generic(is_mmfe8        : std_logic;
+            vmmReadoutMode  : std_logic);
     Port(
         ------------------------------------
         ------- General Interface ----------
@@ -148,7 +148,7 @@ architecture RTL of vmm_readout_wrapper is
 begin
 
 -- continuous mode module instantiation
-cont_readout_case: if l0_enabled = '0' generate
+cont_readout_case: if vmmReadoutMode = '0' generate
 readout_vmm_cont: vmm_readout
     port map(
         clkTkProc               => clkTkProc,
@@ -179,9 +179,9 @@ readout_vmm_cont: vmm_readout
     );
 end generate cont_readout_case;
 
-level0_readout_case : if l0_enabled = '1' generate
+level0_readout_case : if vmmReadoutMode = '1' generate
 readout_vmm_l0: level0_wrapper
-    generic map(is_mmfe8 => is_mmfe8, l0_enabled => l0_enabled)
+    generic map(is_mmfe8 => is_mmfe8, vmmReadoutMode => vmmReadoutMode)
     port map(
         ------------------------------------
         ------- General Interface ----------
@@ -213,7 +213,7 @@ end generate level0_readout_case;
 vmm_io_muxDemux: process(vmmWordReady_cont, vmmEventDone_cont, vmmWord_cont, ckdt_out_vec_cont, cktk_out_vec_cont,
                          vmmWordReady_l0, vmmEventDone_l0, vmmWord_l0, ckdt_out_vec_l0, cktk_out_vec_l0, vmm_data0_vec, vmm_data1_vec)
 begin
-    case l0_enabled is
+    case vmmReadoutMode is
     when '0' =>
         -- outputs
         vmmWordReady        <= vmmWordReady_cont;

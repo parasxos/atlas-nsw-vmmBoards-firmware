@@ -1,236 +1,228 @@
 -------------------------------------------------------------------------------------
--- Company: NTU ATHENS - BNL
+-- Company: NTUA - BNL
 -- Engineer: Paris Moschovakos, Panagiotis Gkountoumis & Christos Bakalis
 -- 
--- Create Date: 16.3.2016
--- Design Name: VMM3 firmware
--- Module Name: mmfe8_top
--- Project Name: VMM3 firmware 
--- Target Devices: Artix7 xc7a200t-2fbg484 and xc7a200t-3fbg484 
+-- Create Date: 16.03.2016
+-- Design Name: VMM boards firmware
+-- Module Name: mmfe8_top.vhd
+-- Project Name: Depends on the board 
+-- Target Devices: Artix7 xc7a200t-2fbg484 & xc7a200t-3fbg484 
 -- Tool Versions: Vivado 2017.1
 --
 -- Changelog:
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals (Reid Pinkham)
--- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added Dynamic IP configuration. (Lev Kurilenko)
 -- 16.02.2017 Added new configuration component (udp_data_in_handler) (Christos Bakalis)
 -- 27.02.2017 Changed main logic clock to 125MHz (Paris)
--- 10.03.2017 Added configurable CKTP/CKBC module. For the moment controlled by
--- a VIO. Added new internal_trigger process (Christos Bakalis)
+-- 10.03.2017 Added configurable CKTP/CKBC module. (Christos Bakalis)
 -- 12.03.2017 Changed flow_fsm's primary cktp assertion to comply with cktp_gen
 -- module. (Christos Bakalis)
 -- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
 -- 28.03.2017 Changes to accomodate to MMFE8 VMM3. (Christos Bakalis)
--- 31.03.2017 Adding 2 CKBC readout mode (Paris)
+-- 31.03.2017 Added 2 CKBC readout mode (Paris)
 -- 30.04.2017 Added vmm_readout_wrapper that contains level-0 readout mode besides
 -- the pre-existing continuous mode. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
-library unisim;
-use unisim.vcomponents.all;
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use work.axi.all;
-use work.ipv4_types.all;
-use work.arp_types.all;
+    library unisim;
+    use unisim.vcomponents.all;
+    library ieee;
+    use ieee.std_logic_1164.all;
+    use ieee.numeric_std.all;
+    use work.axi.all;
+    use work.ipv4_types.all;
+    use work.arp_types.all;
 
 entity mmfe8_top is
     port(
-        -- Trigger pins
---        EXT_TRIGGER_P       : in std_logic;
---        EXT_TRIGGER_N       : in std_logic;
---        EXT_TRIG_IN         : in std_logic;
 
---        TRIGGER_LOOP_P      : out std_logic;
---        TRIGGER_LOOP_N      : out std_logic;
+        -- VMM signals
+        --------------------------------------
+        DATA0_1_P, DATA0_1_N  : IN std_logic;
+        DATA0_2_P, DATA0_2_N  : IN std_logic;
+        DATA0_3_P, DATA0_3_N  : IN std_logic;
+        DATA0_4_P, DATA0_4_N  : IN std_logic;
+        DATA0_5_P, DATA0_5_N  : IN std_logic;
+        DATA0_6_P, DATA0_6_N  : IN std_logic;
+        DATA0_7_P, DATA0_7_N  : IN std_logic;
+        DATA0_8_P, DATA0_8_N  : IN std_logic;
 
-        -- 200.0359MHz from bank 14
-        -------------------------------------
-        X_2V5_DIFF_CLK_P      : IN STD_LOGIC;
-        X_2V5_DIFF_CLK_N      : IN STD_LOGIC;
+        DATA1_1_P, DATA1_1_N  : IN std_logic;
+        DATA1_2_P, DATA1_2_N  : IN std_logic;
+        DATA1_3_P, DATA1_3_N  : IN std_logic;
+        DATA1_4_P, DATA1_4_N  : IN std_logic;
+        DATA1_5_P, DATA1_5_N  : IN std_logic;
+        DATA1_6_P, DATA1_6_N  : IN std_logic;
+        DATA1_7_P, DATA1_7_N  : IN std_logic;
+        DATA1_8_P, DATA1_8_N  : IN std_logic;
 
-        -- Tranceiver Interface
-        -------------------------------------
-        gtrefclk_p            : IN  STD_LOGIC;                     -- Differential +ve of reference clock for tranceiver: 125MHz, very high quality
-        gtrefclk_n            : IN  STD_LOGIC;                     -- Differential -ve of reference clock for tranceiver: 125MHz, very high quality
-        txp                   : OUT STD_LOGIC;                     -- Differential +ve of serial transmission from PMA to PMD.
-        txn                   : OUT STD_LOGIC;                     -- Differential -ve of serial transmission from PMA to PMD.
-        rxp                   : IN  STD_LOGIC;                     -- Differential +ve for serial reception from PMD to PMA.
-        rxn                   : IN  STD_LOGIC;                     -- Differential -ve for serial reception from PMD to PMA.
-        phy_int               : OUT STD_LOGIC;
-        phy_rstn_out          : OUT STD_LOGIC;
+        SDO_1                 : IN std_logic;
+        SDO_2                 : IN std_logic;
+        SDO_3                 : IN std_logic;
+        SDO_4                 : IN std_logic;
+        SDO_5                 : IN std_logic;
+        SDO_6                 : IN std_logic;
+        SDO_7                 : IN std_logic;
+        SDO_8                 : IN std_logic;
 
-        -- VMM3 Signals
-        -------------------------------------
-        DATA0_1_P, DATA0_1_N  : IN STD_LOGIC;
-        DATA0_2_P, DATA0_2_N  : IN STD_LOGIC;
-        DATA0_3_P, DATA0_3_N  : IN STD_LOGIC;
-        DATA0_4_P, DATA0_4_N  : IN STD_LOGIC;
-        DATA0_5_P, DATA0_5_N  : IN STD_LOGIC;
-        DATA0_6_P, DATA0_6_N  : IN STD_LOGIC;
-        DATA0_7_P, DATA0_7_N  : IN STD_LOGIC;
-        DATA0_8_P, DATA0_8_N  : IN STD_LOGIC;
+        SDI_1                 : OUT std_logic;
+        SDI_2                 : OUT std_logic;
+        SDI_3                 : OUT std_logic;
+        SDI_4                 : OUT std_logic;
+        SDI_5                 : OUT std_logic;
+        SDI_6                 : OUT std_logic;
+        SDI_7                 : OUT std_logic;
+        SDI_8                 : OUT std_logic;
 
-        DATA1_1_P, DATA1_1_N  : IN STD_LOGIC;
-        DATA1_2_P, DATA1_2_N  : IN STD_LOGIC;
-        DATA1_3_P, DATA1_3_N  : IN STD_LOGIC;
-        DATA1_4_P, DATA1_4_N  : IN STD_LOGIC;
-        DATA1_5_P, DATA1_5_N  : IN STD_LOGIC;
-        DATA1_6_P, DATA1_6_N  : IN STD_LOGIC;
-        DATA1_7_P, DATA1_7_N  : IN STD_LOGIC;
-        DATA1_8_P, DATA1_8_N  : IN STD_LOGIC;
+        SCK_1                 : OUT std_logic;
+        SCK_2                 : OUT std_logic;
+        SCK_3                 : OUT std_logic;
+        SCK_4                 : OUT std_logic;
+        SCK_5                 : OUT std_logic;
+        SCK_6                 : OUT std_logic;
+        SCK_7                 : OUT std_logic;
+        SCK_8                 : OUT std_logic;
 
-        SDO_1                 : IN STD_LOGIC;
-        SDO_2                 : IN STD_LOGIC;
-        SDO_3                 : IN STD_LOGIC;
-        SDO_4                 : IN STD_LOGIC;
-        SDO_5                 : IN STD_LOGIC;
-        SDO_6                 : IN STD_LOGIC;
-        SDO_7                 : IN STD_LOGIC;
-        SDO_8                 : IN STD_LOGIC;
+        CS_1                  : OUT std_logic;
+        CS_2                  : OUT std_logic;
+        CS_3                  : OUT std_logic;
+        CS_4                  : OUT std_logic;
+        CS_5                  : OUT std_logic;
+        CS_6                  : OUT std_logic;
+        CS_7                  : OUT std_logic;
+        CS_8                  : OUT std_logic;
 
-        SDI_1                 : OUT STD_LOGIC;
-        SDI_2                 : OUT STD_LOGIC;
-        SDI_3                 : OUT STD_LOGIC;
-        SDI_4                 : OUT STD_LOGIC;
-        SDI_5                 : OUT STD_LOGIC;
-        SDI_6                 : OUT STD_LOGIC;
-        SDI_7                 : OUT STD_LOGIC;
-        SDI_8                 : OUT STD_LOGIC;
+        ENA_1_P, ENA_1_N      : OUT std_logic;
+        ENA_2_P, ENA_2_N      : OUT std_logic;
+        ENA_3_P, ENA_3_N      : OUT std_logic;
+        ENA_4_P, ENA_4_N      : OUT std_logic;
+        ENA_5_P, ENA_5_N      : OUT std_logic;
+        ENA_6_P, ENA_6_N      : OUT std_logic;
+        ENA_7_P, ENA_7_N      : OUT std_logic;
+        ENA_8_P, ENA_8_N      : OUT std_logic;
 
-        SCK_1                 : OUT STD_LOGIC;
-        SCK_2                 : OUT STD_LOGIC;
-        SCK_3                 : OUT STD_LOGIC;
-        SCK_4                 : OUT STD_LOGIC;
-        SCK_5                 : OUT STD_LOGIC;
-        SCK_6                 : OUT STD_LOGIC;
-        SCK_7                 : OUT STD_LOGIC;
-        SCK_8                 : OUT STD_LOGIC;
+        CKTK_1_P, CKTK_1_N    : OUT std_logic;
+        CKTK_2_P, CKTK_2_N    : OUT std_logic;
+        CKTK_3_P, CKTK_3_N    : OUT std_logic;
+        CKTK_4_P, CKTK_4_N    : OUT std_logic;
+        CKTK_5_P, CKTK_5_N    : OUT std_logic;
+        CKTK_6_P, CKTK_6_N    : OUT std_logic;
+        CKTK_7_P, CKTK_7_N    : OUT std_logic;
+        CKTK_8_P, CKTK_8_N    : OUT std_logic;
 
-        CS_1                  : OUT STD_LOGIC;
-        CS_2                  : OUT STD_LOGIC;
-        CS_3                  : OUT STD_LOGIC;
-        CS_4                  : OUT STD_LOGIC;
-        CS_5                  : OUT STD_LOGIC;
-        CS_6                  : OUT STD_LOGIC;
-        CS_7                  : OUT STD_LOGIC;
-        CS_8                  : OUT STD_LOGIC;
-
-        ENA_1_P, ENA_1_N      : OUT STD_LOGIC;
-        ENA_2_P, ENA_2_N      : OUT STD_LOGIC;
-        ENA_3_P, ENA_3_N      : OUT STD_LOGIC;
-        ENA_4_P, ENA_4_N      : OUT STD_LOGIC;
-        ENA_5_P, ENA_5_N      : OUT STD_LOGIC;
-        ENA_6_P, ENA_6_N      : OUT STD_LOGIC;
-        ENA_7_P, ENA_7_N      : OUT STD_LOGIC;
-        ENA_8_P, ENA_8_N      : OUT STD_LOGIC;
-
-        CKTK_1_P, CKTK_1_N    : OUT STD_LOGIC;
-        CKTK_2_P, CKTK_2_N    : OUT STD_LOGIC;
-        CKTK_3_P, CKTK_3_N    : OUT STD_LOGIC;
-        CKTK_4_P, CKTK_4_N    : OUT STD_LOGIC;
-        CKTK_5_P, CKTK_5_N    : OUT STD_LOGIC;
-        CKTK_6_P, CKTK_6_N    : OUT STD_LOGIC;
-        CKTK_7_P, CKTK_7_N    : OUT STD_LOGIC;
-        CKTK_8_P, CKTK_8_N    : OUT STD_LOGIC;
-
-        CKTP_1_P, CKTP_1_N    : OUT STD_LOGIC;
-        CKTP_2_P, CKTP_2_N    : OUT STD_LOGIC;
-        CKTP_3_P, CKTP_3_N    : OUT STD_LOGIC;
-        CKTP_4_P, CKTP_4_N    : OUT STD_LOGIC;
-        CKTP_5_P, CKTP_5_N    : OUT STD_LOGIC;
-        CKTP_6_P, CKTP_6_N    : OUT STD_LOGIC;
-        CKTP_7_P, CKTP_7_N    : OUT STD_LOGIC;
-        CKTP_8_P, CKTP_8_N    : OUT STD_LOGIC;
+        CKTP_1_P, CKTP_1_N    : OUT std_logic;
+        CKTP_2_P, CKTP_2_N    : OUT std_logic;
+        CKTP_3_P, CKTP_3_N    : OUT std_logic;
+        CKTP_4_P, CKTP_4_N    : OUT std_logic;
+        CKTP_5_P, CKTP_5_N    : OUT std_logic;
+        CKTP_6_P, CKTP_6_N    : OUT std_logic;
+        CKTP_7_P, CKTP_7_N    : OUT std_logic;
+        CKTP_8_P, CKTP_8_N    : OUT std_logic;
     
-        CKBC_1_P, CKBC_1_N    : OUT STD_LOGIC;
-        CKBC_2_P, CKBC_2_N    : OUT STD_LOGIC;
-        CKBC_3_P, CKBC_3_N    : OUT STD_LOGIC;
-        CKBC_4_P, CKBC_4_N    : OUT STD_LOGIC;
-        CKBC_5_P, CKBC_5_N    : OUT STD_LOGIC;
-        CKBC_6_P, CKBC_6_N    : OUT STD_LOGIC;
-        CKBC_7_P, CKBC_7_N    : OUT STD_LOGIC;
-        CKBC_8_P, CKBC_8_N    : OUT STD_LOGIC;
+        CKBC_1_P, CKBC_1_N    : OUT std_logic;
+        CKBC_2_P, CKBC_2_N    : OUT std_logic;
+        CKBC_3_P, CKBC_3_N    : OUT std_logic;
+        CKBC_4_P, CKBC_4_N    : OUT std_logic;
+        CKBC_5_P, CKBC_5_N    : OUT std_logic;
+        CKBC_6_P, CKBC_6_N    : OUT std_logic;
+        CKBC_7_P, CKBC_7_N    : OUT std_logic;
+        CKBC_8_P, CKBC_8_N    : OUT std_logic;
     
-        CKDT_1_P, CKDT_1_N    : OUT STD_LOGIC;
-        CKDT_2_P, CKDT_2_N    : OUT STD_LOGIC;
-        CKDT_3_P, CKDT_3_N    : OUT STD_LOGIC;
-        CKDT_4_P, CKDT_4_N    : OUT STD_LOGIC;
-        CKDT_5_P, CKDT_5_N    : OUT STD_LOGIC;
-        CKDT_6_P, CKDT_6_N    : OUT STD_LOGIC;
-        CKDT_7_P, CKDT_7_N    : OUT STD_LOGIC;
-        CKDT_8_P, CKDT_8_N    : OUT STD_LOGIC;
+        CKDT_1_P, CKDT_1_N    : OUT std_logic;
+        CKDT_2_P, CKDT_2_N    : OUT std_logic;
+        CKDT_3_P, CKDT_3_N    : OUT std_logic;
+        CKDT_4_P, CKDT_4_N    : OUT std_logic;
+        CKDT_5_P, CKDT_5_N    : OUT std_logic;
+        CKDT_6_P, CKDT_6_N    : OUT std_logic;
+        CKDT_7_P, CKDT_7_N    : OUT std_logic;
+        CKDT_8_P, CKDT_8_N    : OUT std_logic;
 
-        TKI_P,     TKI_N      : OUT STD_LOGIC;
-        TKO_P,     TKO_N      : IN  STD_LOGIC;
+        TKI_P,     TKI_N      : OUT std_logic;
+        TKO_P,     TKO_N      : IN  std_logic;
 
-        CKART_1_P, CKART_1_N  : OUT STD_LOGIC;
-        CKART_2_P, CKART_2_N  : OUT STD_LOGIC;
-        CKART_3_P, CKART_3_N  : OUT STD_LOGIC;
-        CKART_4_P, CKART_4_N  : OUT STD_LOGIC;
-        CKART_5_P, CKART_5_N  : OUT STD_LOGIC;
-        CKART_6_P, CKART_6_N  : OUT STD_LOGIC;
-        CKART_7_P, CKART_7_N  : OUT STD_LOGIC;
-        CKART_8_P, CKART_8_N  : OUT STD_LOGIC;
+        CKART_1_P, CKART_1_N  : OUT std_logic;
+        CKART_2_P, CKART_2_N  : OUT std_logic;
+        CKART_3_P, CKART_3_N  : OUT std_logic;
+        CKART_4_P, CKART_4_N  : OUT std_logic;
+        CKART_5_P, CKART_5_N  : OUT std_logic;
+        CKART_6_P, CKART_6_N  : OUT std_logic;
+        CKART_7_P, CKART_7_N  : OUT std_logic;
+        CKART_8_P, CKART_8_N  : OUT std_logic;
 
-        SETT_P,    SETT_N     : OUT STD_LOGIC; 
-        SETB_P,    SETB_N     : OUT STD_LOGIC;
-        CK6B_1_P,  CK6B_1_N   : OUT STD_LOGIC;
-        CK6B_2_P,  CK6B_2_N   : OUT STD_LOGIC;
-        CK6B_3_P,  CK6B_3_N   : OUT STD_LOGIC;
-        CK6B_4_P,  CK6B_4_N   : OUT STD_LOGIC;
-        CK6B_5_P,  CK6B_5_N   : OUT STD_LOGIC;
-        CK6B_6_P,  CK6B_6_N   : OUT STD_LOGIC;
-        CK6B_7_P,  CK6B_7_N   : OUT STD_LOGIC;
-        CK6B_8_P,  CK6B_8_N   : OUT STD_LOGIC;
+        SETT_P,    SETT_N     : OUT std_logic; 
+        SETB_P,    SETB_N     : OUT std_logic;
+        CK6B_1_P,  CK6B_1_N   : OUT std_logic;
+        CK6B_2_P,  CK6B_2_N   : OUT std_logic;
+        CK6B_3_P,  CK6B_3_N   : OUT std_logic;
+        CK6B_4_P,  CK6B_4_N   : OUT std_logic;
+        CK6B_5_P,  CK6B_5_N   : OUT std_logic;
+        CK6B_6_P,  CK6B_6_N   : OUT std_logic;
+        CK6B_7_P,  CK6B_7_N   : OUT std_logic;
+        CK6B_8_P,  CK6B_8_N   : OUT std_logic;
 
         -- ADDC ART CLK
-        -------------------------------------
-        CKART_ADDC_P          : OUT STD_LOGIC;
-        CKART_ADDC_N          : OUT STD_LOGIC;
+        --------------------------------------
+        CKART_ADDC_P          : OUT std_logic;
+        CKART_ADDC_N          : OUT std_logic;
         
         -- MDT_446/MDT_MU2E Specific Pins
-        TRIGGER_OUT_P         : OUT STD_LOGIC;
-        TRIGGER_OUT_N         : OUT STD_LOGIC;
-        CH_TRIGGER            : IN  STD_LOGIC;
-        MO                    : OUT STD_LOGIC;
-        ART_OUT_P,  ART_OUT_N : OUT STD_LOGIC;
-        ART_P, ART_N          : IN  STD_LOGIC;
+        --------------------------------------
+        TRIGGER_OUT_P         : OUT std_logic;
+        TRIGGER_OUT_N         : OUT std_logic;
+        CH_TRIGGER            : IN  std_logic;
+        MO                    : OUT std_logic;
+        ART_OUT_P,  ART_OUT_N : OUT std_logic;
+        ART_P, ART_N          : IN  std_logic;
 
         -- xADC Interface
-        -------------------------------------
-        VP_0                  : IN STD_LOGIC;
-        VN_0                  : IN STD_LOGIC;
-        Vaux0_v_n             : IN STD_LOGIC;
-        Vaux0_v_p             : IN STD_LOGIC;
-        Vaux1_v_n             : IN STD_LOGIC;
-        Vaux1_v_p             : IN STD_LOGIC;
-        Vaux2_v_n             : IN STD_LOGIC;
-        Vaux2_v_p             : IN STD_LOGIC;
-        Vaux3_v_n             : IN STD_LOGIC;
-        Vaux3_v_p             : IN STD_LOGIC;
-        Vaux8_v_n             : IN STD_LOGIC;
-        Vaux8_v_p             : IN STD_LOGIC;
-        Vaux9_v_n             : IN STD_LOGIC;
-        Vaux9_v_p             : IN STD_LOGIC;
-        Vaux10_v_n            : IN STD_LOGIC;
-        Vaux10_v_p            : IN STD_LOGIC;
-        Vaux11_v_n            : IN STD_LOGIC;
-        Vaux11_v_p            : IN STD_LOGIC;
+        --------------------------------------
+        VP_0                  : IN std_logic;
+        VN_0                  : IN std_logic;
+        Vaux0_v_n             : IN std_logic;
+        Vaux0_v_p             : IN std_logic;
+        Vaux1_v_n             : IN std_logic;
+        Vaux1_v_p             : IN std_logic;
+        Vaux2_v_n             : IN std_logic;
+        Vaux2_v_p             : IN std_logic;
+        Vaux3_v_n             : IN std_logic;
+        Vaux3_v_p             : IN std_logic;
+        Vaux8_v_n             : IN std_logic;
+        Vaux8_v_p             : IN std_logic;
+        Vaux9_v_n             : IN std_logic;
+        Vaux9_v_p             : IN std_logic;
+        Vaux10_v_n            : IN std_logic;
+        Vaux10_v_p            : IN std_logic;
+        Vaux11_v_n            : IN std_logic;
+        Vaux11_v_p            : IN std_logic;
 
-        MuxAddr0              : OUT STD_LOGIC;
-        MuxAddr1              : OUT STD_LOGIC;
-        MuxAddr2              : OUT STD_LOGIC;
-        MuxAddr3_p            : OUT STD_LOGIC;
-        MuxAddr3_n            : OUT STD_LOGIC;
+        MuxAddr0              : OUT std_logic;
+        MuxAddr1              : OUT std_logic;
+        MuxAddr2              : OUT std_logic;
+        MuxAddr3_p            : OUT std_logic;
+        MuxAddr3_n            : OUT std_logic;
+        
+        -- 200.0359MHz from bank 14
+        --------------------------------------
+        X_2V5_DIFF_CLK_P      : IN std_logic;
+        X_2V5_DIFF_CLK_N      : IN std_logic;
 
+        -- Tranceiver interface
+        --------------------------------------
+        gtrefclk_p            : IN  std_logic;                     -- Differential +ve of reference clock for tranceiver: 125MHz, very high quality
+        gtrefclk_n            : IN  std_logic;                     -- Differential -ve of reference clock for tranceiver: 125MHz, very high quality
+        txp                   : OUT std_logic;                     -- Differential +ve of serial transmission from PMA to PMD.
+        txn                   : OUT std_logic;                     -- Differential -ve of serial transmission from PMA to PMD.
+        rxp                   : IN  std_logic;                     -- Differential +ve for serial reception from PMD to PMA.
+        rxn                   : IN  std_logic;                     -- Differential -ve for serial reception from PMD to PMA.
+        phy_int               : OUT std_logic;
+        phy_rstn_out          : OUT std_logic;
+        
         -- AXI4SPI Flash Configuration
         ---------------------------------------
-        IO0_IO                : INOUT STD_LOGIC;
-        IO1_IO                : INOUT STD_LOGIC;
-        SS_IO                 : INOUT STD_LOGIC
+        IO0_IO                : INOUT std_logic;
+        IO1_IO                : INOUT std_logic;
+        SS_IO                 : INOUT std_logic
       );
 end mmfe8_top;
 
@@ -240,12 +232,13 @@ architecture Behavioral of mmfe8_top is
     -- Global Settings
     ------------------------------------------------------------------- 
     -- Default IP and MAC address of the board
-    signal default_IP     : std_logic_vector(31 downto 0) := x"c0a80002";
-    signal default_MAC    : std_logic_vector(47 downto 0) := x"002320189223";
-    signal default_destIP : std_logic_vector(31 downto 0) := x"c0a80010";
-    -- Set to '1' if MMFE8 VMM3, or if level-0 mode is used
-    constant is_mmfe8     : std_logic := '0';
-    constant l0_enabled   : std_logic := '1';
+    signal default_IP       : std_logic_vector(31 downto 0) := x"c0a80002";
+    signal default_MAC      : std_logic_vector(47 downto 0) := x"002320189223";
+    signal default_destIP   : std_logic_vector(31 downto 0) := x"c0a80010";
+    -- Set to '1' for MMFE8 or '0' for 1-VMM boards
+    constant is_mmfe8       : std_logic := '1';
+    -- Set to '0' for continuous readout mode or '0' for L0 readout mode
+    constant vmmReadoutMode : std_logic := '1';
 
     -------------------------------------------------------------------
     -- Transceiver, TEMAC, UDP_ICMP block
@@ -740,8 +733,8 @@ architecture Behavioral of mmfe8_top is
     end component;    
     -- 6
     component vmm_readout_wrapper is
-        generic(is_mmfe8    : std_logic;
-                l0_enabled  : std_logic);
+        generic(is_mmfe8        : std_logic;
+                vmmReadoutMode  : std_logic);
         port ( 
             ------------------------------------
             --- Continuous Readout Interface ---
@@ -812,7 +805,7 @@ architecture Behavioral of mmfe8_top is
     end component;
     -- 8
     component trigger is
-      generic (l0_enabled : std_logic);
+      generic (vmmReadoutMode : std_logic);
       port (
           clk             : in std_logic;
           ckbc            : in std_logic;
@@ -843,7 +836,7 @@ architecture Behavioral of mmfe8_top is
     -- 9
     component packet_formation is
     generic(is_mmfe8    : std_logic;
-            l0_enabled  : std_logic);
+            vmmReadoutMode  : std_logic);
     port (
             clk             : in std_logic;
     
@@ -962,10 +955,10 @@ architecture Behavioral of mmfe8_top is
             -- IP RX signals
             ip_rx_hdr               : out ipv4_rx_header_type;
             -- system signals
-            rx_clk                  : in  STD_LOGIC;
-            tx_clk                  : in  STD_LOGIC;
-            reset                   : in  STD_LOGIC;
-            our_ip_address          : in STD_LOGIC_VECTOR (31 downto 0);
+            rx_clk                  : in  std_logic;
+            tx_clk                  : in  std_logic;
+            reset                   : in  std_logic;
+            our_ip_address          : in std_logic_VECTOR (31 downto 0);
             our_mac_address         : in std_logic_vector (47 downto 0);
             control                 : in udp_control_type;
             -- status signals
@@ -1239,23 +1232,23 @@ architecture Behavioral of mmfe8_top is
         newip_start            : in std_logic;
         flash_busy             : out std_logic;
         
-        io0_i : IN STD_LOGIC;
-        io0_o : OUT STD_LOGIC;
-        io0_t : OUT STD_LOGIC;
-        io1_i : IN STD_LOGIC;
-        io1_o : OUT STD_LOGIC;
-        io1_t : OUT STD_LOGIC;
+        io0_i : IN std_logic;
+        io0_o : OUT std_logic;
+        io0_t : OUT std_logic;
+        io1_i : IN std_logic;
+        io1_o : OUT std_logic;
+        io1_t : OUT std_logic;
         ss_i : IN std_logic_vector(0 DOWNTO 0);
         ss_o : OUT std_logic_vector(0 DOWNTO 0);
-        ss_t : OUT STD_LOGIC
+        ss_t : OUT std_logic
     );
     end component;
     -- 22
     COMPONENT vio_ip
       PORT (
-        clk        : IN STD_LOGIC;
-        probe_out0 : OUT STD_LOGIC_VECTOR(31 DOWNTO 0);
-        probe_out1 : OUT STD_LOGIC_VECTOR(47 DOWNTO 0)
+        clk        : IN std_logic;
+        probe_out0 : OUT std_logic_VECTOR(31 DOWNTO 0);
+        probe_out1 : OUT std_logic_VECTOR(47 DOWNTO 0)
       );
     END COMPONENT;
     -- 23
@@ -1665,7 +1658,7 @@ event_timing_reset_instance: event_timing_reset
     );
 
 readout_vmm: vmm_readout_wrapper
-    generic map(is_mmfe8 => is_mmfe8, l0_enabled => l0_enabled)
+    generic map(is_mmfe8 => is_mmfe8, vmmReadoutMode => vmmReadoutMode)
     port map(
         ------------------------------------
         --- Continuous Readout Interface ---
@@ -1709,7 +1702,7 @@ readout_vmm: vmm_readout_wrapper
     );
 
 trigger_instance: trigger
-    generic map(l0_enabled => l0_enabled)
+    generic map(vmmReadoutMode => vmmReadoutMode)
     port map(
         clk             => userclk2,
         ckbc            => CKBC_glbl,
@@ -1763,8 +1756,8 @@ FIFO2UDP_instance: FIFO2UDP
     );       
 
 packet_formation_instance: packet_formation
-    generic map(is_mmfe8    => is_mmfe8,
-                l0_enabled  => l0_enabled)
+    generic map(is_mmfe8        => is_mmfe8,
+                vmmReadoutMode  => vmmReadoutMode)
     port map(
         clk             => userclk2,
         
@@ -2308,7 +2301,7 @@ flow_fsm: process(userclk2)
                     
                 when TRIG =>
                     is_state            <= "0100";
-                    if(l0_enabled = '0')then
+                    if(vmmReadoutMode = '0')then
                         vmm_tki <= '1';
                     else
                         vmm_tki <= '0';

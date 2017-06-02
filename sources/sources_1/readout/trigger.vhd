@@ -26,7 +26,7 @@ use IEEE.NUMERIC_STD.ALL;
 use UNISIM.VComponents.all;
 
 entity trigger is
-    Generic ( l0_enabled : STD_LOGIC);
+    Generic ( vmmReadoutMode : STD_LOGIC);
     Port (
             clk             : in STD_LOGIC;
             ckbc            : in STD_LOGIC;
@@ -183,7 +183,7 @@ architecture Behavioral of trigger is
     end component;
     
     component trint_gen
-    generic(l0_enabled : std_logic);
+    generic(vmmReadoutMode : std_logic);
     port(
         clk_160     : in  std_logic;
         clk_125     : in  std_logic;
@@ -261,7 +261,7 @@ begin
 --    end if;
 --end process;
 ---------------------------------------------------------------------------------------------- Uncomment for hold window End
-generate_2ckbc: if (l0_enabled = '0') generate
+generate_2ckbc: if (vmmReadoutMode = '0') generate
 
 trReadoutMode2CkbcDelayedRequest: process(clk_art)
 begin
@@ -299,7 +299,7 @@ end process;
 
 end generate generate_2ckbc;
 
-generate_level0: if (l0_enabled = '1') generate
+generate_level0: if (vmmReadoutMode = '1') generate
 
 -- asserts level0 accept signal at the VMMs with a maximum of ~1.6 us latency
 level0Asserter: process(clk_art)
@@ -346,17 +346,6 @@ begin
             else
                 state_l0 <= issueRequest;
             end if;
-            
---        when issueRequest =>
---            level_0_int <= '1'; -- level_0 has a width of 18.75 ns
---            accept_wr_i <= '0';
---            if(cnt = 5)then
---                cnt         <= 0;
---                state_l0    <= checkTrigger;
---            else
---                cnt         <= cnt + 1;
---                state_l0    <= issueRequest;
---            end if;
 
         when checkTrigger =>
             level_0_int     <= '0';
@@ -534,10 +523,12 @@ trraw_synced125     <= trraw_synced125_i;
 trigLatency         <= to_integer(unsigned(latency));
 accept_wr           <= accept_wr_synced125;
 level_0             <= level_0_25ns;
+cktp_width_final    <= std_logic_vector(unsigned(cktp_pulse_width)*"1010000");  -- input x 80
 
+-- Instantiations if any
 
 cktp_trint_module: trint_gen
-    generic map(l0_enabled => l0_enabled)
+    generic map(vmmReadoutMode => vmmReadoutMode)
     port map(
         clk_160         => clk_art,
         clk_125         => clk,
@@ -546,10 +537,6 @@ cktp_trint_module: trint_gen
         cktp_width      => cktp_width_final,
         trint           => trint -- synced to 160 Mhz
     );
-    
-    cktp_width_final <= std_logic_vector(unsigned(cktp_pulse_width)*"1010000");  -- input x 80
-
--- Instantiations if any
 
 --ilaTRIG: ila_trigger
 --port map(

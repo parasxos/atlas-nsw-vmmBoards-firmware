@@ -23,8 +23,8 @@ use IEEE.NUMERIC_STD.all;
 use UNISIM.VComponents.all;
 
 entity level0_wrapper is
-    Generic(is_mmfe8   : std_logic;
-            l0_enabled : std_logic);
+    Generic(is_mmfe8        : std_logic;
+            vmmReadoutMode  : std_logic);
     Port(
         ------------------------------------
         ------- General Interface ----------

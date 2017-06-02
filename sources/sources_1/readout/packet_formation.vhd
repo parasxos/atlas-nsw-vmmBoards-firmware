@@ -11,7 +11,6 @@
 --
 -- Changelog:
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
--- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
 -- 06.04.2017 Hard setting latency to 300ns as configurable latency was moved to trigger module (Paris)
 -- 25.04.2017 Added vmm_driver module. (Christos Bakalis)
@@ -26,8 +25,8 @@ use IEEE.NUMERIC_STD.ALL;
 use UNISIM.VComponents.all;
 
 entity packet_formation is
-    Generic(is_mmfe8    : std_logic;
-            l0_enabled  : std_logic);
+    Generic(is_mmfe8        : std_logic;
+            vmmReadoutMode  : std_logic);
     Port(
         clk             : in std_logic;
 
@@ -140,7 +139,7 @@ architecture Behavioral of packet_formation is
     end component;
 
     component vmm_driver
-    generic(l0_enabled : std_logic);
+    generic(vmmReadoutMode : std_logic);
     port(
         ------------------------------------
         ------ General/PF Interface --------
@@ -258,10 +257,10 @@ begin
                 end if;
 
             when sendHeaderStep3 =>
-                if(sel_cnt < 3 and l0_enabled = '0')then -- incr the counter to select the other parts of the header
+                if(sel_cnt < 3 and vmmReadoutMode = '0')then -- incr the counter to select the other parts of the header
                     sel_cnt <= sel_cnt + 1;   
                     state   <= setEventID;
-                elsif(sel_cnt < 2 and l0_enabled = '1')then
+                elsif(sel_cnt < 2 and vmmReadoutMode = '1')then
                     sel_cnt <= sel_cnt + 1;   
                     state   <= setEventID;
                 else -- the whole header has been sent
@@ -273,7 +272,7 @@ begin
                 debug_state                 <= "00111";
                 sel_cnt                     <= "100"; -- fix the counter to 4 to select the VMM data for the next steps
                 sel_wrenable                <= '1';   -- grant control to driver
-                if wait_Cnt < 30 and l0_enabled = '0' then
+                if wait_Cnt < 30 and vmmReadoutMode = '0' then
                     wait_Cnt                <= wait_Cnt + 1;
                     triggerVmmReadout_i     <= '1';
                 else
@@ -298,10 +297,10 @@ begin
             when sendVmmDataStep2 =>
                 debug_state     <= "01010";
 
-                if(drv_done = '1' and l0_enabled = '0')then
+                if(drv_done = '1' and vmmReadoutMode = '0')then
                     packLen_cnt <= packLen_cnt + 4;
                     state       <= formTrailer;
-                elsif(drv_done = '1' and l0_enabled = '1')then
+                elsif(drv_done = '1' and vmmReadoutMode = '1')then
                     packLen_i   <= packLen_cnt + packLen_drv2pf;
                     state       <= formTrailer;
                 else    
@@ -320,7 +319,7 @@ begin
 
             when sendTrailer =>
                 debug_state     <= "01100";
-                if(l0_enabled = '0')then
+                if(vmmReadoutMode = '0')then
                     packLen_i <= packLen_cnt;
                 else
                     packLen_i <= packLen_cnt + packLen_drv2pf; 
@@ -391,9 +390,9 @@ end process;
 muxFIFOData: process(sel_cnt, header, header_l0, vmmWord)
 begin
     case sel_cnt is
-    when "000"  => if(l0_enabled = '0')then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
-    when "001"  => if(l0_enabled = '0')then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
-    when "010"  => if(l0_enabled = '0')then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
+    when "000"  => if(vmmReadoutMode = '0')then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
+    when "001"  => if(vmmReadoutMode = '0')then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
+    when "010"  => if(vmmReadoutMode = '0')then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
     when "011"  => daqFIFO_din     <= header(15 downto 0);
     when "100"  => daqFIFO_din     <= vmmWord;
     when others => daqFIFO_din     <= (others => '0');
@@ -410,7 +409,7 @@ begin
 end process;
 
 vmm_driver_inst: vmm_driver
-    generic map(l0_enabled => l0_enabled)
+    generic map(vmmReadoutMode => vmmReadoutMode)
     port map(
         ------------------------------------
         ------ General/PF Interface --------
@@ -470,8 +469,8 @@ vmm_driver_inst: vmm_driver
     probe1_out(67)                      <= newCycle;           -- OK
     probe1_out(79 downto 68)            <= std_logic_vector(packLen_i);
     probe1_out(91 downto 80)            <= std_logic_vector(packLen_cnt);
-    probe1_out(92)                      <= end_packet_int;        -- Not tested
-    probe1_out(93)                      <= triggerVmmReadout_i;    --Not tested
+    probe1_out(92)                      <= end_packet_int;
+    probe1_out(93)                      <= triggerVmmReadout_i;
     probe1_out(109 downto 94)           <= latency;
     probe1_out(110)                     <= '0';
     probe1_out(142 downto 111)          <= std_logic_vector(eventCounter_i);

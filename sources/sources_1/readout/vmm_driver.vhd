@@ -21,7 +21,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.all;
 
 entity vmm_driver is
-    generic(l0_enabled : std_logic);
+    generic(vmmReadoutMode : std_logic);
     port(
         ------------------------------------
         ------ General/PF Interface --------
@@ -56,7 +56,7 @@ begin
 ------------------------------------------------------------
 -- Level-0 Enabled
 ------------------------------------------------------------
-l0_case: if l0_enabled = '1' generate
+l0_case: if vmmReadoutMode = '1' generate
 
 l0_FSM_drv: process(clk)
 begin
@@ -138,7 +138,7 @@ end generate l0_case;
 ------------------------------------------------------------
 -- Level-0 Disabled
 ------------------------------------------------------------
-continuous_case: if l0_enabled = '0' generate
+continuous_case: if vmmReadoutMode = '0' generate
 
 cont_FSM_drv: process(clk)
 begin

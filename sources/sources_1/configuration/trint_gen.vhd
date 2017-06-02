@@ -22,7 +22,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 
 entity trint_gen is
-Generic(l0_enabled : std_logic);
+Generic(vmmReadoutMode : std_logic);
 Port(
     clk_160     : in  std_logic;
     clk_125     : in  std_logic;
@@ -119,9 +119,9 @@ begin
                 trint_i     <= '0';
                 trint_cnt   <= (others => '0');
 
-                if(cktp_pulse = '1' and l0_enabled = '0')then
+                if(cktp_pulse = '1' and vmmReadoutMode = '0')then
                     state <= ST_WAIT;
-                elsif(cktp_pulse = '1' and l0_enabled = '1')then
+                elsif(cktp_pulse = '1' and vmmReadoutMode = '1')then
                     state <= ST_TRINT;
                 else
                     state <= ST_IDLE;

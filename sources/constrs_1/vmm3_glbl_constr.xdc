@@ -123,12 +123,12 @@ set tclk_trace_delay_min 0.2
 #============================= Disable Timing =========================
 #set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets gtx_clk]
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_pins FDCE_inst/C] 
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_P]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_N]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_1_P]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_1_N]
 #set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets {CLK_40_IBUF}]
 #set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets art_in_i]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_P]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_N]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_1_P]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_1_N]
 #======================================================================
 
 #====================== PHYSICAL CONSTRAINTS SECTION ==================

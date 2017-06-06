@@ -56,6 +56,15 @@ entity mmfe8_top is
         DATA1_6_P, DATA1_6_N  : IN std_logic;
         DATA1_7_P, DATA1_7_N  : IN std_logic;
         DATA1_8_P, DATA1_8_N  : IN std_logic;
+        
+        ART_1_P, ART_1_N      : IN std_logic;
+--        ART_2_P, ART_2_N      : IN std_logic;
+--        ART_3_P, ART_3_N      : IN std_logic;
+--        ART_4_P, ART_4_N      : IN std_logic;
+--        ART_5_P, ART_5_N      : IN std_logic;
+--        ART_6_P, ART_6_N      : IN std_logic;
+--        ART_7_P, ART_7_N      : IN std_logic;
+--        ART_8_P, ART_8_N      : IN std_logic;
 
         SDO_1                 : IN std_logic;
         SDO_2                 : IN std_logic;
@@ -173,7 +182,6 @@ entity mmfe8_top is
         CH_TRIGGER            : IN  std_logic;
         MO                    : OUT std_logic;
         ART_OUT_P,  ART_OUT_N : OUT std_logic;
-        ART_P, ART_N          : IN  std_logic;
 
         -- xADC Interface
         --------------------------------------
@@ -236,9 +244,10 @@ architecture Behavioral of mmfe8_top is
     signal default_MAC      : std_logic_vector(47 downto 0) := x"002320189223";
     signal default_destIP   : std_logic_vector(31 downto 0) := x"c0a80010";
     -- Set to '1' for MMFE8 or '0' for 1-VMM boards
-    constant is_mmfe8       : std_logic := '1';
-    -- Set to '0' for continuous readout mode or '0' for L0 readout mode
+    constant is_mmfe8       : std_logic := '0';
+    -- Set to '0' for continuous readout mode or '1' for L0 readout mode
     constant vmmReadoutMode : std_logic := '1';
+    constant artEnabled     : std_logic := '1';
 
     -------------------------------------------------------------------
     -- Transceiver, TEMAC, UDP_ICMP block
@@ -342,7 +351,6 @@ architecture Behavioral of mmfe8_top is
     signal conf_ena_i         : std_logic := '0';
     signal conf_wen_i         : std_logic := '0';
     signal cnt_vmm            : integer range 0 to 7 := 0;
-    signal art_in_i           : std_logic := '0';  
     signal tko_i              : std_logic; 
     signal MO_i               : std_logic := 'Z';
     signal end_packet_conf_int: std_logic := '0';
@@ -387,6 +395,7 @@ architecture Behavioral of mmfe8_top is
     signal ckdt_out_vec     : std_logic_vector(8 downto 1);
     signal data0_in_vec     : std_logic_vector(8 downto 1);
     signal data1_in_vec     : std_logic_vector(8 downto 1);
+    signal art_in_vec       : std_logic_vector(8 downto 1) := (others => '0');
     signal vmm_tki          : std_logic := '0';
     signal vmm_cktp_primary : std_logic := '0';
     signal CKTP_glbl        : std_logic := '0';       
@@ -395,7 +404,7 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- Readout Signals
     -------------------------------------------------
-    signal daq_enable_i             : std_logic;
+    signal daq_enable_i             : std_logic := '0';
     signal daqFIFO_wr_en_i          : std_logic := '0';
     signal daqFIFO_din_i            : std_logic_vector(15 downto 0);
     signal vmmWordReady_i           : std_logic := '0';
@@ -414,7 +423,7 @@ architecture Behavioral of mmfe8_top is
     signal rst_l0_buff_flow         : std_logic := '1';
     signal rst_l0_pf                : std_logic := '0';
     signal level_0                  : std_logic := '0';
-
+    
     -------------------------------------------------
     -- Trigger Signals
     -------------------------------------------------
@@ -429,6 +438,7 @@ architecture Behavioral of mmfe8_top is
     signal request2ckbc       : std_logic := '0';
     signal trraw_synced125_i  : std_logic := '0';
     signal accept_wr          : std_logic := '0';
+    signal vmmArtData         : std_logic_vector(5 downto 0) := (others => '0');
   
     -------------------------------------------------
     -- Event Timing & Soft Reset
@@ -666,6 +676,7 @@ architecture Behavioral of mmfe8_top is
     -- 22. VIO_IP
     -- 23. clk_gen_wrapper
     -- 24. ila_overview
+    -- 25. art
     -------------------------------------------------------------------
     -- 1
     component clk_wiz_200_to_400
@@ -797,6 +808,7 @@ architecture Behavioral of mmfe8_top is
             reset_DAQ_FIFO              : in  std_logic;
     
             vmmID                       : in  std_logic_vector(2 downto 0);
+            vmmArtData125               : in std_logic_vector(5 downto 0);
             
             trigger_out                 : out std_logic;
             count_o                     : out std_logic_vector(3 downto 0);
@@ -1287,6 +1299,18 @@ architecture Behavioral of mmfe8_top is
         probe0  : in std_logic_vector(63 downto 0)
     );
     end component;
+    -- 25
+    component artReadout --art_instance
+    generic( is_mmfe8   : std_logic;
+            artEnabled  : std_logic);
+    Port(
+        clk             : in std_logic;
+        clk_art         : in std_logic;
+        trigger         : in std_logic;
+        artData         : in std_logic_vector(8 downto 1);
+        vmmArtData125   : out std_logic_vector(5 downto 0)
+    );
+    end component;
 
 begin
 
@@ -1749,6 +1773,7 @@ FIFO2UDP_instance: FIFO2UDP
         reset_DAQ_FIFO              => daqFIFO_reset,
 
         vmmID                       => pf_vmmIdRo,
+        vmmArtData125               => vmmArtData,
         
         trigger_out                 => trigger_i,
         count_o                     => FIFO2UDP_state,
@@ -1947,8 +1972,19 @@ QSPI_SS_0: IOBUF
       I  => ss_o(0),
       T  => ss_t
    );
+   
+art_instance: artReadout
+    generic map(is_mmfe8 => is_mmfe8, 
+                artEnabled => artEnabled)
+    port map (
+        clk             => userclk2,
+        clk_art         => clk_160_gen,
+        trigger         => trraw_synced125_i,
+        artData         => art_in_vec,
+        vmmArtData125   => vmmArtData
+   );
 
-----------------------------------------------------CS-------------------------------------------------------------
+----------------------------------------------------CS------------------------------------------------------------
 cs_obuf_1:  OBUF  port map  (O => CS_1, I => vmm_cs_vec_obuf(1));
 cs_obuf_2:  OBUF  port map  (O => CS_2, I => vmm_cs_vec_obuf(2));
 cs_obuf_3:  OBUF  port map  (O => CS_3, I => vmm_cs_vec_obuf(3));
@@ -1958,7 +1994,7 @@ cs_obuf_6:  OBUF  port map  (O => CS_6, I => vmm_cs_vec_obuf(6));
 cs_obuf_7:  OBUF  port map  (O => CS_7, I => vmm_cs_vec_obuf(7));
 cs_obuf_8:  OBUF  port map  (O => CS_8, I => vmm_cs_vec_obuf(8));
 
-----------------------------------------------------SCK-------------------------------------------------------------
+----------------------------------------------------SCK------------------------------------------------------------
 sck_obuf_1:  OBUF  port map  (O => SCK_1, I => vmm_sck_vec_obuf(1));
 sck_obuf_2:  OBUF  port map  (O => SCK_2, I => vmm_sck_vec_obuf(2));
 sck_obuf_3:  OBUF  port map  (O => SCK_3, I => vmm_sck_vec_obuf(3));
@@ -1968,7 +2004,7 @@ sck_obuf_6:  OBUF  port map  (O => SCK_6, I => vmm_sck_vec_obuf(6));
 sck_obuf_7:  OBUF  port map  (O => SCK_7, I => vmm_sck_vec_obuf(7));
 sck_obuf_8:  OBUF  port map  (O => SCK_8, I => vmm_sck_vec_obuf(8));
 
-----------------------------------------------------SDI-------------------------------------------------------------
+----------------------------------------------------SDI------------------------------------------------------------
 sdi_obuf_1:  OBUF  port map  (O => SDI_1, I => vmm_sdi_vec_obuf(1));
 sdi_obuf_2:  OBUF  port map  (O => SDI_2, I => vmm_sdi_vec_obuf(2));
 sdi_obuf_3:  OBUF  port map  (O => SDI_3, I => vmm_sdi_vec_obuf(3));
@@ -1978,7 +2014,7 @@ sdi_obuf_6:  OBUF  port map  (O => SDI_6, I => vmm_sdi_vec_obuf(6));
 sdi_obuf_7:  OBUF  port map  (O => SDI_7, I => vmm_sdi_vec_obuf(7));
 sdi_obuf_8:  OBUF  port map  (O => SDI_8, I => vmm_sdi_vec_obuf(8));
 
----------------------------------------------------SETT/SETB/CK6B---------------------------------------------------
+---------------------------------------------------SETT/SETB/CK6B--------------------------------------------------
 sett_obuf:   OBUFDS port map (O => SETT_P,   OB => SETT_N,   I => '0');    
 setb_obuf:   OBUFDS port map (O => SETB_P,   OB => SETB_N,   I => '0');
 ck6b_obuf_1: OBUFDS port map (O => CK6B_1_P, OB => CK6B_1_N, I => '0');
@@ -1990,7 +2026,7 @@ ck6b_obuf_6: OBUFDS port map (O => CK6B_6_P, OB => CK6B_6_N, I => '0');
 ck6b_obuf_7: OBUFDS port map (O => CK6B_7_P, OB => CK6B_7_N, I => '0');
 ck6b_obuf_8: OBUFDS port map (O => CK6B_8_P, OB => CK6B_8_N, I => '0');
 
-----------------------------------------------------SDO-------------------------------------------------------------
+----------------------------------------------------SDO------------------------------------------------------------
 sdo_ibuf_1: IBUF port map ( O =>  vmm_sdo_vec_i(1), I =>  SDO_1);
 sdo_ibuf_2: IBUF port map ( O =>  vmm_sdo_vec_i(2), I =>  SDO_2);
 sdo_ibuf_3: IBUF port map ( O =>  vmm_sdo_vec_i(3), I =>  SDO_3);
@@ -2000,7 +2036,7 @@ sdo_ibuf_6: IBUF port map ( O =>  vmm_sdo_vec_i(6), I =>  SDO_6);
 sdo_ibuf_7: IBUF port map ( O =>  vmm_sdo_vec_i(7), I =>  SDO_7);
 sdo_ibuf_8: IBUF port map ( O =>  vmm_sdo_vec_i(8), I =>  SDO_8);
 
-----------------------------------------------------ENA------------------------------------------------------------
+----------------------------------------------------ENA-----------------------------------------------------------
 ena_diff_1: OBUFDS port map ( O =>  ENA_1_P, OB => ENA_1_N, I => vmm_ena_vec_obuf(1));    
 ena_diff_2: OBUFDS port map ( O =>  ENA_2_P, OB => ENA_2_N, I => vmm_ena_vec_obuf(2));
 ena_diff_3: OBUFDS port map ( O =>  ENA_3_P, OB => ENA_3_N, I => vmm_ena_vec_obuf(3));
@@ -2010,7 +2046,7 @@ ena_diff_6: OBUFDS port map ( O =>  ENA_6_P, OB => ENA_6_N, I => vmm_ena_vec_obu
 ena_diff_7: OBUFDS port map ( O =>  ENA_7_P, OB => ENA_7_N, I => vmm_ena_vec_obuf(7));
 ena_diff_8: OBUFDS port map ( O =>  ENA_8_P, OB => ENA_8_N, I => vmm_ena_vec_obuf(8));
 
-----------------------------------------------------CKBC--------------------------------------------------------------
+----------------------------------------------------CKBC------------------------------------------------------------
 ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I =>  CKBC_glbl);
 ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I =>  CKBC_glbl);
 ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I =>  CKBC_glbl);
@@ -2020,7 +2056,7 @@ ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I =>  CKBC_glbl);
 ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I =>  CKBC_glbl);
 ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I =>  CKBC_glbl);
 
-----------------------------------------------------CKTP--------------------------------------------------------------  
+----------------------------------------------------CKTP------------------------------------------------------------
 cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => CKTP_glbl);  
 cktp_diff_2: OBUFDS port map ( O =>  CKTP_2_P, OB => CKTP_2_N, I => CKTP_glbl);
 cktp_diff_3: OBUFDS port map ( O =>  CKTP_3_P, OB => CKTP_3_N, I => CKTP_glbl);
@@ -2030,7 +2066,7 @@ cktp_diff_6: OBUFDS port map ( O =>  CKTP_6_P, OB => CKTP_6_N, I => CKTP_glbl);
 cktp_diff_7: OBUFDS port map ( O =>  CKTP_7_P, OB => CKTP_7_N, I => CKTP_glbl);
 cktp_diff_8: OBUFDS port map ( O =>  CKTP_8_P, OB => CKTP_8_N, I => CKTP_glbl);
 
-----------------------------------------------------CKTK--------------------------------------------------------------
+----------------------------------------------------CKTK------------------------------------------------------------
 cktk_diff_1: OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I => cktk_out_vec(1));
 cktk_diff_2: OBUFDS port map ( O =>  CKTK_2_P, OB => CKTK_2_N, I => cktk_out_vec(2));
 cktk_diff_3: OBUFDS port map ( O =>  CKTK_3_P, OB => CKTK_3_N, I => cktk_out_vec(3));
@@ -2040,7 +2076,7 @@ cktk_diff_6: OBUFDS port map ( O =>  CKTK_6_P, OB => CKTK_6_N, I => cktk_out_vec
 cktk_diff_7: OBUFDS port map ( O =>  CKTK_7_P, OB => CKTK_7_N, I => cktk_out_vec(7));
 cktk_diff_8: OBUFDS port map ( O =>  CKTK_8_P, OB => CKTK_8_N, I => cktk_out_vec(8));
     
-----------------------------------------------------CKDT--------------------------------------------------------------
+----------------------------------------------------CKDT-------------------------------------------------------------
 ckdt_diff_1: OBUFDS port map ( O => ckdt_1_P, OB => ckdt_1_N, I => ckdt_out_vec(1));
 ckdt_diff_2: OBUFDS port map ( O => ckdt_2_P, OB => ckdt_2_N, I => ckdt_out_vec(2));
 ckdt_diff_3: OBUFDS port map ( O => ckdt_3_P, OB => ckdt_3_N, I => ckdt_out_vec(3));
@@ -2050,7 +2086,7 @@ ckdt_diff_6: OBUFDS port map ( O => ckdt_6_P, OB => ckdt_6_N, I => ckdt_out_vec(
 ckdt_diff_7: OBUFDS port map ( O => ckdt_7_P, OB => ckdt_7_N, I => ckdt_out_vec(7));
 ckdt_diff_8: OBUFDS port map ( O => ckdt_8_P, OB => ckdt_8_N, I => ckdt_out_vec(8));                                               
 
-----------------------------------------------------DATA 0--------------------------------------------------------------
+----------------------------------------------------DATA 0-------------------------------------------------------------
 data0_diff_1: IBUFDS port map ( O => data0_in_vec(1), I => DATA0_1_P, IB => DATA0_1_N);
 data0_diff_2: IBUFDS port map ( O => data0_in_vec(2), I => DATA0_2_P, IB => DATA0_2_N);
 data0_diff_3: IBUFDS port map ( O => data0_in_vec(3), I => DATA0_3_P, IB => DATA0_3_N);
@@ -2060,7 +2096,7 @@ data0_diff_6: IBUFDS port map ( O => data0_in_vec(6), I => DATA0_6_P, IB => DATA
 data0_diff_7: IBUFDS port map ( O => data0_in_vec(7), I => DATA0_7_P, IB => DATA0_7_N);
 data0_diff_8: IBUFDS port map ( O => data0_in_vec(8), I => DATA0_8_P, IB => DATA0_8_N);
     
-----------------------------------------------------DATA 1--------------------------------------------------------------
+----------------------------------------------------DATA 1-------------------------------------------------------------
 data1_diff_1: IBUFDS port map ( O => data1_in_vec(1), I => DATA1_1_P, IB => DATA1_1_N);
 data1_diff_2: IBUFDS port map ( O => data1_in_vec(2), I => DATA1_2_P, IB => DATA1_2_N);
 data1_diff_3: IBUFDS port map ( O => data1_in_vec(3), I => DATA1_3_P, IB => DATA1_3_N);
@@ -2070,11 +2106,11 @@ data1_diff_6: IBUFDS port map ( O => data1_in_vec(6), I => DATA1_6_P, IB => DATA
 data1_diff_7: IBUFDS port map ( O => data1_in_vec(7), I => DATA1_7_P, IB => DATA1_7_N);
 data1_diff_8: IBUFDS port map ( O => data1_in_vec(8), I => DATA1_8_P, IB => DATA1_8_N);
 
-----------------------------------------------------TKI/TKO--------------------------------------------------------------      
+----------------------------------------------------TKI/TKO-------------------------------------------------------------      
 TKI_diff_1: OBUFDS port map ( O =>  TKI_P, OB => TKI_N, I => vmm_tki);
 TKO_diff_1: IBUFDS port map ( O =>  tko_i, I => TKO_P, IB => TKO_N);
 
----------------------------------------------------CKART-----------------------------------------------------------------
+---------------------------------------------------CKART----------------------------------------------------------------
 ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => clk_160);
 ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => clk_160);
 ckart_diff_3: OBUFDS port map ( O => CKART_3_P, OB => CKART_3_N, I => clk_160);
@@ -2084,15 +2120,24 @@ ckart_diff_6: OBUFDS port map ( O => CKART_6_P, OB => CKART_6_N, I => clk_160);
 ckart_diff_7: OBUFDS port map ( O => CKART_7_P, OB => CKART_7_N, I => clk_160);
 ckart_diff_8: OBUFDS port map ( O => CKART_8_P, OB => CKART_8_N, I => clk_160);
 
+----------------------------------------------------ART----------------------------------------------------------------
+art_diff_1: IBUFDS port map ( O => art_in_vec(1), I => ART_1_P, IB => ART_1_N);
+--art_diff_2: IBUFDS port map ( O => art_in_vec(2), I => ART_2_P, IB => ART_2_N);
+--art_diff_3: IBUFDS port map ( O => art_in_vec(3), I => ART_3_P, IB => ART_3_N);
+--art_diff_4: IBUFDS port map ( O => art_in_vec(4), I => ART_4_P, IB => ART_4_N);
+--art_diff_5: IBUFDS port map ( O => art_in_vec(5), I => ART_5_P, IB => ART_5_N);
+--art_diff_6: IBUFDS port map ( O => art_in_vec(6), I => ART_6_P, IB => ART_6_N);
+--art_diff_7: IBUFDS port map ( O => art_in_vec(7), I => ART_7_P, IB => ART_7_N);
+--art_diff_8: IBUFDS port map ( O => art_in_vec(8), I => ART_8_P, IB => ART_8_N);
+
 ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_N, I => clk_160);
 
-----------------------------------------------------XADC-----------------------------------------------------------------
+----------------------------------------------------XADC----------------------------------------------------------------
 xadc_mux0_obuf:   OBUF   port map  (O => MuxAddr0, I => MuxAddr0_i);
 xadc_mux1_obuf:   OBUF   port map  (O => MuxAddr1, I => MuxAddr1_i);
 xadc_mux2_obuf:   OBUF   port map  (O => MuxAddr2, I => MuxAddr2_i);
 xadc_mux3_obufds: OBUFDS port map  (O => MuxAddr3_p, OB => MuxAddr3_n, I => MuxAddr3_p_i);
 
-art_in_diff_1:    IBUFDS port map (O =>  art_in_i, I => ART_P, IB => ART_N);
 art_out_diff_1:   OBUFDS port map (O =>  ART_OUT_P, OB => ART_OUT_N, I => art2);
  
 -------------------------------------------------------------------
@@ -2122,7 +2167,7 @@ FDCE_inst: FDCE
 generic map (INIT => '0') -- Initial value of register ('0' or '1')
 port map (
     Q   => art2, -- Data output
-    C   => art_in_i, -- Clock input
+    C   => art_in_vec(1), -- Clock input
     CE  => '1', -- Clock enable input
     CLR => reset_FF, -- Asynchronous clear input
     D   => '1' -- Data input
@@ -2371,7 +2416,6 @@ end process;
     MO                      <= MO_i;
     rst_l0_buff             <= rst_l0_buff_flow or rst_l0_pf;
     
-
     -- configuration assertion
     vmm_cs_vec_obuf(1)  <= vmm_cs_all;
     vmm_cs_vec_obuf(2)  <= vmm_cs_all;
@@ -2409,7 +2453,6 @@ end process;
     vmm_ena_vec_obuf(7) <= vmm_ena_all;
     vmm_ena_vec_obuf(8) <= vmm_ena_all;
 
-      
 --ila_top: ila_top_level
 --    port map (
 --        clk     => userclk2,
@@ -2466,7 +2509,7 @@ end process;
     vmmSignalsProbe(41)                <= vmm_ena_all;
     vmmSignalsProbe(42)                <= art2;
     vmmSignalsProbe(43)                <= '0';
-    vmmSignalsProbe(44)                <= art_in_i;
+    vmmSignalsProbe(44)                <= art_in_vec(1);
     vmmSignalsProbe(63 downto 45)      <= (others => '0'); 
 
     triggerETRProbe(0)                <= '0';

@@ -148,7 +148,7 @@ architecture RTL of vmm_readout_wrapper is
 begin
 
 -- continuous mode module instantiation
-cont_readout_case: if vmmReadoutMode = '0' generate
+continuousReadoutMode: if vmmReadoutMode = '0' generate
 readout_vmm_cont: vmm_readout
     port map(
         clkTkProc               => clkTkProc,
@@ -177,7 +177,7 @@ readout_vmm_cont: vmm_readout
         dt_state_o              => dt_state_o,
         dt_cntr_st_o            => dt_cntr_st_o
     );
-end generate cont_readout_case;
+end generate continuousReadoutMode;
 
 level0_readout_case : if vmmReadoutMode = '1' generate
 readout_vmm_l0: level0_wrapper

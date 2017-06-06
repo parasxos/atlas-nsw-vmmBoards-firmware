@@ -48,14 +48,15 @@ entity FIFO2UDP is
         re_out					    : out std_logic;
         control					    : out std_logic;
         UDPDone                     : out std_logic;
-        udp_tx_data_out_ready       : in  std_logic;
-        wr_en                       : in  std_logic;
-        end_packet                  : in  std_logic;
-        global_reset                : in  std_logic;
-        packet_length_in            : in  std_logic_vector(11 downto 0);
-        reset_DAQ_FIFO              : in  std_logic;
+        udp_tx_data_out_ready       : in std_logic;
+        wr_en                       : in std_logic;
+        end_packet                  : in std_logic;
+        global_reset                : in std_logic;
+        packet_length_in            : in std_logic_vector(11 downto 0);
+        reset_DAQ_FIFO              : in std_logic;
 
-        vmmID                       : in  std_logic_vector(2 downto 0);
+        vmmID                       : in std_logic_vector(2 downto 0);
+        vmmArtData125               : in std_logic_vector(5 downto 0);
         
         trigger_out                 : out std_logic;
         count_o                     : out std_logic_vector(3 downto 0);
@@ -96,6 +97,7 @@ architecture Behavioral of FIFO2UDP is
     signal trigger                     : std_logic;
 
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
+    signal trailerCounter              : unsigned(3 downto 0) := ( others => '0' );
   
 --    attribute keep : string;
 --    attribute dont_touch : string;
@@ -273,7 +275,7 @@ begin
                     fifo_len_rd_en  <= '0';
 
                 when x"2" =>
-                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 2 + 4, 16);
+                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 2 + 8, 16);
                     count_length    <= resize(unsigned("0000" & packet_len_r) * 2, 16);
                     fifo_len_rd_en  <= '0';
                     count <= x"3";
@@ -331,39 +333,23 @@ begin
                     end if;
 
                 when x"8" =>
-                  if udp_tx_data_out_ready = '1' then    
-                      daq_fifo_re                 <= '0';
-                      udp_tx_start_int            <= '0';
-                      data_out_last               <= '0';
-                      data_out <= x"ff";
-                      count <= x"9";
-                  end if;
-
-                when x"9" =>
-                  if udp_tx_data_out_ready = '1' then    
-                      daq_fifo_re                 <= '0';
-                      udp_tx_start_int            <= '0';
-                      data_out_last               <= '0';
-                      data_out <= x"ff";
-                      count <= x"a";
-                  end if;
-
-                when x"a" =>
-                  if udp_tx_data_out_ready = '1' then    
-                      daq_fifo_re                 <= '0';
-                      udp_tx_start_int            <= '0';
-                      data_out_last               <= '0';
-                      data_out <= x"ff";
-                      count <= x"b";
-                  end if;
-
+                    if trailerCounter = 7 then     
+                        count <= x"b";
+                    elsif udp_tx_data_out_ready = '1' then    
+                        daq_fifo_re                 <= '0';
+                        udp_tx_start_int            <= '0';
+                        data_out_last               <= '0';
+                        data_out                    <= x"ff";
+                        trailerCounter              <= trailerCounter + 1;
+                    end if;
+                    
                 when x"b" =>
                     if udp_tx_data_out_ready = '1' then
-                        daq_fifo_re                 <= '0';    
+                        daq_fifo_re                 <= '0';
                         udp_tx_start_int            <= '0';
                         data_out_last               <= '1';
-                        data_out <= x"ff";
-                        count <= x"c";
+                        data_out                    <= b"01" & vmmArtData125;
+                        count                       <= x"c";
                     end if;
 
                 when x"c" =>
@@ -376,6 +362,7 @@ begin
                 when x"d" =>
                       count                         <= x"0";
                       count_length                  <= x"0000";
+                      trailerCounter                <= ( others => '0' );
                       data_out_last                 <= '0';    
                       data_out_valid                <= '0';                  
                       udp_tx_start_int              <= '0';
@@ -402,13 +389,13 @@ trigger_out                 <= trigger;
 count_o                     <= std_logic_vector(count);
 faifouki                    <= fifo_empty_len;
    
---ila_daq_send : ila_0
---    port map
---    (
---        clk           => clk_125, 
---        probe0        => daq_out,
---        probe1        => udp_tx_data_out_ready
---    );   
+ila_daq_send : ila_0
+    port map
+    (
+        clk           => clk_125, 
+        probe0        => daq_out,
+        probe1        => udp_tx_data_out_ready
+    );
 
 daq_out(0)              <= end_packet_synced;
 daq_out(1)              <= fifo_empty_UDP;

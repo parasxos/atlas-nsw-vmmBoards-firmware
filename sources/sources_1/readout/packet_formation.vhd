@@ -299,6 +299,7 @@ begin
 
                 if(drv_done = '1' and vmmReadoutMode = '0')then
                     packLen_cnt <= packLen_cnt + 4;
+                    drv_enable  <= '0';
                     state       <= formTrailer;
                 elsif(drv_done = '1' and vmmReadoutMode = '1')then
                     packLen_i   <= packLen_cnt + packLen_drv2pf;

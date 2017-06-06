@@ -340,16 +340,12 @@ begin
                     
                 when x"4" =>
                     vmmWordReady_i  <= '1';
-                    state_dt        <= x"c";
-                    
-                when x"c" =>                    -- Extended length of high. (Fast CD to slow CD)
                     state_dt        <= x"5";
 
                 when x"5" =>                    -- Word read
                     dt_cntr_intg0   <= 0;
                     dt_cntr_intg1   <= 1;
-                    vmmWordReady_i  <= '0';
-
+                    
                     if(driverBusy_ff_sync = '1')then
                         state_dt        <= x"6"; -- go to state that waits for driver
                     else
@@ -357,6 +353,7 @@ begin
                     end if;
 
                 when x"6" =>
+                    vmmWordReady_i  <= '0';
                     if(driverBusy_ff_sync = '0')then
                         state_dt        <= x"0"; -- driver is done, go to idle
                     else

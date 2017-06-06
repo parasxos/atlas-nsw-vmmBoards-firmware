@@ -6,10 +6,10 @@
 
 # Data Lines input delays (TO-DO: Perform measurements for input delays)
 #-----------------------------------------------------------------------------------------------------------------------------
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
 
 #====================== I/O Placement - IOSTANDARDS ===================
@@ -44,12 +44,54 @@ set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_N]
 set_property PACKAGE_PIN H13         [get_ports MO]
 set_property IOSTANDARD LVCMOS12     [get_ports MO]
 
-##########################ART VMM3 MDT##############################
-set_property PACKAGE_PIN A18         [get_ports ART_P]
-set_property PACKAGE_PIN A19         [get_ports ART_N]
+##########################ART VMM3 MDT############################
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_P]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_1_P]
+set_property PACKAGE_PIN A18         [get_ports ART_1_P]
+set_property PACKAGE_PIN A19         [get_ports ART_1_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_1_N]
+
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_2_P]
+#set_property PACKAGE_PIN H17         [get_ports ART_2_P]
+#set_property PACKAGE_PIN H18         [get_ports ART_2_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_2_N]
+#set_property PULLDOWN TRUE           [get_ports ART_2_P]
+
+#set_property IOSTANDARD TMDS_33      [get_ports ART_3_P]
+#set_property PACKAGE_PIN P19         [get_ports ART_3_P]
+#set_property PACKAGE_PIN R19         [get_ports ART_3_N]
+#set_property IOSTANDARD TMDS_33      [get_ports ART_3_N]
+#set_property PULLDOWN TRUE           [get_ports ART_3_P]
+
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_4_P]
+#set_property PACKAGE_PIN D20         [get_ports ART_4_P]
+#set_property PACKAGE_PIN C20         [get_ports ART_4_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_4_N]
+#set_property PULLDOWN TRUE           [get_ports ART_4_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_5_P]
+#set_property PACKAGE_PIN E2          [get_ports ART_5_P]
+#set_property PACKAGE_PIN D2          [get_ports ART_5_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_5_N]
+#set_property PULLDOWN TRUE           [get_ports ART_5_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_6_P]
+#set_property PACKAGE_PIN L3          [get_ports ART_6_P]
+#set_property PACKAGE_PIN K3          [get_ports ART_6_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_6_N]
+#set_property PULLDOWN TRUE           [get_ports ART_6_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_7_P]
+#set_property PACKAGE_PIN W2          [get_ports ART_7_P]
+#set_property PACKAGE_PIN Y2          [get_ports ART_7_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_7_N]
+#set_property PULLDOWN TRUE           [get_ports ART_7_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_8_P]
+#set_property PACKAGE_PIN Y8          [get_ports ART_8_P]
+#set_property PACKAGE_PIN Y7          [get_ports ART_8_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_8_N]
+#set_property PULLDOWN TRUE           [get_ports ART_8_P]
 
 set_property PACKAGE_PIN A15         [get_ports ART_OUT_P]
 set_property PACKAGE_PIN A16         [get_ports ART_OUT_N]

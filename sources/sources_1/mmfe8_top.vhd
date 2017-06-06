@@ -22,7 +22,7 @@
 -- 31.03.2017 Added 2 CKBC readout mode (Paris)
 -- 30.04.2017 Added vmm_readout_wrapper that contains level-0 readout mode besides
 -- the pre-existing continuous mode. (Christos Bakalis)
---
+-- 06.06.2017 Added ART readout handling (Paris)
 ----------------------------------------------------------------------------------
 
     library unisim;

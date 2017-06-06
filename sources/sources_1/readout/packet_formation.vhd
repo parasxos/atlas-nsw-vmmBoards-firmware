@@ -14,7 +14,8 @@
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
 -- 06.04.2017 Hard setting latency to 300ns as configurable latency was moved to trigger module (Paris)
 -- 25.04.2017 Added vmm_driver module. (Christos Bakalis)
---
+-- 06.06.2017 Added ART header a handling
+-- 
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -110,20 +111,20 @@ architecture Behavioral of packet_formation is
 -----------------------------------------------------------------
 
 ----------------------  Debugging ------------------------------
-    attribute mark_debug : string;
+--    attribute mark_debug : string;
 
-    attribute mark_debug of header                :    signal    is    "true";
-    attribute mark_debug of globBcid              :    signal    is    "true";
-    attribute mark_debug of globBcid_i            :    signal    is    "true";
-    attribute mark_debug of precCnt               :    signal    is    "true";
-    attribute mark_debug of vmmId_i               :    signal    is    "true";
-    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
-    attribute mark_debug of vmmWord_i             :    signal    is    "true";
-    attribute mark_debug of packLen_i             :    signal    is    "true";
-    attribute mark_debug of packLen_cnt           :    signal    is    "true";
-    attribute mark_debug of end_packet_int        :    signal    is    "true";
-    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
-    attribute mark_debug of debug_state           :    signal    is    "true";
+--    attribute mark_debug of header                :    signal    is    "true";
+--    attribute mark_debug of globBcid              :    signal    is    "true";
+--    attribute mark_debug of globBcid_i            :    signal    is    "true";
+--    attribute mark_debug of precCnt               :    signal    is    "true";
+--    attribute mark_debug of vmmId_i               :    signal    is    "true";
+--    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
+--    attribute mark_debug of vmmWord_i             :    signal    is    "true";
+--    attribute mark_debug of packLen_i             :    signal    is    "true";
+--    attribute mark_debug of packLen_cnt           :    signal    is    "true";
+--    attribute mark_debug of end_packet_int        :    signal    is    "true";
+--    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
+--    attribute mark_debug of debug_state           :    signal    is    "true";
 
     component ila_pf
     port (
@@ -454,12 +455,12 @@ vmm_driver_inst: vmm_driver
                             --    8    &    16    &     5    &   3
     dbg_st_o                <= debug_state;
 
-ilaPacketFormation: ila_pf
-port map(
-    clk                     =>  clk,
-    probe0                  =>  probe0_out,
-    probe1                  =>  probe1_out
-);
+--ilaPacketFormation: ila_pf
+--port map(
+--    clk                     =>  clk,
+--    probe0                  =>  probe0_out,
+--    probe1                  =>  probe1_out
+--);
 
     probe0_out(9 downto 0)             <= std_logic_vector(to_unsigned(trigLatencyCnt, 10));--header;             -- OK
     probe0_out(19 downto 10)           <= std_logic_vector(to_unsigned(trigLatency, 10));          -- OK

@@ -92,32 +92,32 @@ architecture Behavioral of FIFO2UDP is
     signal trigger                     : std_logic;
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
   
-    attribute mark_debug : string;
-    attribute mark_debug of prog_fifo_empty         : signal is "true";
-    attribute mark_debug of fifo_empty_UDP          : signal is "true";     
-    attribute mark_debug of daq_fifo_re             : signal is "true";     
-    attribute mark_debug of data_out_last           : signal is "true";           
-    attribute mark_debug of data_out                : signal is "true";
-    attribute mark_debug of data_out_valid          : signal is "true";
-    attribute mark_debug of udp_tx_data_out_ready   : signal is "true";
-    attribute mark_debug of daq_data_out            : signal is "true";
-    attribute mark_debug of udp_tx_start            : signal is "true";
-    attribute mark_debug of end_packet_synced       : signal is "true";     
-    attribute mark_debug of i                       : signal is "true";     
-    attribute mark_debug of packet_length           : signal is "true";    
-    attribute mark_debug of count                   : signal is "true";
-    attribute mark_debug of count_length            : signal is "true";
-    attribute mark_debug of wr_en_int               : signal is "true";
-    attribute mark_debug of fifo_full_UDP           : signal is "true";
-    attribute mark_debug of fifo_empty_len          : signal is "true";
-    attribute mark_debug of wr_en                   : signal is "true";
-    attribute mark_debug of packet_length_in        : signal is "true";
-    attribute mark_debug of vmmID_i                 : signal is "true";
-    attribute mark_debug of trigger                 : signal is "true";
-    attribute mark_debug of len_cnt                 : signal is "true";
-    attribute mark_debug of fifo_len_wr_en          : signal is "true";
-    attribute mark_debug of fifo_len_rd_en          : signal is "true";
-    attribute mark_debug of packet_len_r            : signal is "true";
+--    attribute mark_debug : string;
+--    attribute mark_debug of prog_fifo_empty         : signal is "true";
+--    attribute mark_debug of fifo_empty_UDP          : signal is "true";     
+--    attribute mark_debug of daq_fifo_re             : signal is "true";     
+--    attribute mark_debug of data_out_last           : signal is "true";           
+--    attribute mark_debug of data_out                : signal is "true";
+--    attribute mark_debug of data_out_valid          : signal is "true";
+--    attribute mark_debug of udp_tx_data_out_ready   : signal is "true";
+--    attribute mark_debug of daq_data_out            : signal is "true";
+--    attribute mark_debug of udp_tx_start            : signal is "true";
+--    attribute mark_debug of end_packet_synced       : signal is "true";     
+--    attribute mark_debug of i                       : signal is "true";     
+--    attribute mark_debug of packet_length           : signal is "true";    
+--    attribute mark_debug of count                   : signal is "true";
+--    attribute mark_debug of count_length            : signal is "true";
+--    attribute mark_debug of wr_en_int               : signal is "true";
+--    attribute mark_debug of fifo_full_UDP           : signal is "true";
+--    attribute mark_debug of fifo_empty_len          : signal is "true";
+--    attribute mark_debug of wr_en                   : signal is "true";
+--    attribute mark_debug of packet_length_in        : signal is "true";
+--    attribute mark_debug of vmmID_i                 : signal is "true";
+--    attribute mark_debug of trigger                 : signal is "true";
+--    attribute mark_debug of len_cnt                 : signal is "true";
+--    attribute mark_debug of fifo_len_wr_en          : signal is "true";
+--    attribute mark_debug of fifo_len_rd_en          : signal is "true";
+--    attribute mark_debug of packet_len_r            : signal is "true";
   
 component readout_fifo is
 
@@ -387,13 +387,13 @@ trigger_out                 <= trigger;
 count_o                     <= std_logic_vector(count);
 faifouki                    <= fifo_empty_len;
    
-ila_daq_send : ila_0
-    port map
-    (
-        clk           => clk_125, 
-        probe0        => daq_out,
-        probe1        => udp_tx_data_out_ready
-    );   
+--ila_daq_send : ila_0
+--    port map
+--    (
+--        clk           => clk_125, 
+--        probe0        => daq_out,
+--        probe1        => udp_tx_data_out_ready
+--    );   
 
 daq_out(0)              <= end_packet_synced;
 daq_out(1)              <= fifo_empty_UDP;

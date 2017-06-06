@@ -48,15 +48,14 @@ entity FIFO2UDP is
         re_out					    : out std_logic;
         control					    : out std_logic;
         UDPDone                     : out std_logic;
-        udp_tx_data_out_ready       : in std_logic;
-        wr_en                       : in std_logic;
-        end_packet                  : in std_logic;
-        global_reset                : in std_logic;
-        packet_length_in            : in std_logic_vector(11 downto 0);
-        reset_DAQ_FIFO              : in std_logic;
+        udp_tx_data_out_ready       : in  std_logic;
+        wr_en                       : in  std_logic;
+        end_packet                  : in  std_logic;
+        global_reset                : in  std_logic;
+        packet_length_in            : in  std_logic_vector(11 downto 0);
+        reset_DAQ_FIFO              : in  std_logic;
 
-        vmmID                       : in std_logic_vector(2 downto 0);
-        vmmArtData125               : in std_logic_vector(5 downto 0);
+        vmmID                       : in  std_logic_vector(2 downto 0);
         
         trigger_out                 : out std_logic;
         count_o                     : out std_logic_vector(3 downto 0);
@@ -86,55 +85,39 @@ architecture Behavioral of FIFO2UDP is
     signal packet_len_r                : std_logic_vector(11 downto 0);
     signal fifo_empty_len              : std_logic;
     signal state                       : std_logic := '0';
-    
     signal is_trailer                  : integer := 0;
     signal temp_buffer                 : std_logic_vector(63 downto 0) := (others=> '0');
-    
-    signal daq_data_out                : std_logic_vector(7 downto 0) := x"00";
-    
-    signal vmmID_i                     : std_logic_vector(2 downto 0);
-    
+    signal daq_data_out                : std_logic_vector(7 downto 0) := x"00"; 
+    signal vmmID_i                     : std_logic_vector(2 downto 0);   
     signal trigger                     : std_logic;
-
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
-    signal trailerCounter              : unsigned(3 downto 0) := ( others => '0' );
   
---    attribute keep : string;
---    attribute dont_touch : string;
---    attribute keep of prog_fifo_empty         : signal is "true";
---    attribute keep of fifo_empty_UDP          : signal is "true";     
---    attribute keep of daq_fifo_re             : signal is "true";     
---    attribute keep of data_out_last           : signal is "true";           
---    attribute keep of data_out                : signal is "true";
---    attribute keep of data_out_valid          : signal is "true";
---    attribute keep of udp_tx_data_out_ready   : signal is "true";
---    attribute dont_touch of udp_tx_data_out_ready   : signal is "true";
---    attribute keep of daq_data_out            : signal is "true";
---    attribute keep of udp_tx_start            : signal is "true";
---    attribute keep of end_packet_synced       : signal is "true";     
---    attribute keep of i                       : signal is "true";     
---    attribute keep of packet_length           : signal is "true";
---    attribute dont_touch of packet_length           : signal is "true";             
---    attribute keep of count                   : signal is "true";
---    attribute keep of count_length            : signal is "true";
---    attribute keep of daq_data_in_int         : signal is "true";
---    attribute keep of wr_en_int               : signal is "true";
---    attribute keep of fifo_full_UDP           : signal is "true";
---    attribute dont_touch of wr_en_int         : signal is "true";
---    attribute dont_touch of fifo_empty_len    : signal is "true";
---    attribute keep of wr_en                   : signal is "true";
---    attribute dont_touch of wr_en             : signal is "true";
-    
---    attribute keep of packet_length_in               : signal is "true";
---    attribute dont_touch of packet_length_in         : signal is "true";
---    attribute dont_touch of vmmID_i           : signal is "true";
---    attribute dont_touch of trigger           : signal is "true";
---    attribute keep of trigger                 : signal is "true";
-
---    attribute keep of len_cnt                 : signal is "true";
---    attribute keep of fifo_len_wr_en          : signal is "true";
---    attribute keep of fifo_len_rd_en          : signal is "true";
---    attribute keep of packet_len_r            : signal is "true";
+    attribute mark_debug : string;
+    attribute mark_debug of prog_fifo_empty         : signal is "true";
+    attribute mark_debug of fifo_empty_UDP          : signal is "true";     
+    attribute mark_debug of daq_fifo_re             : signal is "true";     
+    attribute mark_debug of data_out_last           : signal is "true";           
+    attribute mark_debug of data_out                : signal is "true";
+    attribute mark_debug of data_out_valid          : signal is "true";
+    attribute mark_debug of udp_tx_data_out_ready   : signal is "true";
+    attribute mark_debug of daq_data_out            : signal is "true";
+    attribute mark_debug of udp_tx_start            : signal is "true";
+    attribute mark_debug of end_packet_synced       : signal is "true";     
+    attribute mark_debug of i                       : signal is "true";     
+    attribute mark_debug of packet_length           : signal is "true";    
+    attribute mark_debug of count                   : signal is "true";
+    attribute mark_debug of count_length            : signal is "true";
+    attribute mark_debug of wr_en_int               : signal is "true";
+    attribute mark_debug of fifo_full_UDP           : signal is "true";
+    attribute mark_debug of fifo_empty_len          : signal is "true";
+    attribute mark_debug of wr_en                   : signal is "true";
+    attribute mark_debug of packet_length_in        : signal is "true";
+    attribute mark_debug of vmmID_i                 : signal is "true";
+    attribute mark_debug of trigger                 : signal is "true";
+    attribute mark_debug of len_cnt                 : signal is "true";
+    attribute mark_debug of fifo_len_wr_en          : signal is "true";
+    attribute mark_debug of fifo_len_rd_en          : signal is "true";
+    attribute mark_debug of packet_len_r            : signal is "true";
   
 component readout_fifo is
 
@@ -275,7 +258,7 @@ begin
                     fifo_len_rd_en  <= '0';
 
                 when x"2" =>
-                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 2 + 8, 16);
+                    packet_length   <= resize(unsigned("0000" & packet_len_r) * 2 + 4, 16);
                     count_length    <= resize(unsigned("0000" & packet_len_r) * 2, 16);
                     fifo_len_rd_en  <= '0';
                     count <= x"3";
@@ -333,23 +316,39 @@ begin
                     end if;
 
                 when x"8" =>
-                    if trailerCounter = 7 then     
-                        count <= x"b";
-                    elsif udp_tx_data_out_ready = '1' then    
-                        daq_fifo_re                 <= '0';
-                        udp_tx_start_int            <= '0';
-                        data_out_last               <= '0';
-                        data_out                    <= x"ff";
-                        trailerCounter              <= trailerCounter + 1;
-                    end if;
-                    
+                  if udp_tx_data_out_ready = '1' then    
+                      daq_fifo_re                 <= '0';
+                      udp_tx_start_int            <= '0';
+                      data_out_last               <= '0';
+                      data_out <= x"ff";
+                      count <= x"9";
+                  end if;
+
+                when x"9" =>
+                  if udp_tx_data_out_ready = '1' then    
+                      daq_fifo_re                 <= '0';
+                      udp_tx_start_int            <= '0';
+                      data_out_last               <= '0';
+                      data_out <= x"ff";
+                      count <= x"a";
+                  end if;
+
+                when x"a" =>
+                  if udp_tx_data_out_ready = '1' then    
+                      daq_fifo_re                 <= '0';
+                      udp_tx_start_int            <= '0';
+                      data_out_last               <= '0';
+                      data_out <= x"ff";
+                      count <= x"b";
+                  end if;
+
                 when x"b" =>
                     if udp_tx_data_out_ready = '1' then
-                        daq_fifo_re                 <= '0';
+                        daq_fifo_re                 <= '0';    
                         udp_tx_start_int            <= '0';
                         data_out_last               <= '1';
-                        data_out                    <= b"01" & vmmArtData125;
-                        count                       <= x"c";
+                        data_out <= x"ff";
+                        count <= x"c";
                     end if;
 
                 when x"c" =>
@@ -362,7 +361,6 @@ begin
                 when x"d" =>
                       count                         <= x"0";
                       count_length                  <= x"0000";
-                      trailerCounter                <= ( others => '0' );
                       data_out_last                 <= '0';    
                       data_out_valid                <= '0';                  
                       udp_tx_start_int              <= '0';
@@ -395,7 +393,7 @@ ila_daq_send : ila_0
         clk           => clk_125, 
         probe0        => daq_out,
         probe1        => udp_tx_data_out_ready
-    );
+    );   
 
 daq_out(0)              <= end_packet_synced;
 daq_out(1)              <= fifo_empty_UDP;

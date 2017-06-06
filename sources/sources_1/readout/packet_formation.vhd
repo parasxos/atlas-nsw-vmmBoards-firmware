@@ -60,12 +60,14 @@ entity packet_formation is
         
         latency         : in std_logic_vector(15 downto 0);
         dbg_st_o        : out std_logic_vector(4 downto 0);
-        trraw_synced125 : in std_logic
+        trraw_synced125 : in std_logic;
+        vmmArtData125   : in std_logic_vector(5 downto 0)
     );
 end packet_formation;
 
 architecture Behavioral of packet_formation is
 
+    signal artHeader        : std_logic_vector(15 downto 0) := ( others => '0' );
     signal header           : std_logic_vector(63 downto 0) := ( others => '0' );
     signal header_l0        : std_logic_vector(47 downto 0) := ( others => '0' );
     signal vmmId_i          : std_logic_vector(2 downto 0)  := b"000";
@@ -91,9 +93,9 @@ architecture Behavioral of packet_formation is
     signal sel_cnt              : unsigned(2 downto 0)         := (others => '0');
 
     signal vmmWord_i        : std_logic_vector(15 downto 0) := ( others => '0' );
-    signal packLen_i        : unsigned(11 downto 0) := x"000";
-    signal packLen_drv2pf   : unsigned(11 downto 0) := x"000";
-    signal packLen_cnt      : unsigned(11 downto 0) := x"000";
+    signal packLen_i        : unsigned(11 downto 0)         := x"000";
+    signal packLen_drv2pf   : unsigned(11 downto 0)         := x"000";
+    signal packLen_cnt      : unsigned(11 downto 0)         := x"000";
     signal end_packet_int   : std_logic                     := '0';
 
     type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
@@ -108,20 +110,20 @@ architecture Behavioral of packet_formation is
 -----------------------------------------------------------------
 
 ----------------------  Debugging ------------------------------
---    attribute mark_debug : string;
+    attribute mark_debug : string;
 
---    attribute mark_debug of header                :    signal    is    "true";
---    attribute mark_debug of globBcid              :    signal    is    "true";
---    attribute mark_debug of globBcid_i            :    signal    is    "true";
---    attribute mark_debug of precCnt               :    signal    is    "true";
---    attribute mark_debug of vmmId_i               :    signal    is    "true";
---    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
---    attribute mark_debug of vmmWord_i             :    signal    is    "true";
---    attribute mark_debug of packLen_i             :    signal    is    "true";
---    attribute mark_debug of packLen_cnt           :    signal    is    "true";
---    attribute mark_debug of end_packet_int        :    signal    is    "true";
---    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
---    attribute mark_debug of debug_state           :    signal    is    "true";
+    attribute mark_debug of header                :    signal    is    "true";
+    attribute mark_debug of globBcid              :    signal    is    "true";
+    attribute mark_debug of globBcid_i            :    signal    is    "true";
+    attribute mark_debug of precCnt               :    signal    is    "true";
+    attribute mark_debug of vmmId_i               :    signal    is    "true";
+    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
+    attribute mark_debug of vmmWord_i             :    signal    is    "true";
+    attribute mark_debug of packLen_i             :    signal    is    "true";
+    attribute mark_debug of packLen_cnt           :    signal    is    "true";
+    attribute mark_debug of end_packet_int        :    signal    is    "true";
+    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
+    attribute mark_debug of debug_state           :    signal    is    "true";
 
     component ila_pf
     port (
@@ -257,10 +259,10 @@ begin
                 end if;
 
             when sendHeaderStep3 =>
-                if(sel_cnt < 3 and vmmReadoutMode = '0')then -- incr the counter to select the other parts of the header
+                if(sel_cnt < 5 and vmmReadoutMode = '0')then -- incr the counter to select the other parts of the header
                     sel_cnt <= sel_cnt + 1;   
                     state   <= setEventID;
-                elsif(sel_cnt < 2 and vmmReadoutMode = '1')then
+                elsif(sel_cnt < 4 and vmmReadoutMode = '1')then
                     sel_cnt <= sel_cnt + 1;   
                     state   <= setEventID;
                 else -- the whole header has been sent
@@ -270,7 +272,7 @@ begin
             when triggerVmmReadout =>   -- Creates an 136ns pulse to trigger the readout if not at level0 mode
                                         
                 debug_state                 <= "00111";
-                sel_cnt                     <= "100"; -- fix the counter to 4 to select the VMM data for the next steps
+                sel_cnt                     <= "110"; -- fix the counter to 4 to select the VMM data for the next steps
                 sel_wrenable                <= '1';   -- grant control to driver
                 if wait_Cnt < 30 and vmmReadoutMode = '0' then
                     wait_Cnt                <= wait_Cnt + 1;
@@ -388,19 +390,21 @@ begin
 end if;
 end process;
 
-muxFIFOData: process(sel_cnt, header, header_l0, vmmWord)
+muxFIFOData: process( sel_cnt, header, header_l0, vmmWord )
 begin
     case sel_cnt is
-    when "000"  => if(vmmReadoutMode = '0')then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
-    when "001"  => if(vmmReadoutMode = '0')then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
-    when "010"  => if(vmmReadoutMode = '0')then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
-    when "011"  => daqFIFO_din     <= header(15 downto 0);
-    when "100"  => daqFIFO_din     <= vmmWord;
-    when others => daqFIFO_din     <= (others => '0');
+    when "000"  => daqFIFO_din <= b"0000000100" & vmmArtData125;
+    when "001"  => daqFIFO_din <= b"0000001100" & vmmArtData125;
+    when "010"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
+    when "011"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
+    when "100"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
+    when "101"  => daqFIFO_din <= header(15 downto 0);
+    when "110"  => daqFIFO_din <= vmmWord;
+    when others => daqFIFO_din <= (others => '0');
     end case;
 end process;
 
-muxWrEn: process(sel_wrenable, daqFIFO_wr_en_hdr, daqFIFO_wr_en_drv)
+muxWrEn: process( sel_wrenable, daqFIFO_wr_en_hdr, daqFIFO_wr_en_drv )
 begin
     case sel_wrenable is
     when '0'    => wrenable <= daqFIFO_wr_en_hdr;
@@ -437,9 +441,9 @@ vmm_driver_inst: vmm_driver
     trigLatency     <= 37 + to_integer(unsigned(latency)); --(hard set to 300ns )--to_integer(unsigned(latency));
     pfBusy		    <= pfBusy_i;
     globBCID_etr	<= glBCID;
-
-  ------------------------ 
-  
+    
+    artHeader       <= b"0000000000" & vmmArtData125;
+    
     -- header of level 0 has three 16-bit words from FPGA + one 16-bit word from VMM
     header_l0(47 downto 16) <= std_logic_vector(eventCounter_i);
     header_l0(15 downto 0)  <=  b"00000" & vmmId_i & b"00000000";
@@ -450,12 +454,12 @@ vmm_driver_inst: vmm_driver
                             --    8    &    16    &     5    &   3
     dbg_st_o                <= debug_state;
 
---ilaPacketFormation: ila_pf
---port map(
---    clk                     =>  clk,
---    probe0                  =>  probe0_out,
---    probe1                  =>  probe1_out
---);
+ilaPacketFormation: ila_pf
+port map(
+    clk                     =>  clk,
+    probe0                  =>  probe0_out,
+    probe1                  =>  probe1_out
+);
 
     probe0_out(9 downto 0)             <= std_logic_vector(to_unsigned(trigLatencyCnt, 10));--header;             -- OK
     probe0_out(19 downto 10)           <= std_logic_vector(to_unsigned(trigLatency, 10));          -- OK

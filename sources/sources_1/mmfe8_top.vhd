@@ -246,7 +246,7 @@ architecture Behavioral of mmfe8_top is
     -- Set to '1' for MMFE8 or '0' for 1-VMM boards
     constant is_mmfe8       : std_logic := '0';
     -- Set to '0' for continuous readout mode or '1' for L0 readout mode
-    constant vmmReadoutMode : std_logic := '1';
+    constant vmmReadoutMode : std_logic := '0';
     constant artEnabled     : std_logic := '1';
 
     -------------------------------------------------------------------
@@ -808,7 +808,6 @@ architecture Behavioral of mmfe8_top is
             reset_DAQ_FIFO              : in  std_logic;
     
             vmmID                       : in  std_logic_vector(2 downto 0);
-            vmmArtData125               : in std_logic_vector(5 downto 0);
             
             trigger_out                 : out std_logic;
             count_o                     : out std_logic_vector(3 downto 0);
@@ -883,7 +882,8 @@ architecture Behavioral of mmfe8_top is
             latency         : in std_logic_vector(15 downto 0);
             dbg_st_o        : out std_logic_vector(4 downto 0);
             
-            trraw_synced125 : in std_logic
+            trraw_synced125 : in std_logic;
+            vmmArtData125   : in std_logic_vector(5 downto 0)
     );
     end component;
     -- 10
@@ -1773,7 +1773,6 @@ FIFO2UDP_instance: FIFO2UDP
         reset_DAQ_FIFO              => daqFIFO_reset,
 
         vmmID                       => pf_vmmIdRo,
-        vmmArtData125               => vmmArtData,
         
         trigger_out                 => trigger_i,
         count_o                     => FIFO2UDP_state,
@@ -1816,7 +1815,9 @@ packet_formation_instance: packet_formation
 
         latency         => latency_conf,
         dbg_st_o        => pf_dbg_st,
-        trraw_synced125 => trraw_synced125_i
+        trraw_synced125 => trraw_synced125_i,
+        
+        vmmArtData125   => vmmArtData
     );   
         
 data_selection:  select_data

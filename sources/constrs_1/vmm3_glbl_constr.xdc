@@ -68,12 +68,18 @@ set_false_path -from [get_cells udp_din_conf_block/CDCC_125to40/data_in_reg_reg[
 set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
 
 # Continuous Readout related false paths
-set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/trigger_pulse_stage1_reg]
-set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/daq_enable_stage1_Dt_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/daq_enable_ff_sync_Dt_reg]
-set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/daq_enable_stage1_reg]
-set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmEventDone_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmEventDone_stage1_reg]
-set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWord_i_reg[*]] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWord_stage1_reg[*]]
-set_false_path -from [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWordReady_i_reg] -to [get_cells readout_vmm/cont_readout_case.readout_vmm_cont/vmmWordReady_stage1_reg]
+#125
+set_false_path -from [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/vmmEventDone_i_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/vmmEventDone_i_125_reg]
+set_false_path -from [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/reading_out_word_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/reading_out_word_i_125_reg]
+
+#50
+set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/daq_enable_stage1_Dt_reg]
+set_false_path -from [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/cktkSent_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/cktkSent_stage1_reg]
+
+#40
+set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/trigger_pulse_stage1_reg]
+set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/daq_enable_stage1_reg]
+set_false_path -from [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/reading_out_word_reg] -to [get_cells readout_vmm/continuousReadoutMode.readout_vmm_cont/reading_out_word_stage1_reg]
 
 # Level-0 Readout related false paths
 set_false_path -from [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].l0_buf_wr_inst/inhibit_write_reg] -to [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].l0_buf_wr_inst/inhib_wr_i_reg]

@@ -220,6 +220,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/level0_buffer.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/cont_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\

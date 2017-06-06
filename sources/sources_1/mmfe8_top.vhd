@@ -11,6 +11,7 @@
 --
 -- Changelog:
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals (Reid Pinkham)
+-- 11.08.2016 Corrected the fifo resets to go through select_data (Reid Pinkham)
 -- 16.09.2016 Added Dynamic IP configuration. (Lev Kurilenko)
 -- 16.02.2017 Added new configuration component (udp_data_in_handler) (Christos Bakalis)
 -- 27.02.2017 Changed main logic clock to 125MHz (Paris)
@@ -23,6 +24,7 @@
 -- 30.04.2017 Added vmm_readout_wrapper that contains level-0 readout mode besides
 -- the pre-existing continuous mode. (Christos Bakalis)
 -- 06.06.2017 Added ART readout handling (Paris)
+--
 ----------------------------------------------------------------------------------
 
     library unisim;
@@ -341,6 +343,8 @@ architecture Behavioral of mmfe8_top is
     signal  vmm_sck_all       : std_logic := '0';
     signal  vmm_sdi_all       : std_logic := '0';
     signal  vmm_bitmask       : std_logic_vector(7 downto 0) := "11111111";
+    signal  vmm_bitmask_1VMM  : std_logic_vector(7 downto 0) := "11111111";
+    signal  vmm_bitmask_8VMM  : std_logic_vector(7 downto 0) := "11111111";
     signal  sel_cs            : std_logic_vector(1 downto 0) := (others => '0');
     signal  VMM_CS_i          : std_logic := '0';
     signal vmm_cs_vec_obuf    : std_logic_vector(8 downto 1) := (others => '0');
@@ -458,14 +462,12 @@ architecture Behavioral of mmfe8_top is
     signal pf_packLen   : std_logic_vector(11 downto 0);
     signal pf_trigVmmRo : std_logic := '0';
     signal pf_vmmIdRo   : std_logic_vector(2 downto 0) := b"000";
-    signal sel_data_vmm : std_logic_vector(1 downto 0) := b"00";
-    signal driver_busy  : std_logic := '0';
     signal pf_reset     : std_logic := '0';
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
     signal pfBusy_i     : std_logic := '0';
     signal pf_dbg_st    : std_logic_vector(4 downto 0) := b"00000";
-    signal rd_ena_l0Buf : std_logic := '0';
+    signal rd_ena_buff  : std_logic := '0';
     
     -------------------------------------------------
     -- FIFO2UDP Signals
@@ -636,14 +638,18 @@ architecture Behavioral of mmfe8_top is
 --    attribute mark_debug of CKBC_glbl                 : signal is "TRUE";
 --    attribute mark_debug of tr_out_i                  : signal is "TRUE";
 --    attribute mark_debug of conf_state                : signal is "TRUE";
+--    attribute mark_debug of rd_ena_buff               : signal is "TRUE";
 --    attribute mark_debug of vmmWord_i                 : signal is "TRUE";
 --    attribute mark_debug of CKTP_glbl                 : signal is "TRUE";
 --    attribute mark_debug of level_0                   : signal is "TRUE";
 --    attribute mark_debug of rst_l0_pf                 : signal is "TRUE";
 --    attribute mark_debug of vmmWordReady_i            : signal is "TRUE";
 --    attribute mark_debug of vmmEventDone_i            : signal is "TRUE";
---    attribute mark_debug of commas_true               : signal is "TRUE";
+--    attribute mark_debug of dt_state                  : signal is "TRUE";
 --    attribute mark_debug of daq_data_out_i            : signal is "TRUE";
+--    attribute mark_debug of daq_enable_i              : signal is "TRUE";
+--    attribute mark_debug of pf_trigVmmRo              : signal is "TRUE";
+--    attribute mark_debug of dt_cntr_st                : signal is "TRUE";
     
     -------------------------------------------------------------------
     -- Other
@@ -757,9 +763,6 @@ architecture Behavioral of mmfe8_top is
             trigger_pulse   : in  std_logic;                     -- Trigger
             cktk_max        : in  std_logic_vector(7 downto 0);  -- Max number of CKTKs
             --
-            sel_data        : in  std_logic_vector(1 downto 0); -- select vmmWord chunk
-            driverBusy      : in  std_logic;
-            --
             dt_state_o      : out std_logic_vector(3 downto 0); -- for debugging
             dt_cntr_st_o    : out std_logic_vector(3 downto 0); -- for debugging
             ------------------------------------
@@ -772,13 +775,13 @@ architecture Behavioral of mmfe8_top is
             level_0         : in  std_logic;                    -- level-0 signal
             wr_accept       : in  std_logic;                    -- buffer acceptance window
             --
-            rd_ena_buff     : in  std_logic;                    -- read the level-0 buffer
             commas_true     : out std_logic_vector(8 downto 1);
             ------------------------------------
             ---- Packet Formation Interface ----
             vmmWordReady    : out std_logic;
             vmmWord         : out std_logic_vector(15 downto 0);
             vmmEventDone    : out std_logic;
+            rd_ena_buff     : in  std_logic;                     -- read the readout buffer (level0 or continuous)
             vmmId           : in  std_logic_vector(2 downto 0);  -- VMM to be readout
             ------------------------------------
             ---------- VMM3 Interface ----------
@@ -868,10 +871,8 @@ architecture Behavioral of mmfe8_top is
             wrenable        : out std_logic;
             end_packet      : out std_logic;
             
-            rd_ena_l0_buff  : out std_logic;
+            rd_ena_buff     : out std_logic;
             rst_l0          : out std_logic;
-            sel_data_vmm    : out std_logic_vector(1 downto 0);
-            driver_busy     : out std_logic;
             
             tr_hold         : out std_logic;
             reset           : in std_logic;
@@ -1589,7 +1590,7 @@ udp_din_conf_block: udp_data_in_handler
         cktp_width          => cktp_pulse_width,
         ------------------------------------
         ------ VMM Config Interface --------
-        vmm_bitmask         => vmm_bitmask,
+        vmm_bitmask         => vmm_bitmask_8VMM,
         vmmConf_came        => vmm_conf,
         vmmConf_rdy         => vmm_id_rdy,
         vmmConf_done        => vmmConf_done,
@@ -1694,9 +1695,6 @@ readout_vmm: vmm_readout_wrapper
         trigger_pulse   => pf_trigVmmRo,
         cktk_max        => cktk_max_num,
         --
-        sel_data        => sel_data_vmm,
-        driverBusy      => driver_busy,
-        --
         dt_state_o      => dt_state,
         dt_cntr_st_o    => dt_cntr_st,
         ------------------------------------
@@ -1709,12 +1707,12 @@ readout_vmm: vmm_readout_wrapper
         level_0         => level_0,
         wr_accept       => accept_wr,
         --
-        rd_ena_buff     => rd_ena_l0Buf,
         commas_true     => commas_true,
         ------------------------------------
         ---- Packet Formation Interface ----
         vmmWordReady    => vmmWordReady_i,
         vmmWord         => vmmWord_i,
+        rd_ena_buff     => rd_ena_buff,
         vmmEventDone    => vmmEventDone_i,
         vmmId           => pf_vmmIdRo,
         ------------------------------------
@@ -1802,10 +1800,8 @@ packet_formation_instance: packet_formation
         wrenable        => daq_wr_en_i,
         end_packet      => end_packet_daq_int,
         
-        rd_ena_l0_buff  => rd_ena_l0Buf,
+        rd_ena_buff     => rd_ena_buff,
         rst_l0          => rst_l0_pf,
-        sel_data_vmm    => sel_data_vmm,
-        driver_busy     => driver_busy,
         
         tr_hold         => tr_hold,
         reset           => pf_reset,
@@ -2409,6 +2405,8 @@ end process;
 
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
+    vmm_bitmask_1VMM        <= "11111111";
+    vmm_bitmask             <= vmm_bitmask_8VMM when (vmmReadoutMode = '1') else vmm_bitmask_1VMM;
     
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= not CH_TRIGGER;
@@ -2482,17 +2480,22 @@ end process;
     overviewProbe(8 downto 4)          <= pf_dbg_st;
     overviewProbe(9)                   <= vmmWordReady_i;
     overviewProbe(10)                  <= vmmEventDone_i;
-    overviewProbe(18 downto 11)        <= commas_true;
-    overviewProbe(22 downto 19)        <= FIFO2UDP_state;
-    overviewProbe(23)                  <= CKTP_glbl;
-    overviewProbe(24)                  <= UDPDone;
-    overviewProbe(25)                  <= CKBC_glbl;
-    overviewProbe(26)                  <= tr_out_i;
-    overviewProbe(29 downto 27)        <= conf_state;
+    overviewProbe(11)                  <= daq_enable_i;
+    overviewProbe(12)                  <= pf_trigVmmRo;
+    overviewProbe(14 downto 13)        <= (others => '0');
+    overviewProbe(15)                  <= rd_ena_buff;
+    overviewProbe(19 downto 16)        <= dt_state;
+    overviewProbe(23 downto 20)        <= FIFO2UDP_state;
+    overviewProbe(24)                  <= CKTP_glbl;
+    overviewProbe(25)                  <= UDPDone;
+    overviewProbe(26)                  <= CKBC_glbl;
+    overviewProbe(27)                  <= tr_out_i;
+    overviewProbe(29 downto 28)        <= (others => '0');
     overviewProbe(30)                  <= level_0;
     overviewProbe(31)                  <= rst_l0_pf;
     overviewProbe(47 downto 32)        <= vmmWord_i;
-    overviewProbe(63 downto 48)        <= daq_data_out_i;
+    overviewProbe(51 downto 48)        <= dt_cntr_st;
+    overviewProbe(63 downto 52)        <= (others => '0');
 
     vmmSignalsProbe(7 downto 0)        <= (others => '0');
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;

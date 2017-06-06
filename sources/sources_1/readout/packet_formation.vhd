@@ -11,6 +11,7 @@
 --
 -- Changelog:
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
+-- 09.09.2016 Added two signals for ETR interconnection (Christos Bakalis)
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
 -- 06.04.2017 Hard setting latency to 300ns as configurable latency was moved to trigger module (Paris)
 -- 25.04.2017 Added vmm_driver module. (Christos Bakalis)
@@ -40,18 +41,16 @@ entity packet_formation is
         vmmEventDone    : in std_logic;
 
         UDPDone         : in std_logic;
-        pfBusy          : out std_logic;				        -- Control signal to ETR
-        glBCID          : in std_logic_vector(11 downto 0);		-- glBCID counter from ETR
+        pfBusy          : out std_logic;                        -- Control signal to ETR
+        glBCID          : in std_logic_vector(11 downto 0);     -- glBCID counter from ETR
 
         packLen         : out std_logic_vector(11 downto 0);
         dataout         : out std_logic_vector(15 downto 0);
         wrenable        : out std_logic;
         end_packet      : out std_logic;
         
-        rd_ena_l0_buff  : out std_logic;
-        driver_busy     : out std_logic;
+        rd_ena_buff     : out std_logic;
         rst_l0          : out std_logic;
-        sel_data_vmm    : out std_logic_vector(1 downto 0);
         
         tr_hold         : out std_logic;
         reset           : in std_logic;
@@ -93,11 +92,12 @@ architecture Behavioral of packet_formation is
     signal selectDataInput      : std_logic_vector(2 downto 0) := (others => '0');
     signal sel_cnt              : unsigned(2 downto 0)         := (others => '0');
 
-    signal vmmWord_i        : std_logic_vector(15 downto 0) := ( others => '0' );
-    signal packLen_i        : unsigned(11 downto 0)         := x"000";
-    signal packLen_drv2pf   : unsigned(11 downto 0)         := x"000";
-    signal packLen_cnt      : unsigned(11 downto 0)         := x"000";
-    signal end_packet_int   : std_logic                     := '0';
+    signal vmmWord_i            : std_logic_vector(15 downto 0) := ( others => '0' );
+    signal packLen_i            : unsigned(11 downto 0)         := x"000";
+    signal packLen_drv2pf_unsg  : unsigned(11 downto 0)         := x"000";
+    signal packLen_drv2pf       : std_logic_vector(11 downto 0) := x"000";
+    signal packLen_cnt          : unsigned(11 downto 0)         := x"000";
+    signal end_packet_int       : std_logic                     := '0';
 
     type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
                        sendHeaderStep3, triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, 
@@ -142,20 +142,18 @@ architecture Behavioral of packet_formation is
     end component;
 
     component vmm_driver
-    generic(vmmReadoutMode : std_logic);
     port(
         ------------------------------------
         ------ General/PF Interface --------
         clk             : in  std_logic;
         drv_enable      : in  std_logic;
         drv_done        : out std_logic;
-        pack_len_drv    : out unsigned(11 downto 0);
+        pack_len_drv    : out std_logic_vector(11 downto 0);
         ------------------------------------
         ----- VMM_RO/FIFO2UDP Interface ----
         wr_en_fifo2udp  : out std_logic;
-        rd_en_l0_buff   : out std_logic;
-        vmmWordReady    : in  std_logic;
-        sel_data        : out std_logic_vector(1 downto 0)
+        rd_en_buff      : out std_logic;
+        vmmWordReady    : in  std_logic
     );
     end component;
 
@@ -171,7 +169,7 @@ begin
             debug_state             <= "11111";
             eventCounter_i          <= to_unsigned(0, 32);
             tr_hold                 <= '0';
-            pfBusy_i		        <= '0';
+            pfBusy_i                <= '0';
             triggerVmmReadout_i     <= '0';
             rst_l0                  <= '0';
             sel_wrenable            <= '0';
@@ -300,12 +298,7 @@ begin
             when sendVmmDataStep2 =>
                 debug_state     <= "01010";
 
-                if(drv_done = '1' and vmmReadoutMode = '0')then
-                    packLen_cnt <= packLen_cnt + 4;
-                    drv_enable  <= '0';
-                    state       <= formTrailer;
-                elsif(drv_done = '1' and vmmReadoutMode = '1')then
-                    packLen_i   <= packLen_cnt + packLen_drv2pf;
+                if(drv_done = '1')then
                     state       <= formTrailer;
                 else    
                     state       <= sendVmmDataStep2;
@@ -322,12 +315,8 @@ begin
                 end if;
 
             when sendTrailer =>
-                debug_state     <= "01100";
-                if(vmmReadoutMode = '0')then
-                    packLen_i <= packLen_cnt;
-                else
-                    packLen_i <= packLen_cnt + packLen_drv2pf; 
-                end if;
+                debug_state   <= "01100";
+                packLen_i     <= packLen_cnt + packLen_drv2pf_unsg; 
                 state         <= packetDone;
 
             when packetDone =>
@@ -367,7 +356,7 @@ begin
 --                end if;
 
             when isUDPDone =>
-                debug_state 	<= "01110";
+                debug_state     <= "01110";
                 drv_enable      <= '0';
                 end_packet_int  <= '0';
                 rst_l0          <= '1'; -- reset the level0 buffers and the interface with packet_formation
@@ -391,7 +380,7 @@ begin
 end if;
 end process;
 
-muxFIFOData: process( sel_cnt, header, header_l0, vmmWord )
+muxFIFOData: process( sel_cnt, header, header_l0, vmmWord, vmmArtData125 )
 begin
     case sel_cnt is
     when "000"  => daqFIFO_din <= b"0000000100" & vmmArtData125;
@@ -415,7 +404,6 @@ begin
 end process;
 
 vmm_driver_inst: vmm_driver
-    generic map(vmmReadoutMode => vmmReadoutMode)
     port map(
         ------------------------------------
         ------ General/PF Interface --------
@@ -426,13 +414,11 @@ vmm_driver_inst: vmm_driver
         ------------------------------------
         ----- VMM_RO/FIFO2UDP Interface ----
         wr_en_fifo2udp  => daqFIFO_wr_en_drv,
-        rd_en_l0_buff   => rd_ena_l0_buff,
-        vmmWordReady    => vmmWordReady,
-        sel_data        => sel_data_vmm
+        rd_en_buff      => rd_ena_buff,
+        vmmWordReady    => vmmWordReady
     );
 
     globBcid_i      <= globBcid;
-    driver_busy     <= drv_enable;
     vmmWord_i       <= vmmWord;
     dataout         <= daqFIFO_din;
     packLen         <= std_logic_vector(packLen_i);
@@ -440,8 +426,8 @@ vmm_driver_inst: vmm_driver
     trigVmmRo       <= triggerVmmReadout_i;
     vmmId           <= vmmId_i;
     trigLatency     <= 37 + to_integer(unsigned(latency)); --(hard set to 300ns )--to_integer(unsigned(latency));
-    pfBusy		    <= pfBusy_i;
-    globBCID_etr	<= glBCID;
+    pfBusy          <= pfBusy_i;
+    globBCID_etr    <= glBCID;
     
     artHeader       <= b"0000000000" & vmmArtData125;
     
@@ -454,6 +440,7 @@ vmm_driver_inst: vmm_driver
     header(31 downto 0)     <= precCnt & globBcid & b"00000" & vmmId_i;  
                             --    8    &    16    &     5    &   3
     dbg_st_o                <= debug_state;
+    packLen_drv2pf_unsg     <= unsigned(packLen_drv2pf);
 
 --ilaPacketFormation: ila_pf
 --port map(

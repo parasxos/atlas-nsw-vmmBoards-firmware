@@ -5,12 +5,20 @@
 #----------------------------------------------------------------------
 
 # Data Lines input delays (TO-DO: Perform measurements for input delays)
+# Current DATA0/DATA1 delay valid for continuous readout
 #-----------------------------------------------------------------------------------------------------------------------------
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
+set_output_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT4]] [get_ports CKTK_1_P]
+set_output_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT4]] [get_ports CKTK_1_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+#mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1 320 Mhz (level0 readout)
+#clk_user_inst/inst/mmcm_adv_inst/CLKOUT3 50 MHZ (continuous readout)
+#clk_user_inst/inst/mmcm_adv_inst/CLKOUT4 40 MHZ
+#clk_user_inst/inst/mmcm_adv_inst/CLKOUT5 10 MHZ
 
 #====================== I/O Placement - IOSTANDARDS ===================
 ############################# MDT #############################

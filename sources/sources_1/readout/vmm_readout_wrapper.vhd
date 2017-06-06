@@ -35,9 +35,6 @@ entity vmm_readout_wrapper is
     trigger_pulse   : in  std_logic;                     -- Trigger
     cktk_max        : in  std_logic_vector(7 downto 0);  -- Max number of CKTKs
     --
-    sel_data        : in  std_logic_vector(1 downto 0); -- select vmmWord chunk
-    driverBusy      : in  std_logic;
-    --
     dt_state_o      : out std_logic_vector(3 downto 0); -- for debugging
     dt_cntr_st_o    : out std_logic_vector(3 downto 0); -- for debugging
     ------------------------------------
@@ -50,13 +47,13 @@ entity vmm_readout_wrapper is
     level_0         : in  std_logic;                    -- level-0 signal
     wr_accept       : in  std_logic;                    -- buffer acceptance window
     --
-    rd_ena_buff     : in  std_logic;                    -- read the level-0 buffer
     commas_true     : out std_logic_vector(8 downto 1); -- for debugging
     ------------------------------------
     ---- Packet Formation Interface ----
     vmmWordReady    : out std_logic;
     vmmWord         : out std_logic_vector(15 downto 0);
     vmmEventDone    : out std_logic;
+    rd_ena_buff     : in  std_logic;                     -- read the readout buffer (level0 or continuous)
     vmmId           : in  std_logic_vector(2 downto 0);  -- VMM to be readout
     ------------------------------------
     ---------- VMM3 Interface ----------
@@ -91,8 +88,7 @@ architecture RTL of vmm_readout_wrapper is
         vmmWord                 : out std_logic_vector(15 downto 0);
         vmmEventDone            : out std_logic;
         
-        sel_data                : in  std_logic_vector(1 downto 0);
-        driverBusy              : in  std_logic;
+        rd_en                   : in  std_logic;
         
         dt_state_o              : out std_logic_vector(3 downto 0);
         dt_cntr_st_o            : out std_logic_vector(3 downto 0)
@@ -134,6 +130,7 @@ architecture RTL of vmm_readout_wrapper is
     signal ckdt_out_vec_cont    : std_logic_vector(8 downto 1)  := (others => '0');
     signal cktk_out_vec_cont    : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWord_cont         : std_logic_vector(15 downto 0) := (others => '0');
+    signal rd_en_cont           : std_logic := '0';
     signal vmmWordReady_cont    : std_logic := '0';
     signal vmmEventDone_cont    : std_logic := '0';
 
@@ -142,6 +139,7 @@ architecture RTL of vmm_readout_wrapper is
     signal ckdt_out_vec_l0      : std_logic_vector(8 downto 1)  := (others => '0');
     signal cktk_out_vec_l0      : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWord_l0           : std_logic_vector(15 downto 0) := (others => '0');
+    signal rd_en_l0             : std_logic := '0';
     signal vmmWordReady_l0      : std_logic := '0';
     signal vmmEventDone_l0      : std_logic := '0';
 
@@ -167,8 +165,7 @@ readout_vmm_cont: vmm_readout
         ethernet_fifo_wr_en     => open,
         vmm_data_buf            => open,
         
-        sel_data                => sel_data,
-        driverBusy              => driverBusy,
+        rd_en                   => rd_en_cont,
         
         vmmWordReady            => vmmWordReady_cont,
         vmmWord                 => vmmWord_cont,
@@ -210,7 +207,7 @@ readout_vmm_l0: level0_wrapper
 end generate level0_readout_case;
 
 -- multiplexer/demultiplexer for different mode cases
-vmm_io_muxDemux: process(vmmWordReady_cont, vmmEventDone_cont, vmmWord_cont, ckdt_out_vec_cont, cktk_out_vec_cont,
+vmm_io_muxDemux: process(vmmWordReady_cont, vmmEventDone_cont, vmmWord_cont, ckdt_out_vec_cont, cktk_out_vec_cont, rd_ena_buff,
                          vmmWordReady_l0, vmmEventDone_l0, vmmWord_l0, ckdt_out_vec_l0, cktk_out_vec_l0, vmm_data0_vec, vmm_data1_vec)
 begin
     case vmmReadoutMode is
@@ -222,6 +219,8 @@ begin
         vmm_ckdt_vec        <= ckdt_out_vec_cont;
         vmm_cktk_vec        <= cktk_out_vec_cont;
         -- inputs
+        rd_en_cont          <= rd_ena_buff;
+        rd_en_l0            <= '0';
         data0_in_vec_cont   <= vmm_data0_vec;
         data1_in_vec_cont   <= vmm_data1_vec;
         data0_in_vec_l0     <= (others => '0');
@@ -234,6 +233,8 @@ begin
         vmm_ckdt_vec        <= ckdt_out_vec_l0;
         vmm_cktk_vec        <= cktk_out_vec_l0;
         -- inputs
+        rd_en_cont          <= '0';
+        rd_en_l0            <= rd_ena_buff;
         data0_in_vec_cont   <= (others => '0');
         data1_in_vec_cont   <= (others => '0');
         data0_in_vec_l0     <= vmm_data0_vec;

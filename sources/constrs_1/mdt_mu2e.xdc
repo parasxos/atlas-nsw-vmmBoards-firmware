@@ -5,12 +5,20 @@
 #----------------------------------------------------------------------
 
 # Data Lines input delays (TO-DO: Perform measurements for input delays)
+# Current DATA0/DATA1 delay valid for continuous readout
 #-----------------------------------------------------------------------------------------------------------------------------
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
+set_output_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT4]] [get_ports CKTK_1_P]
+set_output_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT4]] [get_ports CKTK_1_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+#mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1 320 Mhz (level0 readout)
+#clk_user_inst/inst/mmcm_adv_inst/CLKOUT3 50 MHZ (continuous readout)
+#clk_user_inst/inst/mmcm_adv_inst/CLKOUT4 40 MHZ
+#clk_user_inst/inst/mmcm_adv_inst/CLKOUT5 10 MHZ
 
 #====================== I/O Placement - IOSTANDARDS ===================
 ############################# MDT #############################
@@ -38,17 +46,59 @@ set_property PACKAGE_PIN P17     [get_ports TRIGGER_OUT_N]
 set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_N]
 
 ##########################ART VMM3 MDT##############################
-set_property PACKAGE_PIN G21         [get_ports ART_P]
-set_property PACKAGE_PIN G22         [get_ports ART_N]
 
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_P]
-set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_1_P]
+set_property PACKAGE_PIN G21         [get_ports ART_1_P]
+set_property PACKAGE_PIN G22         [get_ports ART_1_N]
+set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_1_N]
 
-set_property PACKAGE_PIN H4          [get_ports ART_OUT_P]
-set_property PACKAGE_PIN G4          [get_ports ART_OUT_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_2_P]
+#set_property PACKAGE_PIN H17         [get_ports ART_2_P]
+#set_property PACKAGE_PIN H18         [get_ports ART_2_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_2_N]
+#set_property PULLDOWN TRUE           [get_ports ART_2_P]
 
-set_property IOSTANDARD LVDS_25      [get_ports ART_OUT_P]
-set_property IOSTANDARD LVDS_25      [get_ports ART_OUT_N]
+#set_property IOSTANDARD TMDS_33      [get_ports ART_3_P]
+#set_property PACKAGE_PIN P19         [get_ports ART_3_P]
+#set_property PACKAGE_PIN R19         [get_ports ART_3_N]
+#set_property IOSTANDARD TMDS_33      [get_ports ART_3_N]
+#set_property PULLDOWN TRUE           [get_ports ART_3_P]
+
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_4_P]
+#set_property PACKAGE_PIN D20         [get_ports ART_4_P]
+#set_property PACKAGE_PIN C20         [get_ports ART_4_N]
+#set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_4_N]
+#set_property PULLDOWN TRUE           [get_ports ART_4_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_5_P]
+#set_property PACKAGE_PIN E2          [get_ports ART_5_P]
+#set_property PACKAGE_PIN D2          [get_ports ART_5_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_5_N]
+#set_property PULLDOWN TRUE           [get_ports ART_5_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_6_P]
+#set_property PACKAGE_PIN L3          [get_ports ART_6_P]
+#set_property PACKAGE_PIN K3          [get_ports ART_6_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_6_N]
+#set_property PULLDOWN TRUE           [get_ports ART_6_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_7_P]
+#set_property PACKAGE_PIN W2          [get_ports ART_7_P]
+#set_property PACKAGE_PIN Y2          [get_ports ART_7_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_7_N]
+#set_property PULLDOWN TRUE           [get_ports ART_7_P]
+
+#set_property IOSTANDARD LVDS_25      [get_ports ART_8_P]
+#set_property PACKAGE_PIN Y8          [get_ports ART_8_P]
+#set_property PACKAGE_PIN Y7          [get_ports ART_8_N]
+#set_property IOSTANDARD LVDS_25      [get_ports ART_8_N]
+#set_property PULLDOWN TRUE           [get_ports ART_8_P]
+
+set_property PACKAGE_PIN H4           [get_ports ART_OUT_P]
+set_property PACKAGE_PIN G4           [get_ports ART_OUT_N]
+
+set_property IOSTANDARD LVDS_25       [get_ports ART_OUT_P]
+set_property IOSTANDARD LVDS_25       [get_ports ART_OUT_N]
 
 ########################## MO ##################################
 set_property PACKAGE_PIN H13     [get_ports MO]

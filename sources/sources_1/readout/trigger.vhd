@@ -15,7 +15,8 @@
 -- 27.02.2017 Synced trout (Paris)
 -- 31.03.2017 Added 2 ckbc mode, requests 2 CKBC upon ext trigger (Paris)
 -- 06.04.2017 Configurable latency was added for the 2 CKBC mode (Paris)
--- 
+-- 28.04.2017 Added two processes that assert the level0 signal. (Christos Bakalis)
+--
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -91,9 +92,7 @@ architecture Behavioral of trigger is
     signal cktp_width_final     : std_logic_vector(11 downto 0) := "000101000000";           --4 * 80 = 320
     signal trint                : std_logic := '0';
     signal cnt                  : integer range 0 to 7 := 0;
-    signal level_0_int          : std_logic := '0';
-    signal level_0_i            : std_logic := '0';
-    signal level_0_s            : std_logic := '0';
+    signal level_0_req          : std_logic := '0';
     signal level_0_25ns         : std_logic := '0';
     signal flag_sent            : std_logic := '0';
  
@@ -170,8 +169,6 @@ architecture Behavioral of trigger is
     attribute ASYNC_REG of pfBusy_stage_synced  : signal is "true";
     attribute ASYNC_REG of flag_sent_stage1     : signal is "true";
     attribute ASYNC_REG of flag_sent_synced     : signal is "true";
-    attribute ASYNC_REG of level_0_i            : signal is "TRUE";
-    attribute ASYNC_REG of level_0_s            : signal is "TRUE";
     
 -- Components if any
 
@@ -308,7 +305,7 @@ begin
         case state_l0 is
 
         when waitingForTrigger =>
-            level_0_int     <= '0';
+            level_0_req     <= '0';
             accept_wr_i     <= '0';
             trigLatencyCnt  <= 0;
 
@@ -339,7 +336,7 @@ begin
             end if;
             
         when issueRequest =>
-            level_0_int <= '1';
+            level_0_req <= '1';
             accept_wr_i <= '0';
             if(flag_sent_synced = '1')then
                 state_l0 <= checkTrigger;
@@ -348,7 +345,7 @@ begin
             end if;
 
         when checkTrigger =>
-            level_0_int     <= '0';
+            level_0_req     <= '0';
 
             if((trext_ff_synced = '0' and trmode_ff_synced = '1') or
                 (trint = '0' and trmode_ff_synced = '0'))then
@@ -358,7 +355,7 @@ begin
             end if;
 
         when others =>
-            level_0_int     <= '0';
+            level_0_req     <= '0';
             trigLatencyCnt  <= 0;
             accept_wr_i     <= '0';
             state_l0        <= waitingForTrigger;
@@ -367,25 +364,24 @@ begin
     end if;
 end process;
 
+-- process that ensures a one-CKBC-width level0 pulse is asserted
 level0_40_proc: process(ckbc)
 begin
     if(rising_edge(ckbc))then
-        if(flag_sent = '1' and level_0_s = '1')then null; -- wait
-        elsif(flag_sent = '1' and level_0_s = '0')then -- reset everything
+        if(flag_sent = '1' and level_0_req = '1')then null; -- wait
+        elsif(flag_sent = '1' and level_0_req = '0')then -- reset everything
             level_0_25ns <= '0';
             flag_sent    <= '0';
         elsif(level_0_25ns = '1')then -- level_0 to VMMs has a width of 25ns
             level_0_25ns <= '0';
             flag_sent    <= '1';
-        elsif(level_0_s = '1')then -- level_0 latched from level0Asserter
+        elsif(level_0_req = '1')then -- level_0 latched from level0Asserter
             level_0_25ns <= '1';
         else
             level_0_25ns <= '0';
             flag_sent    <= '0';
         end if;
     end if;
-        level_0_i <= level_0_int;
-        level_0_s <= level_0_i;
 end process;
 
 end generate generate_level0; 

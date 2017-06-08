@@ -248,7 +248,9 @@ architecture Behavioral of mmfe8_top is
     -- Set to '1' for MMFE8 or '0' for 1-VMM boards
     constant is_mmfe8       : std_logic := '0';
     -- Set to '0' for continuous readout mode or '1' for L0 readout mode
+    -- For MDT boards, also change the 'set_input_delay' of DATA0/DATA1 at .xdc
     constant vmmReadoutMode : std_logic := '0';
+    -- Set to '1' to enable the ART header
     constant artEnabled     : std_logic := '1';
 
     -------------------------------------------------------------------
@@ -403,7 +405,7 @@ architecture Behavioral of mmfe8_top is
     signal vmm_tki          : std_logic := '0';
     signal vmm_cktp_primary : std_logic := '0';
     signal CKTP_glbl        : std_logic := '0';       
-    signal vmm_ena_all      : std_logic := '1';
+    signal vmm_ena_all      : std_logic := '0';
 
     -------------------------------------------------
     -- Readout Signals
@@ -2205,7 +2207,7 @@ flow_fsm: process(userclk2)
                     pf_reset                <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
-                    vmm_ena_all             <= '1';
+                    vmm_ena_all             <= '0';
                     vmm_tki                 <= '0';
                     ckbc_enable             <= '0';
                     vmm_cktp_primary        <= '0';
@@ -2406,7 +2408,9 @@ end process;
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
     vmm_bitmask_1VMM        <= "11111111";
-    vmm_bitmask             <= vmm_bitmask_8VMM when (vmmReadoutMode = '1') else vmm_bitmask_1VMM;
+    vmm_bitmask             <= "11111111";
+    --Uncomment the line below when bitmask is deployed in software
+    --vmm_bitmask             <= vmm_bitmask_8VMM when (vmmReadoutMode = '1') else vmm_bitmask_1VMM;
     
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= not CH_TRIGGER;

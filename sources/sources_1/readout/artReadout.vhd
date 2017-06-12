@@ -72,17 +72,17 @@ architecture Behavioral of artReadout is
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -----------------------------------------------------------------
-    attribute mark_debug : string;
+--    attribute mark_debug : string;
 
-    attribute mark_debug of artData                : signal is "true";
-    attribute mark_debug of trigger                : signal is "true";
-    attribute mark_debug of artCounter             : signal is "true";
-    attribute mark_debug of vmmArtReady160         : signal is "true";
-    attribute mark_debug of enableReadout160       : signal is "true";
-    attribute mark_debug of artDataBuffed          : signal is "true";
-    attribute mark_debug of debug1                 : signal is "true";
-    attribute mark_debug of debug2                 : signal is "true";
-    attribute mark_debug of vmmArtReady125         : signal is "true";
+--    attribute mark_debug of artData                : signal is "true";
+--    attribute mark_debug of trigger                : signal is "true";
+--    attribute mark_debug of artCounter             : signal is "true";
+--    attribute mark_debug of vmmArtReady160         : signal is "true";
+--    attribute mark_debug of enableReadout160       : signal is "true";
+--    attribute mark_debug of artDataBuffed          : signal is "true";
+--    attribute mark_debug of debug1                 : signal is "true";
+--    attribute mark_debug of debug2                 : signal is "true";
+--    attribute mark_debug of vmmArtReady125         : signal is "true";
     
     
 component ila_art
@@ -193,12 +193,12 @@ end process;
 
 vmmArtReady    <= vmmArtReady125;
 
-ilaArt: ila_art
-port map
-    (
-        clk                     =>  clk_art,
-        probe0                  =>  probe0_out
-    );
+--ilaArt: ila_art
+--port map
+--    (
+--        clk                     =>  clk_art,
+--        probe0                  =>  probe0_out
+--    );
 
 probe0_out(0)               <= artData(1);
 probe0_out(1)               <= trigger;

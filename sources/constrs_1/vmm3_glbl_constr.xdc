@@ -33,6 +33,11 @@ set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/
 #=============================== False Paths ==========================
 set_false_path -from [get_ports CH_TRIGGER]
 
+# ART readout
+set_false_path -from [get_cells art_instance/vmmArtData_reg[*]] -to [get_cells art_instance/vmmArtData160_125_reg[*]]
+set_false_path -from [get_cells art_instance/vmmArtReady160_reg] -to [get_cells art_instance/vmmArtReady160_125_reg]
+set_false_path -from [get_cells art_instance/enableReadout125_reg] -to [get_cells art_instance/enableReadout125_160_reg]
+
 # CKTP/CKBC enabling false path
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]

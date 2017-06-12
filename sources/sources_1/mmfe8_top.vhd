@@ -24,6 +24,7 @@
 -- 30.04.2017 Added vmm_readout_wrapper that contains level-0 readout mode besides
 -- the pre-existing continuous mode. (Christos Bakalis)
 -- 06.06.2017 Added ART readout handling (Paris)
+-- 12.06.2017 Added support for MMFE1 board (Paris)
 --
 ----------------------------------------------------------------------------------
 
@@ -248,7 +249,7 @@ architecture Behavioral of mmfe8_top is
     -- Set to '1' for MMFE8 or '0' for 1-VMM boards
     constant is_mmfe8       : std_logic := '0';
     -- Set to '0' for continuous readout mode or '1' for L0 readout mode
-    -- For MDT boards, also change the 'set_input_delay' of DATA0/DATA1 at .xdc
+    -- For 1-VMM boards boards, also change the 'set_input_delay' of DATA0/DATA1 at .xdc
     constant vmmReadoutMode : std_logic := '0';
     -- Set to '1' to enable the ART header
     constant artEnabled     : std_logic := '1';

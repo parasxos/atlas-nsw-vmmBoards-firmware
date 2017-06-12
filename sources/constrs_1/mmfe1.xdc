@@ -1,28 +1,29 @@
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
-#======================== MDT 446/436 08/2016 =========================
+#================================ MMFE1 ===============================
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------
 
 # Data Lines input delays (TO-DO: Perform measurements for input delays)
 #-----------------------------------------------------------------------------------------------------------------------------
 #-------------------------------------- Continuous Readout -------------------------------------------------------------------
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_P]
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_N]
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_P]
-#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA0_1_N]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_P]
+set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT3]] [get_ports DATA1_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
 
 #-------------------------------------- Level-0 Readout ----------------------------------------------------------------------
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_P]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA0_1_N]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_P]
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1]] [get_ports DATA1_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------------
 
 #====================== I/O Placement - IOSTANDARDS ===================
-############################# MDT #############################
+
+############################# MMFE1 #############################
 set_property PACKAGE_PIN V4      [get_ports X_2V5_DIFF_CLK_P]
 set_property PACKAGE_PIN W4      [get_ports X_2V5_DIFF_CLK_N]
 set_property IOSTANDARD LVDS_25  [get_ports X_2V5_DIFF_CLK_P]
@@ -40,7 +41,7 @@ set_property IOSTANDARD LVCMOS25 [get_ports phy_int]
 set_property PACKAGE_PIN AB8     [get_ports phy_rstn_out]
 set_property IOSTANDARD LVCMOS25 [get_ports phy_rstn_out]
 
-#########################TRIGGER-MDT#############################
+######################### Trigger MMFE1 #############################
 set_property PACKAGE_PIN V18     [get_ports CH_TRIGGER]
 set_property IOSTANDARD LVCMOS33 [get_ports CH_TRIGGER]
 
@@ -49,11 +50,12 @@ set_property PACKAGE_PIN W22     [get_ports TRIGGER_OUT_N]
 set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_P]
 set_property IOSTANDARD LVCMOS33 [get_ports TRIGGER_OUT_N]
 
-############################ MO MDT_446 #########################
+############################ MO MMFE1 #########################
 set_property PACKAGE_PIN H13         [get_ports MO]
 set_property IOSTANDARD LVCMOS12     [get_ports MO]
+set_property PULLDOWN TRUE           [get_ports MO]
 
-##########################ART VMM3 MDT############################
+########################## ART VMM3 MMFE1 ############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_1_P]
 set_property PACKAGE_PIN A18         [get_ports ART_1_P]
@@ -104,11 +106,11 @@ set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_1_N]
 
 set_property PACKAGE_PIN A15         [get_ports ART_OUT_P]
 set_property PACKAGE_PIN A16         [get_ports ART_OUT_N]
-
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_OUT_P]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ART_OUT_N]
+set_property PULLDOWN TRUE           [get_ports ART_OUT_P]
 
-#########################DATA0 VMM3#############################
+######################### DATA0 VMM3 #############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA0_1_P]
 set_property PACKAGE_PIN B15         [get_ports DATA0_1_P]
@@ -157,7 +159,7 @@ set_property PACKAGE_PIN AA6         [get_ports DATA0_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports DATA0_8_N]
 set_property PULLDOWN TRUE           [get_ports DATA0_8_P]
 
-#########################DATA1 VMM3#############################
+######################### DATA1 VMM3 #############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports DATA1_1_P]
 set_property PACKAGE_PIN C14         [get_ports DATA1_1_P]
@@ -206,7 +208,7 @@ set_property PACKAGE_PIN Y7          [get_ports DATA1_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports DATA1_8_N]
 set_property PULLDOWN TRUE           [get_ports DATA1_8_P]
 
-##########################CKDT VMM3##############################
+########################## CKDT VMM3 ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKDT_1_P]
 set_property PACKAGE_PIN B20         [get_ports CKDT_1_P]
@@ -255,7 +257,7 @@ set_property PACKAGE_PIN N14         [get_ports CKDT_8_N]
 set_property IOSTANDARD TMDS_33      [get_ports CKDT_8_N]
 set_property PULLDOWN TRUE           [get_ports CKDT_8_P]
 
-##########################CKBC VMM3##############################
+########################## CKBC VMM3 ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKBC_1_P]
 set_property PACKAGE_PIN J19         [get_ports CKBC_1_P]
@@ -304,8 +306,7 @@ set_property PACKAGE_PIN U5          [get_ports CKBC_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports CKBC_8_N]
 set_property PULLDOWN TRUE           [get_ports CKBC_8_P]
 
-
-##########################CKTP VMM3##############################
+########################## CKTP VMM3 ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTP_1_P]
 set_property PACKAGE_PIN H20         [get_ports CKTP_1_P]
@@ -354,7 +355,7 @@ set_property PACKAGE_PIN T4          [get_ports CKTP_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports CKTP_8_N]
 set_property PULLDOWN TRUE           [get_ports CKTP_8_P]
 
-##########################CKTK VMM3##############################
+########################## CKTK VMM3 ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKTK_1_P]
 set_property PACKAGE_PIN M21         [get_ports CKTK_1_P]
@@ -403,7 +404,7 @@ set_property PACKAGE_PIN R17         [get_ports CKTK_8_N]
 set_property IOSTANDARD TMDS_33      [get_ports CKTK_8_N]
 set_property PULLDOWN TRUE           [get_ports CKTK_8_P]
 
-#############################SDI VMM3###########################
+############################# SDI VMM3 ###########################
 
 set_property PACKAGE_PIN G17         [get_ports SDI_1]
 set_property IOSTANDARD LVCMOS12     [get_ports SDI_1]
@@ -436,7 +437,7 @@ set_property PACKAGE_PIN V9          [get_ports SDI_8]
 set_property IOSTANDARD LVCMOS25     [get_ports SDI_8]
 set_property PULLDOWN TRUE           [get_ports SDI_8]
 
-#############################SDO VMM3###########################
+############################# SDO VMM3 ###########################
 
 set_property PACKAGE_PIN G18         [get_ports SDO_1]
 set_property IOSTANDARD LVCMOS12     [get_ports SDO_1]
@@ -469,7 +470,7 @@ set_property PACKAGE_PIN V8          [get_ports SDO_8]
 set_property IOSTANDARD LVCMOS25     [get_ports SDO_8]
 set_property PULLDOWN TRUE           [get_ports SDO_8]
 
-#############################TKI/TKO###########################
+############################# TKI/TKO ###########################
 
 set_property PACKAGE_PIN K17          [get_ports TKI_P]
 set_property PACKAGE_PIN J17          [get_ports TKI_N]
@@ -483,7 +484,7 @@ set_property PACKAGE_PIN J21          [get_ports TKO_N]
 set_property IOSTANDARD DIFF_HSUL_12  [get_ports TKO_P]
 set_property IOSTANDARD DIFF_HSUL_12  [get_ports TKO_N]
 
-##########################ENA VMM3##############################
+########################## ENA VMM3 ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports ENA_1_P]
 set_property PACKAGE_PIN F18         [get_ports ENA_1_P]
@@ -532,7 +533,7 @@ set_property PACKAGE_PIN W7          [get_ports ENA_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports ENA_8_N]
 set_property PULLDOWN TRUE           [get_ports ENA_8_P]
 
-##########################CS VMM3##############################
+########################## CS VMM3 ##############################
 
 set_property PACKAGE_PIN E19         [get_ports CS_1]
 set_property IOSTANDARD LVCMOS12     [get_ports CS_1]
@@ -565,7 +566,7 @@ set_property PACKAGE_PIN R6          [get_ports CS_8]
 set_property IOSTANDARD LVCMOS25     [get_ports CS_8]
 set_property PULLDOWN TRUE           [get_ports CS_8]
 
-##########################SCK VMM3##############################
+########################## SCK VMM3 ##############################
 
 set_property PACKAGE_PIN D19         [get_ports SCK_1]
 set_property IOSTANDARD LVCMOS12     [get_ports SCK_1]
@@ -598,7 +599,7 @@ set_property PACKAGE_PIN T6          [get_ports SCK_8]
 set_property IOSTANDARD LVCMOS25     [get_ports SCK_8]
 set_property PULLDOWN TRUE           [get_ports SCK_8]
 
-##########################SETT/SETB/CK6B VMM3#####################
+########################## SETT/SETB/CK6B VMM3 #####################
 
 set_property IOSTANDARD LVDS_25      [get_ports SETT_P]
 set_property PACKAGE_PIN AA15        [get_ports SETT_P]
@@ -660,7 +661,7 @@ set_property PACKAGE_PIN V5          [get_ports CK6B_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports CK6B_8_N]
 set_property PULLDOWN TRUE           [get_ports CK6B_8_P]
 
-##########################CKART VMM3##############################
+########################## CKART VMM3 ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_1_P]
 set_property PACKAGE_PIN C18         [get_ports CKART_1_P]
@@ -709,14 +710,15 @@ set_property PACKAGE_PIN W5          [get_ports CKART_8_N]
 set_property IOSTANDARD LVDS_25      [get_ports CKART_8_N]
 set_property PULLDOWN TRUE           [get_ports CKART_8_P]
 
-##########################CKART ADDC##############################
+########################## CKART ADDC ##############################
 
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_ADDC_P]
 set_property PACKAGE_PIN B17         [get_ports CKART_ADDC_P]
 set_property PACKAGE_PIN B18         [get_ports CKART_ADDC_N]
 set_property IOSTANDARD DIFF_HSUL_12 [get_ports CKART_ADDC_N]
+set_property PULLDOWN TRUE           [get_ports CKART_ADDC_P]
 
-###########################XADC MDT#############################
+########################### XADC MMFE1 #############################
 # Dedicated Analog Inputs
 set_property IOSTANDARD LVCMOS25     [get_ports VP_0]
 set_property PACKAGE_PIN L10         [get_ports VP_0]

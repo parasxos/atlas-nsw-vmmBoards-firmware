@@ -445,6 +445,7 @@ architecture Behavioral of mmfe8_top is
     signal trraw_synced125_i  : std_logic := '0';
     signal accept_wr          : std_logic := '0';
     signal vmmArtData         : std_logic_vector(5 downto 0) := (others => '0');
+    signal vmmArtReady        : std_logic := '0';
   
     -------------------------------------------------
     -- Event Timing & Soft Reset
@@ -851,8 +852,9 @@ architecture Behavioral of mmfe8_top is
     end component;
     -- 9
     component packet_formation is
-    generic(is_mmfe8    : std_logic;
-            vmmReadoutMode  : std_logic);
+    generic(is_mmfe8        : std_logic;
+            vmmReadoutMode  : std_logic;
+            artEnabled      : std_logic);
     port (
             clk             : in std_logic;
     
@@ -886,7 +888,8 @@ architecture Behavioral of mmfe8_top is
             dbg_st_o        : out std_logic_vector(4 downto 0);
             
             trraw_synced125 : in std_logic;
-            vmmArtData125   : in std_logic_vector(5 downto 0)
+            vmmArtData125   : in std_logic_vector(5 downto 0);
+            vmmArtReady     : in std_logic
     );
     end component;
     -- 10
@@ -1311,7 +1314,8 @@ architecture Behavioral of mmfe8_top is
         clk_art         : in std_logic;
         trigger         : in std_logic;
         artData         : in std_logic_vector(8 downto 1);
-        vmmArtData125   : out std_logic_vector(5 downto 0)
+        vmmArtData125   : out std_logic_vector(5 downto 0);
+        vmmArtReady     : out std_logic
     );
     end component;
 
@@ -1781,7 +1785,8 @@ FIFO2UDP_instance: FIFO2UDP
 
 packet_formation_instance: packet_formation
     generic map(is_mmfe8        => is_mmfe8,
-                vmmReadoutMode  => vmmReadoutMode)
+                vmmReadoutMode  => vmmReadoutMode,
+                artEnabled      => artEnabled)
     port map(
         clk             => userclk2,
         
@@ -1815,7 +1820,9 @@ packet_formation_instance: packet_formation
         dbg_st_o        => pf_dbg_st,
         trraw_synced125 => trraw_synced125_i,
         
-        vmmArtData125   => vmmArtData
+        vmmArtData125   => vmmArtData,
+        vmmArtReady     => vmmArtReady
+        
     );   
         
 data_selection:  select_data
@@ -1980,7 +1987,8 @@ art_instance: artReadout
         clk_art         => clk_160_gen,
         trigger         => trraw_synced125_i,
         artData         => art_in_vec,
-        vmmArtData125   => vmmArtData
+        vmmArtData125   => vmmArtData,
+        vmmArtReady     => vmmArtReady
    );
 
 ----------------------------------------------------CS------------------------------------------------------------

@@ -28,7 +28,8 @@ entity artReadout is
             clk_art         : in std_logic;
             trigger         : in std_logic;
             artData         : in std_logic_vector(8 downto 1);
-            vmmArtData125   : out std_logic_vector(5 downto 0)
+            vmmArtData125   : out std_logic_vector(5 downto 0);
+            vmmArtReady     : out std_logic
             );
 end artReadout;
 
@@ -71,17 +72,17 @@ architecture Behavioral of artReadout is
     -------------------------------------------------------------------
     -- Keep signals for ILA
     -----------------------------------------------------------------
---    attribute mark_debug : string;
+    attribute mark_debug : string;
 
---    attribute mark_debug of artData                : signal is "true";
---    attribute mark_debug of trigger                : signal is "true";
---    attribute mark_debug of artCounter             : signal is "true";
---    attribute mark_debug of vmmArtReady160         : signal is "true";
---    attribute mark_debug of enableReadout160       : signal is "true";
---    attribute mark_debug of artDataBuffed          : signal is "true";
---    attribute mark_debug of debug1                 : signal is "true";
---    attribute mark_debug of debug2                 : signal is "true";
---    attribute mark_debug of vmmArtReady125         : signal is "true";
+    attribute mark_debug of artData                : signal is "true";
+    attribute mark_debug of trigger                : signal is "true";
+    attribute mark_debug of artCounter             : signal is "true";
+    attribute mark_debug of vmmArtReady160         : signal is "true";
+    attribute mark_debug of enableReadout160       : signal is "true";
+    attribute mark_debug of artDataBuffed          : signal is "true";
+    attribute mark_debug of debug1                 : signal is "true";
+    attribute mark_debug of debug2                 : signal is "true";
+    attribute mark_debug of vmmArtReady125         : signal is "true";
     
     
 component ila_art
@@ -190,12 +191,14 @@ begin
     end if;
 end process;
 
---ilaArt: ila_art
---port map
---    (
---        clk                     =>  clk_art,
---        probe0                  =>  probe0_out
---    );
+vmmArtReady    <= vmmArtReady125;
+
+ilaArt: ila_art
+port map
+    (
+        clk                     =>  clk_art,
+        probe0                  =>  probe0_out
+    );
 
 probe0_out(0)               <= artData(1);
 probe0_out(1)               <= trigger;

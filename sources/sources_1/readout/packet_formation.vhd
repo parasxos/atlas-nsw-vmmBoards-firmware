@@ -7,7 +7,7 @@
 -- Module Name: packet_formation.vhd - Behavioral
 -- Project Name: MMFE8 
 -- Target Devices: Artix7 xc7a200t-2fbg484 and xc7a200t-3fbg484 
--- Tool Versions: Vivado 2016.2
+-- Tool Versions: Vivado 2017.1
 --
 -- Changelog:
 -- 22.08.2016 Changed readout trigger pulse from 125 to 100 ns long (Reid Pinkham)
@@ -28,7 +28,8 @@ use UNISIM.VComponents.all;
 
 entity packet_formation is
     Generic(is_mmfe8        : std_logic;
-            vmmReadoutMode  : std_logic);
+            vmmReadoutMode  : std_logic;
+            artEnabled      : std_logic);
     Port(
         clk             : in std_logic;
 
@@ -61,7 +62,8 @@ entity packet_formation is
         latency         : in std_logic_vector(15 downto 0);
         dbg_st_o        : out std_logic_vector(4 downto 0);
         trraw_synced125 : in std_logic;
-        vmmArtData125   : in std_logic_vector(5 downto 0)
+        vmmArtData125   : in std_logic_vector(5 downto 0);
+        vmmArtReady     : in std_logic
     );
 end packet_formation;
 
@@ -98,6 +100,7 @@ architecture Behavioral of packet_formation is
     signal packLen_drv2pf       : std_logic_vector(11 downto 0) := x"000";
     signal packLen_cnt          : unsigned(11 downto 0)         := x"000";
     signal end_packet_int       : std_logic                     := '0';
+    signal artValid             : std_logic                     := '0';
 
     type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
                        sendHeaderStep3, triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, 
@@ -111,20 +114,24 @@ architecture Behavioral of packet_formation is
 -----------------------------------------------------------------
 
 ----------------------  Debugging ------------------------------
---    attribute mark_debug : string;
+    attribute mark_debug : string;
 
---    attribute mark_debug of header                :    signal    is    "true";
---    attribute mark_debug of globBcid              :    signal    is    "true";
---    attribute mark_debug of globBcid_i            :    signal    is    "true";
---    attribute mark_debug of precCnt               :    signal    is    "true";
---    attribute mark_debug of vmmId_i               :    signal    is    "true";
---    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
---    attribute mark_debug of vmmWord_i             :    signal    is    "true";
---    attribute mark_debug of packLen_i             :    signal    is    "true";
---    attribute mark_debug of packLen_cnt           :    signal    is    "true";
---    attribute mark_debug of end_packet_int        :    signal    is    "true";
---    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
---    attribute mark_debug of debug_state           :    signal    is    "true";
+    attribute mark_debug of header                :    signal    is    "true";
+    attribute mark_debug of globBcid              :    signal    is    "true";
+    attribute mark_debug of globBcid_i            :    signal    is    "true";
+    attribute mark_debug of precCnt               :    signal    is    "true";
+    attribute mark_debug of vmmId_i               :    signal    is    "true";
+    attribute mark_debug of daqFIFO_din           :    signal    is    "true";
+    attribute mark_debug of vmmWord_i             :    signal    is    "true";
+    attribute mark_debug of packLen_i             :    signal    is    "true";
+    attribute mark_debug of packLen_cnt           :    signal    is    "true";
+    attribute mark_debug of end_packet_int        :    signal    is    "true";
+    attribute mark_debug of triggerVmmReadout_i   :    signal    is    "true";
+    attribute mark_debug of debug_state           :    signal    is    "true";
+    
+    attribute mark_debug of artValid              :    signal    is    "true";
+    attribute mark_debug of trraw_synced125       :    signal    is    "true";
+    attribute mark_debug of vmmArtReady           :    signal    is    "true";
 
     component ila_pf
     port (
@@ -383,8 +390,8 @@ end process;
 muxFIFOData: process( sel_cnt, header, header_l0, vmmWord, vmmArtData125 )
 begin
     case sel_cnt is
-    when "000"  => daqFIFO_din <= b"0000000100" & vmmArtData125;
-    when "001"  => daqFIFO_din <= b"0000001100" & vmmArtData125;
+    when "000"  => daqFIFO_din <= b"1111000" & artValid & "01" & vmmArtData125;
+    when "001"  => daqFIFO_din <= b"0000000" & artValid & "00" & vmmArtData125;
     when "010"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
     when "011"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
     when "100"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
@@ -418,6 +425,17 @@ vmm_driver_inst: vmm_driver
         vmmWordReady    => vmmWordReady
     );
 
+   LDCE_inst : LDCE
+   generic map (
+      INIT => '0')              -- Initial value of latch ('0' or '1')  
+   port map (
+      Q => artValid,            -- Data output
+      CLR => trraw_synced125,   -- Asynchronous clear/reset input
+      D => '1',                 -- Data input
+      G => vmmArtReady,         -- Gate input
+      GE => artEnabled          -- Gate enable input
+   );					
+					
     globBcid_i      <= globBcid;
     vmmWord_i       <= vmmWord;
     dataout         <= daqFIFO_din;
@@ -442,24 +460,26 @@ vmm_driver_inst: vmm_driver
     dbg_st_o                <= debug_state;
     packLen_drv2pf_unsg     <= unsigned(packLen_drv2pf);
 
---ilaPacketFormation: ila_pf
---port map(
---    clk                     =>  clk,
---    probe0                  =>  probe0_out,
---    probe1                  =>  probe1_out
---);
+ilaPacketFormation: ila_pf
+port map(
+    clk                     =>  clk,
+    probe0                  =>  probe0_out,
+    probe1                  =>  probe1_out
+);
 
-    probe0_out(9 downto 0)             <= std_logic_vector(to_unsigned(trigLatencyCnt, 10));--header;             -- OK
-    probe0_out(19 downto 10)           <= std_logic_vector(to_unsigned(trigLatency, 10));          -- OK
+    probe0_out(9 downto 0)             <= std_logic_vector(to_unsigned(trigLatencyCnt, 10));
+    probe0_out(19 downto 10)           <= std_logic_vector(to_unsigned(trigLatency, 10));
     probe0_out(20)                     <= '0';
-    probe0_out(21)                     <= '0';
-    probe0_out(132 downto 22)          <= (others => '0');--vmmId_i;
+    probe0_out(21)                     <= artValid;
+    probe0_out(22)                     <= trraw_synced125;
+    probe0_out(23)                     <= vmmArtReady;
+    probe0_out(132 downto 24)          <= (others => '0');--vmmId_i;
 
-    probe1_out(63 downto 0)             <= (others => '0');--daqFIFO_din;        -- OK
-    probe1_out(64)                      <= vmmWordReady;       -- OK
-    probe1_out(65)                      <= vmmEventDone;       -- OK
-    probe1_out(66)                      <= '0';    -- OK
-    probe1_out(67)                      <= newCycle;           -- OK
+    probe1_out(63 downto 0)             <= (others => '0');--daqFIFO_din;
+    probe1_out(64)                      <= vmmWordReady;
+    probe1_out(65)                      <= vmmEventDone;
+    probe1_out(66)                      <= '0';
+    probe1_out(67)                      <= newCycle;
     probe1_out(79 downto 68)            <= std_logic_vector(packLen_i);
     probe1_out(91 downto 80)            <= std_logic_vector(packLen_cnt);
     probe1_out(92)                      <= end_packet_int;

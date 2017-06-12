@@ -27,6 +27,7 @@
 -- module. (Christos Bakalis)
 -- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
 -- 28.03.2017 Changes to accomodate to MMFE8 VMM3. (Christos Bakalis)
+-- 19.04.2017 VMM2 version migrated from VMM3 design. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -470,21 +471,21 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------------------------------------
     -- CKBC/CKTP Generator signals
     ------------------------------------------------------------------ 
-    signal clk_160_gen      : std_logic := '0';
-    signal clk_500_gen      : std_logic := '0';
-    signal clk_gen_locked   : std_logic := '0';
-    signal rst_gen          : std_logic := '0';  
-    signal CKBC_glbl        : std_logic := '0';
-    signal rst_enable       : std_logic := '0';
-    signal rst_enable_conf  : std_logic := '0';
-    signal rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
-    signal rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
-    signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04";
-    signal cktp_period      : std_logic_vector(15 downto 0)    := x"4000";
-    signal cktp_skew        : std_logic_vector(7 downto 0)     := (others => '0'); 
-    signal ckbc_freq        : std_logic_vector(7 downto 0)     := x"0a"; --40 Mhz
-    signal cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
-    signal cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
+    signal clk_160_gen        : std_logic := '0';
+    signal clk_500_gen        : std_logic := '0';
+    signal clk_gen_locked     : std_logic := '0';
+    signal rst_gen            : std_logic := '0';  
+    signal CKBC_glbl          : std_logic := '0';
+    signal rst_enable         : std_logic := '0';
+    constant rst_enable_conf  : std_logic := '0';
+    constant rst_period       : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
+    constant rst_before_cktp  : std_logic_vector(7 downto 0)     := b"10000000";
+    constant cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04";
+    constant cktp_period      : std_logic_vector(15 downto 0)    := x"4000";
+    constant cktp_skew        : std_logic_vector(7 downto 0)     := x"04"; 
+    constant ckbc_freq        : std_logic_vector(7 downto 0)     := x"0a"; --40 Mhz
+    constant cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
+    constant cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
 
     -------------------------------------------------
     -- Flow FSM signals
@@ -621,15 +622,15 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     -- VIO
     -------------------------------------------------------------------
-    attribute keep of rst_enable_conf           : signal is "TRUE";
-    attribute keep of rst_period                : signal is "TRUE";
-    attribute keep of rst_before_cktp           : signal is "TRUE";
-    attribute keep of cktp_pulse_width          : signal is "TRUE";
-    attribute keep of cktp_period               : signal is "TRUE";
-    attribute keep of cktp_skew                 : signal is "TRUE";
-    attribute keep of ckbc_freq                 : signal is "TRUE";
-    attribute keep of cktp_max_num              : signal is "TRUE";
-    attribute keep of cktk_max_num              : signal is "TRUE";
+--    attribute keep of rst_enable_conf           : signal is "TRUE";
+--    attribute keep of rst_period                : signal is "TRUE";
+--    attribute keep of rst_before_cktp           : signal is "TRUE";
+--    attribute keep of cktp_pulse_width          : signal is "TRUE";
+--    attribute keep of cktp_period               : signal is "TRUE";
+--    attribute keep of cktp_skew                 : signal is "TRUE";
+--    attribute keep of ckbc_freq                 : signal is "TRUE";
+--    attribute keep of cktp_max_num              : signal is "TRUE";
+--    attribute keep of cktk_max_num              : signal is "TRUE";
     --attribute dont_touch of cktk_max_num        : signal is "TRUE";
                
     -------------------------------------------------------------------
@@ -2074,7 +2075,7 @@ flow_fsm: process(userclk2)
                         end if;
 
                     elsif(newIP_rdy = '1')then -- start new IP setup
-                        if(wait_cnt = "00000111")then -- wait for safe assertion of multi-bit signal
+                        if(wait_cnt = "00001111")then -- wait for safe assertion of multi-bit signal
                             wait_cnt    <= (others => '0');
                             newIP_start <= '1';
                             state       <= FLASH_init;
@@ -2216,6 +2217,7 @@ end process;
     rst_enable              <= '1' when (state = DAQ and rst_enable_conf = '1') else '0';
     daq_is_on               <= '1' when state = DAQ else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
+    -- bitmask to be changed once software is ready
     vmm_bitmask             <= "11111111";
     ckbc_enable             <= '1';
     
@@ -2264,19 +2266,19 @@ end process;
 
     tied_to_gnd_i    <= '0'; -- ground CK6B/SETT/SETB (unused)    
     
-vio_ckbc_cktp: vio_2
-      PORT MAP (
-        clk => clk_160_gen,
-        probe_out0(0) => rst_enable_conf,
-        probe_out1 => rst_period,
-        probe_out2 => rst_before_cktp,
-        probe_out3 => cktp_pulse_width,
-        probe_out4 => cktp_period,
-        probe_out5 => cktp_skew,
-        probe_out6 => ckbc_freq,
-        probe_out7 => cktp_max_num,
-        probe_out8 => cktk_max_num
-      );
+--vio_ckbc_cktp: vio_2
+--      PORT MAP (
+--        clk => clk_160_gen,
+--        probe_out0(0) => rst_enable_conf,
+--        probe_out1 => rst_period,
+--        probe_out2 => rst_before_cktp,
+--        probe_out3 => cktp_pulse_width,
+--        probe_out4 => cktp_period,
+--        probe_out5 => cktp_skew,
+--        probe_out6 => ckbc_freq,
+--        probe_out7 => cktp_max_num,
+--        probe_out8 => cktk_max_num
+--      );
       
       
 --ila_top: ila_overview

@@ -31,7 +31,7 @@ set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 #======================= TIMING EXCEPTIONS SECTION ====================
 #=============================== False Paths ==========================
 #VIO
-set_false_path -from [get_cells vio_ckbc_cktp/inst/PROBE_OUT_ALL_INST/G_PROBE_OUT[*].PROBE_OUT0_INST/Probe_out_reg[*]]
+#set_false_path -from [get_cells vio_ckbc_cktp/inst/PROBE_OUT_ALL_INST/G_PROBE_OUT[*].PROBE_OUT0_INST/Probe_out_reg[*]]
 
 # CKTP/CKBC enabling false path
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
@@ -50,10 +50,16 @@ set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger
 # AXI SPI related false paths
 set_false_path -from [get_cells axi4_spi_instance/CDCC_50to125/data_in_reg_reg[*]] -to [get_cells axi4_spi_instance/CDCC_50to125/data_sync_stage_0_reg[*]]
 set_false_path -from [get_cells axi4_spi_instance/CDCC_125to50/data_in_reg_reg[*]] -to [get_cells axi4_spi_instance/CDCC_125to50/data_sync_stage_0_reg[*]]
+set_false_path -from [get_cells axi4_spi_instance/myIP_reg[*]]
+set_false_path -from [get_cells axi4_spi_instance/myMAC_reg[*]]
+set_false_path -from [get_cells axi4_spi_instance/destIP_reg[*]]
 
 # UDP configuration related false paths
 set_false_path -from [get_cells udp_din_conf_block/CDCC_40to125/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_40to125/data_sync_stage_0_reg[*]]
 set_false_path -from [get_cells udp_din_conf_block/CDCC_125to40/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_125to40/data_sync_stage_0_reg[*]]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/myIP_set_reg[*]]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/myMAC_set_reg[*]]
+set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/destIP_set_reg[*]]
 
 # MMCM related false paths
 set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
@@ -65,6 +71,7 @@ set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/daq
 set_false_path -from [get_cells readout_vmm/vmmEventDone_i_reg] -to [get_cells readout_vmm/vmmEventDone_stage1_reg]
 set_false_path -from [get_cells readout_vmm/vmmWord_i_reg[*]] -to [get_cells readout_vmm/vmmWord_stage1_reg[*]]
 set_false_path -from [get_cells readout_vmm/vmmWordReady_i_reg] -to [get_cells readout_vmm/vmmWordReady_stage1_reg]
+
 
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
@@ -821,6 +828,6 @@ set_property OFFCHIP_TERM NONE [get_ports IO1_IO]
 set_property OFFCHIP_TERM NONE [get_ports SS_IO]
 
 ################# GENERAL CONSTRAINTS ########################
-set_property CONFIG_MODE SPIx4 [current_design]
-set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+set_property CONFIG_MODE SPIx1 [current_design]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 1 [current_design]
 set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]

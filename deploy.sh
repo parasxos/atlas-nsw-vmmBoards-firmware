@@ -1,9 +1,10 @@
 #!/bin/sh
 echo "Cleaning up the build directory..."
 cd sources
-rm -Rf sources/MDT_446 2>&1 >/dev/null
-rm -Rf sources/MDT_MU2E 2>&1 >/dev/null
-rm -Rf sources/ MMFE8_VMM3 2>&1 >/dev/null
+rm -Rf MDT_446 2>&1 >/dev/null
+rm -Rf MDT_MU2E 2>&1 >/dev/null
+rm -Rf MMFE8_VMM3 2>&1 >/dev/null
+rm -Rf MMFE1 2>&1 >/dev/null
 
 tclArg=$1
 projectDir="MMFE8_VMM3/"
@@ -12,6 +13,11 @@ projectXpr="MMFE8_VMM3.xpr"
 if [ "$1" == "mmfe8_vmm3" ] 
 then
 	echo "Buildind project for:" $1
+elif [ "$1" == "mmfe1" ] 
+then
+	echo "Buildind project for:" $1
+	projectDir="MMFE1/"
+	projectXpr="MMFE1.xpr"
 elif [ "$1" == "mdt_446" ] 
 then
 	echo "Buildind project for:" $1

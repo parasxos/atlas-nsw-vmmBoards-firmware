@@ -1,5 +1,5 @@
 #
-# Vivado (TM) v2016.2 (64-bit)
+# Vivado (TM) v2017.1 (64-bit)
 #
 # build_mmfe8.tcl: Tcl script for re-creating project 'MMFE8'
 #
@@ -58,7 +58,11 @@ set origin_dir [file dirname [info script]]
         if {$argv == "mdt_mu2e"} {    
             set projectname "MDT_MU2E"
             puts "Correct. Building Project for MDT MU2E..."
-        } elseif {$argv == "mdt_446"} {
+        } elseif {$argv == "mmfe1"} {
+	    set thepart "xc7a100tfgg484-2"
+            set projectname "MMFE1"
+            puts "Correct. Building Project for MDT MMFE1..."
+	} elseif {$argv == "mdt_446"} {
             set projectname "MDT_446"
             puts "Correct. Building Project for MDT 446..."
         } elseif {$argv == "mmfe8_vmm3"} {
@@ -621,7 +625,7 @@ if {$argv == "mdt_mu2e"} {
     set file [file normalize $file]
     set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
     set_property "file_type" "XDC" $file_obj
-    } elseif {$argv == "mdt_446"} {
+} elseif {$argv == "mdt_446"} {
     # Add/Import constrs file and set constrs file properties from argument
     set file "[file normalize "$origin_dir/constrs_1/mdt_446.xdc"]"
     set file_added [add_files -norecurse -fileset $obj $file]
@@ -629,7 +633,15 @@ if {$argv == "mdt_mu2e"} {
     set file [file normalize $file]
     set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
     set_property "file_type" "XDC" $file_obj
-    } elseif {$argv == "mmfe8_vmm3"} {
+} elseif {$argv == "mmfe1"} {
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/mmfe1.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/mmfe1.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+} elseif {$argv == "mmfe8_vmm3"} {
     # Add/Import constrs file and set constrs file properties from argument
     set file "[file normalize "$origin_dir/constrs_1/mmfe8_vmm3.xdc"]"
     set file_added [add_files -norecurse -fileset $obj $file]
@@ -637,7 +649,7 @@ if {$argv == "mdt_mu2e"} {
     set file [file normalize $file]
     set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
     set_property "file_type" "XDC" $file_obj
-    } else { puts "ERROR!"} 
+} else { puts "ERROR!"} 
 
 # General constraints add
 set file "[file normalize "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"]"
@@ -682,10 +694,10 @@ if {[string equal [get_filesets -quiet sim_1] ""]} {
 
 # Create 'synth_1' run (if not found)
 if {[string equal [get_runs -quiet synth_1] ""]} {
-  create_run -name synth_1 -part $thepart -flow {Vivado Synthesis 2016} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
+  create_run -name synth_1 -part $thepart -flow {Vivado Synthesis 2017} -strategy "Vivado Synthesis Defaults" -constrset constrs_1
 } else {
   set_property strategy "Vivado Synthesis Defaults" [get_runs synth_1]
-  set_property flow "Vivado Synthesis 2016" [get_runs synth_1]
+  set_property flow "Vivado Synthesis 2017" [get_runs synth_1]
 }
 set obj [get_runs synth_1]
 set_property "part" "$thepart" $obj
@@ -695,10 +707,10 @@ current_run -synthesis [get_runs synth_1]
 
 # Create 'impl_1' run (if not found)
 if {[string equal [get_runs -quiet impl_1] ""]} {
-  create_run -name impl_1 -part $thepart -flow {Vivado Implementation 2016} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_1
+  create_run -name impl_1 -part $thepart -flow {Vivado Implementation 2017} -strategy "Vivado Implementation Defaults" -constrset constrs_1 -parent_run synth_1
 } else {
   set_property strategy "Vivado Implementation Defaults" [get_runs impl_1]
-  set_property flow "Vivado Implementation 2016" [get_runs impl_1]
+  set_property flow "Vivado Implementation 2017" [get_runs impl_1]
 }
 set obj [get_runs impl_1]
 set_property "part" $thepart $obj

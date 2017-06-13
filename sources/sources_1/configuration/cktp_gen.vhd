@@ -36,6 +36,7 @@ entity cktp_gen is
         cktp_start      : in  std_logic;
         cktp_primary    : in  std_logic;
         vmm_ckbc        : in  std_logic; -- CKBC clock currently dynamic
+        ckbc_mode       : in  std_logic;
         ckbc_freq       : in  std_logic_vector(5 downto 0);
         skew            : in  std_logic_vector(4 downto 0);
         pulse_width     : in  std_logic_vector(11 downto 0);
@@ -61,6 +62,8 @@ architecture Behavioral of cktp_gen is
     signal align_cnt_thresh             : unsigned(7 downto 0) := (others => '0');
     signal start_align_cnt              : std_logic := '0';     --
     signal cnt_delay                    : unsigned(3 downto 0) := (others => '0');
+    signal ckbc_mode_i                  : std_logic := '0';
+    signal ckbc_mode_sync               : std_logic := '0';
     
     attribute ASYNC_REG : string;
     
@@ -68,6 +71,8 @@ architecture Behavioral of cktp_gen is
     attribute ASYNC_REG of cktp_start_sync      : signal is "TRUE";
     attribute ASYNC_REG of cktp_primary_i       : signal is "TRUE";
     attribute ASYNC_REG of cktp_primary_sync    : signal is "TRUE";
+    attribute ASYNC_REG of ckbc_mode_i          : signal is "TRUE";
+    attribute ASYNC_REG of ckbc_mode_sync       : signal is "TRUE";
     
 begin
 
@@ -116,11 +121,14 @@ end process;
 sync160_proc: process(clk_160)
 begin
     if(rising_edge(clk_160))then
-        cktp_start_i    <= cktp_start;
-        cktp_start_sync <= cktp_start_i;
+        cktp_start_i        <= cktp_start;
+        cktp_start_sync     <= cktp_start_i;
         
         cktp_primary_i      <= cktp_primary;
         cktp_primary_sync   <= cktp_primary_i;
+
+        ckbc_mode_i         <= ckbc_mode;
+        ckbc_mode_sync      <= ckbc_mode_i;
     end if;
 end process;
 
@@ -154,23 +162,25 @@ testPulse_proc: process(clk_160) -- 160 MHz
             elsif(cktp_primary_sync = '1')then  -- from flow_fsm. keep cktp high for readout initialization
                 vmm_cktp            <= '1';
             else
-                if start_align_cnt = '1' then       -- Start alignment counter on rising edge of CKBC    
+                if start_align_cnt = '1' or ckbc_mode_sync = '1' then -- Start alignment counter on rising edge of CKBC    
                     if align_cnt < align_cnt_thresh then
-                    align_cnt <= align_cnt + 1;
-                else
-                    align_cnt <= (others => '0');
-                end if;
-                
-                if cktp_start_final = '0' then       -- Align CKTP generation to rising edge of CKBC
-                    cktp_start_aligned <= '0';
-                elsif (align_cnt = align_cnt_thresh) then
-                    cktp_start_aligned <= '1';
-                    if unsigned(skew) = "00000" then    -- Set CKTP signal as soon as rising edge of CKBC arrives if skew = 0
-                        vmm_cktp <= '1';
+                        align_cnt <= align_cnt + 1;
+                    else
+                        align_cnt <= (others => '0');
                     end if;
-                end if;
                 
-            end if;
+                    if ckbc_mode_sync = '1' then            -- Just send periodic CKTPs if @ ckbc mode
+                        cktp_start_aligned <= '1';
+                    elsif cktp_start_final = '0' then       -- Align CKTP generation to rising edge of CKBC if CKTPs are enabled @ top
+                        cktp_start_aligned <= '0';
+                    elsif (align_cnt = align_cnt_thresh) then
+                        cktp_start_aligned <= '1';
+                        if unsigned(skew) = "00000" then    -- Set CKTP signal as soon as rising edge of CKBC arrives if skew = 0
+                            vmm_cktp <= '1';
+                        end if;
+                    end if;
+                
+                end if;
                 
                 if cktp_start_aligned = '1' then
                     if (cktp_cnt < (to_integer(unsigned(skew)) - 1 ) and (cktp_cnt /= to_integer(unsigned(skew)))) then

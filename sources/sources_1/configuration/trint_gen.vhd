@@ -28,6 +28,7 @@ Port(
     clk_125     : in  std_logic;
     cktp_start  : in  std_logic;
     cktp_pulse  : in  std_logic;
+    ckbc_mode   : in  std_logic;
     cktp_width  : in  std_logic_vector(11 downto 0);
     trint       : out std_logic
    );
@@ -119,8 +120,11 @@ begin
                 trint_i     <= '0';
                 trint_cnt   <= (others => '0');
 
-                if(cktp_pulse = '1' and vmmReadoutMode = '0')then
-                    state <= ST_WAIT;
+                if(cktp_pulse = '1' and ckbc_mode = '1')then
+                    state <= ST_TRINT;
+                elsif(cktp_pulse = '1' and vmmReadoutMode = '0')then
+                   -- state <= ST_WAIT;
+                   state <= ST_TRINT;
                 elsif(cktp_pulse = '1' and vmmReadoutMode = '1')then
                     state <= ST_TRINT;
                 else

@@ -66,6 +66,7 @@ architecture RTL of clk_gen_wrapper is
         cktp_start      : in  std_logic;
         vmm_ckbc        : in  std_logic; -- CKBC clock currently dynamic
         cktp_primary    : in  std_logic;
+        ckbc_mode       : in  std_logic;
         ckbc_freq       : in  std_logic_vector(5 downto 0);
         skew            : in  std_logic_vector(4 downto 0);
         pulse_width     : in  std_logic_vector(11 downto 0);
@@ -148,6 +149,7 @@ cktp_generator: cktp_gen
         cktp_start      => cktp_gen_start,
         cktp_primary    => cktp_primary,
         vmm_ckbc        => CKBC_preBuf,
+        ckbc_mode       => readout_mode,
         ckbc_freq       => ckbc_freq,
         skew            => skew_cktp_gen,
         pulse_width     => cktp_width_final,

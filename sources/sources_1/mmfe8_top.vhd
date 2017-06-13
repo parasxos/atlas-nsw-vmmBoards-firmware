@@ -250,7 +250,7 @@ architecture Behavioral of mmfe8_top is
     constant is_mmfe8       : std_logic := '1';
     -- Set to '0' for continuous readout mode or '1' for L0 readout mode
     -- For 1-VMM boards boards, also change the 'set_input_delay' of DATA0/DATA1 at .xdc
-    constant vmmReadoutMode : std_logic := '1';
+    constant vmmReadoutMode : std_logic := '0';
     -- Set to '1' to enable the ART header
     constant artEnabled     : std_logic := '1';
 
@@ -2419,9 +2419,7 @@ end process;
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
     vmm_bitmask_1VMM        <= "11111111";
-    vmm_bitmask             <= "11111111";
-    --Uncomment the line below when bitmask is deployed in software
-    --vmm_bitmask             <= vmm_bitmask_8VMM when (vmmReadoutMode = '1') else vmm_bitmask_1VMM;
+    vmm_bitmask             <= vmm_bitmask_8VMM when (is_mmfe8 = '1') else vmm_bitmask_1VMM;
     
     pf_newCycle             <= tr_out_i;
     CH_TRIGGER_i            <= not CH_TRIGGER;

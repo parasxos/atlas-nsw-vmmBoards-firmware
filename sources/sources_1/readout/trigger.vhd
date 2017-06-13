@@ -190,6 +190,7 @@ architecture Behavioral of trigger is
         clk_125     : in  std_logic;
         cktp_start  : in  std_logic;
         cktp_pulse  : in  std_logic;
+        ckbc_mode   : in  std_logic;
         cktp_width  : in  std_logic_vector(11 downto 0);
         trint       : out std_logic
     );
@@ -536,6 +537,7 @@ cktp_trint_module: trint_gen
         clk_125         => clk,
         cktp_start      => cktp_enable,
         cktp_pulse      => CKTP_raw,
+        ckbc_mode       => ckbcMode_ff_synced,
         cktp_width      => cktp_width_final,
         trint           => trint -- synced to 160 Mhz
     );

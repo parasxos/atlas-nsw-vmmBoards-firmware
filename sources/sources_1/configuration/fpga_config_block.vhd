@@ -67,6 +67,7 @@ entity fpga_config_block is
     ------------------------------------
     -------- FPGA Config Interface -----
     fpga_conf           : in  std_logic;
+    fpga_rst            : out std_logic;
     fpgaPacket_rdy      : out std_logic;
     latency             : out std_logic_vector(15 downto 0);
     daq_on              : out std_logic;
@@ -85,7 +86,12 @@ architecture RTL of fpga_config_block is
     -- internal registers
     signal daq_state_reg    : std_logic_vector(7 downto 0)  := (others => '0');
     signal trig_state_reg   : std_logic_vector(7 downto 0)  := (others => '0');
+    signal ro_state_reg     : std_logic_vector(7 downto 0)  := (others => '0');
+    signal fpga_rst_reg     : std_logic_vector(7 downto 0)  := (others => '0');
     signal ckbcMode_i       : std_logic := '0';
+    signal fpga_rst_i       : std_logic := '0';
+    signal reg_rst          : std_logic := '0';
+    signal rst_cnt          : integer range 0 to 31 := 0;
     
     -- signal to control the timing of the register address/value assertion
     signal latch_enable     : std_logic := '0';
@@ -263,13 +269,15 @@ begin
 end process;
 
 -- demux that assigns values to signals depending on the address
-regMap_demux_proc: process(reg_address, reg_value, latch_enable)
+regMap_demux_proc: process(reg_address, reg_value, latch_enable, reg_rst)
 begin
     if(latch_enable = '1')then
         case reg_address is
         ----- fpga conf ------
         when x"ab"  => trig_state_reg           <= reg_value(7 downto 0);
         when x"0f"  => daq_state_reg            <= reg_value(7 downto 0);
+        when x"cd"  => ro_state_reg             <= reg_value(7 downto 0);
+        when x"af"  => fpga_rst_reg             <= reg_value(7 downto 0);
         when x"05"  => latency                  <= reg_value(15 downto 0);
         when x"c1"  => cktk_max_num             <= reg_value(7 downto 0);
         when x"c2"  => ckbc_freq                <= reg_value(7 downto 0);
@@ -288,6 +296,8 @@ begin
         when x"b4"  => myMAC_set(31 downto 0)   <= reg_value(31 downto 0);
         when others => null;
         end case;
+    elsif(reg_rst = '1')then
+        fpga_rst_reg <= (others => '0');
     end if;
 end process;
 
@@ -302,14 +312,58 @@ begin
 end process;
 
 -- process to handle trigger state
-triggerState_proc: process(trig_state_reg, ext_trg_i, ckbcMode_i)
+triggerState_proc: process(trig_state_reg, ext_trg_i)
 begin
     case trig_state_reg is
     when x"04"  => ext_trg_i <= '1';
-    when x"05"  => ckbcMode_i<= '1';
-    when x"07"  => ext_trg_i <= '0'; ckbcMode_i <= '0';
-    when others => ext_trg_i <= ext_trg_i; ckbcMode_i <= ckbcMode_i;
+    when x"07"  => ext_trg_i <= '0';
+    when others => ext_trg_i <= ext_trg_i;
     end case;
+end process;
+
+-- process to handle readout state
+readoutState_proc: process(ro_state_reg, ckbcMode_i)
+begin
+    case ro_state_reg is
+    when x"01"  => ckbcMode_i <= '1';
+    when x"00"  => ckbcMode_i <= '0';
+    when others => ckbcMode_i <= ckbcMode_i;
+    end case;
+end process;
+
+-- process to handle FPGA reset state
+FPGArst_proc: process(fpga_rst_reg, fpga_rst_i)
+begin
+    case fpga_rst_reg is
+    when x"aa"  => fpga_rst_i <= '1';
+    when x"00"  => fpga_rst_i <= '0';
+    when others => fpga_rst_i <= fpga_rst_i;
+    end case;
+end process;
+
+-- FPGA reset asserter
+rst_asserter_proc: process(clk_125)
+begin
+    if(rising_edge(clk_125))then
+        if(fpga_rst_i = '1')then
+            case rst_cnt is
+            when 0 to 30 =>
+                fpga_rst <= '1';
+                rst_cnt  <= rst_cnt + 1;
+            when 31 =>
+                fpga_rst <= '0';
+                reg_rst  <= '1';
+            when others =>
+                rst_cnt  <= 0;
+                fpga_rst <= '0';
+                reg_rst  <= '0';
+            end case;
+        else
+            rst_cnt  <= 0;
+            fpga_rst <= '0';
+            reg_rst  <= '0';
+        end if;
+    end if;
 end process;
 
 -- synchronizing circuit
@@ -324,6 +378,6 @@ begin
 end process;
 
 -- To be synchronized into ckbc_gen
-ckbcMode    <= ckbcMode_i;
+ckbcMode <= ckbcMode_i;
 
 end RTL;

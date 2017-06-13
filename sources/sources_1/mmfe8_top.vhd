@@ -288,7 +288,6 @@ architecture Behavioral of mmfe8_top is
     -- Extra registers to ease IOB placement
     signal status_vector_int           : std_logic_vector(15 downto 0);
     
-    --TODO: Review signals and distribute to appropriate "set" i.e Ethernet/UDP/Config etc (Christos)
     signal gmii_txd_emac               : std_logic_vector(7 downto 0);
     signal gmii_tx_en_emac             : std_logic; 
     signal gmii_tx_er_emac             : std_logic; 
@@ -339,17 +338,17 @@ architecture Behavioral of mmfe8_top is
     signal start_conf_proc_int         : std_logic := '0';
 
     -------------------------------------------------
-    -- VMM Configuration Signals
+    -- VMM/FPGA Configuration Signals
     -------------------------------------------------
     signal vmm_sdo_vec_i      : std_logic_vector(8 downto 1) := (others => '0');
-    signal  vmm_cs_all        : std_logic := '0'; 
-    signal  vmm_sck_all       : std_logic := '0';
-    signal  vmm_sdi_all       : std_logic := '0';
-    signal  vmm_bitmask       : std_logic_vector(7 downto 0) := "11111111";
-    signal  vmm_bitmask_1VMM  : std_logic_vector(7 downto 0) := "11111111";
-    signal  vmm_bitmask_8VMM  : std_logic_vector(7 downto 0) := "11111111";
-    signal  sel_cs            : std_logic_vector(1 downto 0) := (others => '0');
-    signal  VMM_CS_i          : std_logic := '0';
+    signal vmm_cs_all         : std_logic := '0'; 
+    signal vmm_sck_all        : std_logic := '0';
+    signal vmm_sdi_all        : std_logic := '0';
+    signal vmm_bitmask        : std_logic_vector(7 downto 0) := "11111111";
+    signal vmm_bitmask_1VMM   : std_logic_vector(7 downto 0) := "11111111";
+    signal vmm_bitmask_8VMM   : std_logic_vector(7 downto 0) := "11111111";
+    signal sel_cs             : std_logic_vector(1 downto 0) := (others => '0');
+    signal VMM_CS_i           : std_logic := '0';
     signal vmm_cs_vec_obuf    : std_logic_vector(8 downto 1) := (others => '0');
     signal vmm_sck_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
     signal vmm_ena_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
@@ -379,6 +378,7 @@ architecture Behavioral of mmfe8_top is
     signal conf_state         : std_logic_vector(2 downto 0) := b"000";
     signal serial_number      : std_logic_vector(31 downto 0) := x"00000000";
     signal packet_len_conf    : std_logic_vector(11 downto 0) := x"000";
+    signal fpga_rst_i         : std_logic := '0';
     signal reply_done         : std_logic := '0';
     signal reply_enable       : std_logic := '0';
 
@@ -1093,6 +1093,7 @@ architecture Behavioral of mmfe8_top is
         daq_on              : out std_logic;
         ext_trigger         : out std_logic;
         ckbcMode            : out std_logic;
+        fpga_rst            : out std_logic;
         ------------------------------------
         -------- UDP Interface -------------
         udp_rx              : in  udp_rx_type;
@@ -1577,6 +1578,7 @@ udp_din_conf_block: udp_data_in_handler
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
         ckbcMode            => ckbcMode,
+        fpga_rst            => fpga_rst_i,
         ------------------------------------
         -------- UDP Interface -------------
         udp_rx              => udp_rx_int,

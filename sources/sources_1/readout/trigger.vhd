@@ -76,6 +76,8 @@ architecture Behavioral of trigger is
     signal tren_buff_ff_synced  : std_logic := '0';
     signal mode_stage1          : std_logic := '0';
     signal mode_ff_synced       : std_logic := '0';
+    signal ckbcMode_stage1      : std_logic := '0';
+    signal ckbcMode_ff_synced   : std_logic := '0';
     signal trmode_stage1        : std_logic := '0';
     signal trmode_ff_synced     : std_logic := '0';
     signal accept_wr_i          : std_logic := '0';
@@ -169,6 +171,8 @@ architecture Behavioral of trigger is
     attribute ASYNC_REG of pfBusy_stage_synced  : signal is "true";
     attribute ASYNC_REG of flag_sent_stage1     : signal is "true";
     attribute ASYNC_REG of flag_sent_synced     : signal is "true";
+    attribute ASYNC_REG of ckbcMode_stage1      : signal is "true";
+    attribute ASYNC_REG of ckbcMode_ff_synced   : signal is "true";
     
 -- Components if any
 
@@ -268,7 +272,7 @@ begin
         
             when waitingForTrigger =>
                 request2ckbc_i      <= '0';
-                if  tren_buff_ff_synced = '1' and tr_out_i = '1' and ckbcMode = '1' then
+                if  tren_buff_ff_synced = '1' and tr_out_i = '1' and ckbcMode_ff_synced = '1' then
                     trigLatencyCnt      <= 0;
                     state               <= waitingForLatency;
                 end if;
@@ -464,6 +468,8 @@ begin
         pfBusy_stage_synced <= pfBusy_stage1;
         flag_sent_stage1    <= flag_sent;
         flag_sent_synced    <= flag_sent_stage1;
+        ckbcMode_stage1     <= ckbcMode;
+        ckbcMode_ff_synced  <= ckbcMode_stage1;
     end if;
 end process;
 

@@ -60,6 +60,7 @@ architecture Behavioral of ckbc_gen is
     signal count_ro         : unsigned(7 downto 0) := to_unsigned(0,8);
     signal ckbc_max_cnt     : unsigned(2 downto 0) := to_unsigned(0, 3);
     signal ckbc_ro          : std_logic := '0';
+    constant ckbc_max_limit : integer := 2;
 
 
     attribute ASYNC_REG : string;
@@ -179,7 +180,7 @@ begin
                 end if;
 
             when ST_INCR =>
-                if(ckbc_max_cnt = 2)then
+                if(ckbc_max_cnt = ckbc_max_limit)then
                     ckbc_inhibit    <= '1';
                     state_cnt       <= ST_WAIT_ENABLE;    
                 else

@@ -92,6 +92,17 @@ port(
 );
 end component;
 
+function reverse_any_vector (a: in std_logic_vector)
+return std_logic_vector is
+  variable result: std_logic_vector(a'RANGE);
+  alias aa: std_logic_vector(a'REVERSE_RANGE) is a;
+begin
+  for i in aa'RANGE loop
+    result(i) := aa(i);
+  end loop;
+  return result;
+end; -- function reverse_any_vector
+
 begin
 
 Proc: process(clk)
@@ -140,7 +151,7 @@ begin
 
                 when S2 =>
                     debug2   <= b"01";
-                    if artCounter /= 6 then
+                    if artCounter /= 7 then
                         artCounter  <= artCounter + 1;
                         vmmArtData  <= shift_left(vmmArtData, 1);
                         vmmArtData(0) <= artDataBuffed;
@@ -152,7 +163,7 @@ begin
                     debug2   <= b"10";
                     vmmArtReady160  <= '1';
                     artCounter      <= artCounter - 1;
-                    if artCounter /= 4 then
+                    if artCounter = 0 then
                         stateReadout    <= S1;
                     end if;
 
@@ -192,6 +203,7 @@ begin
 end process;
 
 vmmArtReady    <= vmmArtReady125;
+
 
 --ilaArt: ila_art
 --port map

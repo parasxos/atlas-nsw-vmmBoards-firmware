@@ -120,11 +120,8 @@ begin
                 trint_i     <= '0';
                 trint_cnt   <= (others => '0');
 
-                if(cktp_pulse = '1' and ckbc_mode = '1')then
+                if(cktp_pulse = '1' and vmmReadoutMode = '0')then
                     state <= ST_TRINT;
-                elsif(cktp_pulse = '1' and vmmReadoutMode = '0')then
-                   -- state <= ST_WAIT;
-                   state <= ST_TRINT;
                 elsif(cktp_pulse = '1' and vmmReadoutMode = '1')then
                     state <= ST_TRINT;
                 else

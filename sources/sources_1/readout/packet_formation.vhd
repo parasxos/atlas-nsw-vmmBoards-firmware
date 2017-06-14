@@ -15,7 +15,7 @@
 -- 26.02.2016 Moved to a global clock domain @125MHz (Paris)
 -- 06.04.2017 Hard setting latency to 300ns as configurable latency was moved to trigger module (Paris)
 -- 25.04.2017 Added vmm_driver module. (Christos Bakalis)
--- 06.06.2017 Added ART header a handling
+-- 06.06.2017 Added ART header a handling (Paris)
 -- 
 ----------------------------------------------------------------------------------
 
@@ -101,6 +101,8 @@ architecture Behavioral of packet_formation is
     signal packLen_cnt          : unsigned(11 downto 0)         := x"000";
     signal end_packet_int       : std_logic                     := '0';
     signal artValid             : std_logic                     := '0';
+    signal trraw_synced125_prev : std_logic                     := '0';
+    signal clearValid           : std_logic                     := '0'; 
 
     type stateType is (waitingForNewCycle, increaseCounter, waitForLatency, captureEventID, setEventID, sendHeaderStep1, sendHeaderStep2, 
                        sendHeaderStep3, triggerVmmReadout, waitForData, sendVmmDataStep1, sendVmmDataStep2, formTrailer, sendTrailer, packetDone, 
@@ -389,8 +391,10 @@ end process;
 muxFIFOData: process( sel_cnt, header, header_l0, vmmWord, vmmArtData125 )
 begin
     case sel_cnt is
-    when "000"  => daqFIFO_din <= b"1111000" & artValid & "01" & vmmArtData125;
-    when "001"  => daqFIFO_din <= b"0000000" & artValid & "00" & vmmArtData125;
+    when "000"  => daqFIFO_din <= b"1111000" & artValid & "01" & 
+    vmmArtData125(0) & vmmArtData125(1) & vmmArtData125(2) & vmmArtData125(3) & vmmArtData125(4) & vmmArtData125(5);
+    when "001"  => daqFIFO_din <= b"0000000" & artValid & "00" & 
+    vmmArtData125(0) & vmmArtData125(1) & vmmArtData125(2) & vmmArtData125(3) & vmmArtData125(4) & vmmArtData125(5);
     when "010"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(63 downto 48); else daqFIFO_din <= header_l0(47 downto 32); end if;
     when "011"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(47 downto 32); else daqFIFO_din <= header_l0(31 downto 16); end if;
     when "100"  => if (vmmReadoutMode = '0') then daqFIFO_din <= header(31 downto 16); else daqFIFO_din <= header_l0(15 downto 0); end if;
@@ -423,17 +427,30 @@ vmm_driver_inst: vmm_driver
         rd_en_buff      => rd_ena_buff,
         vmmWordReady    => vmmWordReady
     );
-
+    
+triggerEdgeDetection: process(clk) --125
+    begin
+        if rising_edge(clk) then 
+            if trraw_synced125_prev = '0' and trraw_synced125 = '1' then 
+                clearValid              <= '1';
+                trraw_synced125_prev    <= trraw_synced125;
+            else
+                clearValid              <= '0';
+                trraw_synced125_prev    <= trraw_synced125;
+            end if;
+        end if;
+    end process;
+    
    LDCE_inst : LDCE
    generic map (
-      INIT => '0')              -- Initial value of latch ('0' or '1')  
+      INIT => '0')
    port map (
-      Q => artValid,            -- Data output
-      CLR => trraw_synced125,   -- Asynchronous clear/reset input
-      D => '1',                 -- Data input
-      G => vmmArtReady,         -- Gate input
-      GE => artEnabled          -- Gate enable input
-   );					
+      Q => artValid,
+      CLR => clearValid,
+      D => '1',
+      G => vmmArtReady,
+      GE => artEnabled
+   );			
 					
     globBcid_i      <= globBcid;
     vmmWord_i       <= vmmWord;
@@ -472,7 +489,8 @@ vmm_driver_inst: vmm_driver
     probe0_out(21)                     <= artValid;
     probe0_out(22)                     <= trraw_synced125;
     probe0_out(23)                     <= vmmArtReady;
-    probe0_out(132 downto 24)          <= (others => '0');--vmmId_i;
+    probe0_out(29 downto 24)           <= vmmArtData125;
+    probe0_out(132 downto 30)          <= (others => '0');--vmmId_i;
 
     probe1_out(63 downto 0)             <= (others => '0');--daqFIFO_din;
     probe1_out(64)                      <= vmmWordReady;

@@ -1487,7 +1487,7 @@ udp_din_conf_block: udp_data_in_handler
         destIP_set          => destIP_set,
         ------------------------------------
         ------ VMM Config Interface --------
-        vmm_bitmask         => open,
+        vmm_bitmask         => vmm_bitmask,
         vmmConf_rdy         => vmm_id_rdy,
         vmmConf_done        => vmmConf_done,
         vmm_cktk            => vmm_cktk_conf,
@@ -2217,8 +2217,6 @@ end process;
     rst_enable              <= '1' when (state = DAQ and rst_enable_conf = '1') else '0';
     daq_is_on               <= '1' when state = DAQ else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
-    -- bitmask to be changed once software is ready
-    vmm_bitmask             <= "11111111";
     ckbc_enable             <= '1';
     
     pf_newCycle             <= tr_out_i;

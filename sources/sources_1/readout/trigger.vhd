@@ -32,6 +32,7 @@ entity trigger is
             clk             : in STD_LOGIC;
             ckbc            : in STD_LOGIC;
             clk_art         : in STD_LOGIC;
+            rst_trig        : in STD_LOGIC;
             
             ckbcMode        : in STD_LOGIC;
             request2ckbc    : out STD_LOGIC;
@@ -268,34 +269,38 @@ generate_2ckbc: if (vmmReadoutMode = '0') generate
 trReadoutMode2CkbcDelayedRequest: process(clk_art)
 begin
     if rising_edge(clk_art) then
-        
-        case state is
-        
-            when waitingForTrigger =>
-                request2ckbc_i      <= '0';
-                if  tren_buff_ff_synced = '1' and tr_out_i = '1' and ckbcMode_ff_synced = '1' then
+        if(rst_trig = '1')then
+            request2ckbc_i  <= '0';
+            trigLatencyCnt  <= 0;
+            state           <= waitingForTrigger;
+        else      
+            case state is
+            
+                when waitingForTrigger =>
+                    request2ckbc_i      <= '0';
+                    if  tren_buff_ff_synced = '1' and tr_out_i = '1' and ckbcMode_ff_synced = '1' then
+                        trigLatencyCnt      <= 0;
+                        state               <= waitingForLatency;
+                    end if;
+                    
+                when waitingForLatency =>
+                    if trigLatencyCnt < trigLatency then
+                        trigLatencyCnt  <= trigLatencyCnt + 1;
+                    else
+                        state           <= issueRequest;
+                    end if;
+                    
+                when issueRequest =>
+                    request2ckbc_i      <= '1';
+                    state               <= waitingForTrigger;
+                    
+                when others =>
+                    request2ckbc_i      <= '0';
                     trigLatencyCnt      <= 0;
-                    state               <= waitingForLatency;
-                end if;
-                
-            when waitingForLatency =>
-                if trigLatencyCnt < trigLatency then
-                    trigLatencyCnt  <= trigLatencyCnt + 1;
-                else
-                    state           <= issueRequest;
-                end if;
-                
-            when issueRequest =>
-                request2ckbc_i      <= '1';
-                state               <= waitingForTrigger;
-                
-            when others =>
-                request2ckbc_i      <= '0';
-                trigLatencyCnt      <= 0;
-                state               <= waitingForTrigger;
+                    state               <= waitingForTrigger;
 
-        end case;
-
+            end case;
+        end if;
     end if;
 end process;
 
@@ -307,65 +312,71 @@ generate_level0: if (vmmReadoutMode = '1') generate
 level0Asserter: process(clk_art)
 begin
     if(rising_edge(clk_art))then
-        case state_l0 is
-
-        when waitingForTrigger =>
-            level_0_req     <= '0';
-            accept_wr_i     <= '0';
-            trigLatencyCnt  <= 0;
-
-            -- proceed only if pf is @ idle
-            if((trext_ff_synced = '1' and trmode_ff_synced = '1' and pfBusy_stage_synced = '0') or
-                (trint = '1' and trmode_ff_synced = '0' and pfBusy_stage_synced = '0'))then
-                state_l0 <= waitingForLatency_1;
-            else
-                state_l0 <= waitingForTrigger;
-            end if;
-
-        when waitingForLatency_1 => -- open the acceptance window for the level-0 buffer
-            if trigLatencyCnt < trigLatency - 30 then
-                trigLatencyCnt  <= trigLatencyCnt + 1;
-                state_l0        <= waitingForLatency_1;
-            else
-                accept_wr_i     <= '1';
-                state_l0        <= waitingForLatency_2;
-            end if;
-
-        when waitingForLatency_2 =>
-            if trigLatencyCnt < trigLatency then
-                trigLatencyCnt  <= trigLatencyCnt + 1;
-                state_l0        <= waitingForLatency_2;
-            else
-                trigLatencyCnt  <= 0;
-                state_l0        <= issueRequest;
-            end if;
-            
-        when issueRequest =>
-            level_0_req <= '1';
-            accept_wr_i <= '0';
-            if(flag_sent_synced = '1')then
-                state_l0 <= checkTrigger;
-            else
-                state_l0 <= issueRequest;
-            end if;
-
-        when checkTrigger =>
-            level_0_req     <= '0';
-
-            if((trext_ff_synced = '0' and trmode_ff_synced = '1') or
-                (trint = '0' and trmode_ff_synced = '0'))then
-                state_l0 <= waitingForTrigger;
-            else
-                state_l0 <= checkTrigger;
-            end if;
-
-        when others =>
+        if(rst_trig = '1')then
             level_0_req     <= '0';
             trigLatencyCnt  <= 0;
             accept_wr_i     <= '0';
             state_l0        <= waitingForTrigger;
-        end case;
-        
+        else
+            case state_l0 is
+
+            when waitingForTrigger =>
+                level_0_req     <= '0';
+                accept_wr_i     <= '0';
+                trigLatencyCnt  <= 0;
+
+                -- proceed only if pf is @ idle
+                if((trext_ff_synced = '1' and trmode_ff_synced = '1' and pfBusy_stage_synced = '0') or
+                    (trint = '1' and trmode_ff_synced = '0' and pfBusy_stage_synced = '0'))then
+                    state_l0 <= waitingForLatency_1;
+                else
+                    state_l0 <= waitingForTrigger;
+                end if;
+
+            when waitingForLatency_1 => -- open the acceptance window for the level-0 buffer
+                if trigLatencyCnt < trigLatency - 30 then
+                    trigLatencyCnt  <= trigLatencyCnt + 1;
+                    state_l0        <= waitingForLatency_1;
+                else
+                    accept_wr_i     <= '1';
+                    state_l0        <= waitingForLatency_2;
+                end if;
+
+            when waitingForLatency_2 =>
+                if trigLatencyCnt < trigLatency then
+                    trigLatencyCnt  <= trigLatencyCnt + 1;
+                    state_l0        <= waitingForLatency_2;
+                else
+                    trigLatencyCnt  <= 0;
+                    state_l0        <= issueRequest;
+                end if;
+                
+            when issueRequest =>
+                level_0_req <= '1';
+                accept_wr_i <= '0';
+                if(flag_sent_synced = '1')then
+                    state_l0 <= checkTrigger;
+                else
+                    state_l0 <= issueRequest;
+                end if;
+
+            when checkTrigger =>
+                level_0_req     <= '0';
+
+                if((trext_ff_synced = '0' and trmode_ff_synced = '1') or
+                    (trint = '0' and trmode_ff_synced = '0'))then
+                    state_l0 <= waitingForTrigger;
+                else
+                    state_l0 <= checkTrigger;
+                end if;
+
+            when others =>
+                level_0_req     <= '0';
+                trigLatencyCnt  <= 0;
+                accept_wr_i     <= '0';
+                state_l0        <= waitingForTrigger;
+            end case;
+        end if;
     end if;
 end process;
 

@@ -179,7 +179,7 @@ begin
             tr_hold                 <= '0';
             pfBusy_i                <= '0';
             triggerVmmReadout_i     <= '0';
-            rst_l0                  <= '0';
+            rst_l0                  <= '1';
             sel_wrenable            <= '0';
             rst_FIFO                <= '1';
             daqFIFO_wr_en_hdr       <= '0';

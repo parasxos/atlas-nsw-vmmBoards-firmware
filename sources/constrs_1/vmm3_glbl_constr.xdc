@@ -33,6 +33,9 @@ set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/
 #=============================== False Paths ==========================
 set_false_path -from [get_ports CH_TRIGGER]
 
+# Global reset false path
+set_false_path -reset_path -from [get_cells udp_din_conf_block/fpga_config_logic/fpga_rst_reg]
+
 # ART readout
 set_false_path -from [get_cells art_instance/vmmArtData_reg[*]] -to [get_cells art_instance/vmmArtData160_125_reg[*]]
 set_false_path -from [get_cells art_instance/vmmArtReady160_reg] -to [get_cells art_instance/vmmArtReady160_125_reg]

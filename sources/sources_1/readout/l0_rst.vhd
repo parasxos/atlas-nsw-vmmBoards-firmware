@@ -100,9 +100,9 @@ begin
 end process;
 
 --    rst_l0_buff_i <= rst_l0_buff_i0 or rst_l0_buff_i1;
-    rst_l0_buff_i <= rst_l0_buff_i1;
+    rst_l0_buff <= rst_l0_buff_i1;
 
 --RST_L0_BUFG:        BUFG port map(O => rst_l0,      I => rst_l0_i);
-RST_L0_BUFF_BUFG:   BUFG port map(O => rst_l0_buff, I => rst_l0_buff_i);
+--RST_L0_BUFF_BUFG:   BUFG port map(O => rst_l0_buff, I => rst_l0_buff_i);
 
 end RTL;

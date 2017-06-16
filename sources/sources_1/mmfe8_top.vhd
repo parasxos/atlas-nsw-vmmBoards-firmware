@@ -309,7 +309,7 @@ architecture Behavioral of mmfe8_top is
     signal tx_axis_mac_tvalid_int      : std_logic;
     signal tx_axis_mac_tlast_int       : std_logic;  
     signal gtx_resetn                  : std_logic;
-    signal glbl_rstn                   : std_logic;
+    signal glbl_rstn                   : std_logic := '1';
     signal glbl_rst_i                  : std_logic := '0';
     signal gtx_clk_reset_int           : std_logic;
     signal an_restart_config_int       : std_logic;
@@ -466,12 +466,13 @@ architecture Behavioral of mmfe8_top is
     signal pf_packLen   : std_logic_vector(11 downto 0);
     signal pf_trigVmmRo : std_logic := '0';
     signal pf_vmmIdRo   : std_logic_vector(2 downto 0) := b"000";
-    signal pf_reset     : std_logic := '0';
+    signal pf_rst_flow  : std_logic := '0';
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
     signal pfBusy_i     : std_logic := '0';
     signal pf_dbg_st    : std_logic_vector(4 downto 0) := b"00000";
     signal rd_ena_buff  : std_logic := '0';
+    signal pf_rst_final : std_logic := '0';
     
     -------------------------------------------------
     -- FIFO2UDP Signals
@@ -828,6 +829,7 @@ architecture Behavioral of mmfe8_top is
           clk             : in std_logic;
           ckbc            : in std_logic;
           clk_art         : in std_logic;
+          rst_trig        : in std_logic;
           
           ckbcMode        : in std_logic;
           cktp_enable     : in std_logic;
@@ -1345,17 +1347,8 @@ gen_vector_reset: process (userclk2)
    -- Transceiver PMA reset circuitry
    -----------------------------------------------------------------------------
    
-   -- Create a reset pulse of a decent length
---   process(glbl_rst_i, clk_200)
---   begin
---     if (glbl_rst_i = '1') then
---       pma_reset_pipe <= "1111";
---     elsif clk_200'event and clk_200 = '1' then
---       pma_reset_pipe <= pma_reset_pipe(2 downto 0) & glbl_rst_i;
---     end if;
---   end process;
-
-   pma_reset <= pma_reset_pipe(3);
+   -- reset pulse of ~400ns length
+   pma_reset <= glbl_rst_i;
 
 core_wrapper: gig_ethernet_pcs_pma_0
     port map (
@@ -1578,7 +1571,7 @@ udp_din_conf_block: udp_data_in_handler
         daq_on              => daq_on,
         ext_trigger         => trig_mode_int,
         ckbcMode            => ckbcMode,
-        fpga_rst            => fpga_rst_i,
+        fpga_rst            => glbl_rst_i,
         ------------------------------------
         -------- UDP Interface -------------
         udp_rx              => udp_rx_int,
@@ -1738,6 +1731,7 @@ trigger_instance: trigger
         clk             => userclk2,
         ckbc            => CKBC_glbl,
         clk_art         => clk_160_gen,
+        rst_trig        => glbl_rst_i,
         
         ckbcMode        => ckbcMode,
         request2ckbc    => request2ckbc,
@@ -1814,7 +1808,7 @@ packet_formation_instance: packet_formation
         rst_l0          => rst_l0_pf,
         
         tr_hold         => tr_hold,
-        reset           => pf_reset,
+        reset           => pf_rst_final,
         rst_vmm         => rst_vmm,
         --resetting       => etr_reset_latched,
         rst_FIFO        => pf_rst_FIFO,
@@ -1859,7 +1853,7 @@ data_selection:  select_data
 xadc_instance: xadcModule
     port map(
         clk125                      => userclk2,
-        rst                         => '0', -- change this plz
+        rst                         => glbl_rst_i,
         
         VP_0                        => VP_0,
         VN_0                        => VN_0,
@@ -1937,7 +1931,7 @@ ckbc_cktp_generator: clk_gen_wrapper
         clk_500             => clk_500_gen,
         clk_160             => clk_160_gen,
         clk_125             => userclk2,
-        rst                 => '0',
+        rst                 => glbl_rst_i,
         mmcm_locked         => clk_gen_locked,
         CKTP_raw            => CKTP_raw,
         ------------------------------------
@@ -2198,7 +2192,7 @@ flow_fsm: process(userclk2)
     begin
     if rising_edge(userclk2) then
         if glbl_rst_i = '1' then
-            state                <=    IDLE;
+            state   <= IDLE;
         elsif is_state = "0000" then
             state   <= IDLE;
         else
@@ -2215,7 +2209,7 @@ flow_fsm: process(userclk2)
                     
                     daq_enable_i            <= '0';
                     rst_l0_buff_flow        <= '1';
-                    pf_reset                <= '0';
+                    pf_rst_flow             <= '0';
                     rstFIFO_top             <= '0';
                     tren                    <= '0';
                     vmm_ena_all             <= '0';
@@ -2338,13 +2332,13 @@ flow_fsm: process(userclk2)
                     daq_cktk_out_enable     <= x"ff";
                     daq_enable_i            <= '1';
                     rstFIFO_top             <= '1';
-                    pf_reset                <= '1';
+                    pf_rst_flow             <= '1';
                     
                     if(daq_on = '0')then    -- Reset came
                         daq_vmm_ena_wen_enable  <= x"00";
                         daq_cktk_out_enable     <= x"00";
                         daq_enable_i            <= '0';
-                        pf_reset                <= '0';
+                        pf_rst_flow             <= '0';
                         state                   <= IDLE;
                     elsif(wait_cnt < "01100100")then
                         wait_cnt    <= wait_cnt + 1;
@@ -2363,7 +2357,7 @@ flow_fsm: process(userclk2)
                     end if;
                     vmm_cktp_primary    <= '0';
                     rstFIFO_top         <= '0';
-                    pf_reset            <= '0';
+                    pf_rst_flow         <= '0';
                     tren                <= '1';
                     state               <= DAQ;
       
@@ -2426,7 +2420,8 @@ end process;
     TRIGGER_OUT_P           <= art2;
     TRIGGER_OUT_N           <= not art2;
     MO                      <= MO_i;
-    rst_l0_buff             <= rst_l0_buff_flow or rst_l0_pf;
+    rst_l0_buff             <= rst_l0_buff_flow or rst_l0_pf or glbl_rst_i;
+    pf_rst_final            <= pf_rst_flow or glbl_rst_i;
     
     -- configuration assertion
     vmm_cs_vec_obuf(1)  <= vmm_cs_all;

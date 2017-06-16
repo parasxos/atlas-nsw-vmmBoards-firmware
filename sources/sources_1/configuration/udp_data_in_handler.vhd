@@ -26,9 +26,11 @@
 -- 28.03.2017 Module now samples the header data as well. (Christos Bakalis)
 --
 -----------------------------------------------------------------------------------------
+library UNISIM;
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
+use UNISIM.VCOMPONENTS.all;
 
 use work.axi.all;
 use work.ipv4_types.all;
@@ -197,6 +199,7 @@ architecture RTL of udp_data_in_handler is
     signal init_ser         : std_logic := '0';
     signal init_ser_s40     : std_logic := '0';
     signal top_rdy_s40      : std_logic := '0';
+    signal fpga_rst_i       : std_logic := '0';
     
     type masterFSM is (ST_IDLE, ST_CHK_PORT, ST_COUNT, ST_WAIT_FOR_BUSY, ST_WAIT_FOR_IDLE, ST_RESET_FIFO, ST_WAIT_FOR_SCK_FSM, ST_ERROR);
     signal st_master : masterFSM := ST_IDLE;
@@ -490,7 +493,7 @@ fpga_config_logic: fpga_config_block
         ------------------------------------
         -------- FPGA Config Interface -----
         fpga_conf           => fpga_conf,
-        fpga_rst            => fpga_rst,
+        fpga_rst            => fpga_rst_i,
         fpgaPacket_rdy      => fpgaPacket_rdy,
         latency             => latency,
         daq_on              => daq_on,
@@ -531,6 +534,8 @@ vmm_config_logic: vmm_config_block
     state_o         <= std_logic_vector(conf_state);
     valid_o         <= user_valid_prv;
     vmmConf_came    <= vmm_conf;
+
+glbl_rst_buf: BUFG port map (O => fpga_rst, I => fpga_rst_i);
 
 ---------------------------------------------------------
 --------- Clock Domain Crossing Sync Block --------------

@@ -91,7 +91,7 @@ architecture RTL of fpga_config_block is
     signal ckbcMode_i       : std_logic := '0';
     signal fpga_rst_i       : std_logic := '0';
     signal reg_rst          : std_logic := '0';
-    signal rst_cnt          : integer range 0 to 31 := 0;
+    signal rst_cnt          : integer range 0 to 63 := 0;
     
     -- signal to control the timing of the register address/value assertion
     signal latch_enable     : std_logic := '0';
@@ -347,10 +347,10 @@ begin
     if(rising_edge(clk_125))then
         if(fpga_rst_i = '1')then
             case rst_cnt is
-            when 0 to 30 =>
+            when 0 to 62 =>
                 fpga_rst <= '1';
                 rst_cnt  <= rst_cnt + 1;
-            when 31 =>
+            when 63 =>
                 fpga_rst <= '0';
                 reg_rst  <= '1';
             when others =>

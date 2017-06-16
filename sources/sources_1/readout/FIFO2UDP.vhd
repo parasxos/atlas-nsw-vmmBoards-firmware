@@ -91,6 +91,7 @@ architecture Behavioral of FIFO2UDP is
     signal vmmID_i                     : std_logic_vector(2 downto 0);   
     signal trigger                     : std_logic;
     signal len_cnt                     : unsigned(7 downto 0) := "00000000";
+    signal rst_fifo                    : std_logic := '0';
   
 --    attribute mark_debug : string;
 --    attribute mark_debug of prog_fifo_empty         : signal is "true";
@@ -170,7 +171,7 @@ end process;
 daq_FIFO_instance: readout_fifo
     port map(
         clk         => clk_125,
-        srst        => reset_DAQ_FIFO,
+        srst        => rst_fifo,
         din         => daq_data_in,
         wr_en       => wr_en,
         rd_en       => daq_fifo_re,
@@ -182,7 +183,7 @@ daq_FIFO_instance: readout_fifo
 packet_len_fifo_instance: packet_len_fifo
     port map (
         clk => clk_125,
-        srst => reset_DAQ_FIFO,
+        srst => rst_fifo,
         din => packet_length_in,
         wr_en => fifo_len_wr_en,
         rd_en => fifo_len_rd_en,
@@ -244,6 +245,8 @@ begin
             data_out_last       <= '0';    
             data_out_valid      <= '0';     
             udp_tx_start_int    <= '0';
+            fifo_len_rd_en      <= '0';
+            daq_fifo_re         <= '0';
             count               <= x"0";
         else
             case count is
@@ -382,6 +385,7 @@ udp_txi.data.data_out       <= data_out;
 
 wr_en_int                   <= wr_en;
 end_packet_synced           <= end_packet;
+rst_fifo                    <= reset_DAQ_FIFO or global_reset;
 
 trigger_out                 <= trigger;
 count_o                     <= std_logic_vector(count);

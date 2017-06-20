@@ -56,7 +56,7 @@ entity packet_formation is
         tr_hold         : out std_logic;
         reset           : in std_logic;
         rst_vmm         : out std_logic;
-        --resetting   : in std_logic;
+        linkHealth_bmsk : in std_logic_vector(8 downto 1);
         rst_FIFO        : out std_logic;
         
         latency         : in std_logic_vector(15 downto 0);
@@ -467,7 +467,7 @@ triggerEdgeDetection: process(clk) --125
     
     -- header of level 0 has three 16-bit words from FPGA + one 16-bit word from VMM
     header_l0(47 downto 16) <= std_logic_vector(eventCounter_i);
-    header_l0(15 downto 0)  <=  b"00000" & vmmId_i & b"00000000";
+    header_l0(15 downto 0)  <=  b"00000" & vmmId_i & linkHealth_bmsk;
     --                              5    &   3     &       8    ; 
 
     header(63 downto 32)    <= std_logic_vector(eventCounter_i);

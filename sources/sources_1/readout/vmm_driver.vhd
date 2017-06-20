@@ -84,7 +84,6 @@ begin
                     state_l0        <= ST_RD_LOW;    
                 else
                     rd_en_buff      <= '0';
-                    pack_len_drv    <= std_logic_vector(packLen_i);
                     state_l0        <= ST_DONE;           
                 end if;
 
@@ -123,5 +122,7 @@ begin
         end if;
     end if;
 end process;
+
+    pack_len_drv <= std_logic_vector(packLen_i);
 
 end RTL;

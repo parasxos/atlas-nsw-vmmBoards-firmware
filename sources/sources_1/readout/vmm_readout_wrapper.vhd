@@ -47,7 +47,8 @@ entity vmm_readout_wrapper is
     level_0         : in  std_logic;                    -- level-0 signal
     wr_accept       : in  std_logic;                    -- buffer acceptance window
     --
-    commas_true     : out std_logic_vector(8 downto 1); -- for debugging
+    vmm_conf        : in  std_logic;                    -- high during VMM configuration
+    daq_on_inhib    : out std_logic;                    -- prevent daq_on state before checking link health
     ------------------------------------
     ---- Packet Formation Interface ----
     vmmWordReady    : out std_logic;
@@ -55,6 +56,7 @@ entity vmm_readout_wrapper is
     vmmEventDone    : out std_logic;
     rd_ena_buff     : in  std_logic;                     -- read the readout buffer (level0 or continuous)
     vmmId           : in  std_logic_vector(2 downto 0);  -- VMM to be readout
+    linkHealth_bmsk : out std_logic_vector(8 downto 1);  -- status of comma alignment links
     ------------------------------------
     ---------- VMM3 Interface ----------
     vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
@@ -107,7 +109,8 @@ architecture RTL of vmm_readout_wrapper is
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
         wr_accept       : in  std_logic; -- buffer acceptance window
-        commas_true     : out std_logic_vector(8 downto 1); -- for debugging
+        vmm_conf        : in  std_logic; -- high during VMM configuration
+        daq_on_inhib    : out std_logic; -- prevent daq_on state before checking link health
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     : in  std_logic;
@@ -116,6 +119,7 @@ architecture RTL of vmm_readout_wrapper is
         vmmWordReady    : out std_logic;
         vmmWord         : out std_logic_vector(15 downto 0);
         vmmEventDone    : out std_logic;
+        linkHealth_bmsk : out std_logic_vector(8 downto 1);
         ------------------------------------
         ---------- VMM3 Interface ----------
         vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
@@ -188,7 +192,8 @@ readout_vmm_l0: level0_wrapper
         rst_buff        => rst_buff,
         level_0         => level_0,
         wr_accept       => wr_accept,
-        commas_true     => commas_true,
+        vmm_conf        => vmm_conf,
+        daq_on_inhib    => daq_on_inhib,
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     => rd_ena_buff,
@@ -197,6 +202,7 @@ readout_vmm_l0: level0_wrapper
         vmmWordReady    => vmmWordReady_l0,
         vmmWord         => vmmWord_l0,
         vmmEventDone    => vmmEventDone_l0,
+        linkHealth_bmsk => linkHealth_bmsk,
         ------------------------------------
         ---------- VMM3 Interface ----------
         vmm_data0_vec   => data0_in_vec_l0,

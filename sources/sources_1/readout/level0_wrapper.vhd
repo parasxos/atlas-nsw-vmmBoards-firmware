@@ -34,7 +34,8 @@ entity level0_wrapper is
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
         wr_accept       : in  std_logic; -- buffer acceptance window
-        commas_true     : out std_logic_vector(8 downto 1); -- for debugging
+        vmm_conf        : in  std_logic; -- high during VMM configuration
+        daq_on_inhib    : out std_logic; -- prevent daq_on state before checking link health
         ------------------------------------
         ---- Packet Formation Interface ----
         rd_ena_buff     : in  std_logic;
@@ -43,6 +44,7 @@ entity level0_wrapper is
         vmmWordReady    : out std_logic;
         vmmWord         : out std_logic_vector(15 downto 0);
         vmmEventDone    : out std_logic;
+        linkHealth_bmsk : out std_logic_vector(8 downto 1);
         ------------------------------------
         ---------- VMM3 Interface ----------
         vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
@@ -101,30 +103,44 @@ component l0_buffer_wrapper is
     );
 end component;
 
-component l0_rst is
+component l0_link_health
+    Generic(is_mmfe8 : std_logic);
     Port(
-        clk         : in  std_logic;
-        rst         : in  std_logic;
-        rst_buff    : in  std_logic;
-        rst_l0      : out std_logic;
-        rst_l0_buff : out std_logic
+        ------------------------------------
+        ------- General Interface ----------
+        clk                 : in  std_logic;
+        vmm_conf            : in  std_logic;
+        daqOn_inhibit       : out std_logic;
+        ------------------------------------
+        --- Deserializer Interface ---------
+        commas_true         : in  std_logic_vector(8 downto 1);
+        ------------------------------------
+        ---- Packet Formation Interface ----
+        EventDone_dummy     : out std_logic_vector(8 downto 1);
+        linkHealth_bitmask  : out std_logic_vector(8 downto 1)
     );
 end component;
 
     type dout_dec_array is array (8 downto 1) of std_logic_vector(7 downto 0);
     type vmmWord_array  is array (8 downto 1) of std_logic_vector(15 downto 0);
     
-    signal wr_en            : std_logic_vector(8 downto 1)  := (others => '0');
-    signal rd_ena_buff_i    : std_logic_vector(8 downto 1)  := (others => '0');
-    signal vmmWordReady_i   : std_logic_vector(8 downto 1)  := (others => '0');
-    signal vmmEventDone_i   : std_logic_vector(8 downto 1)  := (others => '0');
-    signal inhib_wr_i       : std_logic_vector(8 downto 1)  := (others => '0');
-    signal commas_true_i    : std_logic_vector(8 downto 1)  := (others => '0');
-    signal vmmWord_i        : vmmWord_array;
-    signal dout_dec         : dout_dec_array;
+    signal wr_en                : std_logic_vector(8 downto 1)  := (others => '0');
+    signal rd_ena_buff_i        : std_logic_vector(8 downto 1)  := (others => '0');
+    signal vmmWordReady_i       : std_logic_vector(8 downto 1)  := (others => '0');
+    signal EventDone_health_i   : std_logic_vector(8 downto 1)  := (others => '0');
+    signal vmmEventDone_i       : std_logic_vector(8 downto 1)  := (others => '0');
+    signal inhib_wr_i           : std_logic_vector(8 downto 1)  := (others => '0');
+    signal commas_true_i        : std_logic_vector(8 downto 1)  := (others => '0');
+    signal commas_true_s0       : std_logic_vector(8 downto 1)  := (others => '0');
+    signal commas_true_s1       : std_logic_vector(8 downto 1)  := (others => '0');
+    signal vmmWord_i            : vmmWord_array;
+    signal dout_dec             : dout_dec_array;
 
-    signal rst_l0_buffers   : std_logic := '0';
-    signal level_0_bufg     : std_logic := '0';
+    signal level_0_bufg         : std_logic := '0';
+    
+    attribute ASYNC_REG                         : string;
+    attribute ASYNC_REG of commas_true_s0       : signal is "TRUE";
+    attribute ASYNC_REG of commas_true_s1       : signal is "TRUE";
     
 -- function to convert std_logic to integer for instance generation
 function sl2int (x: std_logic) return integer is
@@ -170,7 +186,7 @@ l0_buf_wr_inst: l0_buffer_wrapper
         clk_des         => clk_des,
         clk_ckdt        => clk_ckdt,
         clk             => clk,
-        rst_buff        => rst_l0_buffers,
+        rst_buff        => rst_buff,
         wr_accept       => wr_accept,
         level_0         => level_0,
         ------------------------------------
@@ -190,72 +206,88 @@ l0_buf_wr_inst: l0_buffer_wrapper
     
 end generate readout_instances;
 
--- reset asserter 
-l0_rst_inst: l0_rst
+-- check comma alignment
+l0_link_health_inst: l0_link_health
+    Generic Map(is_mmfe8 => is_mmfe8)
     Port Map(
-        clk         => clk,
-        rst         => '0',
-        rst_buff    => rst_buff,
-        rst_l0      => open,
-        rst_l0_buff => rst_l0_buffers
+        ------------------------------------
+        ------- General Interface ----------
+        clk                 => clk,
+        vmm_conf            => vmm_conf,
+        daqOn_inhibit       => daq_on_inhib,
+        ------------------------------------
+        --- Deserializer Interface ---------
+        commas_true         => commas_true_s1,
+        ------------------------------------
+        ---- Packet Formation Interface ----
+        EventDone_dummy     => EventDone_health_i,
+        linkHealth_bitmask  => linkHealth_bmsk
     );
+    
+sync_linkHealth: process(clk)
+begin
+    if(rising_edge(clk))then
+        commas_true_s0 <= commas_true_i;
+        commas_true_s1 <= commas_true_s0;
+    end if;
+end process;
 
 -- multiplexer that drives the packet formation signals corresponding to the vmmID         
-vmm_ID_MUX: process(vmmId, vmmWordReady_i, vmmWord_i, vmmEventDone_i, rd_ena_buff)
+vmm_ID_MUX: process(vmmId, vmmWordReady_i, vmmWord_i, vmmEventDone_i, EventDone_health_i, rd_ena_buff)
 begin
     case vmmId is
     when "000"  =>
-        vmmWordReady                <= vmmWordReady_i(1);
+        vmmWordReady                <= vmmWordReady_i(1) and not EventDone_health_i(1);
         vmmWord                     <= vmmWord_i(1);
-        vmmEventDone                <= vmmEventDone_i(1);
+        vmmEventDone                <= vmmEventDone_i(1) or EventDone_health_i(1);
         rd_ena_buff_i(1)            <= rd_ena_buff;
         rd_ena_buff_i(8 downto 2)   <= (others => '0');
     when "001"  =>
-        vmmWordReady                <= vmmWordReady_i(2);
+        vmmWordReady                <= vmmWordReady_i(2) and not EventDone_health_i(2);
         vmmWord                     <= vmmWord_i(2);
-        vmmEventDone                <= vmmEventDone_i(2);
+        vmmEventDone                <= vmmEventDone_i(2) or EventDone_health_i(2);
         rd_ena_buff_i(2)            <= rd_ena_buff;
         rd_ena_buff_i(8 downto 3)   <= (others => '0');
         rd_ena_buff_i(1 downto 1)   <= (others => '0');
     when "010"  =>
-        vmmWordReady                <= vmmWordReady_i(3);
+        vmmWordReady                <= vmmWordReady_i(3) and not EventDone_health_i(3);
         vmmWord                     <= vmmWord_i(3);
-        vmmEventDone                <= vmmEventDone_i(3);
+        vmmEventDone                <= vmmEventDone_i(3) or EventDone_health_i(3);
         rd_ena_buff_i(3)            <= rd_ena_buff;
         rd_ena_buff_i(8 downto 4)   <= (others => '0');
         rd_ena_buff_i(2 downto 1)   <= (others => '0');
     when "011"  =>
-        vmmWordReady                <= vmmWordReady_i(4);
+        vmmWordReady                <= vmmWordReady_i(4) and not EventDone_health_i(4);
         vmmWord                     <= vmmWord_i(4);
-        vmmEventDone                <= vmmEventDone_i(4);
+        vmmEventDone                <= vmmEventDone_i(4) or EventDone_health_i(4);
         rd_ena_buff_i(4)            <= rd_ena_buff;
         rd_ena_buff_i(8 downto 5)   <= (others => '0');
         rd_ena_buff_i(3 downto 1)   <= (others => '0');
     when "100"  =>
-        vmmWordReady                <= vmmWordReady_i(5);
+        vmmWordReady                <= vmmWordReady_i(5) and not EventDone_health_i(5);
         vmmWord                     <= vmmWord_i(5);
-        vmmEventDone                <= vmmEventDone_i(5);
+        vmmEventDone                <= vmmEventDone_i(5) or EventDone_health_i(5);
         rd_ena_buff_i(5)            <= rd_ena_buff;
         rd_ena_buff_i(8 downto 6)   <= (others => '0');
         rd_ena_buff_i(4 downto 1)   <= (others => '0');
     when "101"  =>
-        vmmWordReady                <= vmmWordReady_i(6);
+        vmmWordReady                <= vmmWordReady_i(6) and not EventDone_health_i(6);
         vmmWord                     <= vmmWord_i(6);
-        vmmEventDone                <= vmmEventDone_i(6);
+        vmmEventDone                <= vmmEventDone_i(6) or EventDone_health_i(6);
         rd_ena_buff_i(6)            <= rd_ena_buff;
         rd_ena_buff_i(8 downto 7)   <= (others => '0');
         rd_ena_buff_i(5 downto 1)   <= (others => '0');
     when "110"  =>
-        vmmWordReady                <= vmmWordReady_i(7);
+        vmmWordReady                <= vmmWordReady_i(7) and not EventDone_health_i(7);
         vmmWord                     <= vmmWord_i(7);
-        vmmEventDone                <= vmmEventDone_i(7);
+        vmmEventDone                <= vmmEventDone_i(7) or EventDone_health_i(7);
         rd_ena_buff_i(7)            <= rd_ena_buff;
         rd_ena_buff_i(6 downto 1)   <= (others => '0');
         rd_ena_buff_i(8)            <= '0';
     when "111"  =>
-        vmmWordReady                <= vmmWordReady_i(8);
+        vmmWordReady                <= vmmWordReady_i(8) and not EventDone_health_i(8);
         vmmWord                     <= vmmWord_i(8);
-        vmmEventDone                <= vmmEventDone_i(8);
+        vmmEventDone                <= vmmEventDone_i(8) or EventDone_health_i(8);
         rd_ena_buff_i(8)            <= rd_ena_buff;
         rd_ena_buff_i(7 downto 1)   <= (others => '0');
     when others =>
@@ -276,7 +308,5 @@ LEVEL0_BUFG: BUFG port map(O => level_0_bufg, I => level_0);
     vmm_cktk_vec(6) <= level_0_bufg;
     vmm_cktk_vec(7) <= level_0_bufg;
     vmm_cktk_vec(8) <= level_0_bufg;
-    
-    commas_true     <= commas_true_i;
     
 end RTL;

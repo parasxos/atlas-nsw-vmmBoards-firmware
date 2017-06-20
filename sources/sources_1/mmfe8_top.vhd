@@ -420,7 +420,7 @@ architecture Behavioral of mmfe8_top is
     signal daqFIFO_reset            : std_logic := '0';
     signal daq_vmm_ena_wen_enable   : std_logic_vector(8 downto 1) := (others => '0');
     signal daq_cktk_out_enable      : std_logic_vector(8 downto 1) := (others => '0');
-    signal commas_true              : std_logic_vector(8 downto 1) := (others => '0');
+    signal linkHealth_bmsk          : std_logic_vector(8 downto 1) := (others => '0');
     signal UDPDone                  : std_logic;
     signal ckbc_enable              : std_logic := '0';
     signal cktp_enable              : std_logic := '0';
@@ -430,6 +430,7 @@ architecture Behavioral of mmfe8_top is
     signal rst_l0_buff_flow         : std_logic := '1';
     signal rst_l0_pf                : std_logic := '0';
     signal level_0                  : std_logic := '0';
+    signal daq_on_inhib             : std_logic := '1';
     
     -------------------------------------------------
     -- Trigger Signals
@@ -780,7 +781,8 @@ architecture Behavioral of mmfe8_top is
             level_0         : in  std_logic;                    -- level-0 signal
             wr_accept       : in  std_logic;                    -- buffer acceptance window
             --
-            commas_true     : out std_logic_vector(8 downto 1);
+            vmm_conf        : in  std_logic;                    -- high during VMM configuration
+            daq_on_inhib    : out std_logic;                    -- prevent daq_on state before checking link health
             ------------------------------------
             ---- Packet Formation Interface ----
             vmmWordReady    : out std_logic;
@@ -788,6 +790,7 @@ architecture Behavioral of mmfe8_top is
             vmmEventDone    : out std_logic;
             rd_ena_buff     : in  std_logic;                     -- read the readout buffer (level0 or continuous)
             vmmId           : in  std_logic_vector(2 downto 0);  -- VMM to be readout
+            linkHealth_bmsk : out std_logic_vector(8 downto 1);  -- status of comma alignment links
             ------------------------------------
             ---------- VMM3 Interface ----------
             vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
@@ -884,7 +887,7 @@ architecture Behavioral of mmfe8_top is
             tr_hold         : out std_logic;
             reset           : in std_logic;
             rst_vmm         : out std_logic;
-            --resetting   : in std_logic;
+            linkHealth_bmsk : in std_logic_vector(8 downto 1);
             rst_FIFO        : out std_logic;
             
             latency         : in std_logic_vector(15 downto 0);
@@ -1346,9 +1349,6 @@ gen_vector_reset: process (userclk2)
    -----------------------------------------------------------------------------
    -- Transceiver PMA reset circuitry
    -----------------------------------------------------------------------------
-   
-   -- reset pulse of ~400ns length
-   pma_reset <= glbl_rst_i;
 
 core_wrapper: gig_ethernet_pcs_pma_0
     port map (
@@ -1380,7 +1380,7 @@ core_wrapper: gig_ethernet_pcs_pma_0
       gmii_isolate         => gmii_isolate,
       configuration_vector => "10000", -- configuration_vector,
       status_vector        => status_vector_int, -- status_vector_int,
-      reset                => glbl_rst_i,
+      reset                => '0',
       signal_detect        => '1', -- signal_detect
       speed_is_10_100      => speed_is_10_100,
       speed_is_100         => speed_is_100,
@@ -1709,7 +1709,8 @@ readout_vmm: vmm_readout_wrapper
         level_0         => level_0,
         wr_accept       => accept_wr,
         --
-        commas_true     => commas_true,
+        vmm_conf        => conf_wen_i,
+        daq_on_inhib    => daq_on_inhib, -- synced to flow_fsm's clock
         ------------------------------------
         ---- Packet Formation Interface ----
         vmmWordReady    => vmmWordReady_i,
@@ -1717,6 +1718,7 @@ readout_vmm: vmm_readout_wrapper
         rd_ena_buff     => rd_ena_buff,
         vmmEventDone    => vmmEventDone_i,
         vmmId           => pf_vmmIdRo,
+        linkHealth_bmsk => linkHealth_bmsk,
         ------------------------------------
         ---------- VMM3 Interface ----------
         vmm_data0_vec   => data0_in_vec,
@@ -1810,7 +1812,7 @@ packet_formation_instance: packet_formation
         tr_hold         => tr_hold,
         reset           => pf_rst_final,
         rst_vmm         => rst_vmm,
-        --resetting       => etr_reset_latched,
+        linkHealth_bmsk => linkHealth_bmsk,
         rst_FIFO        => pf_rst_FIFO,
 
         latency         => latency_conf,
@@ -2245,7 +2247,7 @@ flow_fsm: process(userclk2)
                             state       <= IDLE;
                         end if;
 
-                    elsif(daq_on = '1')then
+                    elsif(daq_on = '1' and daq_on_inhib = '0')then
                         state   <= DAQ_INIT;
                         
                     else

@@ -94,6 +94,7 @@ set_false_path -from [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/r
 set_false_path -from [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].des_dec_inst/commas_true_reg] -to [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].l0_buf_wr_inst/commas_true_i_reg]
 set_false_path -from [get_cells trigger_instance/generate_level0.accept_wr_i_reg] -to [get_cells trigger_instance/accept_wr_i_stage1_reg]
 set_false_path -from [get_cells packet_formation_instance/pfBusy_i_reg] -to [get_cells trigger_instance/pfBusy_stage1_reg]
+set_false_path -from [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/readout_instances[*].des_dec_inst/commas_true_reg] -to [get_cells readout_vmm/level0_readout_case.readout_vmm_l0/commas_true_s0_reg[*]]
 
 ## SPI FLASH BEGIN ##
 # this is to ensure min routing delay from SCK generation to STARTUP input

@@ -16,6 +16,7 @@
 -- Changelog: 
 -- 30.04.2017: Changed the way wr_en is asserted to comply with the halved wr_clk
 -- of the vmm level-0 data buffer. (Christos Bakalis)
+-- 20.06.2017: Removed pipeline. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -82,13 +83,6 @@ architecture RTL of l0_deserializer_decoder is
     signal L0_8B_K      : std_logic_vector(0 downto 0) := (others => '0');
     signal din_dec      : std_logic_vector(9 downto 0) := (others => '0');
 
-    signal vmm_data0_i  : std_logic := '0';
-    signal vmm_data1_i  : std_logic := '0';
-    signal data_0_i     : std_logic := '0';
-    signal data_1_i     : std_logic := '0';
-    signal data_0       : std_logic := '0';
-    signal data_1       : std_logic := '0';
-
     signal comma_valid  : std_logic := '0';
     signal word10b_rdy  : std_logic := '0';
     signal dec_en       : std_logic := '0';
@@ -106,32 +100,11 @@ architecture RTL of l0_deserializer_decoder is
     signal state : stateType := ST_IDLE;
 
     attribute ASYNC_REG : string;
-    attribute ASYNC_REG of data_0_i     : signal is "TRUE";
-    attribute ASYNC_REG of data_1_i     : signal is "TRUE";
-    attribute ASYNC_REG of data_0       : signal is "TRUE";
-    attribute ASYNC_REG of data_1       : signal is "TRUE";
     attribute ASYNC_REG of L0_8B_data_s : signal is "TRUE";
     attribute ASYNC_REG of dout_dec     : signal is "TRUE";
     attribute ASYNC_REG of rdt_str_s    : signal is "TRUE";
 
---    attribute mark_debug : string;
---    attribute mark_debug of level_0     : signal is "TRUE";
---    attribute mark_debug of L0_8B_data  : signal is "TRUE";
---    attribute mark_debug of data_0      : signal is "TRUE";
---    attribute mark_debug of data_1      : signal is "TRUE";
-
 begin
-
--- register/pipeline the data lines
-data_pipe: process(clk_des)
-begin
-    if(rising_edge(clk_des))then
-        data_0_i    <= vmm_data0;
-        data_1_i    <= vmm_data1;
-        data_0      <= data_0_i;
-        data_1      <= data_1_i;
-    end if;
-end process;
 
 -- raw, encoded data shift register
 sreg_proc: process(clk_des)
@@ -191,23 +164,6 @@ begin
     end if;
 end process;
 
------------- OLD ----------------
--- write_enable asserter / data pipeline
---wr_ena_proc: process(clk_des)
---begin
---    if(rising_edge(clk_des))then
---        if(L0_8B_data = x"BC")then -- only write non-comma characters
---            wr_en_i <= '0';    
---        else
---            wr_en_i <= word10b_rdy;
---        end if;
---        -- data pipeline
---        L0_8B_data_i    <= L0_8B_data;
---        dout_dec        <= L0_8B_data_i;
---    end if;
---end process;
------------------------------------
-
 -- process that stretches the ready signal, to be latched by the slower clock domain
 -- if VMM data have been decoded
 rdy_stretcher: process(clk_des)
@@ -265,20 +221,10 @@ Decoder8b10b_inst: Decoder8b10b
       codeErr       => open,
       dispErr       => open
     );  
-
---ila_level0: ila_l0
---  PORT MAP (
---      clk                   => clk_des,
---      probe0(0)             => level_0,
---      probe0(8 downto 1)    => L0_8B_data,
---      probe0(9)             => data_0,
---      probe0(10)            => data_1,
---      probe0(15 downto 11)  => (others => '0')
---  );
   
   vmm_ckdt      <= clk_ckdt;
   word10b_rdy   <= align_sreg(4);
-  din_buff      <= data_0 & data_1;
+  din_buff      <= vmm_data0 & vmm_data1;
   wr_en         <= wr_en_i;
   
 end RTL;

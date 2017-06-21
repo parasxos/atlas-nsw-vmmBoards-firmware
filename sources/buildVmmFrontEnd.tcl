@@ -35,19 +35,23 @@ set origin_dir [file dirname [info script]]
     #Set project name from argument
         if {$argv == "mdt_mu2e"} {    
             set projectname "MDT_MU2E"
-            puts "Correct. Building Project for MDT MU2E..."
+            puts "Correct. Building Project for MDT MU2E board..."
+        } elseif {$argv == "gpvmm"} {
+	    set thepart "xc7a100tfgg484-2"
+            set projectname "GPVMM"
+            puts "Correct. Building Project for MDT GPVMM board..."
         } elseif {$argv == "mmfe1"} {
 	    set thepart "xc7a100tfgg484-2"
             set projectname "MMFE1"
-            puts "Correct. Building Project for MDT MMFE1..."
+            puts "Correct. Building Project for MDT MMFE1 board..."
 	} elseif {$argv == "mdt_446"} {
             set projectname "MDT_446"
-            puts "Correct. Building Project for MDT 446..."
+            puts "Correct. Building Project for MDT 446 board..."
         } elseif {$argv == "mmfe8_vmm3"} {
             set projectname "MMFE8_VMM3"
-            puts "Correct. Building Project for MMFE8 VMM3..."
+            puts "Correct. Building Project for MMFE8 VMM3 board..."
         } else {
-            puts "ERROR! Please, give argument mdt_mu2e or mdt_446 or mmfe8_vmm3."
+            puts "ERROR! Please, give argument mdt_mu2e or mdt_446 or mmfe8_vmm3 or mmfe1 or gpvmm."
         }
 
 # Create project
@@ -606,6 +610,14 @@ if {$argv == "mdt_mu2e"} {
     set file "[file normalize "$origin_dir/constrs_1/mdt_446.xdc"]"
     set file_added [add_files -norecurse -fileset $obj $file]
     set file "$origin_dir/constrs_1/mdt_446.xdc"
+    set file [file normalize $file]
+    set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+    set_property "file_type" "XDC" $file_obj
+} elseif {$argv == "gpvmm"} {
+    # Add/Import constrs file and set constrs file properties from argument
+    set file "[file normalize "$origin_dir/constrs_1/gpvmm.xdc"]"
+    set file_added [add_files -norecurse -fileset $obj $file]
+    set file "$origin_dir/constrs_1/gpvmm.xdc"
     set file [file normalize $file]
     set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
     set_property "file_type" "XDC" $file_obj

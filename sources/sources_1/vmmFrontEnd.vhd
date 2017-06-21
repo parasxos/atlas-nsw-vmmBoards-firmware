@@ -5,9 +5,9 @@
 -- Create Date: 16.03.2016
 -- Design Name: VMM boards firmware
 -- Module Name: vmmFrontEnd.vhd
--- Project Name: Depends on the board 
+-- Project Name: Depends on the board
 -- Target Devices: Artix7 xc7a200t-2fbg484 & xc7a200t-3fbg484 
--- Tool Versions: Vivado 2017.1
+-- Tool Versions: Vivado 2017.2
 --
 -- Changelog:
 -- 04.08.2016 Added the XADC Component and multiplexer to share fifo UDP Signals (Reid Pinkham)
@@ -25,6 +25,7 @@
 -- the pre-existing continuous mode. (Christos Bakalis)
 -- 06.06.2017 Added ART readout handling (Paris)
 -- 12.06.2017 Added support for MMFE1 board (Paris)
+-- 21.06.2017 Added support for GPVMM board (Paris)
 --
 ----------------------------------------------------------------------------------
 
@@ -1327,9 +1328,6 @@ architecture Behavioral of vmmFrontEnd is
     end component;
 
 begin
-
-    glbl_rstn        <= not glbl_rst_i;
-    phy_int          <= '1';
     
 gen_vector_reset: process (userclk2)
     begin
@@ -1343,8 +1341,6 @@ gen_vector_reset: process (userclk2)
        end if;
      end if;
     end process gen_vector_reset;
-
-    mmcm_reset <= glbl_rst_i; -- reset;
 
    -----------------------------------------------------------------------------
    -- Transceiver PMA reset circuitry
@@ -1395,14 +1391,14 @@ core_wrapper: gig_ethernet_pcs_pma_0
       gt0_pll0refclklost_out => open,
       gt0_pll0lock_out       => open);
 
-    process(userclk2)
-        begin
-            if (local_gtx_reset = '1') then 
-                an_restart_config_int <= '1';
-            else
-                an_restart_config_int <= '0';
-            end if;
-    end process;
+process(userclk2)
+    begin
+        if (local_gtx_reset = '1') then 
+            an_restart_config_int <= '1';
+        else
+            an_restart_config_int <= '0';
+        end if;
+end process;
 
 tri_fifo: temac_10_100_1000_fifo_block
     port map(
@@ -1488,8 +1484,6 @@ config_vector: temac_10_100_1000_config_vector_sm
          gmii_tx_er_int  <= gmii_tx_er_emac;
       end if;
     end process;
-        
-    local_gtx_reset <= glbl_rst_i or rx_reset or tx_reset;
     
 gtx_reset_gen: temac_10_100_1000_reset_sync
     port map (
@@ -1551,8 +1545,10 @@ UDP_ICMP_block: UDP_ICMP_Complete_nomac
             mac_rx_tlast                => rx_axis_mac_tlast_int);
 
 i2c_module: i2c_top
-       port map(  clk_in                => clk_200,
-                  phy_rstn_out          => phy_rstn_out);
+       port map(  
+            clk_in                => clk_200,
+            phy_rstn_out          => phy_rstn_out
+        );
 
 udp_din_conf_block: udp_data_in_handler
     port map(
@@ -2412,6 +2408,11 @@ flow_fsm: process(userclk2)
     end if;
 end process;
 
+    mmcm_reset              <= glbl_rst_i; -- reset;
+    glbl_rstn               <= not glbl_rst_i;
+    phy_int                 <= '1';
+    local_gtx_reset         <= glbl_rst_i or rx_reset or tx_reset;
+    
     cktp_enable             <= '1' when ((state = DAQ and trig_mode_int = '0') or (state = XADC_wait and trig_mode_int = '0')) else '0';
     inhibit_conf            <= '0' when (state = IDLE) else '1';
     vmm_bitmask_1VMM        <= "11111111";

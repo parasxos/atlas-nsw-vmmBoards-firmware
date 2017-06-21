@@ -1,7 +1,7 @@
 #
 # Vivado (TM) v2017.2 (64-bit)
 #
-# build_vmmFrontEnd.tcl: Tcl script for creating project VMM Front End project 
+# buildvmmFrontEnd.tcl: Tcl script for creating generic VMM Front End projects 
 #
 # This file contains the Vivado Tcl commands for re-creating the project to the state*
 # when this script was generated. In order to re-create the project, please source this
@@ -18,12 +18,6 @@
 # This generic .tcl script points to the source files needed to re-create the project
 # 'vmmFrontEnd'. The user may change the project name at the #Set project name
 #  field as he wishes. (e.g. set projectname "myproject"). 
-#
-# In order to execute the tcl script and build the project, run Vivado and go to: 
-# Tools -> Run Tcl Script...
-#
-# An alternative way would be to open a terminal, and run this command:
-# vivado -mode batch -source <PATH>/build_vmmFrontEnd.tcl
 #
 # For more info on how to make further changes to the script, see: 
 # http://xillybus.com/tutorials/vivado-version-control-packaging
@@ -589,7 +583,7 @@ if {$argv == "mmfe8_vmm3"} {
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
-set_property "top" "mmfe8_top" $obj
+set_property "top" "vmmFrontEnd" $obj
 
 # Create 'constrs_1' fileset (if not found)
 if {[string equal [get_filesets -quiet constrs_1] ""]} {

@@ -4,7 +4,7 @@
 -- 
 -- Create Date: 16.03.2016
 -- Design Name: VMM boards firmware
--- Module Name: mmfe8_top.vhd
+-- Module Name: vmmFrontEnd.vhd
 -- Project Name: Depends on the board 
 -- Target Devices: Artix7 xc7a200t-2fbg484 & xc7a200t-3fbg484 
 -- Tool Versions: Vivado 2017.1
@@ -37,7 +37,7 @@
     use work.ipv4_types.all;
     use work.arp_types.all;
 
-entity mmfe8_top is
+entity vmmFrontEnd is
     port(
 
         -- VMM signals
@@ -235,9 +235,9 @@ entity mmfe8_top is
         IO1_IO                : INOUT std_logic;
         SS_IO                 : INOUT std_logic
       );
-end mmfe8_top;
+end vmmFrontEnd;
 
-architecture Behavioral of mmfe8_top is
+architecture Behavioral of vmmFrontEnd is
 
     -------------------------------------------------------------------
     -- Global Settings

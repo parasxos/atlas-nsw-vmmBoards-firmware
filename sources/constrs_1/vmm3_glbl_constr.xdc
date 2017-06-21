@@ -261,18 +261,8 @@ set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
 set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 
-# PBLOCKS (obsolete)
-#create_pblock pblock_skewing_module
-#add_cells_to_pblock [get_pblocks pblock_skewing_module] [get_cells -quiet [list ckbc_cktp_generator/skewing_module]]
-#resize_pblock [get_pblocks pblock_skewing_module] -add {SLICE_X82Y146:SLICE_X83Y148}
-#create_pblock pblock_ckbc_generator_block
-#add_cells_to_pblock [get_pblocks pblock_ckbc_generator_block] [get_cells -quiet [list ckbc_cktp_generator/ckbc_generator]]
-#resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {SLICE_X76Y138:SLICE_X83Y146}
-#resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {RAMB18_X4Y56:RAMB18_X4Y57}
-#resize_pblock [get_pblocks pblock_ckbc_generator_block] -add {RAMB36_X4Y28:RAMB36_X4Y28}
-#create_pblock pblock_cktp_generator_block
-#add_cells_to_pblock [get_pblocks pblock_cktp_generator_block] [get_cells -quiet [list ckbc_cktp_generator/cktp_generator]]
-#resize_pblock [get_pblocks pblock_cktp_generator_block] -add {SLICE_X74Y147:SLICE_X83Y160}
-#resize_pblock [get_pblocks pblock_cktp_generator_block] -add {RAMB18_X4Y60:RAMB18_X4Y63}
-#resize_pblock [get_pblocks pblock_cktp_generator_block] -add {RAMB36_X4Y30:RAMB36_X4Y31}
+# Added to disable timing to known artifact of phase skewing 
+set arcs [get_timing_arcs -of_objects \
+[get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]]
+set_disable_timing $arcs
 #============================================================================================

@@ -247,12 +247,12 @@ architecture Behavioral of mmfe8_top is
     signal default_MAC      : std_logic_vector(47 downto 0) := x"002320189223";
     signal default_destIP   : std_logic_vector(31 downto 0) := x"c0a80010";
     -- Set to '1' for MMFE8 or '0' for 1-VMM boards
-    constant is_mmfe8       : std_logic := '1';
+    constant is_mmfe8       : std_logic := '0';
     -- Set to '0' for continuous readout mode or '1' for L0 readout mode
     -- For 1-VMM boards boards, also change the 'set_input_delay' of DATA0/DATA1 at .xdc
-    constant vmmReadoutMode : std_logic := '1';
+    constant vmmReadoutMode : std_logic := '0';
     -- Set to '1' to enable the ART header
-    constant artEnabled     : std_logic := '0';
+    constant artEnabled     : std_logic := '1';
 
     -------------------------------------------------------------------
     -- Transceiver, TEMAC, UDP_ICMP block

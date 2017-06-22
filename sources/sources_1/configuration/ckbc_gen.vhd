@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------
--- Company: Westfälische Hochschule
+-- Company: Westf??lische Hochschule
 -- Engineer: Pia Piekarek (piapiekarek@googlemail.com)
 -- 
 -- Create Date: 13.01.2017 11:56:04
@@ -58,9 +58,9 @@ architecture Behavioral of ckbc_gen is
     signal readout_mode_i   : std_logic := '0';
     signal readout_mode_s   : std_logic := '0';
     signal count_ro         : unsigned(7 downto 0) := to_unsigned(0,8);
-    signal ckbc_max_cnt     : unsigned(2 downto 0) := to_unsigned(0, 3);
+    signal ckbc_max_cnt     : unsigned(2 downto 0) := to_unsigned(0,3);
     signal ckbc_ro          : std_logic := '0';
-    constant ckbc_max_limit : integer := 2;
+    constant ckbc_max_limit : integer := 5;
 
 
     attribute ASYNC_REG : string;

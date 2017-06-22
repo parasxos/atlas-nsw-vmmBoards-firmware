@@ -22,6 +22,7 @@ rm -Rf MDT_446 2>&1 >/dev/null
 rm -Rf MDT_MU2E 2>&1 >/dev/null
 rm -Rf MMFE8_VMM3 2>&1 >/dev/null
 rm -Rf MMFE1 2>&1 >/dev/null
+rm -Rf GPVMM 2>&1 >/dev/null
 
 tclArg=$1
 projectDir="MMFE8_VMM3/"

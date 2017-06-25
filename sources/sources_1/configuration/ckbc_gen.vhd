@@ -17,6 +17,8 @@
 -- frequency to 160 Mhz. (Christos Bakalis)
 -- 12.03.2017 Removed FSM. (Christos Bakalis)
 -- 31.03.2017 Added CKBC for readout mode. (Christos Bakalis)
+-- 25.06.2017 Fix for CKBC strobbing mode. Allowing greater values that 7 in order
+-- to allow a default to 32. CKBC minimum should no less than 12. (Paris)
 --
 ----------------------------------------------------------------------------------
 library IEEE;
@@ -58,9 +60,9 @@ architecture Behavioral of ckbc_gen is
     signal readout_mode_i   : std_logic := '0';
     signal readout_mode_s   : std_logic := '0';
     signal count_ro         : unsigned(7 downto 0) := to_unsigned(0,8);
-    signal ckbc_max_cnt     : unsigned(2 downto 0) := to_unsigned(0,3);
+    signal ckbc_max_cnt     : unsigned(6 downto 0) := to_unsigned(0,7);
     signal ckbc_ro          : std_logic := '0';
-    constant ckbc_max_limit : integer := 5;
+    constant ckbc_max_limit : integer := 32;
 
 
     attribute ASYNC_REG : string;

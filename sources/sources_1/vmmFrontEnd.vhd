@@ -818,6 +818,7 @@ architecture Behavioral of vmmFrontEnd is
             global_reset                : in  std_logic;
             packet_length_in            : in  std_logic_vector(11 downto 0);
             reset_DAQ_FIFO              : in  std_logic;
+            confReply_packet            : in  std_logic;
     
             vmmID                       : in  std_logic_vector(2 downto 0);
             
@@ -1770,6 +1771,7 @@ FIFO2UDP_instance: FIFO2UDP
         global_reset                => glbl_rst_i,
         packet_length_in            => packet_length_int,
         reset_DAQ_FIFO              => daqFIFO_reset,
+        confReply_packet            => start_conf_proc_int,
 
         vmmID                       => pf_vmmIdRo,
         
@@ -2311,10 +2313,10 @@ flow_fsm: process(userclk2)
                     reply_enable    <= '1';
                     sel_cs          <= "00"; -- drive CS to gnd
                     vmm_ena_all     <= '0'; 
-                    if(reply_done = '0')then
-                        state        <= SEND_CONF_REPLY;
-                    else
+                    if(reply_done = '1' and UDPDone = '1')then
                         state        <= IDLE;
+                    else
+                        state        <= SEND_CONF_REPLY;
                     end if;
 
                 when DAQ_INIT =>

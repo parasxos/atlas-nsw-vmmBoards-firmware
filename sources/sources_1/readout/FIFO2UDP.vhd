@@ -54,6 +54,7 @@ entity FIFO2UDP is
         global_reset                : in  std_logic;
         packet_length_in            : in  std_logic_vector(11 downto 0);
         reset_DAQ_FIFO              : in  std_logic;
+        confReply_packet            : in  std_logic;
 
         vmmID                       : in  std_logic_vector(2 downto 0);
         
@@ -267,17 +268,21 @@ begin
                     count <= x"3";
 
                 when x"3" =>
-                      data_out_last   <= '0';    
-                      data_out_valid  <= '0';
-                      data_out        <= (others => '0');
-                      udp_tx_start_int                 <= '0';
+                      data_out_last     <= '0';    
+                      data_out_valid    <= '0';
+                      data_out          <= (others => '0');
+                      udp_tx_start_int  <= '0';
+                      if(confReply_packet = '1')then
+                        udp_txi.hdr.dst_port    <= x"E887";
+                      else
+                        udp_txi.hdr.dst_port    <= x"1778";
+                      end if;
                       count <= x"4";
 
                 when x"4" =>
-                      udp_tx_start_int             <= '1';
+                      udp_tx_start_int         <= '1';
                       udp_txi.hdr.dst_ip_addr  <= destinationIP;         -- set a generic ip adrress (192.168.0.255)
                       udp_txi.hdr.src_port     <= x"19CB";                -- set src and dst ports
-                      udp_txi.hdr.dst_port     <= x"1778";                     -- x"6af0"; 
                       udp_txi.hdr.data_length  <= std_logic_vector(packet_length); -- defined to be 16 bits in UDP
                       daq_fifo_re              <= '0';                           
                       udp_txi.hdr.checksum     <= x"0000";     

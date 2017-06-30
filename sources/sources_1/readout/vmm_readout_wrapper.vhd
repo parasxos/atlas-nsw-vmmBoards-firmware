@@ -18,8 +18,10 @@
 -- 
 ----------------------------------------------------------------------------------
 library IEEE;
+library UNISIM;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.all;
+use UNISIM.VComponents.all;
 
 entity vmm_readout_wrapper is
     generic(is_mmfe8        : std_logic;
@@ -40,7 +42,6 @@ entity vmm_readout_wrapper is
     ------------------------------------
     ---- Level-0 Readout Interface -----
     clk_ckdt        : in  std_logic;                    -- will be forwarded to the VMM
-    clk_des         : in  std_logic;                    -- must be twice the frequency of CKDT
     rst_buff        : in  std_logic;                    -- reset the level-0 buffer
     rst_intf_proc   : in  std_logic;                    -- reset the pf interface
     --
@@ -61,7 +62,8 @@ entity vmm_readout_wrapper is
     ---------- VMM3 Interface ----------
     vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
     vmm_data1_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data1 from VMM
-    vmm_ckdt_vec    : out std_logic_vector(8 downto 1);  -- Strobe to VMM CKDT
+    vmm_ckdt_glbl   : out std_logic;                     -- Strobe to VMM CKDT
+    vmm_ckdt_enable : out std_logic_vector(8 downto 1);  -- Enable signal for VMM CKDT
     vmm_cktk_vec    : out std_logic_vector(8 downto 1)   -- Strobe to VMM CKTK
     );
 end vmm_readout_wrapper;
@@ -76,8 +78,9 @@ architecture RTL of vmm_readout_wrapper is
 
         vmm_data0_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data0 from VMM
         vmm_data1_vec           : in std_logic_vector(8 downto 1);      -- Single-ended data1 from VMM
-        vmm_ckdt_vec            : out std_logic_vector(8 downto 1);     -- Strobe to VMM CKDT
+        vmm_ckdt_enable         : out std_logic_vector(8 downto 1);     -- Enable signal for VMM CKDT
         vmm_cktk_vec            : out std_logic_vector(8 downto 1);     -- Strobe to VMM CKTK
+        vmm_ckdt                : out std_logic;                        -- Strobe to VMM CKDT 
 
         daq_enable              : in std_logic;
         trigger_pulse           : in std_logic;                     -- Trigger
@@ -104,7 +107,6 @@ architecture RTL of vmm_readout_wrapper is
         ------------------------------------
         ------- General Interface ----------
         clk_ckdt        : in  std_logic; -- will be forwarded to the VMM
-        clk_des         : in  std_logic; -- must be twice the frequency of CKDT
         clk             : in  std_logic; -- buffer read domain
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
@@ -124,28 +126,29 @@ architecture RTL of vmm_readout_wrapper is
         ---------- VMM3 Interface ----------
         vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
         vmm_data1_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data1 from VMM
-        vmm_ckdt_vec    : out std_logic_vector(8 downto 1);  -- Strobe to VMM CKDT
         vmm_cktk_vec    : out std_logic_vector(8 downto 1)   -- Strobe to VMM CKTK
     );
     end component;
 
     signal data0_in_vec_cont    : std_logic_vector(8 downto 1)  := (others => '0');
     signal data1_in_vec_cont    : std_logic_vector(8 downto 1)  := (others => '0');
-    signal ckdt_out_vec_cont    : std_logic_vector(8 downto 1)  := (others => '0');
     signal cktk_out_vec_cont    : std_logic_vector(8 downto 1)  := (others => '0');
+    signal vmm_ckdt_enable_cont : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWord_cont         : std_logic_vector(15 downto 0) := (others => '0');
     signal rd_en_cont           : std_logic := '0';
     signal vmmWordReady_cont    : std_logic := '0';
     signal vmmEventDone_cont    : std_logic := '0';
+    signal vmm_ckdt_cont        : std_logic := '0';
 
     signal data0_in_vec_l0      : std_logic_vector(8 downto 1)  := (others => '0');
     signal data1_in_vec_l0      : std_logic_vector(8 downto 1)  := (others => '0');
-    signal ckdt_out_vec_l0      : std_logic_vector(8 downto 1)  := (others => '0');
     signal cktk_out_vec_l0      : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWord_l0           : std_logic_vector(15 downto 0) := (others => '0');
     signal rd_en_l0             : std_logic := '0';
     signal vmmWordReady_l0      : std_logic := '0';
     signal vmmEventDone_l0      : std_logic := '0';
+
+    signal vmm_ckdt_glbl_i      : std_logic := '0';
 
 begin
 
@@ -159,8 +162,9 @@ readout_vmm_cont: vmm_readout
         
         vmm_data0_vec           => data0_in_vec_cont,
         vmm_data1_vec           => data1_in_vec_cont,
-        vmm_ckdt_vec            => ckdt_out_vec_cont,
+        vmm_ckdt_enable         => vmm_ckdt_enable_cont,
         vmm_cktk_vec            => cktk_out_vec_cont,
+        vmm_ckdt                => vmm_ckdt_cont,
 
         daq_enable              => daq_enable,
         trigger_pulse           => trigger_pulse,
@@ -186,8 +190,7 @@ readout_vmm_l0: level0_wrapper
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_ckdt        => clk_ckdt,
-        clk_des         => clk_des,
+        clk_ckdt        => clk_ckdt, -- vmm_ckdt_glbl_i ??
         clk             => clk,
         rst_buff        => rst_buff,
         level_0         => level_0,
@@ -207,14 +210,13 @@ readout_vmm_l0: level0_wrapper
         ---------- VMM3 Interface ----------
         vmm_data0_vec   => data0_in_vec_l0,
         vmm_data1_vec   => data1_in_vec_l0,
-        vmm_ckdt_vec    => ckdt_out_vec_l0,
         vmm_cktk_vec    => cktk_out_vec_l0
     );
 end generate level0_readout_case;
 
 -- multiplexer/demultiplexer for different mode cases
-vmm_io_muxDemux: process(vmmWordReady_cont, vmmEventDone_cont, vmmWord_cont, ckdt_out_vec_cont, cktk_out_vec_cont, rd_ena_buff,
-                         vmmWordReady_l0, vmmEventDone_l0, vmmWord_l0, ckdt_out_vec_l0, cktk_out_vec_l0, vmm_data0_vec, vmm_data1_vec)
+vmm_io_muxDemux: process(vmmWordReady_cont, vmmEventDone_cont, vmmWord_cont, vmm_ckdt_enable_cont, cktk_out_vec_cont, rd_ena_buff,
+                         vmmWordReady_l0, vmmEventDone_l0, vmmWord_l0, cktk_out_vec_l0, vmm_data0_vec, vmm_data1_vec)
 begin
     case vmmReadoutMode is
     when '0' =>
@@ -222,7 +224,7 @@ begin
         vmmWordReady        <= vmmWordReady_cont;
         vmmEventDone        <= vmmEventDone_cont;
         vmmWord             <= vmmWord_cont;
-        vmm_ckdt_vec        <= ckdt_out_vec_cont;
+        vmm_ckdt_enable     <= vmm_ckdt_enable_cont;
         vmm_cktk_vec        <= cktk_out_vec_cont;
         -- inputs
         rd_en_cont          <= rd_ena_buff;
@@ -236,7 +238,7 @@ begin
         vmmWordReady        <= vmmWordReady_l0;
         vmmEventDone        <= vmmEventDone_l0;
         vmmWord             <= vmmWord_l0;
-        vmm_ckdt_vec        <= ckdt_out_vec_l0;
+        vmm_ckdt_enable     <= x"FF";
         vmm_cktk_vec        <= cktk_out_vec_l0;
         -- inputs
         rd_en_cont          <= '0';
@@ -246,10 +248,11 @@ begin
         data0_in_vec_l0     <= vmm_data0_vec;
         data1_in_vec_l0     <= vmm_data1_vec;
     when others =>
+        -- outputs
         vmmWordReady        <= '0';
         vmmEventDone        <= '0';
         vmmWord             <= (others => '0');
-        vmm_ckdt_vec        <= (others => '0');
+        vmm_ckdt_enable     <= (others => '0');
         vmm_cktk_vec        <= (others => '0');
         -- inputs
         data0_in_vec_cont   <= (others => '0');
@@ -258,6 +261,11 @@ begin
         data1_in_vec_l0     <= (others => '0');
     end case;
 end process;
+
+CKDT_BUFGMUX: BUFGMUX
+    port map(O => vmm_ckdt_glbl_i, I0 => vmm_ckdt_cont, I1 => clk_ckdt, S => vmmReadoutMode);
+
+    vmm_ckdt_glbl <= vmm_ckdt_glbl_i;
 
 end RTL;
 

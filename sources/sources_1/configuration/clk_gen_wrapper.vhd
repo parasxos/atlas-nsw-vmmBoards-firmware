@@ -41,7 +41,6 @@ entity clk_gen_wrapper is
         CKTP_raw            : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
-        ckbc_enable         : in  std_logic;
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
         readout_mode        : in  std_logic;
@@ -196,7 +195,7 @@ end process;
 
     cktp_start      <= not rst and cktp_enable and mmcm_locked;
     cktp_gen_start  <= not rst and cktp_enable and mmcm_locked and not cktp_inhibit;
-    ckbc_start      <= not rst and ckbc_enable and mmcm_locked;
+    ckbc_start      <= not rst and mmcm_locked;
 
     CKBC            <= CKBC_glbl;
     CKTP            <= CKTP_glbl;

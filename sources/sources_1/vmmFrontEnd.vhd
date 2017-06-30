@@ -26,6 +26,7 @@
 -- 06.06.2017 Added ART readout handling (Paris)
 -- 12.06.2017 Added support for MMFE1 board (Paris)
 -- 21.06.2017 Added support for GPVMM board (Paris)
+-- 22.06.2017 Added ODDRs for VMM clock forwarding optimization. (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -250,8 +251,7 @@ architecture Behavioral of vmmFrontEnd is
     -- Set to '1' for MMFE8 or '0' for 1-VMM boards
     constant is_mmfe8       : std_logic := '0';
     -- Set to '0' for continuous readout mode or '1' for L0 readout mode
-    -- For 1-VMM boards boards, also change the 'set_input_delay' of DATA0/DATA1 at .xdc
-    constant vmmReadoutMode : std_logic := '0';
+    constant vmmReadoutMode : std_logic := '1';
     -- Set to '1' to enable the ART header
     constant artEnabled     : std_logic := '1';
 
@@ -354,6 +354,9 @@ architecture Behavioral of vmmFrontEnd is
     signal vmm_sck_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
     signal vmm_ena_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
     signal vmm_sdi_vec_obuf   : std_logic_vector(8 downto 1) := (others => '0');
+    signal vmm_ckbc_vec       : std_logic_vector(8 downto 1) := (others => '0');
+    signal vmm_cktp_vec       : std_logic_vector(8 downto 1) := (others => '0');
+    signal ckart_vec          : std_logic_vector(9 downto 1) := (others => '0');  
     signal conf_di_i          : std_logic := '0';
     signal conf_ena_i         : std_logic := '0';
     signal conf_wen_i         : std_logic := '0';
@@ -383,19 +386,6 @@ architecture Behavioral of vmmFrontEnd is
     signal reply_done         : std_logic := '0';
     signal reply_enable       : std_logic := '0';
 
-    -------------------------------------------------
-    -- MMCM Signals                   
-    -------------------------------------------------
-    signal clk_400_noclean  : std_logic;
-    signal clk_400_clean    : std_logic;
-    signal clk_200          : std_logic;
-    signal clk_160          : std_logic;
-    signal clk_800          : std_logic;
-    signal clk_10_phase45   : std_logic;
-    signal clk_50           : std_logic;
-    signal clk_40           : std_logic;
-    signal clk_10           : std_logic;
-    
     -------------------------------------------------
     -- VMM Signals                   
     -------------------------------------------------
@@ -432,6 +422,8 @@ architecture Behavioral of vmmFrontEnd is
     signal rst_l0_pf                : std_logic := '0';
     signal level_0                  : std_logic := '0';
     signal daq_on_inhib             : std_logic := '1';
+    signal CKDT_glbl                : std_logic := '0';
+    signal vmm_ckdt_enable          : std_logic_vector(8 downto 1) := (others => '0');
     
     -------------------------------------------------
     -- Trigger Signals
@@ -521,12 +513,14 @@ architecture Behavioral of vmmFrontEnd is
     signal ss_t                 : std_logic:= '0'; 
 
     ------------------------------------------------------------------
-    -- CKBC/CKTP Generator signals
+    -- MMCM + CKBC/CKTP Generator signals
     ------------------------------------------------------------------ 
-    signal clk_160_gen      : std_logic := '0';
-    signal clk_500_gen      : std_logic := '0';
-    signal clk_320_gen      : std_logic := '0';
-    signal clk_gen_locked   : std_logic := '0';
+    signal clk_160          : std_logic := '0';
+    signal clk_500          : std_logic := '0';
+    signal clk_200          : std_logic := '0';
+    signal clk_40           : std_logic := '0';
+    signal clk_50           : std_logic := '0';
+    signal master_locked    : std_logic := '0';
     signal CKBC_glbl        : std_logic := '0';
     signal cktp_pulse_width : std_logic_vector(7 downto 0)     := x"04"; -- 2 us
     signal cktp_period      : std_logic_vector(15 downto 0)    := x"1388"; -- 1 ms
@@ -569,7 +563,79 @@ architecture Behavioral of vmmFrontEnd is
     attribute keep          : string;
     attribute dont_touch    : string;
     attribute mark_debug    : string;
-  
+
+    -------------------------------------------------------------------
+    -- IOB attribute for VMM pins
+    -------------------------------------------------------------------
+    attribute IOB               : string;
+
+    -- data0
+    attribute IOB of DATA0_1_P  : signal is "TRUE";
+    attribute IOB of DATA0_1_N  : signal is "TRUE";
+    attribute IOB of DATA0_2_P  : signal is "TRUE";
+    attribute IOB of DATA0_2_N  : signal is "TRUE";
+    attribute IOB of DATA0_3_P  : signal is "TRUE";
+    attribute IOB of DATA0_3_N  : signal is "TRUE";
+    attribute IOB of DATA0_4_P  : signal is "TRUE";
+    attribute IOB of DATA0_4_N  : signal is "TRUE";
+
+    attribute IOB of DATA0_5_P  : signal is "TRUE";
+    attribute IOB of DATA0_5_N  : signal is "TRUE";
+    attribute IOB of DATA0_6_P  : signal is "TRUE";
+    attribute IOB of DATA0_6_N  : signal is "TRUE";
+    attribute IOB of DATA0_7_P  : signal is "TRUE";
+    attribute IOB of DATA0_7_N  : signal is "TRUE";
+    attribute IOB of DATA0_8_P  : signal is "TRUE";
+    attribute IOB of DATA0_8_N  : signal is "TRUE";
+
+    -- data1
+    attribute IOB of DATA1_1_P  : signal is "TRUE";
+    attribute IOB of DATA1_1_N  : signal is "TRUE";
+    attribute IOB of DATA1_2_P  : signal is "TRUE";
+    attribute IOB of DATA1_2_N  : signal is "TRUE";
+    attribute IOB of DATA1_3_P  : signal is "TRUE";
+    attribute IOB of DATA1_3_N  : signal is "TRUE";
+    attribute IOB of DATA1_4_P  : signal is "TRUE";
+    attribute IOB of DATA1_4_N  : signal is "TRUE";
+
+    attribute IOB of DATA1_5_P  : signal is "TRUE";
+    attribute IOB of DATA1_5_N  : signal is "TRUE";
+    attribute IOB of DATA1_6_P  : signal is "TRUE";
+    attribute IOB of DATA1_6_N  : signal is "TRUE";
+    attribute IOB of DATA1_7_P  : signal is "TRUE";
+    attribute IOB of DATA1_7_N  : signal is "TRUE";
+    attribute IOB of DATA1_8_P  : signal is "TRUE";
+    attribute IOB of DATA1_8_N  : signal is "TRUE";
+
+    -- cktk
+    attribute IOB of CKTK_1_P   : signal is "TRUE";
+    attribute IOB of CKTK_1_N   : signal is "TRUE";
+    attribute IOB of CKTK_2_P   : signal is "TRUE";
+    attribute IOB of CKTK_2_N   : signal is "TRUE";
+    attribute IOB of CKTK_3_P   : signal is "TRUE";
+    attribute IOB of CKTK_3_N   : signal is "TRUE";
+    attribute IOB of CKTK_4_P   : signal is "TRUE";
+    attribute IOB of CKTK_4_N   : signal is "TRUE";
+
+    attribute IOB of CKTK_5_P   : signal is "TRUE";
+    attribute IOB of CKTK_5_N   : signal is "TRUE";
+    attribute IOB of CKTK_6_P   : signal is "TRUE";
+    attribute IOB of CKTK_6_N   : signal is "TRUE";
+    attribute IOB of CKTK_7_P   : signal is "TRUE";
+    attribute IOB of CKTK_7_N   : signal is "TRUE";
+    attribute IOB of CKTK_8_P   : signal is "TRUE";
+    attribute IOB of CKTK_8_N   : signal is "TRUE";
+
+    -- sdi
+    attribute IOB of SDI_1      : signal is "TRUE";
+    attribute IOB of SDI_2      : signal is "TRUE";
+    attribute IOB of SDI_3      : signal is "TRUE";
+    attribute IOB of SDI_4      : signal is "TRUE";
+    attribute IOB of SDI_5      : signal is "TRUE";
+    attribute IOB of SDI_6      : signal is "TRUE";
+    attribute IOB of SDI_7      : signal is "TRUE";
+    attribute IOB of SDI_8      : signal is "TRUE";
+ 
     -------------------------------------------------------------------
     -- Readout Monitoring
     -------------------------------------------------------------------
@@ -657,6 +723,7 @@ architecture Behavioral of vmmFrontEnd is
 --    attribute mark_debug of daq_enable_i              : signal is "TRUE";
 --    attribute mark_debug of pf_trigVmmRo              : signal is "TRUE";
 --    attribute mark_debug of dt_cntr_st                : signal is "TRUE";
+--    attribute mark_debug of linkHealth_bmsk           : signal is "TRUE";
     
     -------------------------------------------------------------------
     -- Other
@@ -665,73 +732,48 @@ architecture Behavioral of vmmFrontEnd is
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
     -------------------------------------------------------------------
-    -- 1.  clk_wiz_200_to_400
-    -- 2.  clk_wiz_low_jitter
-    -- 3.  clk_wiz_0
-    -- 4.  clk_wiz_gen
-    -- 5.  event_timing_reset
-    -- 6.  vmm_readout_wrapper
-    -- 7.  FIFO2UDP
-    -- 8.  trigger
-    -- 9.  packet_formation
-    -- 10. gig_ethernet_pcs_pma_0
-    -- 11. UDP_Complete_nomac
-    -- 12. temac_10_100_1000_fifo_block
-    -- 13. temac_10_100_1000_reset_sync
-    -- 14. temac_10_100_1000_config_vector_sm
-    -- 15. i2c_top
-    -- 16. udp_data_in_handler
-    -- 17. udp_reply_handler
-    -- 18. select_data
-    -- 19. ila_top_level
-    -- 20. xadc
-    -- 21. AXI4_SPI
-    -- 22. VIO_IP
-    -- 23. clk_gen_wrapper
-    -- 24. ila_overview
-    -- 25. art
+    -- 1. clk_wiz_gen
+    -- 2. event_timing_reset
+    -- 3. vmm_readout_wrapper
+    -- 4. FIFO2UDP
+    -- 5. trigger
+    -- 6. packet_formation
+    -- 7. gig_ethernet_pcs_pma_0
+    -- 8. UDP_Complete_nomac
+    -- 9. temac_10_100_1000_fifo_block
+    -- 10. temac_10_100_1000_reset_sync
+    -- 11. temac_10_100_1000_config_vector_sm
+    -- 12. i2c_top
+    -- 13. udp_data_in_handler
+    -- 14. udp_reply_handler
+    -- 15. select_data
+    -- 16. ila_top_level
+    -- 17. xadc
+    -- 18. AXI4_SPI
+    -- 19. VIO_IP
+    -- 20. clk_gen_wrapper
+    -- 21. ila_overview
+    -- 22. art
+    -- 23. vmm_oddr_wrapper
     -------------------------------------------------------------------
     -- 1
-    component clk_wiz_200_to_400
-      port(
-          clk_in1_p       : in     std_logic;
-          clk_in1_n       : in     std_logic;
-          clk_out_400     : out    std_logic
-      );
+    component clk_wiz_gen
+    port
+     (  -- Clock in ports
+        clk_in1_p         : in  std_logic;
+        clk_in1_n         : in  std_logic;
+        -- Clock out ports
+        clk_out_160       : out std_logic;
+        clk_out_500       : out std_logic;
+        clk_out_200       : out std_logic;
+        clk_out_50        : out std_logic;
+        clk_out_40        : out std_logic;
+        -- Status and control signals
+        reset             : in  std_logic;
+        gen_locked        : out std_logic
+     );
     end component;
     -- 2
-    component clk_wiz_low_jitter
-      port(
-          clk_in1         : in     std_logic;
-          clk_out1        : out    std_logic
-      );
-    end component;
-    -- 3
-    component clk_wiz_0
-      port(
-          clk_in1         : in     std_logic;
-          reset           : in     std_logic;
-          clk_200_o       : out    std_logic;
-          clk_800_o       : out    std_logic;
-          clk_10_phase45_o: out    std_logic;
-          clk_50_o        : out    std_logic;
-          clk_40_o        : out    std_logic;
-          clk_10_o        : out    std_logic;
-          clk_160_o       : out    std_logic
-      );
-    end component;
-    -- 4
-    component clk_wiz_gen
-    port(
-        clk_in_400  : in     std_logic;
-        clk_out_160 : out    std_logic;
-        clk_out_500 : out    std_logic;
-        clk_out_320 : out    std_logic;
-        reset       : in     std_logic;
-        gen_locked  : out    std_logic
-    );
-    end component;
-    --5
     component event_timing_reset
       port(
           hp_clk          : in std_logic;
@@ -755,7 +797,7 @@ architecture Behavioral of vmmFrontEnd is
           reset_latched   : out std_logic
       );
     end component;    
-    -- 6
+    -- 3
     component vmm_readout_wrapper is
         generic(is_mmfe8        : std_logic;
                 vmmReadoutMode  : std_logic);
@@ -775,7 +817,6 @@ architecture Behavioral of vmmFrontEnd is
             ------------------------------------
             ---- Level-0 Readout Interface -----
             clk_ckdt        : in  std_logic;                    -- will be forwarded to the VMM
-            clk_des         : in  std_logic;                    -- must be twice the frequency of CKDT
             rst_buff        : in  std_logic;                    -- reset the level-0 buffer
             rst_intf_proc   : in  std_logic;                    -- reset the pf interface
             --
@@ -796,11 +837,12 @@ architecture Behavioral of vmmFrontEnd is
             ---------- VMM3 Interface ----------
             vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
             vmm_data1_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data1 from VMM
-            vmm_ckdt_vec    : out std_logic_vector(8 downto 1);  -- Strobe to VMM CKDT
+            vmm_ckdt_glbl   : out std_logic;                     -- Strobe to VMM CKDT
+            vmm_ckdt_enable : out std_logic_vector(8 downto 1);  -- Enable signal for VMM CKDT
             vmm_cktk_vec    : out std_logic_vector(8 downto 1)   -- Strobe to VMM CKTK
         );
     end component;
-    -- 7
+    -- 4
     component FIFO2UDP
         port ( 
             clk_125                     : in std_logic;
@@ -818,16 +860,16 @@ architecture Behavioral of vmmFrontEnd is
             global_reset                : in  std_logic;
             packet_length_in            : in  std_logic_vector(11 downto 0);
             reset_DAQ_FIFO              : in  std_logic;
-            confReply_packet            : in  std_logic;
     
             vmmID                       : in  std_logic_vector(2 downto 0);
-            
+            confReply_packet            : in  std_logic;
+                                
             trigger_out                 : out std_logic;
             count_o                     : out std_logic_vector(3 downto 0);
             faifouki                    : out std_logic
         );
     end component;
-    -- 8
+    -- 5
     component trigger is
       generic (vmmReadoutMode : std_logic);
       port (
@@ -858,7 +900,7 @@ architecture Behavioral of vmmFrontEnd is
           latency         : in std_logic_vector(15 DOWNTO 0)
       );
     end component;
-    -- 9
+    -- 6
     component packet_formation is
     generic(is_mmfe8        : std_logic;
             vmmReadoutMode  : std_logic;
@@ -900,7 +942,7 @@ architecture Behavioral of vmmFrontEnd is
             vmmArtReady     : in std_logic
     );
     end component;
-    -- 10
+    -- 7
     component gig_ethernet_pcs_pma_0
         port(
             -- Transceiver Interface
@@ -964,7 +1006,7 @@ architecture Behavioral of vmmFrontEnd is
             gt0_pll0refclklost_out  : out std_logic;
             gt0_pll0lock_out        : out std_logic);
     end component;
-    -- 11
+    -- 8
     component UDP_ICMP_Complete_nomac
        Port (
             -- UDP TX signals
@@ -1002,7 +1044,7 @@ architecture Behavioral of vmmFrontEnd is
             mac_rx_tready           : out  std_logic;                           -- tells mac that we are ready to take data
             mac_rx_tlast            : in std_logic);                            -- indicates last byte of the trame
     end component;
-    -- 12
+    -- 9
     component temac_10_100_1000_fifo_block
     port(
             gtx_clk                    : in  std_logic;
@@ -1057,7 +1099,7 @@ architecture Behavioral of vmmFrontEnd is
             rx_configuration_vector   : in  std_logic_vector(79 downto 0);
             tx_configuration_vector   : in  std_logic_vector(79 downto 0));
     end component;
-    -- 13
+    -- 10
     component temac_10_100_1000_reset_sync
         port ( 
             reset_in           : in  std_logic;    -- Active high asynchronous reset
@@ -1065,7 +1107,7 @@ architecture Behavioral of vmmFrontEnd is
             clk                : in  std_logic;    -- clock to be sync'ed to
             reset_out          : out std_logic);     -- "Synchronised" reset signal
     end component;
-    -- 14
+    -- 11
     component temac_10_100_1000_config_vector_sm is
     port(
       gtx_clk                 : in  std_logic;
@@ -1075,14 +1117,14 @@ architecture Behavioral of vmmFrontEnd is
       rx_configuration_vector : out std_logic_vector(79 downto 0);
       tx_configuration_vector : out std_logic_vector(79 downto 0));
     end component;
-    -- 15
+    -- 12
     component i2c_top is
     port(  
         clk_in                : in    std_logic;        
         phy_rstn_out          : out   std_logic
     );  
     end component;
-    -- 16
+    -- 13
     component udp_data_in_handler
     port(
         ------------------------------------
@@ -1138,7 +1180,7 @@ architecture Behavioral of vmmFrontEnd is
         xadc_delay          : out std_logic_vector(17 downto 0)
     );
     end component;
-    -- 17
+    -- 14
     component udp_reply_handler
     port(
         ------------------------------------
@@ -1155,7 +1197,7 @@ architecture Behavioral of vmmFrontEnd is
         end_conf        : out std_logic       
     );
     end component;
-    -- 18
+    -- 15
     component select_data
     port(
         configuring                 : in  std_logic;
@@ -1184,7 +1226,7 @@ architecture Behavioral of vmmFrontEnd is
         fifo_rst                    : out std_logic
     );
     end component;
-    -- 19
+    -- 16
     component ila_top_level
         PORT (  clk     : in std_logic;
                 probe0  : in std_logic_vector(63 DOWNTO 0);
@@ -1195,7 +1237,7 @@ architecture Behavioral of vmmFrontEnd is
                 probe5  : in std_logic_vector(63 DOWNTO 0)
                 );
     end component;
-    -- 20
+    -- 17
     component xadcModule
     port(
         clk125              : in std_logic;
@@ -1237,7 +1279,7 @@ architecture Behavioral of vmmFrontEnd is
         xadc_busy           : out std_logic
     );
     end component;
-    -- 21
+    -- 18
     component AXI4_SPI
     port(
         clk_200                 : in  std_logic;
@@ -1270,7 +1312,7 @@ architecture Behavioral of vmmFrontEnd is
         ss_t : OUT std_logic
     );
     end component;
-    -- 22
+    -- 19
     COMPONENT vio_ip
       PORT (
         clk        : IN std_logic;
@@ -1278,7 +1320,7 @@ architecture Behavioral of vmmFrontEnd is
         probe_out1 : OUT std_logic_VECTOR(47 DOWNTO 0)
       );
     END COMPONENT;
-    -- 23
+    -- 20
     component clk_gen_wrapper
     Port(
         ------------------------------------
@@ -1291,7 +1333,6 @@ architecture Behavioral of vmmFrontEnd is
         CKTP_raw            : out std_logic;
         ------------------------------------
         ----- Configuration Interface ------
-        ckbc_enable         : in  std_logic;
         cktp_enable         : in  std_logic;
         cktp_primary        : in  std_logic;
         readout_mode        : in  std_logic;
@@ -1307,14 +1348,14 @@ architecture Behavioral of vmmFrontEnd is
         CKBC                : out std_logic
     );
     end component;
-    -- 24
+    -- 21
     component ila_overview
     Port(
         clk     : in std_logic;
         probe0  : in std_logic_vector(63 downto 0)
     );
     end component;
-    -- 25
+    -- 22
     component artReadout --art_instance
     generic( is_mmfe8   : std_logic;
             artEnabled  : std_logic);
@@ -1325,6 +1366,26 @@ architecture Behavioral of vmmFrontEnd is
         artData         : in std_logic_vector(8 downto 1);
         vmmArtData125   : out std_logic_vector(5 downto 0);
         vmmArtReady     : out std_logic
+    );
+    end component;
+    -- 23
+    component vmm_oddr_wrapper
+    Port(
+        -------------------------------------------------------
+        ckdt_bufg       : in  std_logic;
+        ckdt_enable_vec : in  std_logic_vector(8 downto 1);
+        ckdt_toBuf_vec  : out std_logic_vector(8 downto 1);
+        -------------------------------------------------------
+        ckbc_bufg       : in  std_logic;
+        ckbc_enable     : in  std_logic;
+        ckbc_toBuf_vec  : out std_logic_vector(8 downto 1);
+        -------------------------------------------------------
+        cktp_bufg       : in  std_logic;
+        cktp_toBuf_vec  : out std_logic_vector(8 downto 1);
+        -------------------------------------------------------
+        ckart_bufg      : in  std_logic;
+        ckart_toBuf_vec : out std_logic_vector(9 downto 1)
+        -------------------------------------------------------
     );
     end component;
 
@@ -1622,48 +1683,28 @@ udp_reply_instance: udp_reply_handler
         end_conf        => end_packet_conf_int
     );
 
-clk_200_to_400_inst: clk_wiz_200_to_400
-    port map(
+mmcm_master: clk_wiz_gen    
+    port map (
+        -- Clock in ports
         clk_in1_p   => X_2V5_DIFF_CLK_P,
         clk_in1_n   => X_2V5_DIFF_CLK_N,
-        clk_out_400 => clk_400_noclean
-    );
-
-clk_400_low_jitter_inst: clk_wiz_low_jitter
-    port map(
-        clk_in1     => clk_400_noclean,
-        clk_out1    => clk_400_clean
-    );
-
-clk_user_inst: clk_wiz_0
-    port map(
-        clk_in1             => clk_400_clean,
-        reset               => '0',
-        clk_200_o           => clk_200,
-        clk_800_o           => clk_800,
-        clk_10_phase45_o    => clk_10_phase45,
-        clk_50_o            => clk_50,
-        clk_40_o            => clk_40,
-        clk_10_o            => clk_10,
-        clk_160_o           => clk_160
-   );
-
-mmcm_ckbc_cktp: clk_wiz_gen
-    port map ( 
-        clk_in_400  => clk_400_clean,
-        clk_out_160 => clk_160_gen,
-        clk_out_500 => clk_500_gen,
-        clk_out_320 => clk_320_gen,
+        -- Clock out ports  
+        clk_out_160 => clk_160,
+        clk_out_500 => clk_500,
+        clk_out_200 => clk_200,
+        clk_out_50  => clk_50,
+        clk_out_40  => clk_40,
+        -- Status and control signals                
         reset       => '0',
-        gen_locked  => clk_gen_locked            
+        gen_locked  => master_locked
     );
 
 event_timing_reset_instance: event_timing_reset
     port map(
-        hp_clk          => clk_800,
+        hp_clk          => '0', --clk_800
         clk             => userclk2,
-        clk_10_phase45  => clk_10_phase45,
-        bc_clk          => clk_10,
+        clk_10_phase45  => '0', --clk_10_phase45
+        bc_clk          => '0', --clk_10
 
         daqEnable       => daq_enable_i,
         pfBusy          => pfBusy_i,
@@ -1698,8 +1739,7 @@ readout_vmm: vmm_readout_wrapper
         dt_cntr_st_o    => dt_cntr_st,
         ------------------------------------
         ---- Level-0 Readout Interface -----
-        clk_ckdt        => clk_160_gen,
-        clk_des         => clk_320_gen,
+        clk_ckdt        => clk_160,
         rst_buff        => rst_l0_buff,
         rst_intf_proc   => rst_l0_pf,
         --
@@ -1720,7 +1760,8 @@ readout_vmm: vmm_readout_wrapper
         ---------- VMM3 Interface ----------
         vmm_data0_vec   => data0_in_vec,
         vmm_data1_vec   => data1_in_vec,
-        vmm_ckdt_vec    => ckdt_out_vec,
+        vmm_ckdt_glbl   => CKDT_glbl,
+        vmm_ckdt_enable => vmm_ckdt_enable,
         vmm_cktk_vec    => cktk_out_vec
     );
 
@@ -1729,7 +1770,7 @@ trigger_instance: trigger
     port map(
         clk             => userclk2,
         ckbc            => CKBC_glbl,
-        clk_art         => clk_160_gen,
+        clk_art         => clk_160,
         rst_trig        => glbl_rst_i,
         
         ckbcMode        => ckbcMode,
@@ -1928,15 +1969,14 @@ ckbc_cktp_generator: clk_gen_wrapper
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_500             => clk_500_gen,
-        clk_160             => clk_160_gen,
+        clk_500             => clk_500,
+        clk_160             => clk_160,
         clk_125             => userclk2,
         rst                 => glbl_rst_i,
-        mmcm_locked         => clk_gen_locked,
+        mmcm_locked         => master_locked,
         CKTP_raw            => CKTP_raw,
         ------------------------------------
         ----- Configuration Interface ------
-        ckbc_enable         => ckbc_enable,
         cktp_enable         => cktp_enable,
         cktp_primary        => vmm_cktp_primary, -- from flow_fsm
         readout_mode        => ckbcMode,
@@ -1981,12 +2021,32 @@ art_instance: artReadout
                 artEnabled => artEnabled)
     port map (
         clk             => userclk2,
-        clk_art         => clk_160_gen,
+        clk_art         => clk_160,
         trigger         => trraw_synced125_i,
         artData         => art_in_vec,
         vmmArtData125   => vmmArtData,
         vmmArtReady     => vmmArtReady
    );
+
+vmm_oddr_inst: vmm_oddr_wrapper
+    port map(
+        -------------------------------------------------------
+        ckdt_bufg       => CKDT_glbl,
+        ckdt_enable_vec => vmm_ckdt_enable,
+        ckdt_toBuf_vec  => ckdt_out_vec,
+        -------------------------------------------------------
+        ckbc_bufg       => CKBC_glbl,
+        ckbc_enable     => ckbc_enable,
+        ckbc_toBuf_vec  => vmm_ckbc_vec,
+        -------------------------------------------------------
+        cktp_bufg       => CKTP_glbl,
+        cktp_toBuf_vec  => vmm_cktp_vec,
+        -------------------------------------------------------
+        ckart_bufg      => clk_160,
+        ckart_toBuf_vec => ckart_vec
+        -------------------------------------------------------
+    );
+    
 
 ----------------------------------------------------CS------------------------------------------------------------
 cs_obuf_1:  OBUF  port map  (O => CS_1, I => vmm_cs_vec_obuf(1));
@@ -2051,24 +2111,24 @@ ena_diff_7: OBUFDS port map ( O =>  ENA_7_P, OB => ENA_7_N, I => vmm_ena_vec_obu
 ena_diff_8: OBUFDS port map ( O =>  ENA_8_P, OB => ENA_8_N, I => vmm_ena_vec_obuf(8));
 
 ----------------------------------------------------CKBC------------------------------------------------------------
-ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I =>  CKBC_glbl);
-ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I =>  CKBC_glbl);
-ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I =>  CKBC_glbl);
-ckbc_diff_4: OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I =>  CKBC_glbl);
-ckbc_diff_5: OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I =>  CKBC_glbl);
-ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I =>  CKBC_glbl);
-ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I =>  CKBC_glbl);
-ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I =>  CKBC_glbl);
+ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I => vmm_ckbc_vec(1));
+ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I => vmm_ckbc_vec(2));
+ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I => vmm_ckbc_vec(3));
+ckbc_diff_4: OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I => vmm_ckbc_vec(4));
+ckbc_diff_5: OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I => vmm_ckbc_vec(5));
+ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I => vmm_ckbc_vec(6));
+ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I => vmm_ckbc_vec(7));
+ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I => vmm_ckbc_vec(8));
 
 ----------------------------------------------------CKTP------------------------------------------------------------
-cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => CKTP_glbl);  
-cktp_diff_2: OBUFDS port map ( O =>  CKTP_2_P, OB => CKTP_2_N, I => CKTP_glbl);
-cktp_diff_3: OBUFDS port map ( O =>  CKTP_3_P, OB => CKTP_3_N, I => CKTP_glbl);
-cktp_diff_4: OBUFDS port map ( O =>  CKTP_4_P, OB => CKTP_4_N, I => CKTP_glbl);
-cktp_diff_5: OBUFDS port map ( O =>  CKTP_5_P, OB => CKTP_5_N, I => CKTP_glbl);
-cktp_diff_6: OBUFDS port map ( O =>  CKTP_6_P, OB => CKTP_6_N, I => CKTP_glbl);
-cktp_diff_7: OBUFDS port map ( O =>  CKTP_7_P, OB => CKTP_7_N, I => CKTP_glbl);
-cktp_diff_8: OBUFDS port map ( O =>  CKTP_8_P, OB => CKTP_8_N, I => CKTP_glbl);
+cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => vmm_cktp_vec(1));
+cktp_diff_2: OBUFDS port map ( O =>  CKTP_2_P, OB => CKTP_2_N, I => vmm_cktp_vec(2));
+cktp_diff_3: OBUFDS port map ( O =>  CKTP_3_P, OB => CKTP_3_N, I => vmm_cktp_vec(3));
+cktp_diff_4: OBUFDS port map ( O =>  CKTP_4_P, OB => CKTP_4_N, I => vmm_cktp_vec(4));
+cktp_diff_5: OBUFDS port map ( O =>  CKTP_5_P, OB => CKTP_5_N, I => vmm_cktp_vec(5));
+cktp_diff_6: OBUFDS port map ( O =>  CKTP_6_P, OB => CKTP_6_N, I => vmm_cktp_vec(6));
+cktp_diff_7: OBUFDS port map ( O =>  CKTP_7_P, OB => CKTP_7_N, I => vmm_cktp_vec(7));
+cktp_diff_8: OBUFDS port map ( O =>  CKTP_8_P, OB => CKTP_8_N, I => vmm_cktp_vec(8));
 
 ----------------------------------------------------CKTK------------------------------------------------------------
 cktk_diff_1: OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I => cktk_out_vec(1));
@@ -2115,14 +2175,14 @@ TKI_diff_1: OBUFDS port map ( O =>  TKI_P, OB => TKI_N, I => vmm_tki);
 TKO_diff_1: IBUFDS port map ( O =>  tko_i, I => TKO_P, IB => TKO_N);
 
 ---------------------------------------------------CKART----------------------------------------------------------------
-ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => clk_160);
-ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => clk_160);
-ckart_diff_3: OBUFDS port map ( O => CKART_3_P, OB => CKART_3_N, I => clk_160);
-ckart_diff_4: OBUFDS port map ( O => CKART_4_P, OB => CKART_4_N, I => clk_160);
-ckart_diff_5: OBUFDS port map ( O => CKART_5_P, OB => CKART_5_N, I => clk_160);
-ckart_diff_6: OBUFDS port map ( O => CKART_6_P, OB => CKART_6_N, I => clk_160);
-ckart_diff_7: OBUFDS port map ( O => CKART_7_P, OB => CKART_7_N, I => clk_160);
-ckart_diff_8: OBUFDS port map ( O => CKART_8_P, OB => CKART_8_N, I => clk_160);
+ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => ckart_vec(1));
+ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => ckart_vec(2));
+ckart_diff_3: OBUFDS port map ( O => CKART_3_P, OB => CKART_3_N, I => ckart_vec(3));
+ckart_diff_4: OBUFDS port map ( O => CKART_4_P, OB => CKART_4_N, I => ckart_vec(4));
+ckart_diff_5: OBUFDS port map ( O => CKART_5_P, OB => CKART_5_N, I => ckart_vec(5));
+ckart_diff_6: OBUFDS port map ( O => CKART_6_P, OB => CKART_6_N, I => ckart_vec(6));
+ckart_diff_7: OBUFDS port map ( O => CKART_7_P, OB => CKART_7_N, I => ckart_vec(7));
+ckart_diff_8: OBUFDS port map ( O => CKART_8_P, OB => CKART_8_N, I => ckart_vec(8));
 
 ----------------------------------------------------ART----------------------------------------------------------------
 art_diff_1: IBUFDS port map ( O => art_in_vec(1), I => ART_1_P, IB => ART_1_N);
@@ -2134,7 +2194,7 @@ art_diff_1: IBUFDS port map ( O => art_in_vec(1), I => ART_1_P, IB => ART_1_N);
 --art_diff_7: IBUFDS port map ( O => art_in_vec(7), I => ART_7_P, IB => ART_7_N);
 --art_diff_8: IBUFDS port map ( O => art_in_vec(8), I => ART_8_P, IB => ART_8_N);
 
-ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_N, I => clk_160);
+ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_N, I => ckart_vec(9));
 
 ----------------------------------------------------XADC----------------------------------------------------------------
 xadc_mux0_obuf:   OBUF   port map  (O => MuxAddr0, I => MuxAddr0_i);
@@ -2488,27 +2548,28 @@ end process;
 --        probe_out0  => default_IP,
 --        probe_out1  => default_MAC
 --      );
-
-    overviewProbe(3 downto 0)          <= is_state;
-    overviewProbe(8 downto 4)          <= pf_dbg_st;
-    overviewProbe(9)                   <= vmmWordReady_i;
-    overviewProbe(10)                  <= vmmEventDone_i;
-    overviewProbe(11)                  <= daq_enable_i;
-    overviewProbe(12)                  <= pf_trigVmmRo;
-    overviewProbe(14 downto 13)        <= (others => '0');
-    overviewProbe(15)                  <= rd_ena_buff;
-    overviewProbe(19 downto 16)        <= dt_state;
-    overviewProbe(23 downto 20)        <= FIFO2UDP_state;
-    overviewProbe(24)                  <= CKTP_glbl;
-    overviewProbe(25)                  <= UDPDone;
-    overviewProbe(26)                  <= CKBC_glbl;
-    overviewProbe(27)                  <= tr_out_i;
-    overviewProbe(29 downto 28)        <= (others => '0');
-    overviewProbe(30)                  <= level_0;
-    overviewProbe(31)                  <= rst_l0_pf;
-    overviewProbe(47 downto 32)        <= vmmWord_i;
-    overviewProbe(51 downto 48)        <= dt_cntr_st;
-    overviewProbe(63 downto 52)        <= (others => '0');
+    
+--    overviewProbe(3 downto 0)          <= is_state;
+--    overviewProbe(8 downto 4)          <= pf_dbg_st;
+--    overviewProbe(9)                   <= vmmWordReady_i;
+--    overviewProbe(10)                  <= vmmEventDone_i;
+--    overviewProbe(11)                  <= daq_enable_i;
+--    overviewProbe(12)                  <= pf_trigVmmRo;
+--    overviewProbe(14 downto 13)        <= (others => '0');
+--    overviewProbe(15)                  <= rd_ena_buff;
+--    overviewProbe(19 downto 16)        <= dt_state;
+--    overviewProbe(23 downto 20)        <= FIFO2UDP_state;
+--    overviewProbe(24)                  <= CKTP_glbl;
+--    overviewProbe(25)                  <= UDPDone;
+--    overviewProbe(26)                  <= CKBC_glbl;
+--    overviewProbe(27)                  <= tr_out_i;
+--    overviewProbe(29 downto 28)        <= (others => '0');
+--    overviewProbe(30)                  <= level_0;
+--    overviewProbe(31)                  <= rst_l0_pf;
+--    overviewProbe(47 downto 32)        <= vmmWord_i;
+--    overviewProbe(51 downto 48)        <= dt_cntr_st;
+--    overviewProbe(59 downto 52)        <= linkHealth_bmsk;
+--    overviewProbe(63 downto 60)        <= (others => '0');
 
     vmmSignalsProbe(7 downto 0)        <= (others => '0');
     vmmSignalsProbe(15 downto 8)       <= cktk_out_vec;

@@ -31,10 +31,11 @@ entity vmm_readout is
 
             vmm_data0_vec           : in std_logic_vector(8 downto 1);     -- Single-ended data0 from VMM
             vmm_data1_vec           : in std_logic_vector(8 downto 1);     -- Single-ended data1 from VMM
-            vmm_ckdt_vec            : out std_logic_vector(8 downto 1);    -- Strobe to VMM CKDT
+            vmm_ckdt_enable         : out std_logic_vector(8 downto 1);    -- Enable signal for VMM CKDT
             vmm_cktk_vec            : out std_logic_vector(8 downto 1);    -- Strobe to VMM CKTK
             vmm_wen_vec             : out std_logic_vector(8 downto 1);    -- Strobe to VMM WEN
             vmm_ena_vec             : out std_logic_vector(8 downto 1);    -- Strobe to VMM ENA
+            vmm_ckdt                : out std_logic;                       -- Strobe to VMM CKDT 
 
             daq_enable              : in std_logic;
             trigger_pulse           : in std_logic;                     -- Trigger
@@ -103,7 +104,6 @@ architecture Behavioral of vmm_readout is
     signal vmm_data0_ff_sync    : std_logic := '0';
     signal vmm_data1_stage1     : std_logic := '0';
     signal vmm_data1_ff_sync    : std_logic := '0';
-    signal vmm_ckdt             : std_logic := '0';     -- Strobe to VMM CKDT
     signal vmm_cktk             : std_logic := '0';     -- Strobe to VMM CKTK
     signal vmm_ckdt_i           : std_logic := '0';
 
@@ -183,9 +183,8 @@ port(
     vmm_data0       : out std_logic;
     vmm_data1       : out std_logic;
     
-    vmm_ckdt        : in std_logic;
     vmm_cktk        : in std_logic;
-    vmm_ckdt_vec    : out std_logic_vector(8 downto 1);
+    vmm_ckdt_enable : out std_logic_vector(8 downto 1);
     vmm_cktk_vec    : out std_logic_vector(8 downto 1)
     );
 end component;
@@ -529,9 +528,8 @@ port map(
     vmm_data0       => vmm_data0,
     vmm_data1       => vmm_data1,
     
-    vmm_ckdt        => vmm_ckdt,
     vmm_cktk        => vmm_cktk,
-    vmm_ckdt_vec    => vmm_ckdt_vec,
+    vmm_ckdt_enable => vmm_ckdt_enable,
     vmm_cktk_vec    => vmm_cktk_vec
     );
 

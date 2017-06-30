@@ -29,7 +29,6 @@ entity level0_wrapper is
         ------------------------------------
         ------- General Interface ----------
         clk_ckdt        : in  std_logic; -- will be forwarded to the VMM
-        clk_des         : in  std_logic; -- must be twice the frequency of CKDT
         clk             : in  std_logic; -- buffer read domain
         rst_buff        : in  std_logic; -- reset buffer
         level_0         : in  std_logic; -- level-0 signal
@@ -49,7 +48,6 @@ entity level0_wrapper is
         ---------- VMM3 Interface ----------
         vmm_data0_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data0 from VMM
         vmm_data1_vec   : in  std_logic_vector(8 downto 1);  -- Single-ended data1 from VMM
-        vmm_ckdt_vec    : out std_logic_vector(8 downto 1);  -- Strobe to VMM CKDT
         vmm_cktk_vec    : out std_logic_vector(8 downto 1)   -- Strobe to VMM CKTK
     );
 end level0_wrapper;
@@ -61,7 +59,6 @@ component l0_deserializer_decoder
         ------------------------------------
         ------- General Interface ----------
         clk_ckdt    : in  std_logic; -- will be forwarded to the VMM
-        clk_des     : in  std_logic; -- must be twice the frequency of CKDT
         level_0     : in  std_logic; -- level-0 signal
         ------------------------------------
         -------- Buffer Interface ----------
@@ -71,7 +68,6 @@ component l0_deserializer_decoder
         wr_en       : out std_logic;
         ------------------------------------
         ---------- VMM Interface -----------
-        vmm_ckdt    : out std_logic;
         vmm_data0   : in  std_logic;
         vmm_data1   : in  std_logic
     );
@@ -81,7 +77,6 @@ component l0_buffer_wrapper is
     Port(
         ------------------------------------
         ------- General Interface ----------
-        clk_des         : in  std_logic;
         clk_ckdt        : in  std_logic;
         clk             : in  std_logic;
         rst_buff        : in  std_logic;
@@ -135,8 +130,6 @@ end component;
     signal commas_true_s1       : std_logic_vector(8 downto 1)  := (others => '0');
     signal vmmWord_i            : vmmWord_array;
     signal dout_dec             : dout_dec_array;
-
-    signal level_0_bufg         : std_logic := '0';
     
     attribute ASYNC_REG                         : string;
     attribute ASYNC_REG of commas_true_s0       : signal is "TRUE";
@@ -164,7 +157,6 @@ des_dec_inst: l0_deserializer_decoder
         ------------------------------------
         ------- General Interface ----------
         clk_ckdt    => clk_ckdt,
-        clk_des     => clk_des,
         level_0     => level_0,
         ------------------------------------
         -------- Buffer Interface ----------
@@ -174,7 +166,6 @@ des_dec_inst: l0_deserializer_decoder
         wr_en       => wr_en(I),
         ------------------------------------
         ---------- VMM Interface -----------
-        vmm_ckdt    => vmm_ckdt_vec(I),
         vmm_data0   => vmm_data0_vec(I),
         vmm_data1   => vmm_data1_vec(I)
     );
@@ -183,7 +174,6 @@ l0_buf_wr_inst: l0_buffer_wrapper
     Port Map(
         ------------------------------------
         ------- General Interface ----------
-        clk_des         => clk_des,
         clk_ckdt        => clk_ckdt,
         clk             => clk,
         rst_buff        => rst_buff,
@@ -298,15 +288,13 @@ begin
     end case;
 end process;
 
-LEVEL0_BUFG: BUFG port map(O => level_0_bufg, I => level_0);
-
-    vmm_cktk_vec(1) <= level_0_bufg;
-    vmm_cktk_vec(2) <= level_0_bufg;
-    vmm_cktk_vec(3) <= level_0_bufg;
-    vmm_cktk_vec(4) <= level_0_bufg;
-    vmm_cktk_vec(5) <= level_0_bufg;
-    vmm_cktk_vec(6) <= level_0_bufg;
-    vmm_cktk_vec(7) <= level_0_bufg;
-    vmm_cktk_vec(8) <= level_0_bufg;
+    vmm_cktk_vec(1) <= level_0;
+    vmm_cktk_vec(2) <= level_0;
+    vmm_cktk_vec(3) <= level_0;
+    vmm_cktk_vec(4) <= level_0;
+    vmm_cktk_vec(5) <= level_0;
+    vmm_cktk_vec(6) <= level_0;
+    vmm_cktk_vec(7) <= level_0;
+    vmm_cktk_vec(8) <= level_0;
     
 end RTL;

@@ -145,6 +145,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/configuration/trint_gen.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/ckbc_gen.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/skew_gen.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/vmm_oddr_wrapper.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_REQ.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_RX.vhd"]"\
@@ -182,13 +183,10 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/Code8b10bPkg.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/Decoder8b10b.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/StdRtlPkg.vhd"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_0_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_user_FIFO.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_200_to_400.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_pf.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/readout_fifo.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_low_jitter.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_readout.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/temac_10_100_1000.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/gig_ethernet_pcs_pma_0.xcix"]"\
@@ -281,6 +279,11 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/configuration/skew_gen.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/vmm_oddr_wrapper.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
@@ -597,6 +600,14 @@ if {[string equal [get_filesets -quiet constrs_1] ""]} {
 # Set 'constrs_1' fileset object
 set obj [get_filesets constrs_1]
 
+# General constraints add
+set file "[file normalize "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"]"
+set file_added [add_files -norecurse -fileset $obj $file]
+set file "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
+set_property "file_type" "XDC" $file_obj
+
 if {$argv == "mdt_mu2e"} {    
     # Add/Import constrs file and set constrs file properties from argument
     set file "[file normalize "$origin_dir/constrs_1/mdt_mu2e.xdc"]"
@@ -638,14 +649,6 @@ if {$argv == "mdt_mu2e"} {
     set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
     set_property "file_type" "XDC" $file_obj
 } else { puts "ERROR!"} 
-
-# General constraints add
-set file "[file normalize "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"]"
-set file_added [add_files -norecurse -fileset $obj $file]
-set file "$origin_dir/constrs_1/vmm3_glbl_constr.xdc"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets constrs_1] [list "*$file"]]
-set_property "file_type" "XDC" $file_obj
 
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]

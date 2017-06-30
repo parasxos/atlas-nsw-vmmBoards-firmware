@@ -2,6 +2,7 @@
 #============================= Primary Clocks =========================
 create_clock -period 5.000 -name X_2V5_DIFF_CLK_P -waveform {0.000 2.500} [get_ports X_2V5_DIFF_CLK_P]
 create_clock -period 8.000 -name gtrefclk_p       -waveform {0.000 4.000} [get_ports gtrefclk_p]
+
 #============================= Virtual Clocks =========================
 #============================= Generated Clocks =======================
 ## SPI FLASH BEGIN ##
@@ -10,7 +11,48 @@ create_clock -period 8.000 -name gtrefclk_p       -waveform {0.000 4.000} [get_p
 # create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_quad_spi_0/ext_spi_clk] [get_pins -hierarchical *USRCCLKO] -edges {3 5 7} -edge_shift [list $cclk_delay $cclk_delay $cclk_delay]
 create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_SPI/ext_spi_clk] -edges {3 5 7} -edge_shift {6.700 6.700 6.700} [get_pins -hierarchical *USRCCLKO]
 ## SPI FLASH END ##
+
+# Continuous readout generated clock
+create_generated_clock -name roClkCont -source [get_pins mmcm_master/inst/mmcm_adv_inst/CLKOUT3] -divide_by 2 [get_pins readout_vmm/continuousReadoutMode.readout_vmm_cont/vmm_ckdt_i_reg/Q]
+
+# CKBC generated clock
+create_generated_clock -name ckbc_clk -source [get_pins mmcm_master/inst/mmcm_adv_inst/CLKOUT0] -divide_by 4 [get_pins ckbc_cktp_generator/ckbc_generator/ckbc_out_reg/Q]
+
+# ODDR/CKDT
+create_generated_clock -name ckdt_1 -source [get_pins vmm_oddr_inst/ODDR_CKDT_1/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_1/Q]
+create_generated_clock -name ckdt_2 -source [get_pins vmm_oddr_inst/ODDR_CKDT_2/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_2/Q]
+create_generated_clock -name ckdt_3 -source [get_pins vmm_oddr_inst/ODDR_CKDT_3/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_3/Q]
+create_generated_clock -name ckdt_4 -source [get_pins vmm_oddr_inst/ODDR_CKDT_4/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_4/Q]
+create_generated_clock -name ckdt_5 -source [get_pins vmm_oddr_inst/ODDR_CKDT_5/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_5/Q]
+create_generated_clock -name ckdt_6 -source [get_pins vmm_oddr_inst/ODDR_CKDT_6/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_6/Q]
+create_generated_clock -name ckdt_7 -source [get_pins vmm_oddr_inst/ODDR_CKDT_7/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_7/Q]
+create_generated_clock -name ckdt_8 -source [get_pins vmm_oddr_inst/ODDR_CKDT_8/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKDT_8/Q]
+
+# ODDR/CKBC
+create_generated_clock -name ckbc_1 -source [get_pins vmm_oddr_inst/ODDR_CKBC_1/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_1/Q]
+create_generated_clock -name ckbc_2 -source [get_pins vmm_oddr_inst/ODDR_CKBC_2/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_2/Q]
+create_generated_clock -name ckbc_3 -source [get_pins vmm_oddr_inst/ODDR_CKBC_3/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_3/Q]
+create_generated_clock -name ckbc_4 -source [get_pins vmm_oddr_inst/ODDR_CKBC_4/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_4/Q]
+create_generated_clock -name ckbc_5 -source [get_pins vmm_oddr_inst/ODDR_CKBC_5/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_5/Q]
+create_generated_clock -name ckbc_6 -source [get_pins vmm_oddr_inst/ODDR_CKBC_6/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_6/Q]
+create_generated_clock -name ckbc_7 -source [get_pins vmm_oddr_inst/ODDR_CKBC_7/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_7/Q]
+create_generated_clock -name ckbc_8 -source [get_pins vmm_oddr_inst/ODDR_CKBC_8/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_8/Q]
+
+# ODDR/CKART
+create_generated_clock -name ckart_1 -source [get_pins vmm_oddr_inst/ODDR_CKART_1/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_1/Q]
+create_generated_clock -name ckart_2 -source [get_pins vmm_oddr_inst/ODDR_CKART_2/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_2/Q]
+create_generated_clock -name ckart_3 -source [get_pins vmm_oddr_inst/ODDR_CKART_3/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_3/Q]
+create_generated_clock -name ckart_4 -source [get_pins vmm_oddr_inst/ODDR_CKART_4/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_4/Q]
+create_generated_clock -name ckart_5 -source [get_pins vmm_oddr_inst/ODDR_CKART_5/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_5/Q]
+create_generated_clock -name ckart_6 -source [get_pins vmm_oddr_inst/ODDR_CKART_6/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_6/Q]
+create_generated_clock -name ckart_7 -source [get_pins vmm_oddr_inst/ODDR_CKART_7/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_7/Q]
+create_generated_clock -name ckart_8 -source [get_pins vmm_oddr_inst/ODDR_CKART_8/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_8/Q]
+
+
 #============================= Clock Groups ===========================
+# Exclusive clock group between the two possible CKDTs
+#set_clock_groups -name exclusive_clk0_clk1 -physically_exclusive -group roClkCont -group [get_pins mmcm_master/inst/mmcm_adv_inst/CLKOUT2]
+
 #============================= I/O Delays =============================
 ## SPI FLASH BEGIN ##
 # Data is captured into FPGA on the second rising edge of ext_spi_clk after the SCK falling edge
@@ -24,8 +66,8 @@ set_output_delay -clock clk_sck -max 2.050 [get_ports IO*_IO]
 set_output_delay -clock clk_sck -min -2.950 [get_ports IO*_IO]
 ## SPI FLASH END ##
 
-set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
-#mmcm_ckbc_cktp/inst/mmcm_adv_inst/CLKOUT1
+#set_input_delay 1.0 -clock [get_clocks -of_objects [get_pins clk_user_inst/inst/mmcm_adv_inst/CLKOUT0]] [get_ports CH_TRIGGER]
+#mmcm_master/inst/mmcm_adv_inst/CLKOUT1
 #============================= Primary Clocks =========================
 #======================================================================
 
@@ -44,7 +86,7 @@ set_false_path -from [get_cells art_instance/enableReadout125_reg] -to [get_cell
 # CKTP/CKBC enabling false path
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_start_i_reg]
 set_false_path -from [get_cells rstFIFO_top_reg]      -to [get_cells ckbc_cktp_generator/cktp_generator/cktp_primary_i_reg]
-set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
+#set_false_path -from [get_cells ckbc_enable_reg]      -to [get_cells ckbc_cktp_generator/ckbc_generator/ready_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/ext_trigger_reg] -to [get_cells ckbc_cktp_generator/cktp_max_module/fsm_enable_i_reg]
 set_false_path -from [get_cells FSM_sequential_state_reg[*]] -to [get_cells ckbc_cktp_generator/cktp_max_module/inhibit_async_i_reg]
@@ -73,7 +115,7 @@ set_false_path -from [get_cells udp_din_conf_block/CDCC_40to125/data_in_reg_reg[
 set_false_path -from [get_cells udp_din_conf_block/CDCC_125to40/data_in_reg_reg[*]] -to [get_cells udp_din_conf_block/CDCC_125to40/data_sync_stage_0_reg[*]]
 
 # MMCM related false paths
-set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
+#set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
 
 # Continuous Readout related false paths
 #125
@@ -216,9 +258,9 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_1_N]
 
 #======================= Configurable CKBC/CKTP Constraints ==========
 # 160 MHz global clock buffer placement constraint
-set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_ckbc_cktp/inst/clkout1_buf]
+#set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_master/inst/clkout1_buf]
 # 500 Mhz global clock buffer placement constraint
-set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_ckbc_cktp/inst/clkout2_buf]
+#set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_master/inst/clkout2_buf]
 
 # CKBC global buffer placement constraint
 set_property LOC BUFGCTRL_X0Y0 [get_cells ckbc_cktp_generator/CKBC_BUFGMUX]

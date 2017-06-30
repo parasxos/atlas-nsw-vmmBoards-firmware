@@ -23,9 +23,8 @@ entity vmmSignalsDemux is
            vmm_data1_vec : in STD_LOGIC_VECTOR (8 downto 1);
            vmm_data0 : out STD_LOGIC;
            vmm_data1 : out STD_LOGIC;
-           vmm_ckdt : in STD_LOGIC;
            vmm_cktk : in STD_LOGIC;
-           vmm_ckdt_vec : out STD_LOGIC_VECTOR (8 downto 1);
+           vmm_ckdt_enable : out STD_LOGIC_VECTOR (8 downto 1);
            vmm_cktk_vec : out STD_LOGIC_VECTOR (8 downto 1)
            );
 end vmmSignalsDemux;
@@ -51,14 +50,14 @@ begin
                     vmm_data1_vec(7) when (selVMM = b"110") else
                     vmm_data1_vec(8) when (selVMM = b"111");
                     
-    vmm_ckdt_vec(1)     <= vmm_ckdt when (selVMM = b"000") else '0';
-    vmm_ckdt_vec(2)     <= vmm_ckdt when (selVMM = b"001") else '0';
-    vmm_ckdt_vec(3)     <= vmm_ckdt when (selVMM = b"010") else '0';
-    vmm_ckdt_vec(4)     <= vmm_ckdt when (selVMM = b"011") else '0';
-    vmm_ckdt_vec(5)     <= vmm_ckdt when (selVMM = b"100") else '0';
-    vmm_ckdt_vec(6)     <= vmm_ckdt when (selVMM = b"101") else '0';
-    vmm_ckdt_vec(7)     <= vmm_ckdt when (selVMM = b"110") else '0';
-    vmm_ckdt_vec(8)     <= vmm_ckdt when (selVMM = b"111") else '0';
+    vmm_ckdt_enable(1) <= '1' when (selVMM = b"000") else '0';
+    vmm_ckdt_enable(2) <= '1' when (selVMM = b"001") else '0';
+    vmm_ckdt_enable(3) <= '1' when (selVMM = b"010") else '0';
+    vmm_ckdt_enable(4) <= '1' when (selVMM = b"011") else '0';
+    vmm_ckdt_enable(5) <= '1' when (selVMM = b"100") else '0';
+    vmm_ckdt_enable(6) <= '1' when (selVMM = b"101") else '0';
+    vmm_ckdt_enable(7) <= '1' when (selVMM = b"110") else '0';
+    vmm_ckdt_enable(8) <= '1' when (selVMM = b"111") else '0';
     
     vmm_cktk_vec(1)     <= vmm_cktk when (selVMM = b"000") else '0';
     vmm_cktk_vec(2)     <= vmm_cktk when (selVMM = b"001") else '0';

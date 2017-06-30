@@ -24,7 +24,6 @@ entity l0_buffer_wrapper is
     Port(
         ------------------------------------
         ------- General Interface ----------
-        clk_des         : in  std_logic;
         clk_ckdt        : in  std_logic;
         clk             : in  std_logic;
         rst_buff        : in  std_logic;

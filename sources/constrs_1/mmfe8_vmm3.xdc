@@ -74,6 +74,21 @@ set_output_delay 0.8 -clock [get_clocks ckbc_8] [get_ports CKTK_8_P]
 set_output_delay 0.8 -clock [get_clocks ckbc_8] [get_ports CKTK_8_N]
 #-----------------------------------------------------------------------------------------------------------------------------
 
+#------------------- CKBC/CKTP placement constraints  ------------------------------------------------------------------------
+# register-to-CKBC buffer placement constraint
+# xc7a200tfbg484
+set_property LOC SLICE_X83Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
+
+# register-to-CKTP buffer placement constraint
+# xc7a200tfbg484
+set_property LOC SLICE_X83Y146 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+set_property LOC SLICE_X83Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+
+# critical register of cktp generator placement constraint
+# xc7a200tfbg484
+set_property LOC SLICE_X82Y146 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
+#-----------------------------------------------------------------------------------------------------------------------------
+
 #====================== I/O Placement - IOSTANDARDS ===================
 ############################# MMFE8 #############################
 set_property PACKAGE_PIN W19     [get_ports X_2V5_DIFF_CLK_P]

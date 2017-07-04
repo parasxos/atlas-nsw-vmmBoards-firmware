@@ -14,8 +14,23 @@ set_input_delay -max 0.4 -clock [get_clocks ckdt_1] [get_ports DATA1_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
 
 #-------------------------------------- CKTK/L0 delay ------------------------------------------------------------------------
-set_output_delay -clock [get_clocks ckbc_1] 0.3 [get_ports CKTK_1_P]
-set_output_delay -clock [get_clocks ckbc_1] 0.3 [get_ports CKTK_1_N]
+set_output_delay 0.3 -clock [get_clocks ckbc_1] [get_ports CKTK_1_P]
+set_output_delay 0.3 -clock [get_clocks ckbc_1] [get_ports CKTK_1_N]
+#-----------------------------------------------------------------------------------------------------------------------------
+
+#------------------- CKBC/CKTP placement constraints  ------------------------------------------------------------------------
+# register-to-CKBC buffer placement constraint
+# xc7a200tfbg484
+set_property LOC SLICE_X83Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
+
+# register-to-CKTP buffer placement constraint
+# xc7a200tfbg484
+set_property LOC SLICE_X83Y146 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+set_property LOC SLICE_X83Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+
+# critical register of cktp generator placement constraint
+# xc7a200tfbg484
+set_property LOC SLICE_X82Y146 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
 #-----------------------------------------------------------------------------------------------------------------------------
 
 #====================== I/O Placement - IOSTANDARDS ===================

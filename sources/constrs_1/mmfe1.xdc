@@ -18,6 +18,21 @@ set_output_delay 0.3 -clock [get_clocks ckbc_1] [get_ports CKTK_1_P]
 set_output_delay 0.3 -clock [get_clocks ckbc_1] [get_ports CKTK_1_N]
 #-----------------------------------------------------------------------------------------------------------------------------
 
+#------------------- CKBC/CKTP placement constraints  ------------------------------------------------------------------------
+# register-to-CKBC buffer placement constraint
+# xc7a100tfgg484
+set_property LOC SLICE_X51Y95 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
+
+# register-to-CKTP buffer placement constraint
+# xc7a100tfgg484
+set_property LOC SLICE_X51Y96 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
+set_property LOC SLICE_X51Y97 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+
+# critical register of cktp generator placement constraint
+# xc7a100tfgg484
+set_property LOC SLICE_X52Y96 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
+#-----------------------------------------------------------------------------------------------------------------------------
+
 #====================== I/O Placement - IOSTANDARDS ===================
 
 ############################# MMFE1 #############################

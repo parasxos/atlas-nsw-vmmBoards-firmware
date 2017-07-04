@@ -257,51 +257,22 @@ set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets ART_1_N]
 #=====================================================================
 
 #======================= Configurable CKBC/CKTP Constraints ==========
-# 160 MHz global clock buffer placement constraint
-#set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_master/inst/clkout1_buf]
-# 500 Mhz global clock buffer placement constraint
-#set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_master/inst/clkout2_buf]
 
 # CKBC global buffer placement constraint
 set_property LOC BUFGCTRL_X0Y0 [get_cells ckbc_cktp_generator/CKBC_BUFGMUX]
-# register-to-CKBC buffer placement constraint
-set_property LOC SLICE_X83Y145 [get_cells ckbc_cktp_generator/ckbc_generator/ckbc_out_reg]
 
 # CKTP global buffer placement constraint
 set_property LOC BUFGCTRL_X0Y3 [get_cells ckbc_cktp_generator/CKTP_BUFGMUX]
-# register-to-CKTP buffer placement constraint
-set_property LOC SLICE_X83Y146 [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
-set_property LOC SLICE_X83Y147 [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
-
-# critical register of cktp generator placement constraint
-set_property LOC SLICE_X82Y146 [get_cells ckbc_cktp_generator/cktp_generator/start_align_cnt_reg]
 
 #ASYNC_REG to skewing pipeline
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_04_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_08_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_10_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_12_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_14_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_16_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_18_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_20_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_22_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_24_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_26_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_28_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_30_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_32_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_34_reg]
-#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_36_reg]
 
 #False paths for skewing pipeline (Caution!! Those lines might not be needed. It should be validated with an oscilloscope) 
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
-set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+#set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 
 # Added to disable timing to known artifact of phase skewing 
 set arcs [get_timing_arcs -of_objects \

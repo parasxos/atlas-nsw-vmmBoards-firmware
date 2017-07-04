@@ -10,6 +10,32 @@ create_clock -period 8.000 -name gtrefclk_p       -waveform {0.000 4.000} [get_p
 # create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_quad_spi_0/ext_spi_clk] [get_pins -hierarchical *USRCCLKO] -edges {3 5 7} -edge_shift [list $cclk_delay $cclk_delay $cclk_delay]
 create_generated_clock -name clk_sck -source [get_pins -hierarchical *axi_SPI/ext_spi_clk] -edges {3 5 7} -edge_shift {6.700 6.700 6.700} [get_pins -hierarchical *USRCCLKO]
 ## SPI FLASH END ##
+# Continuous readout generated clock
+create_generated_clock -name roClkCont -source [get_pins mmcm_master/inst/mmcm_adv_inst/CLKOUT4] -divide_by 2 [get_pins readout_vmm/vmm_ckdt_i_reg/Q]
+
+# CKBC generated clock
+create_generated_clock -name ckbc_clk -source [get_pins mmcm_master/inst/mmcm_adv_inst/CLKOUT2] -divide_by 4 [get_pins ckbc_cktp_generator/ckbc_generator/ckbc_out_reg/Q]
+
+
+# ODDR/CKBC
+create_generated_clock -name ckbc_1 -source [get_pins vmm_oddr_inst/ODDR_CKBC_1/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_1/Q]
+create_generated_clock -name ckbc_2 -source [get_pins vmm_oddr_inst/ODDR_CKBC_2/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_2/Q]
+create_generated_clock -name ckbc_3 -source [get_pins vmm_oddr_inst/ODDR_CKBC_3/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_3/Q]
+create_generated_clock -name ckbc_4 -source [get_pins vmm_oddr_inst/ODDR_CKBC_4/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_4/Q]
+create_generated_clock -name ckbc_5 -source [get_pins vmm_oddr_inst/ODDR_CKBC_5/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_5/Q]
+create_generated_clock -name ckbc_6 -source [get_pins vmm_oddr_inst/ODDR_CKBC_6/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_6/Q]
+create_generated_clock -name ckbc_7 -source [get_pins vmm_oddr_inst/ODDR_CKBC_7/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_7/Q]
+create_generated_clock -name ckbc_8 -source [get_pins vmm_oddr_inst/ODDR_CKBC_8/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKBC_8/Q]
+
+# ODDR/CKART
+create_generated_clock -name ckart_1 -source [get_pins vmm_oddr_inst/ODDR_CKART_1/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_1/Q]
+create_generated_clock -name ckart_2 -source [get_pins vmm_oddr_inst/ODDR_CKART_2/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_2/Q]
+create_generated_clock -name ckart_3 -source [get_pins vmm_oddr_inst/ODDR_CKART_3/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_3/Q]
+create_generated_clock -name ckart_4 -source [get_pins vmm_oddr_inst/ODDR_CKART_4/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_4/Q]
+create_generated_clock -name ckart_5 -source [get_pins vmm_oddr_inst/ODDR_CKART_5/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_5/Q]
+create_generated_clock -name ckart_6 -source [get_pins vmm_oddr_inst/ODDR_CKART_6/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_6/Q]
+create_generated_clock -name ckart_7 -source [get_pins vmm_oddr_inst/ODDR_CKART_7/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_7/Q]
+create_generated_clock -name ckart_8 -source [get_pins vmm_oddr_inst/ODDR_CKART_8/C] -divide_by 1 [get_pins vmm_oddr_inst/ODDR_CKART_8/Q]
 #============================= Clock Groups ===========================
 #============================= I/O Delays =============================
 ## SPI FLASH BEGIN ##
@@ -61,8 +87,8 @@ set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/myIP_set_re
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/myMAC_set_reg[*]]
 set_false_path -from [get_cells udp_din_conf_block/fpga_config_logic/destIP_set_reg[*]]
 
-# MMCM related false paths
-set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
+## MMCM related false paths
+#set_false_path -from [get_cells clk_400_low_jitter_inst/inst/seq_reg1_reg[*]] -to [get_cells clk_400_low_jitter_inst/inst/clkout1_buf]
 
 # Readout related false paths
 set_false_path -from [get_cells packet_formation_instance/triggerVmmReadout_i_reg] -to [get_cells readout_vmm/trigger_pulse_stage1_reg]
@@ -71,7 +97,18 @@ set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/daq
 set_false_path -from [get_cells readout_vmm/vmmEventDone_i_reg] -to [get_cells readout_vmm/vmmEventDone_stage1_reg]
 set_false_path -from [get_cells readout_vmm/vmmWord_i_reg[*]] -to [get_cells readout_vmm/vmmWord_stage1_reg[*]]
 set_false_path -from [get_cells readout_vmm/vmmWordReady_i_reg] -to [get_cells readout_vmm/vmmWordReady_stage1_reg]
+set_false_path -from [get_cells readout_vmm/reading_out_word_reg] -to [get_cells readout_vmm/reading_out_word_stage1_reg]
+set_false_path -from [get_cells readout_vmm/cktkSent_reg] -to [get_cells readout_vmm/cktkSent_stage1_reg]
+set_false_path -from [get_cells packet_formation_instance/vmmId_i_reg[*]] -to [get_cells readout_vmm/vmm_data0_stage1_reg]
+set_false_path -from [get_cells packet_formation_instance/vmmId_i_reg[*]] -to [get_cells readout_vmm/vmm_data1_stage1_reg]
+set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells readout_vmm/daq_enable_stage1_Dt_reg]
 
+#CKBC related false paths
+set_false_path -from [get_cells packet_formation_instance/pfBusy_i_reg] -to [get_cells event_timing_reset_instance/pfBusy_i_reg]
+set_false_path -from [get_cells daq_enable_i_reg] -to [get_cells event_timing_reset_instance/daqEnable_i_reg]
+set_false_path -from [get_cells event_timing_reset_instance/reset_latched_i_reg] -to [get_cells event_timing_reset_instance/reset_latched_s_0_reg]
+set_false_path -from [get_cells event_timing_reset_instance/rst_i_reg] -to [get_cells event_timing_reset_instance/rst_s_0_reg]
+set_false_path -from [get_cells event_timing_reset_instance/rst_done_reg] -to [get_cells event_timing_reset_instance/rst_done_i_reg]
 
 #============================== Min/Max Delay =========================
 ## SPI FLASH BEGIN ##
@@ -142,8 +179,8 @@ set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_ff_sync_Dt_reg]
 
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/trigger_pulse_ff_sync_reg]
-set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_i_reg[*]]
-set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
+#set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_i_reg[*]]
+#set_property ASYNC_REG true [get_cells readout_vmm/cktk_max_sync_reg[*]]
 set_property ASYNC_REG true [get_cells readout_vmm/reading_out_word_stage1_reg]
 set_property ASYNC_REG true [get_cells readout_vmm/reading_out_word_ff_sync_reg]
 
@@ -168,9 +205,9 @@ set_property ASYNC_REG true [get_cells readout_vmm/daq_enable_stage1_reg]
 
 #======================= Configurable CKBC/CKTP Constraints ==========
 # 160 MHz global clock buffer placement constraint
-set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_ckbc_cktp/inst/clkout1_buf]
+#set_property LOC BUFGCTRL_X0Y1 [get_cells mmcm_ckbc_cktp/inst/clkout1_buf]
 # 500 Mhz global clock buffer placement constraint
-set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_ckbc_cktp/inst/clkout2_buf]
+#set_property LOC BUFGCTRL_X0Y2 [get_cells mmcm_ckbc_cktp/inst/clkout2_buf]
 
 # CKBC global buffer placement constraint
 set_property LOC BUFGCTRL_X0Y0 [get_cells ckbc_cktp_generator/CKBC_BUFGCE]
@@ -190,16 +227,16 @@ set_property LOC SLICE_X82Y146 [get_cells ckbc_cktp_generator/cktp_generator/sta
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_04_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_08_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_10_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_12_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_14_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_16_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_18_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_20_reg]
-set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_22_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_04_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_06_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_08_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_10_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_12_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_14_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_16_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_18_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_20_reg]
+#set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_22_reg]
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_24_reg]
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_26_reg]
 #set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_28_reg]
@@ -211,7 +248,7 @@ set_property ASYNC_REG true [get_cells ckbc_cktp_generator/skewing_module/cktp_2
 #False paths for skewing pipeline (Caution!! Those lines might not be needed. It should be validated with an oscilloscope) 
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 set_false_path -from [get_cells ckbc_cktp_generator/cktp_generator/vmm_cktp_reg] -to [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg]
-set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
+#set_false_path -from [get_cells ckbc_cktp_generator/skewing_module/cktp_02_reg] -to [get_cells ckbc_cktp_generator/skewing_module/CKTP_skewed_reg]
 
 # PBLOCKS (obsolete)
 #create_pblock pblock_skewing_module

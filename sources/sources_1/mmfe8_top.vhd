@@ -319,16 +319,12 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- MMCM/Configuration Signals
     -------------------------------------------------
-    
-    signal clk_400_noclean  : std_logic;
-    signal clk_400_clean    : std_logic;
-    signal clk_200          : std_logic;
+    signal clk_320          : std_logic;
+    signal clk_80           : std_logic;
     signal clk_160          : std_logic;
-    signal clk_800          : std_logic;
     signal clk_10_phase45   : std_logic;
     signal clk_50           : std_logic;
     signal clk_40           : std_logic;
-    signal clk_10           : std_logic;
     
     signal tko_i              : std_logic;
     signal cnt_reply          : integer := 0;
@@ -364,6 +360,10 @@ architecture Behavioral of mmfe8_top is
     signal ckdt_out_vec     : std_logic_vector(8 downto 1);
     signal data0_in_vec     : std_logic_vector(8 downto 1);
     signal data1_in_vec     : std_logic_vector(8 downto 1);
+    
+    signal vmm_ckbc_vec     : std_logic_vector(8 downto 1);
+    signal vmm_cktp_vec     : std_logic_vector(8 downto 1);
+    signal ckart_vec        : std_logic_vector(9 downto 1);
 
     signal CKTP_glbl        : std_logic := '0';
 
@@ -471,8 +471,6 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------------------------------------
     -- CKBC/CKTP Generator signals
     ------------------------------------------------------------------ 
-    signal clk_160_gen        : std_logic := '0';
-    signal clk_500_gen        : std_logic := '0';
     signal clk_gen_locked     : std_logic := '0';
     signal rst_gen            : std_logic := '0';  
     signal CKBC_glbl          : std_logic := '0';
@@ -636,70 +634,47 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
     -------------------------------------------------------------------
-    -- 1.  clk_wiz_200_to_400
-    -- 2.  clk_wiz_low_jitter
-    -- 3.  clk_wiz_0
-    -- 4.  clk_wiz_gen
-    -- 5.  event_timing_reset
-    -- 6.  vmm_readout
-    -- 7.  FIFO2UDP
-    -- 8.  trigger
-    -- 9.  packet_formation
-    -- 10. gig_ethernet_pcs_pma_0
-    -- 11. UDP_Complete_nomac
-    -- 12. temac_10_100_1000_fifo_block
-    -- 13. temac_10_100_1000_reset_sync
-    -- 14. temac_10_100_1000_config_vector_sm
-    -- 15. i2c_top
-    -- 16. udp_data_in_handler
-    -- 17. select_data
-    -- 18. ila_top_level
-    -- 19. xadc
-    -- 20. AXI4_SPI
-    -- 21. CDCC
-    -- 22. VIO_2
-    -- 23. clk_gen_wrapper
+    -- 1.  master_clk
+    -- 2.  event_timing_reset
+    -- 3.  vmm_readout
+    -- 4.  FIFO2UDP
+    -- 5.  trigger
+    -- 6.  packet_formation
+    -- 7. gig_ethernet_pcs_pma_0
+    -- 8. UDP_Complete_nomac
+    -- 9. temac_10_100_1000_fifo_block
+    -- 10. temac_10_100_1000_reset_sync
+    -- 11. temac_10_100_1000_config_vector_sm
+    -- 12. i2c_top
+    -- 13. udp_data_in_handler
+    -- 14. select_data
+    -- 15. ila_top_level
+    -- 16. xadc
+    -- 17. AXI4_SPI
+    -- 18. CDCC
+    -- 19. VIO_2
+    -- 20. clk_gen_wrapper
+    -- 21. vmm_oddr_wrapper
     -------------------------------------------------------------------
     -- 1
-    component clk_wiz_200_to_400
-      port(
-          clk_in1_p       : in     std_logic;
-          clk_in1_n       : in     std_logic;
-          clk_out_400     : out    std_logic
-      );
+    component master_clk
+    port
+     (  -- Clock in ports
+        clk_in1_p       : in  std_logic;
+        clk_in1_n       : in  std_logic;
+        -- Clock out ports
+        clk_out_40      : out std_logic;
+        clk_out_80      : out std_logic;
+        clk_out_160     : out std_logic;
+        clk_out_320     : out std_logic;
+        clk_out_50      : out std_logic;
+        clk_out_10_45   : out std_logic;
+        -- Status and control signals
+        reset           : in  std_logic;
+        locked          : out std_logic
+     );
     end component;
     -- 2
-    component clk_wiz_low_jitter
-      port(
-          clk_in1         : in     std_logic;
-          clk_out1        : out    std_logic
-      );
-    end component;
-    -- 3
-    component clk_wiz_0
-      port(
-          clk_in1         : in     std_logic;
-          reset           : in     std_logic;
-          clk_200_o       : out    std_logic;
-          clk_800_o       : out    std_logic;
-          clk_10_phase45_o: out    std_logic;
-          clk_50_o        : out    std_logic;
-          clk_40_o        : out    std_logic;
-          clk_10_o        : out    std_logic;
-          clk_160_o       : out    std_logic
-      );
-    end component;
-    -- 4
-    component clk_wiz_gen
-    port(
-        clk_in_400  : in     std_logic;
-        clk_out_160 : out    std_logic;
-        clk_out_500 : out    std_logic;
-        reset       : in     std_logic;
-        gen_locked  : out    std_logic
-    );
-    end component;
-    --5
     component event_timing_reset
       port(
           hp_clk          : in std_logic;
@@ -723,7 +698,7 @@ architecture Behavioral of mmfe8_top is
           reset_latched   : out std_logic
       );
     end component;    
-    -- 6
+    -- 3
     component vmm_readout is
         port ( 
             clkTkProc               : in std_logic;     -- Used to clock checking for data process
@@ -750,7 +725,7 @@ architecture Behavioral of mmfe8_top is
             vmmEventDone            : out std_logic
         );
     end component;
-    -- 7
+    -- 4
     component FIFO2UDP
         port ( 
             clk_125                     : in std_logic;
@@ -774,7 +749,7 @@ architecture Behavioral of mmfe8_top is
             trigger_out                 : out std_logic
         );
     end component;
-    -- 8
+    -- 5
     component trigger is
       port (
           clk             : in std_logic;
@@ -790,7 +765,7 @@ architecture Behavioral of mmfe8_top is
           tr_out          : out std_logic
       );
     end component;
-    -- 9
+    -- 6
     component packet_formation is
     port (
             clk         : in std_logic;
@@ -824,7 +799,7 @@ architecture Behavioral of mmfe8_top is
             --trigger     : in std_logic
     );
     end component;
-    -- 10
+    -- 7
     component gig_ethernet_pcs_pma_0
         port(
             -- Transceiver Interface
@@ -888,7 +863,7 @@ architecture Behavioral of mmfe8_top is
             gt0_pll0refclklost_out  : out std_logic;
             gt0_pll0lock_out        : out std_logic);
     end component;
-    -- 11
+    -- 8
     component UDP_ICMP_Complete_nomac
        Port (
             -- UDP TX signals
@@ -926,7 +901,7 @@ architecture Behavioral of mmfe8_top is
             mac_rx_tready           : out  std_logic;                           -- tells mac that we are ready to take data
             mac_rx_tlast            : in std_logic);                            -- indicates last byte of the trame
     end component;
-    -- 12
+    -- 9
     component temac_10_100_1000_fifo_block
     port(
             gtx_clk                    : in  std_logic;
@@ -981,7 +956,7 @@ architecture Behavioral of mmfe8_top is
             rx_configuration_vector   : in  std_logic_vector(79 downto 0);
             tx_configuration_vector   : in  std_logic_vector(79 downto 0));
     end component;
-    -- 13
+    -- 10
     component temac_10_100_1000_reset_sync
         port ( 
             reset_in           : in  std_logic;    -- Active high asynchronous reset
@@ -989,7 +964,7 @@ architecture Behavioral of mmfe8_top is
             clk                : in  std_logic;    -- clock to be sync'ed to
             reset_out          : out std_logic);     -- "Synchronised" reset signal
     end component;
-    -- 14
+    -- 11
     component temac_10_100_1000_config_vector_sm is
     port(
       gtx_clk                 : in  std_logic;
@@ -999,14 +974,14 @@ architecture Behavioral of mmfe8_top is
       rx_configuration_vector : out std_logic_vector(79 downto 0);
       tx_configuration_vector : out std_logic_vector(79 downto 0));
     end component;
-    -- 15
+    -- 12
     component i2c_top is
     port(  
         clk_in                : in    std_logic;        
         phy_rstn_out          : out   std_logic
     );  
     end component;
-    -- 16
+    -- 13
     component udp_data_in_handler
     port(
     ------------------------------------
@@ -1048,7 +1023,7 @@ architecture Behavioral of mmfe8_top is
     xadc_delay          : out std_logic_vector(17 downto 0)
     );
     end component;
-    -- 17
+    -- 14
     component select_data
     port(
         configuring                 : in  std_logic;
@@ -1076,7 +1051,7 @@ architecture Behavioral of mmfe8_top is
         fifo_rst                    : out std_logic
     );
     end component;
-    -- 18
+    -- 15
     component ila_top_level
         PORT (  clk     : in std_logic;
                 probe0  : in std_logic_vector(63 DOWNTO 0);
@@ -1087,8 +1062,8 @@ architecture Behavioral of mmfe8_top is
                 probe5  : in std_logic_vector(63 DOWNTO 0)
                 );
     end component;
-    -- 19
-    component xadc
+    -- 16
+    component xadcModule
     port(
         clk125              : in std_logic;
         rst                 : in std_logic;
@@ -1129,7 +1104,7 @@ architecture Behavioral of mmfe8_top is
         xadc_busy           : out std_logic
     );
     end component;
-    -- 20
+    -- 17
     component AXI4_SPI
     port(
         clk_200                 : in  std_logic;
@@ -1162,7 +1137,7 @@ architecture Behavioral of mmfe8_top is
         ss_t : OUT STD_LOGIC
     );
     end component;
-    -- 21
+    -- 18
     component CDCC
     generic(
         NUMBER_OF_BITS : integer := 8); -- number of signals to be synced
@@ -1173,7 +1148,7 @@ architecture Behavioral of mmfe8_top is
         data_out_s  : out std_logic_vector(NUMBER_OF_BITS - 1 downto 0)     -- synced data to clk_dst
     );
     end component;
-    -- 22
+    -- 19
     component vio_2
       port(
         clk        : IN STD_LOGIC;
@@ -1188,7 +1163,7 @@ architecture Behavioral of mmfe8_top is
         probe_out8 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
       );
     end component;
-    -- 23
+    -- 20
     component clk_gen_wrapper
     Port(
         ------------------------------------
@@ -1218,6 +1193,26 @@ architecture Behavioral of mmfe8_top is
         CKTP                : out std_logic;
         CKBC                : out std_logic;
         RST_VMM             : out std_logic
+    );
+    end component;
+    -- 21
+    component vmm_oddr_wrapper
+    Port(
+        -------------------------------------------------------
+        ckdt_bufg       : in  std_logic;
+        ckdt_enable_vec : in  std_logic_vector(8 downto 1);
+        ckdt_toBuf_vec  : out std_logic_vector(8 downto 1);
+        -------------------------------------------------------
+        ckbc_bufg       : in  std_logic;
+        ckbc_enable     : in  std_logic;
+        ckbc_toBuf_vec  : out std_logic_vector(8 downto 1);
+        -------------------------------------------------------
+        cktp_bufg       : in  std_logic;
+        cktp_toBuf_vec  : out std_logic_vector(8 downto 1);
+        -------------------------------------------------------
+        ckart_bufg      : in  std_logic;
+        ckart_toBuf_vec : out std_logic_vector(9 downto 1)
+        -------------------------------------------------------
     );
     end component;   
 
@@ -1273,7 +1268,7 @@ core_wrapper: gig_ethernet_pcs_pma_0
       mmcm_locked_out      => mmcm_locked,
       userclk_out          => userclk,
       userclk2_out         => userclk2,
-      independent_clock_bufg => clk_200,
+      independent_clock_bufg => clk_160,
       pma_reset_out        => pma_reset,
       sgmii_clk_r          => sgmii_clk_r,
       sgmii_clk_f          => sgmii_clk_f,
@@ -1458,7 +1453,7 @@ UDP_ICMP_block: UDP_ICMP_Complete_nomac
             mac_rx_tlast                => rx_axis_mac_tlast_int);
 
 i2c_module: i2c_top
-       port map(  clk_in                => clk_200,
+       port map(  clk_in                => clk_160,
                   phy_rstn_out          => phy_rstn_out);
 
 udp_din_conf_block: udp_data_in_handler
@@ -1501,45 +1496,27 @@ udp_din_conf_block: udp_data_in_handler
         xadc_sample_size    => xadc_sample_size,
         xadc_delay          => xadc_delay
     );
-
-clk_200_to_400_inst: clk_wiz_200_to_400
-    port map(
-        clk_in1_p   => X_2V5_DIFF_CLK_P,
-        clk_in1_n   => X_2V5_DIFF_CLK_N,
-        clk_out_400 => clk_400_noclean
-    );
-
-clk_400_low_jitter_inst: clk_wiz_low_jitter
-    port map(
-        clk_in1     => clk_400_noclean,
-        clk_out1    => clk_400_clean
-    );
-
-clk_user_inst: clk_wiz_0
-    port map(
-        clk_in1             => clk_400_clean,
-        reset               => '0',
-        clk_200_o           => clk_200,
-        clk_800_o           => clk_800,
-        clk_10_phase45_o    => clk_10_phase45,
-        clk_50_o            => clk_50,
-        clk_40_o            => clk_40,
-        clk_10_o            => clk_10,
-        clk_160_o           => clk_160
-   );
-
-mmcm_ckbc_cktp: clk_wiz_gen
-    port map ( 
-        clk_in_400  => clk_400_clean,
-        clk_out_160 => clk_160_gen,
-        clk_out_500 => clk_500_gen,
-        reset       => '0',
-        gen_locked  => clk_gen_locked            
-    );
+    
+mmcm_master: master_clk
+       port map ( 
+      -- Clock out ports  
+       clk_out_40       => clk_40,
+       clk_out_80       => clk_80,
+       clk_out_160      => clk_160,
+       clk_out_320      => clk_320,
+       clk_out_50       => clk_50,
+       clk_out_10_45    => clk_10_phase45,
+      -- Status and control signals                
+       reset            => '0',
+       locked           => clk_gen_locked,
+       -- Clock in ports
+       clk_in1_p        => X_2V5_DIFF_CLK_P,
+       clk_in1_n        => X_2V5_DIFF_CLK_N
+       );
 
 event_timing_reset_instance: event_timing_reset
     port map(
-        hp_clk          => clk_800,
+        hp_clk          => '0',
         clk             => userclk2,
         clk_10_phase45  => clk_10_phase45,
         bc_clk          => CKBC_glbl,
@@ -1685,7 +1662,7 @@ data_selection:  select_data
         fifo_rst                    => daqFIFO_reset
     );
 
-xadc_instance: xadc
+xadc_instance: xadcModule
     port map(
         clk125                      => userclk2,
         rst                         => '0', -- change this plz
@@ -1728,7 +1705,7 @@ xadc_instance: xadc
 
 axi4_spi_instance: AXI4_SPI  
     port map(
-        clk_200                => clk_200,
+        clk_200                => '0',
         clk_125                => userclk2,
         clk_50                 => clk_50,
         
@@ -1763,8 +1740,8 @@ ckbc_cktp_generator: clk_gen_wrapper
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_500             => clk_500_gen,
-        clk_160             => clk_160_gen,
+        clk_500             => clk_320,
+        clk_160             => clk_160,
         clk_125             => userclk2,    
         rst                 => rst_gen,
         mmcm_locked         => clk_gen_locked,
@@ -1813,6 +1790,25 @@ QSPI_SS_0: IOBUF
       I  => ss_o(0),
       T  => ss_t
    );
+   
+vmm_oddr_inst: vmm_oddr_wrapper
+       port map(
+           -------------------------------------------------------
+           ckdt_bufg       => '0', -- unused
+           ckdt_enable_vec => (others => '0'),
+           ckdt_toBuf_vec  => open,
+           -------------------------------------------------------
+           ckbc_bufg       => CKBC_glbl,
+           ckbc_enable     => ckbc_enable,
+           ckbc_toBuf_vec  => vmm_ckbc_vec,
+           -------------------------------------------------------
+           cktp_bufg       => CKTP_glbl,
+           cktp_toBuf_vec  => vmm_cktp_vec,
+           -------------------------------------------------------
+           ckart_bufg      => clk_160,
+           ckart_toBuf_vec => ckart_vec
+           -------------------------------------------------------
+       );
 
 
 ----------------------------------------------------DI-------------------------------------------------------------
@@ -1861,25 +1857,25 @@ wen_diff_6: OBUFDS port map ( O =>  WEN_6_P, OB => WEN_6_N, I => vmm_wen_vec(6))
 wen_diff_7: OBUFDS port map ( O =>  WEN_7_P, OB => WEN_7_N, I => vmm_wen_vec(7));
 wen_diff_8: OBUFDS port map ( O =>  WEN_8_P, OB => WEN_8_N, I => vmm_wen_vec(8));
 
-----------------------------------------------------CKBC--------------------------------------------------------------
-ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I => CKBC_glbl); -- CKBC_glbl
-ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I => CKBC_glbl);
-ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I => CKBC_glbl);
-ckbc_diff_4: OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I => CKBC_glbl);
-ckbc_diff_5: OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I => CKBC_glbl);
-ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I => CKBC_glbl);
-ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I => CKBC_glbl);
-ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I => CKBC_glbl);
+----------------------------------------------------CKBC------------------------------------------------------------
+ckbc_diff_1: OBUFDS port map ( O =>  CKBC_1_P, OB => CKBC_1_N, I => vmm_ckbc_vec(1));
+ckbc_diff_2: OBUFDS port map ( O =>  CKBC_2_P, OB => CKBC_2_N, I => vmm_ckbc_vec(2));
+ckbc_diff_3: OBUFDS port map ( O =>  CKBC_3_P, OB => CKBC_3_N, I => vmm_ckbc_vec(3));
+ckbc_diff_4: OBUFDS port map ( O =>  CKBC_4_P, OB => CKBC_4_N, I => vmm_ckbc_vec(4));
+ckbc_diff_5: OBUFDS port map ( O =>  CKBC_5_P, OB => CKBC_5_N, I => vmm_ckbc_vec(5));
+ckbc_diff_6: OBUFDS port map ( O =>  CKBC_6_P, OB => CKBC_6_N, I => vmm_ckbc_vec(6));
+ckbc_diff_7: OBUFDS port map ( O =>  CKBC_7_P, OB => CKBC_7_N, I => vmm_ckbc_vec(7));
+ckbc_diff_8: OBUFDS port map ( O =>  CKBC_8_P, OB => CKBC_8_N, I => vmm_ckbc_vec(8));
 
-----------------------------------------------------CKTP--------------------------------------------------------------  
-cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => CKTP_glbl); -- CKTP_glbl  
-cktp_diff_2: OBUFDS port map ( O =>  CKTP_2_P, OB => CKTP_2_N, I => CKTP_glbl);
-cktp_diff_3: OBUFDS port map ( O =>  CKTP_3_P, OB => CKTP_3_N, I => CKTP_glbl);
-cktp_diff_4: OBUFDS port map ( O =>  CKTP_4_P, OB => CKTP_4_N, I => CKTP_glbl);
-cktp_diff_5: OBUFDS port map ( O =>  CKTP_5_P, OB => CKTP_5_N, I => CKTP_glbl);
-cktp_diff_6: OBUFDS port map ( O =>  CKTP_6_P, OB => CKTP_6_N, I => CKTP_glbl);
-cktp_diff_7: OBUFDS port map ( O =>  CKTP_7_P, OB => CKTP_7_N, I => CKTP_glbl);
-cktp_diff_8: OBUFDS port map ( O =>  CKTP_8_P, OB => CKTP_8_N, I => CKTP_glbl);
+----------------------------------------------------CKTP------------------------------------------------------------
+cktp_diff_1: OBUFDS port map ( O =>  CKTP_1_P, OB => CKTP_1_N, I => vmm_cktp_vec(1));
+cktp_diff_2: OBUFDS port map ( O =>  CKTP_2_P, OB => CKTP_2_N, I => vmm_cktp_vec(2));
+cktp_diff_3: OBUFDS port map ( O =>  CKTP_3_P, OB => CKTP_3_N, I => vmm_cktp_vec(3));
+cktp_diff_4: OBUFDS port map ( O =>  CKTP_4_P, OB => CKTP_4_N, I => vmm_cktp_vec(4));
+cktp_diff_5: OBUFDS port map ( O =>  CKTP_5_P, OB => CKTP_5_N, I => vmm_cktp_vec(5));
+cktp_diff_6: OBUFDS port map ( O =>  CKTP_6_P, OB => CKTP_6_N, I => vmm_cktp_vec(6));
+cktp_diff_7: OBUFDS port map ( O =>  CKTP_7_P, OB => CKTP_7_N, I => vmm_cktp_vec(7));
+cktp_diff_8: OBUFDS port map ( O =>  CKTP_8_P, OB => CKTP_8_N, I => vmm_cktp_vec(8));
 
 ----------------------------------------------------CKTK--------------------------------------------------------------
 cktk_diff_1: OBUFDS port map ( O =>  CKTK_1_P, OB => CKTK_1_N, I => vmm_cktk_vec(1));
@@ -1922,16 +1918,16 @@ data1_diff_7: IBUFDS port map ( O => data1_in_vec(7), I => DATA1_7_P, IB => DATA
 data1_diff_8: IBUFDS port map ( O => data1_in_vec(8), I => DATA1_8_P, IB => DATA1_8_N);
 
 ---------------------------------------------------CKART-----------------------------------------------------------------
-ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => clk_160);
-ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => clk_160);
-ckart_diff_3: OBUFDS port map ( O => CKART_3_P, OB => CKART_3_N, I => clk_160);
-ckart_diff_4: OBUFDS port map ( O => CKART_4_P, OB => CKART_4_N, I => clk_160);
-ckart_diff_5: OBUFDS port map ( O => CKART_5_P, OB => CKART_5_N, I => clk_160);
-ckart_diff_6: OBUFDS port map ( O => CKART_6_P, OB => CKART_6_N, I => clk_160);
-ckart_diff_7: OBUFDS port map ( O => CKART_7_P, OB => CKART_7_N, I => clk_160);
-ckart_diff_8: OBUFDS port map ( O => CKART_8_P, OB => CKART_8_N, I => clk_160);
+ckart_diff_1: OBUFDS port map ( O => CKART_1_P, OB => CKART_1_N, I => ckart_vec(1));
+ckart_diff_2: OBUFDS port map ( O => CKART_2_P, OB => CKART_2_N, I => ckart_vec(2));
+ckart_diff_3: OBUFDS port map ( O => CKART_3_P, OB => CKART_3_N, I => ckart_vec(3));
+ckart_diff_4: OBUFDS port map ( O => CKART_4_P, OB => CKART_4_N, I => ckart_vec(4));
+ckart_diff_5: OBUFDS port map ( O => CKART_5_P, OB => CKART_5_N, I => ckart_vec(5));
+ckart_diff_6: OBUFDS port map ( O => CKART_6_P, OB => CKART_6_N, I => ckart_vec(6));
+ckart_diff_7: OBUFDS port map ( O => CKART_7_P, OB => CKART_7_N, I => ckart_vec(7));
+ckart_diff_8: OBUFDS port map ( O => CKART_8_P, OB => CKART_8_N, I => ckart_vec(8));
 
-ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_N, I => clk_160);
+ckart_addc_buf: OBUFDS port map ( O => CKART_ADDC_P, OB => CKART_ADDC_N, I => ckart_vec(9));
 
 ----------------------------------------------------XADC-----------------------------------------------------------------
 xadc_mux0_obuf:   OBUF   port map  (O => MuxAddr0, I => MuxAddr0_i);

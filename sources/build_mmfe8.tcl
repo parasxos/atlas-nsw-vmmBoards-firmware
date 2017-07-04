@@ -163,6 +163,7 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/configuration/ckbc_gen.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/skew_gen.vhd"]"\
  "[file normalize "$origin_dir/sources_1/configuration/trint_gen.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/configuration/vmm_oddr_wrapper.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_REQ.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/arp_RX.vhd"]"\
@@ -197,13 +198,11 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_reset_sync.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/sgmii_10_100_1000/ipcore_dir/temac_10_100_1000/example_design/common/temac_10_100_1000_sync_block.vhd"]"\
  "[file normalize "$origin_dir/sources_1/imports/CDCC.vhd"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_0.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/master_clk.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_0_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_user_FIFO.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_200_to_400.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_pf.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/readout_fifo.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_low_jitter.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_readout.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/temac_10_100_1000.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/gig_ethernet_pcs_pma_0.xcix"]"\
@@ -211,7 +210,6 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vio_2.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/clk_wiz_gen.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
@@ -284,6 +282,11 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/configuration/trint_gen.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/configuration/vmm_oddr_wrapper.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj

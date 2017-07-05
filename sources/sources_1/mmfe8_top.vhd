@@ -28,6 +28,7 @@
 -- 14.03.2017 Added register address/value configuration scheme. (Christos Bakalis)
 -- 28.03.2017 Changes to accomodate to MMFE8 VMM3. (Christos Bakalis)
 -- 19.04.2017 VMM2 version migrated from VMM3 design. (Christos Bakalis)
+-- 05.07.2017 Added E-link RX/TX for DAQ and TTC.   (Christos Bakalis)
 --
 ----------------------------------------------------------------------------------
 
@@ -204,6 +205,22 @@ entity mmfe8_top is
         MuxAddr3_p            : OUT STD_LOGIC;
         MuxAddr3_n            : OUT STD_LOGIC;
 
+        ---- E-link Interface, Data
+        -----------------------------------------
+        --ELINK_DAQ_TX_P        : OUT   STD_LOGIC;
+        --ELINK_DAQ_TX_N        : OUT   STD_LOGIC;
+        --ELINK_DAQ_RX_P        : IN    STD_LOGIC;
+        --ELINK_DAQ_RX_N        : IN    STD_LOGIC;
+        --ELINK_TTC_RX_P        : IN    STD_LOGIC;
+        --ELINK_TTC_RX_N        : IN    STD_LOGIC;
+
+        ---- E-link Interface, Clock
+        -----------------------------------------
+        --ELINK_DAQ_CLK_P       : IN    STD_LOGIC;
+        --ELINK_DAQ_CLK_N       : IN    STD_LOGIC;
+        --ELINK_TTC_CLK_P       : IN    STD_LOGIC;
+        --ELINK_TTC_CLK_N       : IN    STD_LOGIC;
+
         -- AXI4SPI Flash Configuration
         ---------------------------------------
         IO0_IO                : INOUT STD_LOGIC;
@@ -319,12 +336,19 @@ architecture Behavioral of mmfe8_top is
     -------------------------------------------------
     -- MMCM/Configuration Signals
     -------------------------------------------------
-    signal clk_320          : std_logic;
-    signal clk_80           : std_logic;
-    signal clk_160          : std_logic;
-    signal clk_10_phase45   : std_logic;
-    signal clk_50           : std_logic;
-    signal clk_40           : std_logic;
+    signal clk_320_daq        : std_logic;
+    signal clk_80_daq         : std_logic;
+    signal clk_160_daq        : std_logic;
+    signal clk_10_phase45_daq : std_logic;
+    signal clk_50_daq         : std_logic;
+    signal clk_40_daq         : std_logic;
+    
+    signal clk_320_ttc        : std_logic;
+    signal clk_80_ttc         : std_logic;
+    signal clk_160_ttc        : std_logic;
+    signal clk_10_phase45_ttc : std_logic;
+    signal clk_50_ttc         : std_logic;
+    signal clk_40_ttc         : std_logic;
     
     signal tko_i              : std_logic;
     signal cnt_reply          : integer := 0;
@@ -346,6 +370,7 @@ architecture Behavioral of mmfe8_top is
     
     signal conf_wen_i         : std_logic := '0';
     signal conf_ena_i         : std_logic := '0';
+    signal clk_ttc_locked     : std_logic := '0';
     signal vmm_cktk_vec       : std_logic_vector(8 downto 1) := (others => '0');
     signal daq_sigs_enable    : std_logic_vector(8 downto 1) := (others => '0');
     signal conf_cktk_vec      : std_logic_vector(8 downto 1) := (others => '0');
@@ -429,6 +454,8 @@ architecture Behavioral of mmfe8_top is
     signal rst_vmm      : std_logic := '0';
     signal pf_rst_FIFO  : std_logic := '0';
     signal pfBusy_i     : std_logic := '0';
+    signal daq_data_out_pf_i : std_logic_vector(63 downto 0) := (others => '0');
+    signal daq_wr_en_pf_i : std_logic := '0';
     
     ------------------------------------------------------------------
     -- xADC signals
@@ -471,7 +498,7 @@ architecture Behavioral of mmfe8_top is
     ------------------------------------------------------------------
     -- CKBC/CKTP Generator signals
     ------------------------------------------------------------------ 
-    signal clk_gen_locked     : std_logic := '0';
+    signal clk_daq_locked     : std_logic := '0';
     signal rst_gen            : std_logic := '0';  
     signal CKBC_glbl          : std_logic := '0';
     signal rst_enable         : std_logic := '0';
@@ -484,6 +511,28 @@ architecture Behavioral of mmfe8_top is
     constant ckbc_freq        : std_logic_vector(7 downto 0)     := x"0a"; --40 Mhz
     constant cktp_max_num     : std_logic_vector(15 downto 0)    := x"ffff";
     constant cktk_max_num     : std_logic_vector(7 downto 0)     := x"07";
+    
+    ------------------------------------------------------------------
+    -- E-LINK signals
+    ------------------------------------------------------------------ 
+    signal rst_elink_mmcm       : std_logic := '0';
+    signal rst_elink_glbl       : std_logic := '0';
+    signal rst_elink_tx         : std_logic := '0';
+    signal rst_elink_rx         : std_logic := '0';
+    signal swap_tx              : std_logic := '0';
+    signal swap_rx              : std_logic := '0';
+  
+    signal pattern_enable       : std_logic := '0'; -- DEFAULT: disable pattern
+    signal daq_enable           : std_logic := '0'; -- DEFAULT: disable daq
+    signal loopback_enable      : std_logic := '0'; -- DEFAULT: disable loopback
+    signal selDAQelinkUDP       : std_logic_vector(1 downto 0) := "01";
+    
+    signal daq_data_elink_i     : std_logic_vector(63 downto 0) := (others => '0');
+    signal daq_wr_en_elink_i    : std_logic := '0';
+    
+    signal elink_DAQ_tx         : std_logic := '0';
+    signal elink_DAQ_rx         : std_logic := '0';
+    signal elink_TTC_rx         : std_logic := '0';
 
     -------------------------------------------------
     -- Flow FSM signals
@@ -616,20 +665,36 @@ architecture Behavioral of mmfe8_top is
 --    attribute dont_touch of default_IP          : signal is "TRUE";    
 --    attribute keep of default_MAC               : signal is "TRUE";
 --    attribute dont_touch of default_MAC         : signal is "TRUE";
+
+    attribute mark_debug of clk_daq_locked      : signal is "TRUE";
+    attribute mark_debug of clk_ttc_locked      : signal is "TRUE";
+    attribute dont_touch of clk_ttc_locked      : signal is "TRUE";
+    attribute keep of clk_ttc_locked            : signal is "TRUE";
     
     -------------------------------------------------------------------
     -- VIO
     -------------------------------------------------------------------
---    attribute keep of rst_enable_conf           : signal is "TRUE";
---    attribute keep of rst_period                : signal is "TRUE";
---    attribute keep of rst_before_cktp           : signal is "TRUE";
---    attribute keep of cktp_pulse_width          : signal is "TRUE";
---    attribute keep of cktp_period               : signal is "TRUE";
---    attribute keep of cktp_skew                 : signal is "TRUE";
---    attribute keep of ckbc_freq                 : signal is "TRUE";
---    attribute keep of cktp_max_num              : signal is "TRUE";
---    attribute keep of cktk_max_num              : signal is "TRUE";
-    --attribute dont_touch of cktk_max_num        : signal is "TRUE";
+    attribute keep of pattern_enable          : signal is "TRUE";
+    attribute keep of daq_enable              : signal is "TRUE";
+    attribute keep of loopback_enable         : signal is "TRUE";
+    attribute keep of rst_elink_glbl          : signal is "TRUE";
+    attribute keep of rst_elink_mmcm          : signal is "TRUE";
+    attribute keep of rst_elink_tx            : signal is "TRUE";
+    attribute keep of rst_elink_rx            : signal is "TRUE";
+    attribute keep of swap_rx                 : signal is "TRUE";
+    attribute keep of swap_tx                 : signal is "TRUE";
+    attribute keep of selDAQelinkUDP          : signal is "TRUE";
+
+    attribute dont_touch of pattern_enable    : signal is "TRUE";
+    attribute dont_touch of daq_enable        : signal is "TRUE";
+    attribute dont_touch of loopback_enable   : signal is "TRUE";
+    attribute dont_touch of rst_elink_glbl    : signal is "TRUE";
+    attribute dont_touch of rst_elink_mmcm    : signal is "TRUE";
+    attribute dont_touch of rst_elink_tx      : signal is "TRUE";
+    attribute dont_touch of rst_elink_rx      : signal is "TRUE";
+    attribute dont_touch of swap_rx           : signal is "TRUE";
+    attribute dont_touch of swap_tx           : signal is "TRUE";
+    attribute dont_touch of selDAQelinkUDP    : signal is "TRUE";
                
     -------------------------------------------------------------------
     --                       COMPONENTS                              --
@@ -655,6 +720,8 @@ architecture Behavioral of mmfe8_top is
     -- 19. VIO_2
     -- 20. clk_gen_wrapper
     -- 21. vmm_oddr_wrapper
+    -- 22. elink_wrapper
+    -- 23. mmcm_ttc
     -------------------------------------------------------------------
     -- 1
     component master_clk
@@ -1149,18 +1216,12 @@ architecture Behavioral of mmfe8_top is
     );
     end component;
     -- 19
-    component vio_2
+    component vio_elink
       port(
-        clk        : IN STD_LOGIC;
-        probe_out0 : OUT STD_LOGIC_VECTOR(0 DOWNTO 0);
-        probe_out1 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out2 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        probe_out3 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        probe_out4 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out5 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        probe_out6 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        probe_out7 : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        probe_out8 : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+        clk         : IN  STD_LOGIC;
+        probe_in0   : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe_in1   : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+        probe_out0  : OUT STD_LOGIC_VECTOR(10 DOWNTO 0)
       );
     end component;
     -- 20
@@ -1214,7 +1275,59 @@ architecture Behavioral of mmfe8_top is
         ckart_toBuf_vec : out std_logic_vector(9 downto 1)
         -------------------------------------------------------
     );
-    end component;   
+    end component; 
+    -- 22
+    component elink_wrapper
+    Generic(DataRate        : integer;  -- 80 / 160 / 320 MHz
+            elinkEncoding   : std_logic_vector (1 downto 0)); -- 00-direct data / 01-8b10b encoding / 10-HDLC encoding
+    Port(
+        ---------------------------------
+        ----- General/VIO Interface -----
+        user_clock      : in  std_logic;  -- user logic clocking
+        pattern_ena     : in  std_logic;  -- if high, test packets are sent.
+        daq_ena         : in  std_logic;  -- if high, DAQ data are sent.
+        loopback_ena    : in  std_logic;  -- if high, internal loopback mode is enabled
+        glbl_rst        : in  std_logic;  -- reset the entire component
+        rst_tx          : in  std_logic;  -- reset the e-link tx sub-component
+        rst_rx          : in  std_logic;  -- reset the e-link rx sub-component
+        swap_tx         : in  std_logic;  -- swap the tx-side bits
+        swap_rx         : in  std_logic;  -- swap the rx-side bits
+        ttc_detected    : out std_logic;  -- TTC signal detected
+        ---------------------------------
+        -------- E-link clocking --------
+        clk_40          : in  std_logic;
+        clk_80          : in  std_logic;
+        clk_160         : in  std_logic;
+        clk_320         : in  std_logic;
+        elink_locked    : in  std_logic;
+        ---------------------------------
+        ---- E-link Serial Interface ----
+        elink_tx        : out std_logic;  -- elink tx bus
+        elink_rx        : in  std_logic;  -- elink rx bus
+        ---------------------------------
+        --------- PF Interface ----------
+        din_daq         : in  std_logic_vector(63 downto 0); -- data packets from packet formation
+        wr_en_daq       : in  std_logic                      -- write enable from packet formation
+        );
+    end component;
+    -- 23
+    component mmcm_ttc
+    port
+    (   -- Clock in ports
+        clk_in1_p       : in    std_logic;
+        clk_in1_n       : in    std_logic;
+        -- Clock out ports
+        clk_out_320     : out   std_logic;
+        clk_out_160     : out   std_logic;
+        clk_out_80      : out   std_logic;
+        clk_out_50      : out   std_logic;
+        clk_out_40      : out   std_logic;
+        clk_out_10_45   : out   std_logic;
+        -- Status and control signals
+        reset           : in    std_logic;
+        locked          : out   std_logic
+     );
+    end component;  
 
 begin
 
@@ -1268,7 +1381,7 @@ core_wrapper: gig_ethernet_pcs_pma_0
       mmcm_locked_out      => mmcm_locked,
       userclk_out          => userclk,
       userclk2_out         => userclk2,
-      independent_clock_bufg => clk_160,
+      independent_clock_bufg => clk_160_daq,
       pma_reset_out        => pma_reset,
       sgmii_clk_r          => sgmii_clk_r,
       sgmii_clk_f          => sgmii_clk_f,
@@ -1453,7 +1566,7 @@ UDP_ICMP_block: UDP_ICMP_Complete_nomac
             mac_rx_tlast                => rx_axis_mac_tlast_int);
 
 i2c_module: i2c_top
-       port map(  clk_in                => clk_160,
+       port map(  clk_in                => clk_160_daq,
                   phy_rstn_out          => phy_rstn_out);
 
 udp_din_conf_block: udp_data_in_handler
@@ -1461,7 +1574,7 @@ udp_din_conf_block: udp_data_in_handler
         ------------------------------------
         ------- General Interface ----------
         clk_125             => userclk2,
-        clk_40              => clk_40,
+        clk_40              => clk_40_daq,
         inhibit_conf        => inhibit_conf,
         rst                 => glbl_rst_i,
         ------------------------------------
@@ -1496,29 +1609,30 @@ udp_din_conf_block: udp_data_in_handler
         xadc_sample_size    => xadc_sample_size,
         xadc_delay          => xadc_delay
     );
-    
+
+-- can be either used as DAQ path MMCM or as boardClk MMCM    
 mmcm_master: master_clk
        port map ( 
       -- Clock out ports  
-       clk_out_40       => clk_40,
-       clk_out_80       => clk_80,
-       clk_out_160      => clk_160,
-       clk_out_320      => clk_320,
-       clk_out_50       => clk_50,
-       clk_out_10_45    => clk_10_phase45,
+       clk_out_40       => clk_40_daq,
+       clk_out_80       => clk_80_daq,
+       clk_out_160      => clk_160_daq,
+       clk_out_320      => clk_320_daq,
+       clk_out_50       => clk_50_daq,
+       clk_out_10_45    => clk_10_phase45_daq,
       -- Status and control signals                
-       reset            => '0',
-       locked           => clk_gen_locked,
+       reset            => rst_elink_mmcm, -- used to be gnd
+       locked           => clk_daq_locked,
        -- Clock in ports
-       clk_in1_p        => X_2V5_DIFF_CLK_P,
-       clk_in1_n        => X_2V5_DIFF_CLK_N
+       clk_in1_p        => X_2V5_DIFF_CLK_P, --ELINK_DAQ_CLK_P
+       clk_in1_n        => X_2V5_DIFF_CLK_N  --ELINK_DAQ_CLK_N (DONT FORGET TO CHANGE INPUT FREQ!)
        );
 
 event_timing_reset_instance: event_timing_reset
     port map(
         hp_clk          => '0',
         clk             => userclk2,
-        clk_10_phase45  => clk_10_phase45,
+        clk_10_phase45  => clk_10_phase45_daq,
         bc_clk          => CKBC_glbl,
 
         daqEnable       => daq_enable_i,
@@ -1539,8 +1653,8 @@ event_timing_reset_instance: event_timing_reset
 
 readout_vmm: vmm_readout
     port map(
-        clkTkProc               => clk_10_phase45,
-        clkDtProc               => clk_50,
+        clkTkProc               => clk_10_phase45_daq,
+        clkDtProc               => clk_50_daq,
         clk                     => userclk2,
         
         vmm_data0_vec           => data0_in_vec,
@@ -1619,8 +1733,8 @@ packet_formation_instance: packet_formation
         glBCID          => glBCID_i,
         
         packLen         => pf_packLen,
-        dataout         => daq_data_out_i,
-        wrenable        => daq_wr_en_i,
+        dataout         => daq_data_out_pf_i,
+        wrenable        => daq_wr_en_pf_i,
         end_packet      => end_packet_daq_int,
         
         tr_hold         => tr_hold,
@@ -1707,7 +1821,7 @@ axi4_spi_instance: AXI4_SPI
     port map(
         clk_200                => '0',
         clk_125                => userclk2,
-        clk_50                 => clk_50,
+        clk_50                 => clk_50_daq,
         
         myIP                   => myIP,             -- synced to 125 Mhz
         myMAC                  => myMAC,            -- synced to 125 Mhz
@@ -1740,11 +1854,11 @@ ckbc_cktp_generator: clk_gen_wrapper
     port map(
         ------------------------------------
         ------- General Interface ----------
-        clk_500             => clk_320,
-        clk_160             => clk_160,
+        clk_500             => clk_320_daq,
+        clk_160             => clk_160_daq,
         clk_125             => userclk2,    
         rst                 => rst_gen,
-        mmcm_locked         => clk_gen_locked,
+        mmcm_locked         => clk_daq_locked,
         rst_enable          => rst_enable,
         pf_busy             => pfBusy_i,
         trint               => trint,
@@ -1792,24 +1906,172 @@ QSPI_SS_0: IOBUF
    );
    
 vmm_oddr_inst: vmm_oddr_wrapper
-       port map(
-           -------------------------------------------------------
-           ckdt_bufg       => '0', -- unused
-           ckdt_enable_vec => (others => '0'),
-           ckdt_toBuf_vec  => open,
-           -------------------------------------------------------
-           ckbc_bufg       => CKBC_glbl,
-           ckbc_enable     => ckbc_enable,
-           ckbc_toBuf_vec  => vmm_ckbc_vec,
-           -------------------------------------------------------
-           cktp_bufg       => CKTP_glbl,
-           cktp_toBuf_vec  => vmm_cktp_vec,
-           -------------------------------------------------------
-           ckart_bufg      => clk_160,
-           ckart_toBuf_vec => ckart_vec
-           -------------------------------------------------------
-       );
+   port map(
+       -------------------------------------------------------
+       ckdt_bufg       => '0', -- unused
+       ckdt_enable_vec => (others => '0'),
+       ckdt_toBuf_vec  => open,
+       -------------------------------------------------------
+       ckbc_bufg       => CKBC_glbl,
+       ckbc_enable     => ckbc_enable,
+       ckbc_toBuf_vec  => vmm_ckbc_vec,
+       -------------------------------------------------------
+       cktp_bufg       => CKTP_glbl,
+       cktp_toBuf_vec  => vmm_cktp_vec,
+       -------------------------------------------------------
+       ckart_bufg      => clk_160_daq,
+       ckart_toBuf_vec => ckart_vec
+       -------------------------------------------------------
+   );
 
+-- DAQ path E-link
+DAQ_ELINK: elink_wrapper
+    generic map(DataRate      => 320,
+                elinkEncoding => "01")
+    port map(
+        ---------------------------------
+        ----- General/VIO Interface -----
+        user_clock      => userclk2,
+        pattern_ena     => pattern_enable,  -- pattern data enabled by default, from VIO
+        daq_ena         => daq_enable,      -- from VIO
+        loopback_ena    => loopback_enable, -- from VIO
+        glbl_rst        => rst_elink_glbl,  -- from VIO
+        rst_tx          => rst_elink_tx,    -- from VIO
+        rst_rx          => rst_elink_rx,    -- from VIO
+        swap_tx         => swap_tx,         -- from VIO
+        swap_rx         => swap_rx,         -- from VIO
+        ttc_detected    => open,
+        ---------------------------------
+        -------- E-link clocking --------
+        clk_40          => clk_40_daq,
+        clk_80          => clk_80_daq,
+        clk_160         => clk_160_daq,
+        clk_320         => clk_320_daq,
+        elink_locked    => clk_daq_locked,
+        ---------------------------------
+        ---- E-link Serial Interface ----
+        elink_tx        => elink_DAQ_tx,
+        elink_rx        => elink_DAQ_rx,
+        ---------------------------------
+        --------- PF Interface ----------
+        din_daq         => daq_data_elink_i,    -- to DAQelinkMUX
+        wr_en_daq       => daq_wr_en_elink_i    -- to DAQelinkMUX
+        );
+
+-- TTC path e-link
+--TTC_ELINK: elink_wrapper
+--    generic map(DataRate      => 80,
+--                elinkEncoding => "00")
+--    port map(
+--        ---------------------------------
+--        ----- General/VIO Interface -----
+--        user_clock      => userclk2,
+--        pattern_ena     => '0',
+--        daq_ena         => '0',
+--        loopback_ena    => '0',
+--        glbl_rst        => rst_elink_glbl,
+--        rst_tx          => '0',
+--        rst_rx          => rst_elink_rx,
+--        swap_tx         => '0',
+--        swap_rx         => swap_rx,
+--        ttc_detected    => ttc_detected,
+--        ---------------------------------
+--        -------- E-link clocking --------
+--        clk_40          => clk_40_ttc,
+--        clk_80          => clk_80_ttc,
+--        clk_160         => clk_160_ttc,
+--        clk_320         => clk_320_ttc,
+--        elink_locked    => clk_ttc_locked,
+--        ---------------------------------
+--        ---- E-link Serial Interface ----
+--        elink_tx        => '0',
+--        elink_rx        => elink_TTC_rx,
+--        ---------------------------------
+--        --------- PF Interface ----------
+--        din_daq         => (others => '0'),
+--        wr_en_daq       => '0'
+--        );
+
+--mmcm_ttc_inst: mmcm_ttc
+--   port map ( 
+--  -- Clock out ports  
+--   clk_out_320      => clk_320_ttc,
+--   clk_out_160      => clk_160_ttc,
+--   clk_out_80       => clk_80_ttc,
+--   clk_out_50       => clk_50_ttc,
+--   clk_out_40       => clk_40_ttc,
+--   clk_out_10_45    => clk_10_phase45_ttc,
+--  -- Status and control signals                
+--   reset => rst_elink_mmcm,
+--   locked => clk_ttc_locked,
+--   -- Clock in ports
+--   clk_in1_p => ELINK_TTC_CLK_P,
+--   clk_in1_n => ELINK_TTC_CLK_N
+--   );
+
+vio_elink_instance: vio_elink
+    PORT MAP(
+        clk             => userclk2,
+        probe_in0(0)    => clk_daq_locked,
+        probe_in1(0)    => clk_ttc_locked,
+        probe_out0(0)   => pattern_enable,
+        probe_out0(1)   => daq_enable,
+        probe_out0(2)   => loopback_enable,
+        probe_out0(3)   => rst_elink_glbl,
+        probe_out0(4)   => rst_elink_mmcm,
+        probe_out0(5)   => rst_elink_tx,
+        probe_out0(6)   => rst_elink_rx,
+        probe_out0(7)   => swap_rx,
+        probe_out0(8)   => swap_tx,
+        probe_out0(9)   => selDAQelinkUDP(0),
+        probe_out0(10)  => selDAQelinkUDP(1)
+        );
+
+DAQelinkUDPdemux_proc: process(selDAQelinkUDP, daq_data_out_pf_i, daq_wr_en_pf_i)
+begin
+    case selDAQelinkUDP is
+    when "00" => -- disable data
+        daq_data_out_i      <= (others => '0');
+        daq_wr_en_i         <= '0';
+        daq_data_elink_i    <= (others => '0');
+        daq_wr_en_elink_i   <= '0';
+    when "01" => -- DAQ data only through UDP (default)
+        daq_data_out_i      <= daq_data_out_pf_i;
+        daq_wr_en_i         <= daq_wr_en_pf_i;
+        daq_data_elink_i    <= (others => '0');
+        daq_wr_en_elink_i   <= '0';
+    when "10" => -- DAQ data only through E-LINK
+        daq_data_out_i      <= (others => '0');
+        daq_wr_en_i         <= '0';
+        daq_data_elink_i    <= daq_data_out_pf_i;
+        daq_wr_en_elink_i   <= daq_wr_en_pf_i;
+    when "11" => -- DAQ data through both UDP+E-ELINK
+        daq_data_out_i      <= daq_data_out_pf_i;
+        daq_wr_en_i         <= daq_wr_en_pf_i;
+        daq_data_elink_i    <= daq_data_out_pf_i;
+        daq_wr_en_elink_i   <= daq_wr_en_pf_i;
+    when others => 
+        daq_data_out_i      <= (others => '0');
+        daq_wr_en_i         <= '0';
+        daq_data_elink_i    <= (others => '0');
+        daq_wr_en_elink_i   <= '0';
+    end case;
+end process;
+
+---------------------------- E-LINK BUFFERS -----------------------------------------------------------------------
+--elink_tx_daq_buf: OBUFDS generic map  (IOSTANDARD => "DEFAULT" , SLEW => "FAST")
+--                         port map     (O =>  ELINK_DAQ_TX_P, OB => ELINK_DAQ_TX_N, I =>  elink_DAQ_tx);
+--elink_rx_daq_buf: IBUFDS generic map  (IOSTANDARD => "DEFAULT" , DIFF_TERM => TRUE)
+--                         port map     (O =>  elink_DAQ_rx, I =>  ELINK_DAQ_RX_P, IB => ELINK_DAQ_RX_N);    
+--elink_rx_ttc_buf: IBUFDS generic map  (IOSTANDARD => "DEFAULT" , DIFF_TERM => TRUE)
+--                         port map     (O =>  elink_TTC_rx, I =>  ELINK_TTC_RX_P, IB => ELINK_TTC_RX_N);
+-------------------------------------------------------------------------------------------------------------------
+
+------------------------------ clk_200 global buffer --------------------------------------------------------------
+--IBUFGDS_clk_200 : IBUFGDS
+--    generic map( DIFF_TERM => FALSE, IBUF_LOW_PWR => FALSE, IOSTANDARD => "DEFAULT")
+--    port map   (O => clk_200_i, I => X_2V5_DIFF_CLK_P, IB => X_2V5_DIFF_CLK_N);
+-------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------DI-------------------------------------------------------------
 sdi_obufds_1:  OBUFDS  port map  (O =>  DI_1_P, OB => DI_1_N, I => vmm_di_vec_obuf(1));
@@ -2258,22 +2520,7 @@ end process;
     conf_cktk_vec(7) <= vmm_cktk_conf and vmm_bitmask(6);
     conf_cktk_vec(8) <= vmm_cktk_conf and vmm_bitmask(7);
 
-    tied_to_gnd_i    <= '0'; -- ground CK6B/SETT/SETB (unused)    
-    
---vio_ckbc_cktp: vio_2
---      PORT MAP (
---        clk => clk_160_gen,
---        probe_out0(0) => rst_enable_conf,
---        probe_out1 => rst_period,
---        probe_out2 => rst_before_cktp,
---        probe_out3 => cktp_pulse_width,
---        probe_out4 => cktp_period,
---        probe_out5 => cktp_skew,
---        probe_out6 => ckbc_freq,
---        probe_out7 => cktp_max_num,
---        probe_out8 => cktk_max_num
---      );
-      
+    tied_to_gnd_i    <= '0'; -- ground CK6B/SETT/SETB (unused)      
       
 --ila_top: ila_overview
 --      PORT MAP (

@@ -209,11 +209,16 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/ip/ila_top_level.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/packet_len_fifo.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_1.xcix"]"\
- "[file normalize "$origin_dir/sources_1/ip/vio_2.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/vio_elink.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/ila_spi_flash.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/axi_quad_spi_0.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/icmp_payload_buffer.xcix"]"\
  "[file normalize "$origin_dir/sources_1/ip/vmm_conf_buffer.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/DAQelinkFIFO.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/EPATH_FIFO.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/fh_epath_fifo2K_18bit_wide.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/hdlc_bist_fifo.xcix"]"\
+ "[file normalize "$origin_dir/sources_1/ip/mmcm_ttc.xcix"]"\
  "[file normalize "$origin_dir/sources_1/readout/event_timing_reset.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/select_data.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmmSignalsDemux.vhd"]"\
@@ -221,6 +226,50 @@ set files [list \
  "[file normalize "$origin_dir/sources_1/readout/trigger.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/vmm_readout.vhd"]"\
  "[file normalize "$origin_dir/sources_1/readout/packet_formation.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/8b10_dec.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/8b10_dec_wrap.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/BLOCK_WORD_COUNTER.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/CD_COUNTER.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/centralRouter_package.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/Elink2FIFO.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/elink_daq_driver.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/elink_daq_tester.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/elink_wrapper.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/enc_8b10.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/enc8b10_wrap.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPATH_FIFO_WRAP.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_FIFO_DRIVER.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN16_ALIGN_BLOCK.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN16_DEC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN16_direct.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN16.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN2_DEC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN2_HDLC.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN2.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN4_DEC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN4.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN8_DEC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_IN8.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT2_direct.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT2_ENC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT2_HDLC.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT2.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT4_direct.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT4_ENC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT4.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT8_ENC8b10b.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/EPROC_OUT8.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/FIFO2Elink.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/KcharTest.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/MUX2_Nbit.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/MUX4_Nbit.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/MUX4.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/MUX8_Nbit.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/pulse_fall_pw01.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/pulse_pdxx_pwxx.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/reg8to16bit.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/SCDataMANAGER.vhd"]"\
+ "[file normalize "$origin_dir/sources_1/elinks/upstreamEpathFifoWrap.vhd"]"\
 ]
 
 add_files -norecurse -fileset $obj $files
@@ -497,6 +546,226 @@ set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj
 
 set file "$origin_dir/sources_1/readout/packet_formation.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/8b10_dec.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/8b10_dec_wrap.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/BLOCK_WORD_COUNTER.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/CD_COUNTER.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/centralRouter_package.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/Elink2FIFO.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/elink_daq_driver.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/elink_daq_tester.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/elink_wrapper.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/enc_8b10.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/enc8b10_wrap.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPATH_FIFO_WRAP.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_FIFO_DRIVER.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN16_ALIGN_BLOCK.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN16_DEC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN16_direct.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN16.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN2_DEC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN2_HDLC.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN2.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN4_DEC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN4.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN8_DEC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_IN8.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT2_direct.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT2_ENC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT2_HDLC.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT2.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT4_direct.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT4_ENC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT4.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT8_ENC8b10b.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/EPROC_OUT8.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/FIFO2Elink.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/KcharTest.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/MUX2_Nbit.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/MUX4_Nbit.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/MUX4.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/MUX8_Nbit.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/pulse_fall_pw01.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/pulse_pdxx_pwxx.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/reg8to16bit.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/SCDataMANAGER.vhd"
+set file [file normalize $file]
+set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
+set_property "file_type" "VHDL" $file_obj
+
+set file "$origin_dir/sources_1/elinks/upstreamEpathFifoWrap.vhd"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property "file_type" "VHDL" $file_obj

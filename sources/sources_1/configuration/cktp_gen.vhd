@@ -1,6 +1,24 @@
 ----------------------------------------------------------------------------------------
 -- Company:  University of Washington
 -- Engineer: Lev Kurilenko
+--
+-- Copyright Notice/Copying Permission:
+--    Copyright 2017 Lev Kurilenko
+--
+--    This file is part of NTUA-BNL_VMM_firmware.
+--
+--    NTUA-BNL_VMM_firmware is free software: you can redistribute it and/or modify
+--    it under the terms of the GNU General Public License as published by
+--    the Free Software Foundation, either version 3 of the License, or
+--    (at your option) any later version.
+--
+--    NTUA-BNL_VMM_firmware is distributed in the hope that it will be useful,
+--    but WITHOUT ANY WARRANTY; without even the implied warranty of
+--    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--    GNU General Public License for more details.
+--
+--    You should have received a copy of the GNU General Public License
+--    along with NTUA-BNL_VMM_firmware.  If not, see <http://www.gnu.org/licenses/>.
 -- 
 -- Create Date: 25.10.2016 15:47:35
 -- Design Name: 
